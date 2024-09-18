@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>고급 심리 통계 분석</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="곽현석(waurimal@snuecse.org)" />
+    <script src="libs/header-attrs-2.28/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/panelset-0.3.0/panelset.css" rel="stylesheet" />
+    <script src="libs/panelset-0.3.0/panelset.js"></script>
+    <script src="libs/clipboard-2.0.6/clipboard.min.js"></script>
+    <link href="libs/xaringanExtra-clipboard-0.2.6/xaringanExtra-clipboard.css" rel="stylesheet" />
+    <script src="libs/xaringanExtra-clipboard-0.2.6/xaringanExtra-clipboard.js"></script>
+    <script>window.xaringanExtraClipboard(null, {"button":"<i class=\"fa fa-clipboard\"><\/i>","success":"<i class=\"fa fa-check\" style=\"color: #90BE6D\"><\/i>","error":"Press Ctrl+C to Copy"})</script>
+    <link href="libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
+    <link href="libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="css/statisticsplaybook.css" type="text/css" />
+    <link rel="stylesheet" href="css/statisticsplaybook-fonts.css" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+
+
+
+
+class: title-slide, left, bottom
+
+# 고급 심리 통계 분석
+----
+## **데이터 준비 및 측정학적 적절성 검토**
+### 곽현석(waurimal@snuecse.org)
+### 2024.9.19.
+
+---
+
+# 목차
+----
+
+1. 데이터 준비
+
+1. 데이터의 측정학적 적절성
+
+    * 표본크기
+    * 다변량 정규성
+    * 이상치
+    * 다중공선성
+    * 신뢰도
+    * 결측치
+
+1. GEPS 예제
+
+---
+class: inverse,middle,center
+# 데이터 준비
+
+---
+
+# 데이터 준비
+____
+
+## 라이브러리 구동
+
+
+``` r
+pkg_list &lt;- c(
+  "haven","tidyverse","modelsummary","lavaan",
+  "lavaanPlot","knitr","epiDisplay","tinytex",
+  "showtext","stargazer","tibble","magrittr",
+  "semPlot","semTools"
+  )
+
+lapply(pkg_list, require, character.only = T)
+```
+
+---
+
+# 데이터 준비
+____
+
+## 파일 불러오기
+
+* read_csv()
+
+``` r
+e4_s &lt;- read_sav("../DATA/1차년도_초등학교/1차년도_학생(초).sav")
+```
+---
+
+# 데이터 준비
+____
+
+## ID 변수 확인
+
+* names() 
+
+``` r
+names(e4_s)[1:5]
+[1] "STUID"             "SCHID"             "Y1E_CLASS"        
+[4] "MULTI_CULTURAL"    "KOR_UNDERSTANDING"
+e4_s$STUID[1:5]
+[1] 10001 10002 10003 10004 10005
+```
+
+---
+
+# 데이터 준비
+----
+
+## 케이스 결측치 확인
+.pull-left[
+* 케이스 결측치 확인
+
+``` r
+complete.cases(e4_s[,1:20])[1:50]
+```
+
+```
+##  [1]  TRUE  TRUE  TRUE  TRUE FALSE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE
+## [13]  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE FALSE  TRUE  TRUE  TRUE  TRUE
+## [25]  TRUE  TRUE FALSE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE
+## [37]  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE
+## [49]  TRUE  TRUE
+```
+]
+
+.pull-right[
+* 케이스 결측치 행 확인
+
+``` r
+which(!complete.cases(e4_s[,1:20]))
+```
+
+```
+##   [1]    5   20   27   73   80   92  131  139  153  154  158  160  161  162  172
+##  [16]  173  198  201  206  258  260  264  266  281  288  290  308  408  433  434
+##  [31]  439  450  451  467  471  491  569  620  634  635  642  648  652  661  666
+##  [46]  667  676  692  724  759  773  807  812  818  819  844  921  927  935  963
+##  [61]  984  992 1013 1030 1060 1064 1072 1089 1095 1112 1118 1144 1150 1153 1175
+##  [76] 1179 1228 1231 1232 1272 1282 1331 1334 1336 1337 1349 1403 1418 1453 1458
+##  [91] 1462 1476 1480 1490 1494 1501 1504 1531 1540 1552 1561 1564 1589 1599 1602
+## [106] 1616 1621 1624 1626 1652 1653 1678 1682 1734 1850 1862 1869 1906 1911 1920
+## [121] 1937 1954 1959 1978 1988 1996 2037 2041 2044 2071 2077 2088 2128 2138 2144
+## [136] 2148 2149 2155 2166 2168 2169 2174 2181 2182 2187 2189 2193 2212 2216 2217
+## [151] 2231 2236 2261 2263 2274 2289 2297 2298 2309 2339 2344 2373 2387 2388 2400
+## [166] 2430 2433 2440 2456 2471 2493 2522 2553 2601 2602 2606 2611 2612 2640 2643
+## [181] 2644 2663 2683 2689 2737 2742 2749 2751 2754 2795 2798 2803 2807 2810 2883
+## [196] 2899 2910 2918 2945 2957 2964 2966 3016 3045 3071 3078 3096 3105 3121 3149
+## [211] 3166 3168 3178 3181 3194 3217 3244 3255 3256 3260 3319 3325 3330 3343 3352
+## [226] 3355 3357 3358 3379 3380 3385 3391 3406 3421 3475 3499 3511 3515 3540
+```
+]
+---
+# 데이터 준비
+----
+
+## 변수별 결측치 확인
+.pull-left[
+* 변수별 결측치 확인
+
+``` r
+is.na(e4_s)[1:5,11:15]
+```
+
+```
+##      Y1E_ST4_2_1 Y1E_ST4_2_2 Y1E_ST4_3_1 Y1E_ST4_3_2 Y1E_ST4_4_1
+## [1,]       FALSE       FALSE       FALSE       FALSE       FALSE
+## [2,]       FALSE       FALSE       FALSE       FALSE       FALSE
+## [3,]       FALSE       FALSE       FALSE       FALSE       FALSE
+## [4,]       FALSE       FALSE       FALSE       FALSE       FALSE
+## [5,]        TRUE        TRUE        TRUE        TRUE        TRUE
+```
+]
+
+.pull-right[
+* 변수별 결측치수
+
+``` r
+colSums(is.na(e4_s))[11:15]
+```
+
+```
+## Y1E_ST4_2_1 Y1E_ST4_2_2 Y1E_ST4_3_1 Y1E_ST4_3_2 Y1E_ST4_4_1 
+##         134         134         136         136         136
+```
+]
+---
+
+# 데이터 준비
+----
+
+## 결측치 비율 계산하기
+
+
+``` r
+e4_s_missing_ratio &lt;- as.data.frame((colSums(is.na(e4_s))/length(e4_s$STUID))*100)
+e4_s_missing_ratio[1:50,]
+```
+
+```
+##  [1]  0.0000000  0.0000000  0.0000000  0.0000000  0.0000000  0.0000000
+##  [7]  0.5648122  0.7624965  3.6430387  3.6430387  3.7842417  3.7842417
+## [13]  3.8407230  3.8407230  3.8407230  3.8407230  3.7560011  3.7560011
+## [19]  1.7509178  0.3388873  5.1680316  4.8573849  0.2259249  0.3953685
+## [25]  0.5365716  0.3388873  0.1129624  0.3388873  0.1976843  0.1694437
+## [31]  0.1694437  0.4800904  0.3106467  0.2541655 96.3004801  0.2259249
+## [37] 96.5828862  0.2541655 98.8986162  0.2259249 97.6277888  0.3106467
+## [43]  0.4518498  0.9884213  1.1578650  1.5249929  1.7791584  5.0268286
+## [49] 13.6119740 12.9341994
+```
+
+---
+
+# 데이터 준비
+----
+
+## 결측치 제거하기
+
+* 행 제거(list-wise deletion)
+* na.omit()
+
+``` r
+e4_s_nomiss &lt;- na.omit(e4_s[,1:20]); glimpse(e4_s_nomiss)
+```
+
+```
+## Rows: 3,302
+## Columns: 20
+## $ STUID             &lt;dbl&gt; 10001, 10002, 10003, 10004, 10006, 10007, 10008, 100…
+## $ SCHID             &lt;dbl&gt; 101, 101, 101, 101, 101, 101, 101, 101, 101, 101, 10…
+## $ Y1E_CLASS         &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5…
+## $ MULTI_CULTURAL    &lt;dbl+lbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+## $ KOR_UNDERSTANDING &lt;dbl+lbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
+## $ Y1E_ST1_1         &lt;dbl+lbl&gt; 2, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 1, …
+## $ Y1E_ST3_1         &lt;dbl+lbl&gt; 2, 2, 2, 2, 3, 3, 2, 2, 1, 3, 1, 2, 2, 2, 2, 1, …
+## $ Y1E_ST3_2         &lt;dbl+lbl&gt; 3, 4, 4, 5, 4, 4, 2, 4, 5, 3, 3, 4, 3, 4, 5, 3, …
+## $ Y1E_ST4_1_1       &lt;dbl&gt; 1, 0, 2, 1, 0, 0, 0, 0, 0, 8, 7, 0, 1, 0, 1, 1, 0, 0…
+## $ Y1E_ST4_1__2      &lt;dbl&gt; 10, 0, 30, 0, 20, 30, 50, 50, 40, 0, 30, 30, 30, 20,…
+## $ Y1E_ST4_2_1       &lt;dbl&gt; 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0…
+## $ Y1E_ST4_2_2       &lt;dbl&gt; 30, 44, 30, 30, 10, 20, 10, 0, 30, 30, 0, 40, 30, 10…
+## $ Y1E_ST4_3_1       &lt;dbl&gt; 2, 0, 2, 0, 3, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2…
+## $ Y1E_ST4_3_2       &lt;dbl&gt; 0, 10, 0, 30, 50, 30, 0, 30, 0, 20, 30, 0, 0, 0, 40,…
+## $ Y1E_ST4_4_1       &lt;dbl&gt; 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 2, 0…
+## $ Y1E_ST4_4_2       &lt;dbl&gt; 50, 10, 30, 0, 0, 0, 45, 20, 30, 50, 0, 40, 30, 30, …
+## $ Y1E_ST4_5_1       &lt;dbl&gt; 0, 0, 2, 1, 1, 0, 2, 4, 0, 1, 1, 2, 0, 2, 2, 1, 2, 3…
+## $ Y1E_ST4_5_2       &lt;dbl&gt; 50, 30, 0, 0, 0, 50, 0, 0, 30, 30, 0, 0, 30, 0, 0, 2…
+## $ Y1E_ST5           &lt;dbl&gt; 1, 0, 0, 40, 0, 0, 0, 0, 7, 0, 5, 9, 0, 1, 0, 0, 0, …
+## $ Y1E_ST6           &lt;dbl+lbl&gt; 4, 4, 4, 2, 4, 4, 4, 4, 4, 3, 4, 4, 4, 4, 2, 4, …
+```
+
+---
+
+# 데이터 준비
+----
+
+## 역산문항 처리하기
+
+* 성장신념 문항 / 5점 리커트 척도인 경우
+
+``` r
+e4_s &lt;- e4_s %&gt;% mutate(
+  Y1E_ST21_1R=6-Y1E_ST21_1,
+  Y1E_ST21_2R=6-Y1E_ST21_2,
+  Y1E_ST21_3R=6-Y1E_ST21_3
+)
+```
+
+---
+
+# 데이터 준비
+----
+
+## 더미변수 만들기
+
+* 성별인 경우
+
+``` r
+e4_s &lt;- e4_s %&gt;% mutate(
+  female=ifelse(Y1E_ST1_1==2,1,0)
+)
+e4_s$female[1:10]
+```
+
+```
+##  [1] 1 0 1 1 1 1 1 1 1 0
+```
+
+---
+class: inverse, middle, center
+
+# 데이터의 측정학적 적절성 검토
+
+---
+
+# 표본 크기
+----
+
+* 구조방정식에서 주로 사용하는 추정방법이 **최대우도(ML)**인데 &lt;br&gt;이는 **다변량 정규성**을 만족시키는 큰 표본에 기반한 방법임
+
+* 정규성을 만족하는 경우 작은 표본도 큰 문제를 일으키진 않지만, &lt;br&gt;**충분한 표본**을 확보하지 못하면 표준오차의 정확성으로 인해 결과를 믿을 수 없게 됨
+
+---
+
+# 표본 크기
+----
+
+## 표본 크기에 대한 학자들의 다양한 의견
+
+.pull-left[
+  * 사례수
+  
+    + Anderson &amp; Gerbing(1988): 150(CFA의 경우)
+    + Holbert &amp; Stephenson(2002): 150
+    + Chou &amp; Bentler(1995): 200
+    + Hoyle &amp; Kenny(1999): 100, &lt;br&gt;가능하면 200&lt;br&gt;(잠재변수가 있는 매개모형의 경우)
+]
+.pull-right[
+  * *N*:*q*(*N*=표본크기, *q*=추정모수의 개수)
+  
+    + Jackson(2001, 2003): &lt;br&gt;요인분석의 경우 20:1
+    + Kline(2011): 10:1, 가능하면 20:1
+    + Tanaka(1987): 20:1
+    + Bentler &amp; Chou(1987): 5:1
+]    
+---
+
+# 표본 크기
+----
+
+## 표본 크기 계산 방법
+
+### MacCallum, Browne, &amp; Sugawara(1996) 방법
+
+* 영가설의 RMSEA와 대립가설의 RMSEA의 차이를 이용하는 방법
+
+* 주어진 검정력과 모형 적합도에서 표본크기를 추정할 수 있는 방법
+
+* 자유도가 크지 않은 경우는 사용을 하지 않는 게 좋음
+
+  + Kenny, Kaniskan, &amp; McCoach(2014):&lt;br&gt; 자유도가 낮은 경우 RMSEA 자체를 계산하지 말아야 함
+
+* 모형의 종류와 관계없이 사용가능함  
+
+---
+
+# 표본 크기
+----
+
+## 표본 크기 계산 방법
+
+### MacCallum, Browne, &amp; Sugawara(1996) 방법
+
+.pull-left[
+
+* model1
+
+&lt;img src="./img/model1.png" width="300" height="250" /&gt;
+
+
+]
+
+.pull-right[
+
+* model1의 자유도: 19&lt;br&gt;
+
+  + 정보의 개수(36)-추정해야 할 모수(17)
+
+      + 잠재변수의 분산 및 공분산: 3
+      + 요인부하량: 6
+      + 측정오차 분산: 8
+
+]
+
+---
+
+# 표본 크기
+----
+
+## 표본 크기 계산 방법
+
+### MacCallum, Browne, &amp; Sugawara(1996) 방법
+
+* 유의수준 .05, 검정력 .8, 자유도 19를 만족시키는 표본크기 추정
+
+* [Preacher &amp; Coffman(2006)의 사이트](http://www.quantpsy.org/rmsea/rmsea.htm)
+
+---
+
+# 다변량 정규성
+----
+
+* 최대우도 추정은 연속형 종속변수들의 다변량 정규성을 가정함
+
+* 다변량 정규성: 각각의 변수가 정규분포를 따르며,&lt;br&gt; 두 변수의 결합분포가 이변량 정규분포를 따름을 의미함
+
+* MVN 패키지를 이용해 다변량 정규성 검정을 실행할 수 있음
+.pull-left[
+정규성 검정  | 그래프
+------------- | ------------- 
+Mardia 방법  |Q-Q plot      
+  Henze-Zirkler 방법|perspective plot
+  Royston 방법|contour plot
+]
+
+---
+
+# 다변량 정규성
+----
+  
+* 다변량 정규성 검정은 표본크기가 크면 약간의 위반에 대해서도 &lt;br&gt; 정규성 가정을 기각하는 단점이 있음
+  
+* Kline(2011): 각 변수의 단변량 정규성을 조사하는 것만으로 다변량 정규성을 확인할 수 있음  
+
+  + 단변량 정규성 검정 방법
+  
+      + Kolmogorov-Smirnov 검정
+      + Shapiro-Wilk 검정
+      + Q-Q plot
+      
+  + 하지만 단변량 정규성 검정 방법 또한 표본크기에 민감함
+      
+* 여러 가지 이유와 한계점으로 인해 구조방정식에서 단변량 정규성을 확인하는 방법은 &lt;br&gt; 주로 **왜도와 첨도**를 이용함      
+
+
+---
+
+# 다변량 정규성
+----
+  
+* Kline(2011)
+  + 왜도의 절대값: 3
+  + 첨도의 절대값: 10
+
+* Curran, West, &amp; Finch(1997)
+  + 왜도의 절대값: 2
+  + 첨도의 절대값: 7
+  
+* 다변량 정규성을 만족하지 않았을 경우
+  + 문항묶음
+  + 척도 변환
+      + 로그 변환
+
+---
+
+# 이상치(outlier)
+----
+
+## 이상치
+
+* 하나 또는 여러 변수에서 매우 큰 값이나 작은 값을 의미함
+
+* 모형 분석 전에 찾아서 제거하는 것이 중요하나 &lt;br&gt;최종적인 결정은 연구자의 경험과 논리적인 판단으로 결정해야 함
+
+* 구조방정식에서 이상치를 다루는 방법은 두 가지임
+
+  + 단변량 이상치: 개별 변수마다 이상치를 결정하고 제거하는 방법
+  + 다변량 이상치: 여러 변수를 한꺼번에 고려해 이상치를 결정하는 방법
+
+---
+
+# 이상치(outlier)
+----
+
+## 이상치
+
+* 다변량 이상치를 판단하는 대표적인 방법은 Mahalanobis의 거리를 이용하는 방법
+
+* Mahalanobis의 거리: 일반적인 차원 상에서 자료의 중심과 한 점의 통계적인 거리를 &lt;br&gt;나타내는 지수
+
+* Mahalanobis의 거리는 다차원 상에서 한 점과 자료의 중심 사이의 거리를 &lt;br&gt;표준편차 단위로 나타내는 수치
+
+* `\(d^2\)` 검정을 이용해 이상치를 찾아낼 수 있음
+
+  + Kline(2011): `\(d^2\)` 검정이 이상치의 영향에 상당히 민감하므로 &lt;br&gt;보수적으로 접근해 유의수준 .001에서 검정하기를 제안함 
+  
+---
+# 다중공선성
+----
+
+* 공선성(collinearity)은 두 변수 간에 상관이 매우 높을 때 발생하게 되는 문제임
+
+* 다중공선성(multicollinearity)은 여러 변수 간 상관이 매우 높을 때 발생하게 되는 문제임
+
+* 다중공선성이 존재하면&lt;br&gt; 추정치 검정에 필요한 표준오차 값이 정확하게 추정되지 않는다는 문제점이 생김
+
+* 다중공선성 확인
+  + 분산팽창지수(variance inflation factor, VIF): 10 이상
+  + 다중상관제곱( `\(R^2\)` ): 0.9 이상
+  + 공차(tolerance): 0.1 이하
+
+---
+
+# 다중공선성
+----
+
+* 다중공선성이 존재하는 경우 해결 방법
+
+  + 높은 VIF 변수 제거
+  + 변수 합치기
+
+---
+
+# 신뢰도
+----
+
+* 신뢰도는 검사에 대한 것이 아니라 점수에 대한 것임
+
+* 신뢰도를 보고할 때는&lt;br&gt; 이 검사를 어느 집단에 실시하였더니 높은 신뢰도를 얻었다고 하는 것이 바람직함
+
+* 신뢰도를 추정하는 방법
+
+  + 평행검사(parallel forms)
+  + 검사 재검사(test-retest)
+  + 반분(split-half)
+  + 내적일치도(internal consistency)
+  
+---
+
+# 신뢰도
+----
+
+## Cronbach's alpha 
+
+* 실제 연구에서 가장 많이 사용되는 신뢰도
+
+.pull-left[
+* Kline(2000)
+
+  + 훌륭한(excellent): .9 이상
+  + 좋은(good): .7~.9
+  + 받아들일 수 있는(acceptable): .6~.7
+  + 나쁜(poor): .5~.6
+  + 받아들일 수 없는(unacceptable):&lt;br&gt; .5 미만
+]
+
+.pull-right[
+* Nunnally(1994)
+
+  + Early stage of research: .7 이상
+  + Applied research: .8 이상
+  + When making important decisions: .95(최소 .9) 이상
+]
+
+---
+
+# 신뢰도
+----
+
+## Cronbach's alpha 
+
+* 구조방정식 관점에서는 Nunnally의 제안이 더 합리적임. &lt;br&gt; 그 이유는 너무 비슷한 문항을 사용하면 측정오차들 간의 높은 상관으로 인해 &lt;br&gt;모형의 적합도가 오히려 떨어지는 경향이 있음(Bandalos, 2002)
+
+---
+
+# 결측치
+----
+
+## 결측치 발생 원인
+
+* 답변 거부
+* 시간 부족
+* 연구 참가자의 이탈 현상(종단연구 등)
+* 연구 설계 자체의 문제
+
+## 결측치 패턴 분석
+
+* Rubin(1976, 1987)
+  + MCAR(missing completely at random, 완전 무선 결측)
+  + MAR(missing at random, 무선 결측)
+  + MNAR(missing not at random, 비무선 결측)
+
+---
+
+# 결측치
+----
+## MCAR
+
+* 결측치의 패턴이 어떤 변수와도 관련이 없을 때
+
+  + Pr(y is missing|x,y,z)=Pr(y is missing)
+
+---
+
+# 결측치
+----
+## MAR
+
+* 결측치의 패턴이 자기 자신과는 관련이 없지만 다른 변수와는 관련이 있을 때
+
+  + Pr(y is missing|x,y,z)=Pr(y is missing|x,z)
+
+---
+
+# 결측치
+----
+## MNAR
+
+* 결측치의 패턴이 자기 자신과도 관련이 있을 때
+
+  + Pr(y is missing|x,y,z)=Pr(y is missing|x,y,z)
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+
+
+* **구조방정식 모형에서 MCAR나 MAR의 결측치 패턴은 무시할 수 있음**  
+
+---
+
+# 결측치
+----
+
+## 결측치 처리 방법
+
+* 삭제(deletion)
+
+* 대체(imputation)
+
+---
+
+# 결측치
+----
+
+## 삭제
+
+* listwise deletion: 결측치가 발생한 사례를 모두 지우는 방식
+  + MCAR인 경우, 자료의 손실은 있지만 불편추정치를 얻을 수 있음
+  + MAR인 경우, 자료의 손실뿐만 아니라 편향된 추정치를 얻을 수 있음
+
+* pairwise deletion: 결측치를 지우는 기준이 공분산을 계산하기 위한 두 변수만 고려하는 방식
+  + listwise deletion에 비해 더 많은 사례를 이용할 수 있음
+  + 하지만 표본크기 결정에 문제가 생김
+  
+---
+
+# 결측치
+----
+
+## 대체
+
+* 단일 대체(single imputation): 결측치를 하나의 값으로 대체하는 방식
+  + 평균대체
+  + 회귀대체
+  
+* 다중 대체(multiple imputation): 어떤 확률모형(EM 알고리즘)을 이용해 &lt;br&gt;결측치를 여러 번 대체시켜 &lt;br&gt;여러 개의 자료 세트를 만든 다음 구조방정식 모형을 추정하는 방식으로 &lt;br&gt;여러 개의 세트에서 나온 추정치의 평균 등을 구해 &lt;br&gt;최종 추정치로 결정하는 방식
+
+* 일반적으로 다중 대체가 단일 대체보다 더 우월한 방법으로 인식됨
+
+---
+
+# 결측치
+----
+
+## 완전정보 최대우도(FIML)
+
+* FIML은 자료의 요약치를 이용하는 것이 아니라 개별반응을 모두 이용하는 추정법임
+
+* 모든 사례마다 로그우도함수를 각각 계산하고, &lt;br&gt;이를 더하여 최종적인 로그우도함수로 사용하는 방식
+
+* MCAR이나 MAR 상황에서 불편 추정치를 제공함
+
+* FIML은 다중 대체보다도 더 작은 표준오차를 가지는 등 여러 면에서 효율적임
+
+---
+class: inverse, middle, center
+
+# GEPS 예제
+
+---
+
+# GEPS 예제
+____
+
+## 파일 불러오기
+
+* read_csv()
+
+``` r
+e4_s &lt;- read_sav("../DATA/1차년도_초등학교/1차년도_학생(초).sav")
+```
+
+---
+# GEPS 예제
+____
+
+## 분석 관심 변수 추출 후 서브셋 데이터 만들기
+
+### 연구모델 설정
+
+* 성장 신념, 수업 태도, 학업 성취도의 구조적 관계
+
+  + 성장 신념 -&gt; 수업 태도 -&gt; 학업성취도
+  + 성장 신념 -&gt; 학업성취도
+
+### 최종 추출 변수
+
+* STUID, 성별, 성장 신념, 수업 태도, 학업성취도
+
+---
+# GEPS 예제
+____
+
+## 분석 관심 변수 추출 후 서브셋 데이터 만들기
+
+* 성별
+
+  + Y1E_ST1_1
+  
+* 성장 신념
+
+  + 능력있는 사람은 태어날 때부터 정해져 있다
+  + 나의 능력은 시간 지나도 크게 변하지 않는다
+  + 내가 노력해도 능력은 크게 변하지 않는다
+  
+  + 성장신념=~Y1E_ST21_1R+Y1E_ST21_2R+Y1E_ST21_3R
+
+---
+# GEPS 예제
+____
+
+## 분석 관심 변수 추출 후 서브셋 데이터 만들기
+
+* 수업 태도
+
+  + 수업시간 집중한다
+  + 적극적으로 참여한다
+  + 숙제 꼬박꼬박한다
+  + 예습한다
+  + 복습한다
+  
+  + 수업태도=~Y1E_ST25_1+Y1E_ST25_2+Y1E_ST25_3+Y1E_ST25_4+Y1E_ST25_5
+
+---
+# GEPS 예제
+____
+
+## 분석 관심 변수 추출 후 서브셋 데이터 만들기
+
+* 학업성취도
+
+  + 국어(서술형) 수직척도점수
+  + 영어 수직척도점수
+  + 수학 수직척도점수
+  
+  + 학업성취도=Y1E_ENG_VS+Y1E_ENG_VS+Y1E_MATH_VS
+
+---
+# GEPS 예제
+____
+
+## 분석 관심 변수 추출 후 서브셋 데이터 만들기
+
+* e4_s_sub 만들기
+
+
+``` r
+e4_s_sub &lt;- e4_s %&gt;% 
+  dplyr::select(c(STUID,Y1E_ST1_1,Y1E_ST21_1:Y1E_ST21_3,Y1E_ST25_1:Y1E_ST25_5,Y1E_ENG_VS,Y1E_KOR_VS,Y1E_MATH_VS))
+e4_s_sub[1:2,]
+```
+
+```
+# A tibble: 2 × 13
+  STUID Y1E_ST1_1 Y1E_ST21_1         Y1E_ST21_2 Y1E_ST21_3 Y1E_ST25_1 Y1E_ST25_2
+  &lt;dbl&gt; &lt;dbl+lbl&gt; &lt;dbl+lbl&gt;          &lt;dbl+lbl&gt;  &lt;dbl+lbl&gt;  &lt;dbl+lbl&gt;  &lt;dbl+lbl&gt; 
+1 10001 2 [여]    1 [전혀 그렇지 않… 2 [그렇지… 2 [그렇지… 4 [그렇다] 4 [그렇다]
+2 10002 1 [남]    2 [그렇지 않다]  … 1 [전혀 … 3 [보통] … 3 [보통]   3 [보통]  
+# ℹ 6 more variables: Y1E_ST25_3 &lt;dbl+lbl&gt;, Y1E_ST25_4 &lt;dbl+lbl&gt;,
+#   Y1E_ST25_5 &lt;dbl+lbl&gt;, Y1E_ENG_VS &lt;dbl&gt;, Y1E_KOR_VS &lt;dbl&gt;, Y1E_MATH_VS &lt;dbl&gt;
+```
+
+---
+
+# GEPS 예제
+____
+
+## 결측치 확인
+
+``` r
+colSums(is.na(e4_s_sub))
+```
+
+```
+##       STUID   Y1E_ST1_1  Y1E_ST21_1  Y1E_ST21_2  Y1E_ST21_3  Y1E_ST25_1 
+##           0           0          12          13           9           9 
+##  Y1E_ST25_2  Y1E_ST25_3  Y1E_ST25_4  Y1E_ST25_5  Y1E_ENG_VS  Y1E_KOR_VS 
+##           6           8          15          23           4          11 
+## Y1E_MATH_VS 
+##           4
+```
+
+---
+
+# GEPS 예제
+____
+
+## 결측치 확인
+
+``` r
+(colSums(is.na(e4_s_sub))/length(e4_s_sub$STUID))*100
+```
+
+```
+##       STUID   Y1E_ST1_1  Y1E_ST21_1  Y1E_ST21_2  Y1E_ST21_3  Y1E_ST25_1 
+##   0.0000000   0.0000000   0.3388873   0.3671279   0.2541655   0.2541655 
+##  Y1E_ST25_2  Y1E_ST25_3  Y1E_ST25_4  Y1E_ST25_5  Y1E_ENG_VS  Y1E_KOR_VS 
+##   0.1694437   0.2259249   0.4236091   0.6495340   0.1129624   0.3106467 
+## Y1E_MATH_VS 
+##   0.1129624
+```
+
+---
+
+# GEPS 예제
+____
+
+## 역산문항 처리하기
+
+* 성장신념 문항 / 5점 리커트 척도인 경우
+
+``` r
+e4_s_sub &lt;- e4_s_sub %&gt;% mutate(
+  Y1E_ST21_1R=6-Y1E_ST21_1,
+  Y1E_ST21_2R=6-Y1E_ST21_2,
+  Y1E_ST21_3R=6-Y1E_ST21_3
+)
+```
+
+---
+# GEPS 예제
+____
+
+## 서브셋 데이터 파일로 저장하기
+
+
+``` r
+write.csv(e4_s_sub,"e4_s_sub.csv",row.names = F)
+```
+
+---
+# GEPS 예제
+____
+
+## 신뢰도 확인
+
+### 성장신념
+
+
+``` r
+# 성장선념
+cronbach.GM &lt;- e4_s_sub %&gt;% dplyr::select(Y1E_ST21_1R:Y1E_ST21_3R) %&gt;% cronbach()
+cronbach.GM$alpha
+```
+
+```
+## [1] 0.7385524
+```
+
+---
+# GEPS 예제
+____
+
+## 신뢰도 확인
+
+### 수업 태도
+
+
+``` r
+# 수업태도
+cronbach.CA &lt;- e4_s_sub %&gt;% dplyr::select(Y1E_ST25_1:Y1E_ST25_5) %&gt;% cronbach()
+cronbach.CA$alpha
+```
+
+```
+## [1] 0.8063289
+```
+
+
+---
+# GEPS 예제
+____
+
+## 신뢰도 확인
+
+### 학업성취도
+
+
+``` r
+# 학업성취도
+cronbach.ACH &lt;- e4_s_sub %&gt;% dplyr::select(Y1E_ENG_VS,Y1E_KOR_VS,Y1E_MATH_VS) %&gt;% cronbach()
+cronbach.ACH$alpha
+```
+
+```
+## [1] 0.6654684
+```
+
+---
+# GEPS 예제
+____
+
+## 신뢰도 표 만들어 파일로 저장하기
+
+
+``` r
+cronbach.all &lt;- data.frame(cronbach.GM$alpha,
+                           cronbach.CA$alpha,
+                           cronbach.ACH$alpha)
+cronbach.all &lt;- round(cronbach.all,3)
+write.csv(cronbach.all,"cronbach.all.csv",row.names = F)
+```
+
+---
+# GEPS 예제
+____
+
+## 신뢰도 표 만들기
+
+
+``` r
+kable(t(cronbach.all))
+```
+
+
+
+|                   |      |
+|:------------------|-----:|
+|cronbach.GM.alpha  | 0.739|
+|cronbach.CA.alpha  | 0.806|
+|cronbach.ACH.alpha | 0.665|
+
+
+---
+# GEPS 예제
+____
+
+## 변수 생성
+
+
+``` r
+e4_s_sub &lt;- e4_s_sub %&gt;% rowwise() %&gt;% mutate(
+  성장신념 = mean(c(Y1E_ST21_1R,Y1E_ST21_1R,Y1E_ST21_3R)),
+  수업태도 = mean(c(Y1E_ST25_1,Y1E_ST25_2,Y1E_ST25_3,Y1E_ST25_4,Y1E_ST25_5)),
+  학업성취도 = mean(c(Y1E_ENG_VS,Y1E_KOR_VS,Y1E_MATH_VS))
+)
+```
+
+---
+
+# GEPS 예제
+____
+
+## 서브셋 데이터 파일로 저장하기
+
+
+``` r
+write.csv(e4_s_sub,"e4_s_sub.csv",row.names = F)
+```
+
+---
+# GEPS 예제
+____
+
+## 변수 살펴보기(그래프)
+
+
+``` r
+Boxplot(e4_s_sub$성장신념,id=list(n=500))
+```
+
+![](week03_files/figure-html/unnamed-chunk-24-1.png)&lt;!-- --&gt;
+
+---
+# GEPS 예제
+____
+
+## 변수 살펴보기(그래프)
+
+
+``` r
+scatterplot(수업태도~성장신념,data=e4_s_sub,id=list())
+```
+
+![](week03_files/figure-html/unnamed-chunk-25-1.png)&lt;!-- --&gt;
+
+```
+## 1121 2226 
+## 1104 2195
+```
+
+---
+# GEPS 예제
+____
+
+## 변수 살펴보기(그래프)
+
+
+``` r
+scatterplot(학업성취도~성장신념,data=e4_s_sub,id=list())
+```
+
+![](week03_files/figure-html/unnamed-chunk-26-1.png)&lt;!-- --&gt;
+
+```
+##  997 2872 
+##  991 2851
+```
+
+---
+# GEPS 예제
+____
+
+## 변수 살펴보기(그래프)
+
+
+``` r
+scatterplot(학업성취도~수업태도,data=e4_s_sub,id=list())
+```
+
+![](week03_files/figure-html/unnamed-chunk-27-1.png)&lt;!-- --&gt;
+
+```
+##  860 1957 
+##  845 1928
+```
+
+---
+# GEPS 예제
+____
+
+## 다변량 정규성 검정
+
+
+``` r
+mvn.result1 &lt;- mvn(data=e4_s_sub[,3:13],mvnTest="mardia",univariateTest="SW",univariatePlot="histogram")
+mvn.result1
+```
+
+```
+## $multivariateNormality
+##              Test        Statistic p value Result
+## 1 Mardia Skewness 4579.76528597563       0     NO
+## 2 Mardia Kurtosis 36.3247737830612       0     NO
+## 3             MVN             &lt;NA&gt;    &lt;NA&gt;     NO
+## 
+## $univariateNormality
+##            Test    Variable Statistic   p value Normality
+## 1  Shapiro-Wilk Y1E_ST21_1     0.7984  &lt;0.001      NO    
+## 2  Shapiro-Wilk Y1E_ST21_2     0.8516  &lt;0.001      NO    
+## 3  Shapiro-Wilk Y1E_ST21_3     0.7659  &lt;0.001      NO    
+## 4  Shapiro-Wilk Y1E_ST25_1     0.8582  &lt;0.001      NO    
+## 5  Shapiro-Wilk Y1E_ST25_2     0.8625  &lt;0.001      NO    
+## 6  Shapiro-Wilk Y1E_ST25_3     0.8770  &lt;0.001      NO    
+## 7  Shapiro-Wilk Y1E_ST25_4     0.9140  &lt;0.001      NO    
+## 8  Shapiro-Wilk Y1E_ST25_5     0.9123  &lt;0.001      NO    
+## 9  Shapiro-Wilk Y1E_ENG_VS     0.8453  &lt;0.001      NO    
+## 10 Shapiro-Wilk Y1E_KOR_VS     0.9352  &lt;0.001      NO    
+## 11 Shapiro-Wilk Y1E_MATH_VS    0.9758  &lt;0.001      NO    
+## 
+## $Descriptives
+##                n       Mean    Std.Dev Median    Min    Max   25th   75th
+## Y1E_ST21_1  3480   2.004023  1.1741128   2.00   1.00   5.00   1.00   3.00
+## Y1E_ST21_2  3480   2.204598  1.1841541   2.00   1.00   5.00   1.00   3.00
+## Y1E_ST21_3  3480   1.820690  1.0374021   1.00   1.00   5.00   1.00   2.00
+## Y1E_ST25_1  3480   3.831609  0.8526581   4.00   1.00   5.00   3.00   4.00
+## Y1E_ST25_2  3480   3.828736  0.9126757   4.00   1.00   5.00   3.00   5.00
+## Y1E_ST25_3  3480   3.737931  1.0125674   4.00   1.00   5.00   3.00   5.00
+## Y1E_ST25_4  3480   3.001149  1.1804671   3.00   1.00   5.00   2.00   4.00
+## Y1E_ST25_5  3480   3.168678  1.1782724   3.00   1.00   5.00   2.00   4.00
+## Y1E_ENG_VS  3480 408.644138 56.1438686 383.65 278.86 492.19 368.68 492.19
+## Y1E_KOR_VS  3480 394.180776 71.9042176 385.67 282.46 600.02 345.97 433.30
+## Y1E_MATH_VS 3480 483.203784 85.0959973 466.85 273.98 651.50 421.71 565.33
+##                    Skew    Kurtosis
+## Y1E_ST21_1   1.01376279  0.08645196
+## Y1E_ST21_2   0.68080196 -0.48377280
+## Y1E_ST21_3   1.24010513  0.95622377
+## Y1E_ST25_1  -0.28352508 -0.21709769
+## Y1E_ST25_2  -0.31356793 -0.40632323
+## Y1E_ST25_3  -0.35732619 -0.54134583
+## Y1E_ST25_4   0.04808816 -0.74851794
+## Y1E_ST25_5  -0.10361402 -0.74050540
+## Y1E_ENG_VS   0.47863947 -1.20307555
+## Y1E_KOR_VS   0.87636880  1.06358555
+## Y1E_MATH_VS  0.08269237 -0.65419281
+```
+
+![](week03_files/figure-html/unnamed-chunk-28-1.png)&lt;!-- --&gt;
+
+---
+class: inverse, middle, center
+
+# 다음 시간
+
+### 회귀분석
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "googlecode",
+"highlightLines": true,
+"highlightLanguage": "r",
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+<!--Hat-tip: https://www.garrickadenbuie.com/blog/xaringan-tip-logo-all-slides/-->
+<style>
+.logo {
+  background-image: url(img/logo-blue.png);
+  background-size: contain;
+  background-repeat: no-repeat;
+  position: absolute;
+  top: 2em;
+  right: 4em;
+  width: 70px;
+  height: 80px;
+  z-index: 0;
+}
+</style>
+
+<script>
+document
+  .querySelectorAll(
+    '.remark-slide-content' +
+    ':not(.title-slide)' +
+    // add additional classes to exclude here, e.g.
+    ':not(.inverse)' +
+    ':not(.hide-logo)'
+  )
+  .forEach(el => {
+    el.innerHTML += '<div class="logo"></div>';
+  });
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
