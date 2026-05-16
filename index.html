@@ -1,18 +1,369 @@
----
-layout: default
----
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스마트 학습 포털</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --bg-color: #F3F4F6;
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --text-muted: #6B7280;
+        }
 
-<div class="posts">
-  {% for post in site.posts %}
-    <article class="post">
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
 
-      <h1><a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a></h1>
+        /* 헤더 디자인 */
+        header {
+            background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
 
-      <div class="entry">
-        {{ post.excerpt }}
-      </div>
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+        }
 
-      <a href="{{ site.baseurl }}{{ post.url }}" class="read-more">Read More</a>
-    </article>
-  {% endfor %}
-</div>
+        header p {
+            margin-top: 1rem;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* 그리드 레이아웃 */
+        .container {
+            max-width: 1200px;
+            margin: -2rem auto 4rem;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        /* 카드 디자인 */
+        .card {
+            background: var(--card-bg);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            background: #EEF2FF;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .card h2 {
+            margin: 0 0 1rem 0;
+            font-size: 1.5rem;
+        }
+
+        .card p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            flex-grow: 1;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            width: 100%;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: #E5E7EB;
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background-color: #D1D5DB;
+        }
+
+        /* 모달 (팝업) 디자인 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 500px;
+            padding: 2rem;
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            padding-right: 2rem;
+        }
+
+        /* 탭 메뉴 */
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #E5E7EB;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            font-size: 1.05rem;
+            color: #374151;
+            line-height: 1.7;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>에듀 학습 놀이터</h1>
+        <p>수업을 더 즐겁고 효율적으로 만들어주는 스마트 학습 도구 모음</p>
+    </header>
+
+    <div class="container" id="app-container">
+        </div>
+
+    <div class="modal-overlay" id="info-modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            <div class="modal-title" id="modal-title">앱 이름</div>
+            
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('teacher')"><i class="fas fa-chalkboard-teacher"></i> 교사용</button>
+                <button class="tab-btn" onclick="switchTab('student')"><i class="fas fa-user-graduate"></i> 학생용</button>
+            </div>
+
+            <div id="tab-teacher" class="tab-content active"></div>
+            <div id="tab-student" class="tab-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // 앱 데이터 (이곳에서 제목, 설명, 사용방법을 수정할 수 있습니다)
+        const apps = [
+            {
+                id: "wordtyping",
+                title: "단어 타자 연습",
+                icon: "fas fa-keyboard",
+                desc: "정확하고 빠른 타이핑으로 어휘력을 기릅니다.",
+                url: "https://waurimal.github.io/wordtyping/index.html",
+                teacher: "수업 전 5분 워밍업 활동이나, 새로운 단어 철자를 익힐 때 활용하세요. 학생들이 집중해서 정확하게 타이핑하는지 지도해 주시면 좋습니다.",
+                student: "화면에 나오는 단어를 보고 정확하게 타이핑해 보세요! 속도보다는 틀리지 않고 정확하게 입력하는 것이 훨씬 중요합니다."
+            },
+            {
+                id: "hangman",
+                title: "행맨 게임",
+                icon: "fas fa-gamepad",
+                desc: "숨겨진 철자를 맞추며 즐겁게 단어를 학습합니다.",
+                url: "https://waurimal.github.io/hangman/index.html",
+                teacher: "배운 단어들을 복습하는 즐거운 게임 활동으로 좋습니다. 단어의 철자 구조와 파닉스(Phonics)를 연계하여 설명해 주시면 학습 효과가 배가 됩니다.",
+                student: "알파벳을 하나씩 선택해서 숨겨진 단어를 맞혀보세요. 기회가 다 사라지기 전에 정답을 찾아야 해요!"
+            },
+            {
+                id: "alchemist",
+                title: "연금술사 게임",
+                icon: "fas fa-flask",
+                desc: "단어를 조합하고 발견하는 창의력 어휘 게임입니다.",
+                url: "https://waurimal.github.io/alchemist/index.html",
+                teacher: "단어와 단어 사이의 관계, 합성어의 원리 등을 가르칠 때 흥미 유발 자료로 활용할 수 있습니다. 아이들이 창의적인 조합을 시도하도록 격려해 주세요.",
+                student: "마치 연금술사처럼 여러 철자나 단어 조각을 합쳐서 새로운 단어를 만들어 보세요! 어떤 숨겨진 단어가 나올지 실험해 봅시다."
+            },
+            {
+                id: "eng_sen",
+                title: "영어 문장 연습",
+                icon: "fas fa-book-open",
+                desc: "핵심 영어 문장 구조를 반복하여 익히고 연습합니다.",
+                url: "https://waurimal.github.io/eng_sen/index.html",
+                teacher: "단원별 핵심 표현을 문장 단위로 연습하도록 안내해 주세요. 학생들이 문장을 입력하며 소리 내어 읽도록 지도하시면 말하기 실력 향상에도 도움이 됩니다.",
+                student: "제시된 영어 문장을 눈으로 보고, 손으로 타이핑하고, 입으로 소리 내어 읽어보세요. 영어 문장의 구조가 자연스럽게 머릿속에 들어올 거예요."
+            },
+            {
+                id: "file_upload",
+                title: "과제 파일 제출",
+                icon: "fas fa-cloud-upload-alt",
+                desc: "학습 결과물과 과제 파일을 쉽고 안전하게 제출합니다.",
+                url: "https://waurimal.github.io/file_upload/index.html",
+                teacher: "디지털 기기를 활용한 결과물(이미지, 문서 등)을 일괄적으로 수합할 때 사용하세요. 학생들이 제출한 파일을 한눈에 확인하고 관리할 수 있습니다.",
+                student: "선생님께서 내주신 과제나 수업 시간에 만든 결과물 파일을 선택해서 이곳에 업로드해 주세요. 내 이름이 제대로 적혔는지 꼭 확인하세요!"
+            }
+        ];
+
+        // 앱 카드 렌더링
+        const container = document.getElementById('app-container');
+        
+        apps.forEach(app => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="card-icon"><i class="${app.icon}"></i></div>
+                <h2>${app.title}</h2>
+                <p>${app.desc}</p>
+                <div class="btn-group">
+                    <a href="${app.url}" class="btn btn-primary">앱 실행</a>
+                    <button onclick="openModal('${app.id}')" class="btn btn-secondary">사용 방법</button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+
+        // 모달 및 탭 기능
+        const modal = document.getElementById('info-modal');
+        
+        function openModal(appId) {
+            const app = apps.find(a => a.id === appId);
+            document.getElementById('modal-title').innerText = app.title + " 안내";
+            document.getElementById('tab-teacher').innerText = app.teacher;
+            document.getElementById('tab-student').innerText = app.student;
+            
+            // 탭 초기화 (교사용을 기본으로 엶)
+            switchTab('teacher');
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+        }
+
+        function switchTab(type) {
+            // 버튼 상태 변경
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            if(type === 'teacher') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            }
+
+            // 콘텐츠 표시 변경
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`tab-${type}`).classList.add('active');
+        }
+
+        // 모달 바깥 영역 클릭 시 닫기
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
