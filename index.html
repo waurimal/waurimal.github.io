@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>에듀테크 영어 학습 놀이터</title>
+    <title>에듀테크(Edtech) 영어 학습 놀이터</title>
     <!-- 폰트 및 아이콘 불러오기 -->
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -30,6 +30,9 @@
             margin: 0;
             padding: 0;
             line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         /* 헤더 디자인 */
@@ -51,19 +54,21 @@
         }
 
         header p {
-            margin-top: 1.2rem;
+            margin-top: 1rem;
             font-size: 1.15rem;
-            opacity: 0.9;
+            opacity: 0.95;
+            font-weight: 300;
         }
 
         /* 그리드 레이아웃 */
         .container {
             max-width: 1200px;
-            margin: -2rem auto 4rem;
+            margin: -2rem auto 2rem;
             padding: 0 2rem;
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 2rem;
+            flex-grow: 1; /* 푸터를 하단에 밀어내기 위함 */
         }
 
         /* 카드 디자인 */
@@ -76,36 +81,32 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            /* JS에서 주입하는 --app-color, --app-bg 변수를 사용 */
         }
 
         .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
         }
 
-        /* 더 커진 아이콘 */
         .card-icon {
-            font-size: 4rem;
-            color: var(--app-color);
-            background: var(--app-bg);
+            font-size: 3.5rem; /* 아이콘 크기 확대 */
             margin-bottom: 1.5rem;
-            width: 110px;
-            height: 110px;
+            width: 90px;
+            height: 90px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
 
         .card h2 {
             margin: 0 0 1.5rem 0;
             font-size: 1.6rem;
-            color: var(--text-main);
+            font-weight: 700;
+            text-align: center;
         }
 
-        /* 개조식 설명 리스트 & 내어쓰기 처리 */
+        /* 설명글 (개조식 & 내어쓰기 적용) */
         .card-desc {
             list-style: none;
             padding: 0;
@@ -116,22 +117,21 @@
 
         .card-desc li {
             position: relative;
-            padding-left: 1.2rem; /* 불릿 공간 확보 */
+            padding-left: 1.2rem;
             margin-bottom: 0.8rem;
             color: var(--text-muted);
-            text-align: left;
+            font-size: 1.05rem;
             line-height: 1.5;
-            word-break: keep-all; /* 단어 단위 줄바꿈 방지 */
+            text-align: left;
+            word-break: keep-all;
         }
 
         .card-desc li::before {
             content: "•";
             position: absolute;
             left: 0;
-            top: 0;
-            color: var(--app-color); /* 불릿 색상을 메뉴 색상과 통일 */
             font-weight: bold;
-            font-size: 1.2em;
+            color: var(--theme-color); /* 자바스크립트에서 주입받는 테마 컬러 */
         }
 
         /* 버튼 그룹 */
@@ -143,26 +143,27 @@
 
         .btn {
             flex: 1;
-            padding: 0.85rem 1rem;
+            padding: 0.8rem 1rem;
             border-radius: 0.5rem;
             border: none;
-            font-size: 1rem;
+            font-size: 1.05rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
             text-decoration: none;
             text-align: center;
+            box-sizing: border-box;
         }
 
         .btn-primary {
-            background-color: var(--app-color);
+            /* 배경색은 JS에서 동적으로 설정 */
             color: white;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
         .btn-primary:hover {
             filter: brightness(0.9);
-            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
         }
 
         .btn-secondary {
@@ -172,6 +173,19 @@
 
         .btn-secondary:hover {
             background-color: #D1D5DB;
+        }
+
+        /* 푸터 디자인 */
+        .site-footer {
+            text-align: center;
+            padding: 2rem;
+            color: #6B7280;
+            font-size: 0.9rem;
+            margin-top: 2rem;
+        }
+
+        .site-footer p {
+            margin: 0.3rem 0;
         }
     </style>
 </head>
@@ -186,18 +200,24 @@
         <!-- 자바스크립트를 통해 카드가 동적으로 생성됩니다 -->
     </div>
 
+    <!-- 하단 카피라이트 -->
+    <footer class="site-footer">
+        <p>만든이: 곽현석(이의초등학교)</p>
+        <p>Copyright &copy; 2026 Eui Elementary School. All Rights Reserved.</p>
+    </footer>
+
     <script>
-        // 앱 데이터 (색상 테마와 개조식 설명 추가)
+        // 앱 데이터 (각 메뉴별 테마 컬러 및 불릿 설명 적용)
         const apps = [
             {
                 id: "wordtyping",
                 title: "단어 타자 연습",
                 icon: "fas fa-keyboard",
-                theme: "#3B82F6", // 파랑
+                theme: "#3B82F6", // 블루
                 bgTheme: "#EFF6FF",
                 bullets: [
-                    "화면에 제시된 영단어를 정확하게 타이핑하는 연습",
-                    "철자(Spelling)를 자연스럽게 암기하며 기본 어휘력 강화"
+                    "정확하고 빠른 영어 타이핑 연습 지원",
+                    "스펠링을 직접 입력하며 자연스러운 어휘력 향상"
                 ],
                 url: "https://waurimal.github.io/wordtyping/index.html"
             },
@@ -205,11 +225,11 @@
                 id: "hangman",
                 title: "행맨 게임",
                 icon: "fas fa-gamepad",
-                theme: "#8B5CF6", // 보라
+                theme: "#8B5CF6", // 퍼플
                 bgTheme: "#F5F3FF",
                 bullets: [
-                    "알파벳을 하나씩 추론하여 숨겨진 영단어를 맞추는 게임",
-                    "배운 단어의 철자 구조와 파닉스(Phonics) 복습에 최적화"
+                    "숨겨진 철자를 추리하며 맞추는 흥미진진한 단어 게임",
+                    "파닉스와 철자 구조를 복습하는 즐거운 놀이 활동"
                 ],
                 url: "https://waurimal.github.io/hangman/index.html"
             },
@@ -220,8 +240,8 @@
                 theme: "#F97316", // 오렌지
                 bgTheme: "#FFF7ED",
                 bullets: [
-                    "철자나 단어 조각을 조합하여 새로운 단어를 발견하는 게임",
-                    "단어 간의 관계 및 합성어 생성 원리를 창의적으로 학습"
+                    "단어 조각을 합쳐 새로운 단어를 발견하는 창의력 게임",
+                    "합성어의 원리와 단어 간의 관계를 재미있게 학습"
                 ],
                 url: "https://waurimal.github.io/alchemist/index.html"
             },
@@ -229,11 +249,11 @@
                 id: "eng_sen",
                 title: "영어 문장 연습",
                 icon: "fas fa-book-open",
-                theme: "#10B981", // 에메랄드 (청록)
+                theme: "#10B981", // 에메랄드
                 bgTheme: "#ECFDF5",
                 bullets: [
-                    "단원별 핵심 영어 문장 구조를 타이핑하며 반복 학습",
-                    "눈, 손, 입을 동시에 사용하여 문장 체화 및 말하기 실력 향상"
+                    "핵심 영어 문장 구조를 반복 타이핑하며 체화",
+                    "소리 내어 읽기와 병행하여 말하기 및 작문 기초 다지기"
                 ],
                 url: "https://waurimal.github.io/eng_sen/index.html"
             },
@@ -251,27 +271,27 @@
             }
         ];
 
-        // 앱 카드 렌더링
+        // 앱 카드 동적 렌더링
         const container = document.getElementById('app-container');
         
         apps.forEach(app => {
             const card = document.createElement('div');
             card.className = 'card';
-            // CSS 변수로 개별 색상 주입
-            card.style.setProperty('--app-color', app.theme);
-            card.style.setProperty('--app-bg', app.bgTheme);
             
-            // 불릿 리스트(개조식) 생성
-            const bulletHTML = app.bullets.map(b => `<li>${b}</li>`).join('');
+            // 불릿 리스트 HTML 생성
+            const bulletsHtml = app.bullets.map(bullet => `<li>${bullet}</li>`).join('');
 
             card.innerHTML = `
-                <div class="card-icon"><i class="${app.icon}"></i></div>
-                <h2>${app.title}</h2>
-                <ul class="card-desc">
-                    ${bulletHTML}
+                <div class="card-icon" style="color: ${app.theme}; background-color: ${app.bgTheme};">
+                    <i class="${app.icon}"></i>
+                </div>
+                <h2 style="color: ${app.theme};">${app.title}</h2>
+                <ul class="card-desc" style="--theme-color: ${app.theme};">
+                    ${bulletsHtml}
                 </ul>
                 <div class="btn-group">
-                    <a href="${app.url}" class="btn btn-primary" target="_blank">앱 실행</a>
+                    <a href="${app.url}" class="btn btn-primary" style="background-color: ${app.theme};">앱 실행</a>
+                    <!-- guide.html에 파라미터를 넘겨 어떤 앱의 설명인지 식별하도록 함 -->
                     <a href="guide.html?app=${app.id}" class="btn btn-secondary">사용 방법</a>
                 </div>
             `;
