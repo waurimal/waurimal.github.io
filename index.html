@@ -202,7 +202,8 @@
                     ${bulletsHtml}
                 </ul>
                 <div class="btn-group">
-                    <a href="${app.url}" class="btn btn-primary" style="background-color: ${app.theme};">앱 실행</a>
+                    <a href="${app.url}" class="btn btn-primary" style="background-color: ${app.theme};" target="_blank" rel="noopener noreferrer">앱 실행</a>
+                    <!-- guide.html에 파라미터를 넘겨 어떤 앱의 설명인지 식별하도록 함 -->
                     <a href="guide.html?app=${app.id}" class="btn btn-secondary">사용 방법</a>
                 </div>
             `;
