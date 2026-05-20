@@ -3,43 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>사용 방법 안내 - 에듀테크 놀이터</title>
+    <title>사용 방법 안내</title>
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --bg-color: #F3F4F6; --card-bg: #FFFFFF; --text-main: #1F2937; --text-muted: #4B5563; }
-        body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; line-height: 1.6; }
-        header { background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%); color: white; padding: 3rem 2rem 4rem; text-align: center; }
-        .nav-back { display: inline-block; margin-top: 1.5rem; padding: 0.6rem 1.2rem; background-color: rgba(255, 255, 255, 0.1); border-radius: 2rem; border: 1px solid rgba(255, 255, 255, 0.2); color: white; text-decoration: none; font-weight: 600; transition: all 0.2s; }
-        .nav-back:hover { background-color: rgba(255, 255, 255, 0.25); transform: translateY(-2px); }
-        .guide-container { max-width: 800px; margin: 2rem auto 4rem; padding: 0 1.5rem; }
-        .guide-card { background: var(--card-bg); border-radius: 1rem; padding: 3rem 2rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .app-header { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #E5E7EB; }
-        .app-icon { font-size: 3rem; color: var(--app-color); background: var(--app-bg); width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
-        .app-title { font-size: 2rem; margin: 0; color: var(--text-main); }
-        .tabs { display: flex; border-bottom: 2px solid #E5E7EB; margin-bottom: 2rem; }
-        .tab-btn { flex: 1; padding: 1rem; background: none; border: none; font-size: 1.1rem; font-weight: 700; color: #9CA3AF; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
-        .tab-btn.active { color: var(--app-color); border-bottom-color: var(--app-color); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
-        .guide-box { background-color: #F9FAFB; border-left: 5px solid var(--app-color); padding: 1.5rem 2rem; border-radius: 0 0.5rem 0.5rem 0; margin-top: 1rem; }
-        .usage-list { margin-top: 0.8rem; padding-left: 1.2rem; line-height: 1.8; }
-        .usage-list li { margin-bottom: 0.8rem; }
-        .site-footer { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.9rem; margin-top: 2rem; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        :root { --bg-color: #F3F4F6; --card-bg: #FFFFFF; --text-main: #1F2937; }
+        body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; }
+        header { background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%); color: white; padding: 2rem; text-align: center; }
+        .guide-container { max-width: 600px; margin: 3rem auto; padding: 2rem; background: white; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .nav-back { display: inline-block; margin-top: 1rem; color: white; text-decoration: none; font-weight: 600; }
+        .site-footer { text-align: center; padding: 2rem; color: #6B7280; font-size: 0.8rem; }
     </style>
 </head>
 <body>
-
     <header>
         <h1>앱 사용 방법</h1>
-        <a href="index.html" class="nav-back"><i class="fas fa-arrow-left"></i> 메인 화면으로 돌아가기</a>
+        <a href="index.html" class="nav-back"><i class="fas fa-arrow-left"></i> 메인으로 돌아가기</a>
     </header>
-
-    <div class="guide-container">
-        <div class="guide-card" id="guide-content"></div>
+    <div class="guide-container" id="guide-content">
+        <!-- JS로 내용 로드 -->
     </div>
-
     <footer class="site-footer">
         <p>만든이: 곽현석(이의초등학교)</p>
         <p>Copyright &copy; 2026 Eui Elementary School. All Rights Reserved.</p>
@@ -47,41 +30,18 @@
 
     <script>
         const guideData = {
-            "wordtyping": { title: "단어 타자 연습", icon: "fas fa-keyboard", theme: "#3B82F6", bgTheme: "#EFF6FF", teacher: "<ol class='usage-list'><li>학생들에게 링크 공유</li><li>사전 단어 리스트 세팅</li><li>정확도 중심 지도</li></ol>", student: "<ol class='usage-list'><li>단어 확인</li><li>정확히 타이핑</li><li>콤보 점수 도전</li></ol>" },
-            "hangman": { title: "행맨 게임", icon: "fas fa-gamepad", theme: "#8B5CF6", bgTheme: "#F5F3FF", teacher: "<ol class='usage-list'><li>단어 복습용</li><li>파닉스 힌트 활용</li></ol>", student: "<ol class='usage-list'><li>철자 유추</li><li>알파벳 클릭</li><li>기회 관리</li></ol>" },
-            "alchemist": { title: "연금술사 게임", icon: "fas fa-flask", theme: "#F97316", bgTheme: "#FFF7ED", teacher: "<ol class='usage-list'><li>합성어 원리 학습</li><li>짝 활동 권장</li></ol>", student: "<ol class='usage-list'><li>단어 드래그</li><li>결합 및 발견</li></ol>" },
-            "reading": { title: "영어 읽기 연습", icon: "fas fa-glasses", theme: "#DB2777", bgTheme: "#FDF2F8", teacher: "<ol class='usage-list'><li>수준별 지문 배정</li><li>학습 결과 모니터링</li><li>어휘 사전 학습</li></ol>", student: "<ol class='usage-list'><li>지문 정독</li><li>새 단어 체크</li><li>읽기 연습</li></ol>" },
-            "eng_sen": { title: "영어 문장 연습", icon: "fas fa-book-open", theme: "#10B981", bgTheme: "#ECFDF5", teacher: "<ol class='usage-list'><li>문장 부호 강조</li><li>소리 내어 읽기 지도</li></ol>", student: "<ol class='usage-list'><li>문장 읽기</li><li>완벽 타이핑</li><li>오답 수정</li></ol>" },
-            "file_upload": { title: "과제 파일 제출", icon: "fas fa-cloud-upload-alt", theme: "#6366F1", bgTheme: "#EEF2FF", teacher: "<ol class='usage-list'><li>지정 폴더 확인</li><li>실시간 수합 확인</li></ol>", student: "<ol class='usage-list'><li>정보 입력</li><li>파일 선택</li><li>제출 완료 대기</li></ol>" }
+            "wordtyping": { title: "단어 타자 연습", teacher: "1. 학생들에게 링크 공유\n2. 단어장 선택", student: "1. 단어 확인\n2. 정확히 타이핑" },
+            "hangman": { title: "행맨 게임", teacher: "1. 단어 복습용\n2. 파닉스 활용", student: "1. 철자 유추\n2. 기회 확인" },
+            "alchemist": { title: "연금술사", teacher: "1. 합성어 원리 학습", student: "1. 드래그 및 조합" },
+            "reading": { title: "영어 읽기", teacher: "1. 수준별 배정", student: "1. 정독 및 연습" },
+            "eng_sen": { title: "영어 문장", teacher: "1. 문장 부호 강조", student: "1. 소리 내어 읽기" },
+            "swarm": { title: "Swarm 게임", teacher: "1. 실시간 협동 설계", student: "1. 팀 목표 수행" },
+            "file_upload": { title: "파일 제출", teacher: "1. 폴더 수합 확인", student: "1. 파일 선택 및 제출" }
         };
-
-        const guideContent = document.getElementById('guide-content');
-        const urlParams = new URLSearchParams(window.location.search);
-        const appId = urlParams.get('app');
-        const appData = guideData[appId];
-
-        if (appData) {
-            guideContent.style.setProperty('--app-color', appData.theme);
-            guideContent.style.setProperty('--app-bg', appData.bgTheme);
-            guideContent.innerHTML = `
-                <div class="app-header">
-                    <div class="app-icon"><i class="${appData.icon}"></i></div>
-                    <h2 class="app-title">${appData.title}</h2>
-                </div>
-                <div class="tabs">
-                    <button class="tab-btn active" onclick="switchTab('teacher')"><i class="fas fa-chalkboard-teacher"></i> 교사용</button>
-                    <button class="tab-btn" onclick="switchTab('student')"><i class="fas fa-user-graduate"></i> 학생용</button>
-                </div>
-                <div id="tab-teacher" class="tab-content active"><div class="guide-box">${appData.teacher}</div></div>
-                <div id="tab-student" class="tab-content"><div class="guide-box">${appData.student}</div></div>
-            `;
-        }
-
-        function switchTab(type) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-btn')[type === 'teacher' ? 0 : 1].classList.add('active');
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            document.getElementById(`tab-${type}`).classList.add('active');
+        const params = new URLSearchParams(window.location.search);
+        const app = guideData[params.get('app')];
+        if(app) {
+            document.getElementById('guide-content').innerHTML = `<h2>${app.title}</h2><h3>교사용</h3><pre>${app.teacher}</pre><h3>학생용</h3><pre>${app.student}</pre>`;
         }
     </script>
 </body>
