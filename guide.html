@@ -7,12 +7,33 @@
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * { box-sizing: border-box; } /* 가로 스크롤 방지 */
         :root { --bg-color: #F3F4F6; --card-bg: #FFFFFF; --text-main: #1F2937; }
         body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; }
         header { background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%); color: white; padding: 2rem; text-align: center; }
-        .guide-container { max-width: 600px; margin: 3rem auto; padding: 2rem; background: white; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .guide-container { max-width: 600px; margin: 3rem auto; padding: 2rem; background: white; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); width: 90%; }
         .nav-back { display: inline-block; margin-top: 1rem; color: white; text-decoration: none; font-weight: 600; }
         .site-footer { text-align: center; padding: 2rem; color: #6B7280; font-size: 0.8rem; }
+        
+        /* 가이드 텍스트 박스 스타일 개선 및 좁은 화면에서 자동 줄바꿈 적용 */
+        pre {
+            white-space: pre-wrap;       /* 공백 유지하되 텍스트가 화면을 넘어가면 자동 줄바꿈 */
+            word-wrap: break-word;       
+            font-family: inherit;        
+            background-color: #F9FAFB;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #E5E7EB;
+            line-height: 1.6;
+        }
+
+        /* 모바일 등 작은 화면을 위한 반응형 스타일 추가 */
+        @media (max-width: 600px) {
+            header { padding: 1.5rem 1rem; }
+            .guide-container { margin: 1.5rem auto; padding: 1.5rem; width: 95%; }
+            h2 { font-size: 1.3rem; }
+            h3 { font-size: 1.1rem; }
+        }
     </style>
 </head>
 <body>
@@ -36,7 +57,8 @@
             "reading": { title: "영어 읽기", teacher: "1. 수준별 배정", student: "1. 정독 및 연습" },
             "eng_sen": { title: "영어 문장", teacher: "1. 문장 부호 강조", student: "1. 소리 내어 읽기" },
             "swarm": { title: "Swarm 게임", teacher: "1. 실시간 협동 설계", student: "1. 팀 목표 수행" },
-            "file_upload": { title: "파일 제출", teacher: "1. 폴더 수합 확인", student: "1. 파일 선택 및 제출" }
+            "file_upload": { title: "파일 제출", teacher: "1. 폴더 수합 확인", student: "1. 파일 선택 및 제출" },
+            "senbattle": { title: "영어문장 배틀", teacher: "1. 학생들에게 접속 링크 및 방 안내\n2. 게임을 통한 학습 동기 부여 및 결과 확인", student: "1. 방에 접속하여 친구들과 실시간 대결\n2. 제시된 영어 문장을 빠르고 정확하게 타이핑" }
         };
         const params = new URLSearchParams(window.location.search);
         const app = guideData[params.get('app')];
