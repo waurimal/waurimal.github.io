@@ -9,11 +9,12 @@
     <style>
         * { box-sizing: border-box; } /* 가로 스크롤 방지 */
         :root { --bg-color: #F3F4F6; --card-bg: #FFFFFF; --text-main: #1F2937; }
-        body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; }
+        body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh;}
         header { background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%); color: white; padding: 2rem; text-align: center; }
-        .guide-container { max-width: 600px; margin: 3rem auto; padding: 2rem; background: white; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); width: 90%; }
-        .nav-back { display: inline-block; margin-top: 1rem; color: white; text-decoration: none; font-weight: 600; }
-        .site-footer { text-align: center; padding: 2rem; color: #6B7280; font-size: 0.8rem; }
+        .guide-container { max-width: 600px; margin: 3rem auto; padding: 2rem; background: white; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); width: 90%; flex-grow: 1;}
+        .nav-back { display: inline-block; margin-top: 1rem; color: white; text-decoration: none; font-weight: 600; padding: 0.5rem 1rem; background-color: rgba(255,255,255,0.2); border-radius: 0.5rem; transition: background-color 0.2s;}
+        .nav-back:hover { background-color: rgba(255,255,255,0.3);}
+        .site-footer { text-align: center; padding: 2rem; color: #6B7280; font-size: 0.8rem; margin-top: auto;}
         
         /* 가이드 텍스트 박스 스타일 개선 및 좁은 화면에서 자동 줄바꿈 적용 */
         pre {
@@ -21,10 +22,18 @@
             word-wrap: break-word;       
             font-family: inherit;        
             background-color: #F9FAFB;
-            padding: 1rem;
+            padding: 1.5rem;
             border-radius: 0.5rem;
             border: 1px solid #E5E7EB;
             line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        
+        h3 {
+            color: #1E3A8A;
+            margin-bottom: 0.5rem;
+            border-bottom: 2px solid #E5E7EB;
+            padding-bottom: 0.5rem;
         }
 
         /* 모바일 등 작은 화면을 위한 반응형 스타일 추가 */
@@ -51,19 +60,61 @@
 
     <script>
         const guideData = {
-            "wordtyping": { title: "단어 타자 연습", teacher: "1. 학생들에게 링크 공유\n2. 단어장 선택", student: "1. 단어 확인\n2. 정확히 타이핑" },
-            "hangman": { title: "행맨 게임", teacher: "1. 단어 복습용\n2. 파닉스 활용", student: "1. 철자 유추\n2. 기회 확인" },
-            "alchemist": { title: "연금술사", teacher: "1. 합성어 원리 학습", student: "1. 드래그 및 조합" },
-            "reading": { title: "영어 읽기", teacher: "1. 수준별 배정", student: "1. 정독 및 연습" },
-            "eng_sen": { title: "영어 문장", teacher: "1. 문장 부호 강조", student: "1. 소리 내어 읽기" },
-            "swarm": { title: "Swarm 게임", teacher: "1. 실시간 협동 설계", student: "1. 팀 목표 수행" },
-            "file_upload": { title: "파일 제출", teacher: "1. 폴더 수합 확인", student: "1. 파일 선택 및 제출" },
-            "senbattle": { title: "영어문장 배틀", teacher: "1. 학생들에게 접속 링크 및 방 안내\n2. 게임을 통한 학습 동기 부여 및 결과 확인", student: "1. 방에 접속하여 친구들과 실시간 대결\n2. 제시된 영어 문장을 빠르고 정확하게 타이핑" }
+            "wordtyping": { 
+                title: "단어 타자 연습", 
+                teacher: "1. 학생들에게 접속 링크를 공유합니다.\n2. 화면에 표시된 단어 목록을 확인합니다.\n3. 학생들이 정확도에 집중하여 연습하도록 지도합니다.", 
+                student: "1. 화면 상단의 단어를 확인합니다.\n2. 키보드를 사용하여 스펠링을 빠르고 정확하게 입력합니다.\n3. 오타가 났을 경우 백스페이스로 수정합니다." 
+            },
+            "hangman": { 
+                title: "행맨 게임", 
+                teacher: "1. 학생들에게 접속 링크를 안내합니다.\n2. 배운 단어나 파닉스를 적용하여 철자를 유추하도록 유도합니다.", 
+                student: "1. 게임이 시작되면 빈칸의 개수를 확인합니다.\n2. 키보드나 화면의 알파벳 버튼을 눌러 들어갈 철자를 추측합니다.\n3. 기회(목숨)가 모두 닳기 전에 단어를 완성하세요!" 
+            },
+            "alchemist": { 
+                title: "연금술사", 
+                teacher: "1. 학생들에게 접속 링크를 안내합니다.\n2. 두 개의 단어나 철자를 결합하여 새로운 형태를 만드는 원리를 설명합니다.", 
+                student: "1. 화면에 주어진 기본 단어 조각들을 마우스로 드래그합니다.\n2. 조각들을 서로 겹쳐서 새로운 단어가 만들어지는지 확인합니다.\n3. 가능한 모든 조합을 찾아보세요!" 
+            },
+            "reading": { 
+                title: "영어 읽기", 
+                teacher: "1. 학생의 수준에 맞는 읽기 지문을 선택하도록 안내합니다.\n2. 소리 내어 읽기(Read Aloud) 활동과 병행하면 더욱 좋습니다.", 
+                student: "1. 읽고 싶은 글을 선택합니다.\n2. 눈으로 읽거나 소리 내어 문장을 끝까지 읽습니다.\n3. 모르는 단어가 나오면 문맥을 통해 뜻을 유추해 보세요." 
+            },
+            "eng_sen": { 
+                title: "영어 문장", 
+                teacher: "1. 학생들에게 학습할 문장 세트를 안내합니다.\n2. 대소문자와 문장 부호(마침표, 물음표 등)를 정확히 입력하도록 강조합니다.", 
+                student: "1. 화면에 제시된 영어 문장을 꼼꼼히 확인합니다.\n2. 대소문자와 띄어쓰기를 지켜 똑같이 타이핑합니다.\n3. 문장을 입력하면서 입으로 소리 내어 읽어보세요." 
+            },
+            "swarm": { 
+                title: "Swarm 게임", 
+                teacher: "1. 반 전체 또는 모둠별로 링크에 접속하게 합니다.\n2. 학생들이 각자의 캐릭터를 조종하여 협동으로 미션을 수행하도록 독려합니다.", 
+                student: "1. 링크에 접속하여 내 캐릭터를 확인합니다.\n2. 방향키나 터치로 캐릭터를 움직입니다.\n3. 다른 친구들과 협력하여 목표 지점에 도달하거나 미션을 완수하세요." 
+            },
+            "file_upload": { 
+                title: "파일 제출", 
+                teacher: "1. 수합할 폴더(구글 드라이브 등)가 제대로 연동되었는지 확인합니다.\n2. 학생들에게 제출 기한과 파일명 규칙(예: 학번_이름)을 안내합니다.", 
+                student: "1. '파일 선택' 버튼을 눌러 제출할 결과물이나 사진을 고릅니다.\n2. 내 이름이 정확하게 입력되었는지 확인합니다.\n3. '제출' 버튼을 누르고 완료 메시지가 뜰 때까지 기다립니다." 
+            },
+            "senbattle": { 
+                title: "영어문장 배틀", 
+                teacher: "1. 학생들에게 접속 링크 및 방 번호를 안내합니다.\n2. 게임을 통해 학습 동기를 부여하고 완료 후 결과를 확인합니다.", 
+                student: "1. 방 번호를 입력하여 친구들과 동일한 방에 접속합니다.\n2. 화면에 제시된 영어 문장을 누구보다 빠르고 정확하게 타이핑합니다.\n3. 대결에서 승리하여 점수를 획득하세요!" 
+            },
+            "tictac": {
+                title: "틱택토 게임",
+                teacher: "1. 학생들에게 짝을 지어 게임 링크에 접속하도록 안내합니다.\n2. 단순한 게임 속에 숨겨진 전략을 고민해 보도록 지도합니다.",
+                student: "1. 번갈아 가며 3x3 격자의 빈칸을 클릭하여 자신의 기호(O 또는 X)를 놓습니다.\n2. 가로, 세로, 혹은 대각선으로 자신의 기호 3개를 먼저 연결하는 사람이 승리합니다.\n3. 상대방이 연결하지 못하도록 전략적으로 방어하세요!"
+            }
         };
         const params = new URLSearchParams(window.location.search);
-        const app = guideData[params.get('app')];
+        const appKey = params.get('app');
+        const app = guideData[appKey];
+        const contentDiv = document.getElementById('guide-content');
+        
         if(app) {
-            document.getElementById('guide-content').innerHTML = `<h2>${app.title}</h2><h3>교사용</h3><pre>${app.teacher}</pre><h3>학생용</h3><pre>${app.student}</pre>`;
+            contentDiv.innerHTML = `<h2>${app.title}</h2><h3>교사용</h3><pre>${app.teacher}</pre><h3>학생용</h3><pre>${app.student}</pre>`;
+        } else {
+            contentDiv.innerHTML = `<p style="text-align:center; color: #EF4444; font-weight:bold;">앱 정보를 찾을 수 없습니다. 메인 화면으로 돌아가 다시 시도해 주세요.</p>`;
         }
     </script>
 </body>
