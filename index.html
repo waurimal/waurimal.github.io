@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>에듀테크(Edtech) 영어 학습 놀이터</title>
+    <!-- 폰트 및 아이콘 불러오기 -->
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* 세련되고 팬시한 무료 폰트 (지마켓 산스) 추가 */
         @font-face {
             font-family: 'GmarketSansBold';
             src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff');
@@ -38,6 +40,7 @@
             flex-direction: column;
         }
 
+        /* 헤더 디자인 */
         header {
             background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%);
             color: white;
@@ -51,11 +54,18 @@
             margin: 0;
             font-size: 2.2rem;
             letter-spacing: -0.02em;
+            word-break: keep-all;
             text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
         }
 
-        header p { margin-top: 0.5rem; font-size: 1rem; opacity: 0.9; }
+        header p {
+            margin-top: 0.5rem;
+            font-size: 1rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
 
+        /* 그리드 레이아웃 */
         .container {
             max-width: 1200px;
             margin: -1.5rem auto 2rem;
@@ -63,21 +73,25 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 1.2rem;
-            flex-grow: 1;
+            flex-grow: 1; /* 푸터를 하단에 밀어내기 위함 */
         }
 
+        /* 카드 디자인 */
         .card {
             background: var(--card-bg);
             border-radius: 0.8rem;
             padding: 1.5rem 1rem;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        .card:hover { transform: translateY(-3px); }
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
+        }
 
         .card-icon {
             font-size: 2.2rem;
@@ -90,9 +104,21 @@
             border-radius: 50%;
         }
 
-        .card h2 { margin: 0 0 1rem 0; font-size: 1.25rem; font-weight: 700; }
+        .card h2 {
+            margin: 0 0 1rem 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            text-align: center;
+        }
 
-        .card-desc { list-style: none; padding: 0; margin: 0 0 1.5rem 0; width: 100%; flex-grow: 1; }
+        /* 설명글 (개조식 & 내어쓰기 적용) */
+        .card-desc {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 1.5rem 0;
+            width: 100%;
+            flex-grow: 1;
+        }
 
         .card-desc li {
             position: relative;
@@ -101,12 +127,24 @@
             color: var(--text-muted);
             font-size: 0.9rem;
             line-height: 1.4;
+            text-align: left;
             word-break: keep-all;
         }
 
-        .card-desc li::before { content: "•"; position: absolute; left: 0; font-weight: bold; color: var(--theme-color); }
+        .card-desc li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            color: var(--theme-color); /* 자바스크립트에서 주입받는 테마 컬러 */
+        }
 
-        .btn-group { display: flex; gap: 0.5rem; width: 100%; }
+        /* 버튼 그룹 */
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            width: 100%;
+        }
 
         .btn {
             flex: 1;
@@ -116,24 +154,59 @@
             font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
+            transition: all 0.2s;
             text-decoration: none;
             text-align: center;
         }
 
-        .btn-primary { color: white; }
-        .btn-secondary { background-color: #E5E7EB; color: var(--text-main); }
+        .btn-primary {
+            /* 배경색은 JS에서 동적으로 설정 */
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
 
-        .site-footer { text-align: center; padding: 1.5rem; color: #6B7280; font-size: 0.85rem; }
+        .btn-primary:hover {
+            filter: brightness(0.9);
+            transform: translateY(-1px);
+        }
 
-        /* 모바일 등 작은 화면을 위한 반응형 스타일 추가 */
+        .btn-secondary {
+            background-color: #E5E7EB;
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background-color: #D1D5DB;
+        }
+
+        /* 푸터 디자인 */
+        .site-footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: #6B7280;
+            font-size: 0.85rem;
+            margin-top: 1rem;
+        }
+
+        .site-footer p {
+            margin: 0.3rem 0;
+        }
+
+        /* 모바일 등 작은 화면을 위한 반응형 스타일 */
         @media (max-width: 600px) {
-            header { padding: 2rem 1rem; }
-            header h1 { font-size: 1.8rem; }
+            header {
+                padding: 2rem 1rem;
+            }
+            header h1 {
+                font-size: 1.8rem;
+            }
             .container { 
                 grid-template-columns: 1fr; /* 스마트폰에서는 1열로 꽉 차게 보이도록 설정 */
                 margin-top: -1rem;
             }
-            .card { padding: 1.2rem; }
+            .card {
+                padding: 1.2rem;
+            }
         }
     </style>
 </head>
@@ -144,14 +217,18 @@
         <p>수업을 더 즐겁고 효율적으로 만들어주는 스마트 학습 도구 모음</p>
     </header>
 
-    <div class="container" id="app-container"></div>
+    <div class="container" id="app-container">
+        <!-- 자바스크립트를 통해 카드가 동적으로 생성됩니다 -->
+    </div>
 
+    <!-- 하단 카피라이트 -->
     <footer class="site-footer">
         <p>만든이: 곽현석(이의초등학교)</p>
         <p>Copyright &copy; 2026 Eui Elementary School. All Rights Reserved.</p>
     </footer>
 
     <script>
+        // 앱 데이터 (각 메뉴별 테마 컬러 및 불릿 설명 적용)
         const apps = [
             { id: "wordtyping", title: "단어 타자 연습", icon: "fas fa-keyboard", theme: "#3B82F6", bgTheme: "#EFF6FF", bullets: ["정확한 타이핑 연습", "자연스러운 어휘력 향상"], url: "https://waurimal.github.io/wordtyping/index.html" },
             { id: "hangman", title: "행맨 게임", icon: "fas fa-gamepad", theme: "#8B5CF6", bgTheme: "#F5F3FF", bullets: ["철자 추리 단어 게임", "파닉스 구조 복습"], url: "https://waurimal.github.io/hangman/index.html" },
@@ -159,22 +236,29 @@
             { id: "reading", title: "영어 읽기", icon: "fas fa-glasses", theme: "#DB2777", bgTheme: "#FDF2F8", bullets: ["단계별 독해 연습", "어휘력 향상"], url: "https://waurimal.github.io/reading/index.html" },
             { id: "eng_sen", title: "영어 문장", icon: "fas fa-book-open", theme: "#10B981", bgTheme: "#ECFDF5", bullets: ["핵심 문장 구조 체화", "말하기 기초 다지기"], url: "https://waurimal.github.io/sen_typing/index.html" },
             { id: "swarm", title: "Swarm 게임", icon: "fas fa-users", theme: "#0891B2", bgTheme: "#ECFEFF", bullets: ["실시간 협동 학습", "팀워크 전략 강화"], url: "https://waurimal.github.io/swarm/index.html" },
-            { id: "tictac", title: "Tic Tac Toe 게임", icon: "fas fa-hashtag", theme: "#D97706", bgTheme: "#FEF3C7", bullets: ["전략적인 Tic Tac Toe 대결", "놀이를 통한 반복 학습"], url: "https://waurimal.github.io/tictac/index.html" },
+            { id: "tictac", title: "Tic Tac Toe", icon: "fas fa-hashtag", theme: "#D97706", bgTheme: "#FEF3C7", bullets: ["전략적인 틱택토 대결", "놀이를 통한 반복 학습"], url: "https://waurimal.github.io/tictac/index.html" },
             { id: "file_upload", title: "파일 제출", icon: "fas fa-cloud-upload-alt", theme: "#6366F1", bgTheme: "#EEF2FF", bullets: ["구글 드라이브 연동", "결과물 간편 제출"], url: "https://waurimal.github.io/file_upload/index.html" },
-            { id: "senbattle", title: "영어문장 배틀", icon: "fas fa-bolt", theme: "#E11D48", bgTheme: "#FFF1F2", bullets: ["실시간 영어 문장 타이핑 대결", "경쟁을 통한 빠르고 정확한 체화"], url: "https://waurimal.github.io/senbattle/index.html" }
+            { id: "senbattle", title: "영어문장 배틀", icon: "fas fa-bolt", theme: "#E11D48", bgTheme: "#FFF1F2", bullets: ["실시간 영어 문장 타이핑 대결", "경쟁을 통한 빠르고 정확한 체화"], url: "https://waurimal.github.io/senbattle/index.html" },
+            { id: "baseball", title: "야구게임", icon: "fas fa-baseball-ball", theme: "#14B8A6", bgTheme: "#CCFBF1", bullets: ["야구 규칙을 더한 보드게임", "치열한 공격과 수비 전략"], url: "https://waurimal.github.io/baseball/index.html" }
         ];
 
+        // 앱 카드 동적 렌더링
         const container = document.getElementById('app-container');
+        
         apps.forEach(app => {
             const card = document.createElement('div');
             card.className = 'card';
+            
+            // 불릿 리스트 HTML 생성
+            const bulletsHtml = app.bullets.map(bullet => `<li>${bullet}</li>`).join('');
+
             card.innerHTML = `
                 <div class="card-icon" style="color: ${app.theme}; background-color: ${app.bgTheme};">
                     <i class="${app.icon}"></i>
                 </div>
                 <h2 style="color: ${app.theme};">${app.title}</h2>
                 <ul class="card-desc" style="--theme-color: ${app.theme};">
-                    ${app.bullets.map(b => `<li>${b}</li>`).join('')}
+                    ${bulletsHtml}
                 </ul>
                 <div class="btn-group">
                     <a href="${app.url}" class="btn btn-primary" style="background-color: ${app.theme};" target="_blank">실행</a>
