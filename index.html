@@ -44,7 +44,7 @@
         header {
             background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%);
             color: white;
-            padding: 3rem 2rem;
+            padding: 1.5rem 1rem;
             text-align: center;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
@@ -52,15 +52,15 @@
         header h1 {
             font-family: 'GmarketSansBold', 'Pretendard', sans-serif;
             margin: 0;
-            font-size: 2.2rem;
+            font-size: 1.6rem;
             letter-spacing: -0.02em;
             word-break: keep-all;
             text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         header p {
-            margin-top: 0.5rem;
-            font-size: 1rem;
+            margin-top: 0.3rem;
+            font-size: 0.85rem;
             opacity: 0.9;
             font-weight: 300;
         }
@@ -68,19 +68,19 @@
         /* 그리드 레이아웃 */
         .container {
             max-width: 1200px;
-            margin: -1.5rem auto 2rem;
+            margin: -1rem auto 1rem;
             padding: 0 1rem;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.2rem;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* 한 줄에 더 많이 들어가도록 폭 축소 */
+            gap: 0.6rem; /* 카드 사이 간격 축소 */
             flex-grow: 1; /* 푸터를 하단에 밀어내기 위함 */
         }
 
         /* 카드 디자인 */
         .card {
             background: var(--card-bg);
-            border-radius: 0.8rem;
-            padding: 1.5rem 1rem;
+            border-radius: 0.6rem;
+            padding: 0.8rem 0.6rem;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             display: flex;
@@ -89,15 +89,15 @@
         }
 
         .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 12px -3px rgba(0, 0, 0, 0.15);
         }
 
         .card-icon {
-            font-size: 2.2rem;
-            margin-bottom: 1rem;
-            width: 60px;
-            height: 60px;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -105,8 +105,8 @@
         }
 
         .card h2 {
-            margin: 0 0 1rem 0;
-            font-size: 1.25rem;
+            margin: 0 0 0.5rem 0;
+            font-size: 0.95rem;
             font-weight: 700;
             text-align: center;
         }
@@ -115,18 +115,18 @@
         .card-desc {
             list-style: none;
             padding: 0;
-            margin: 0 0 1.5rem 0;
+            margin: 0 0 0.8rem 0;
             width: 100%;
             flex-grow: 1;
         }
 
         .card-desc li {
             position: relative;
-            padding-left: 1rem;
-            margin-bottom: 0.4rem;
+            padding-left: 0.7rem;
+            margin-bottom: 0.2rem;
             color: var(--text-muted);
-            font-size: 0.9rem;
-            line-height: 1.4;
+            font-size: 0.75rem;
+            line-height: 1.3;
             text-align: left;
             word-break: keep-all;
         }
@@ -142,16 +142,16 @@
         /* 버튼 그룹 */
         .btn-group {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.3rem;
             width: 100%;
         }
 
         .btn {
             flex: 1;
-            padding: 0.6rem 0.5rem;
-            border-radius: 0.4rem;
+            padding: 0.4rem 0.2rem;
+            border-radius: 0.3rem;
             border: none;
-            font-size: 0.9rem;
+            font-size: 0.75rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
@@ -182,30 +182,31 @@
         /* 푸터 디자인 */
         .site-footer {
             text-align: center;
-            padding: 1.5rem;
+            padding: 1rem;
             color: #6B7280;
-            font-size: 0.85rem;
-            margin-top: 1rem;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
         }
 
         .site-footer p {
-            margin: 0.3rem 0;
+            margin: 0.2rem 0;
         }
 
         /* 모바일 등 작은 화면을 위한 반응형 스타일 */
         @media (max-width: 600px) {
             header {
-                padding: 2rem 1rem;
+                padding: 1.2rem 1rem;
             }
             header h1 {
-                font-size: 1.8rem;
+                font-size: 1.4rem;
             }
             .container { 
-                grid-template-columns: 1fr; /* 스마트폰에서는 1열로 꽉 차게 보이도록 설정 */
-                margin-top: -1rem;
+                grid-template-columns: repeat(2, 1fr); /* 스마트폰에서는 1열 대신 2열로 배치하여 공간 절약 */
+                margin-top: -0.8rem;
+                gap: 0.5rem;
             }
             .card {
-                padding: 1.2rem;
+                padding: 0.6rem;
             }
         }
     </style>
@@ -224,14 +225,17 @@
     <!-- 하단 카피라이트 및 방문자수 카운터 -->
     <footer class="site-footer">
         <div style="margin-bottom: 0.8rem;">
-            <!-- 안정적인 글로벌 방문자수 카운터 배지 -->
-            <img src="https://komarev.com/ghpvc/?username=waurimal-github-io&label=Visitors&color=3B82F6&style=flat" alt="방문자수 뱃지" />
+            <!-- 자바스크립트로 이미지를 불러와 캐시를 방지합니다 -->
+            <img id="visitor-badge" alt="방문자수 뱃지" style="height: 20px;" />
         </div>
         <p>만든이: 곽현석(이의초등학교)</p>
         <p>Copyright &copy; 2026 Eui Elementary School. All Rights Reserved.</p>
     </footer>
 
     <script>
+        // 방문자수 뱃지 새로고침 즉시 반영 (브라우저 캐시 무시)
+        document.getElementById('visitor-badge').src = "https://api.visitorbadge.io/api/visitors?path=waurimal.github.io&label=Visitors&countColor=%233b82f6&t=" + new Date().getTime();
+
         // 앱 데이터 (각 메뉴별 테마 컬러 및 불릿 설명 적용)
         const apps = [
             { id: "wordtyping", title: "단어 타자 연습", icon: "fas fa-keyboard", theme: "#3B82F6", bgTheme: "#EFF6FF", bullets: ["정확한 타이핑 연습", "자연스러운 어휘력 향상"], url: "https://waurimal.github.io/wordtyping/index.html" },
