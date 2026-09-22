@@ -60,9 +60,32 @@
 
         header p {
             margin-top: 0.3rem;
+            margin-bottom: 1rem;
             font-size: 0.85rem;
             opacity: 0.9;
             font-weight: 300;
+        }
+
+        /* 피드백 버튼 스타일 */
+        .feedback-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: #10B981;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 2rem;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 700;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        
+        .feedback-btn:hover {
+            background-color: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0,0,0,0.15);
         }
 
         /* 그리드 레이아웃 */
@@ -216,6 +239,7 @@
     <header>
         <h1>에듀테크(Edtech) 영어 학습 놀이터</h1>
         <p>수업을 더 즐겁고 효율적으로 만들어주는 스마트 학습 도구 모음</p>
+        <a href="feedback.html" class="feedback-btn"><i class="fas fa-comment-dots"></i> 앱 평가 및 의견 남기기</a>
     </header>
 
     <div class="container" id="app-container">
