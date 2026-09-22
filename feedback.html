@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>평가 및 의견 - 에듀테크 학습 놀이터</title>
+    <!-- 폰트 및 아이콘 불러오기 -->
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @font-face {
+            font-family: 'GmarketSansBold';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * { box-sizing: border-box; }
+
+        :root {
+            --primary: #10B981;
+            --bg-color: #F3F4F6;
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --text-muted: #4B5563;
+        }
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: linear-gradient(135deg, #047857 0%, #10B981 100%);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            font-family: 'GmarketSansBold', 'Pretendard', sans-serif;
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        header p {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            flex-grow: 1;
+            width: 100%;
+        }
+
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 1rem;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .likes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .like-card {
+            background: var(--card-bg);
+            border-radius: 0.8rem;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+
+        .like-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+
+        .app-info { display: flex; align-items: center; gap: 0.8rem; }
+        .app-icon { font-size: 1.5rem; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .app-name { font-weight: 700; font-size: 0.95rem; }
+
+        .like-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 1.1rem;
+            color: #9CA3AF;
+            font-weight: 600;
+            padding: 0.5rem;
+            border-radius: 2rem;
+            transition: all 0.2s;
+        }
+        
+        .like-btn.liked { color: #EF4444; }
+        .like-btn:hover { background: #F3F4F6; }
+
+        .board-form {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.8rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; }
+        .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 0.5rem;
+            font-family: inherit;
+            font-size: 0.95rem;
+        }
+        .form-textarea { resize: vertical; min-height: 100px; }
+        
+        .submit-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-weight: 700;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+        .submit-btn:hover { background: #059669; }
+
+        .post-card {
+            background: white;
+            padding: 1.2rem;
+            border-radius: 0.8rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+            border-left: 4px solid #D1D5DB;
+            position: relative;
+        }
+
+        .post-card.resolved { border-left-color: var(--primary); background-color: #F8FAFC; }
+
+        .post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
+        
+        .post-badge {
+            background: #E5E7EB;
+            color: #4B5563;
+            padding: 0.3rem 0.6rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .post-date { font-size: 0.8rem; color: #9CA3AF; }
+        .post-content { font-size: 0.95rem; white-space: pre-wrap; margin-bottom: 1rem; color: #374151; }
+
+        .resolved-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: #D1FAE5;
+            color: #065F46;
+            padding: 0.4rem 0.8rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .admin-action {
+            margin-top: 1rem;
+            text-align: right;
+            display: none; /* 관리자 모드에서만 보임 */
+        }
+
+        .resolve-btn {
+            background: #4B5563;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.3rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .resolve-btn.cancel { background: #EF4444; }
+
+        /* 공통 버튼 */
+        .back-btn-container { text-align: center; margin: 2rem 0; }
+        .back-btn {
+            display: inline-block; padding: 0.8rem 2rem; background: var(--text-main);
+            color: white; text-decoration: none; border-radius: 2rem; font-weight: 600;
+        }
+
+        /* 관리자 모드 토글 */
+        .admin-toggle-container { text-align: center; margin-bottom: 1rem; font-size: 0.85rem; color: #9CA3AF; }
+        .admin-toggle-container label { cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>의견 및 업데이트 게시판</h1>
+        <p>어떤 앱이 가장 재미있었나요? 바라는 점이 있다면 남겨주세요!</p>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('likes')"><i class="fas fa-heart"></i> 좋아요 투표</button>
+            <button class="tab-btn" onclick="switchTab('board')"><i class="fas fa-comment-dots"></i> 개선점 게시판</button>
+        </div>
+
+        <!-- 좋아요 탭 -->
+        <div id="tab-likes" class="tab-content active">
+            <div class="likes-grid" id="likes-container">
+                <div style="text-align: center; width: 100%; color: #6B7280;">데이터를 불러오는 중...</div>
+            </div>
+        </div>
+
+        <!-- 게시판 탭 -->
+        <div id="tab-board" class="tab-content">
+            <div class="board-form">
+                <div class="form-group">
+                    <label for="app-select">어떤 앱에 대한 의견인가요?</label>
+                    <select id="app-select" class="form-select"></select>
+                </div>
+                <div class="form-group">
+                    <label for="suggestion-text">개선점이나 바라는 점을 자유롭게 적어주세요.</label>
+                    <textarea id="suggestion-text" class="form-textarea" placeholder="예: 단어장에 동물 이름도 추가해 주시면 좋겠어요!"></textarea>
+                </div>
+                <button class="submit-btn" onclick="submitSuggestion()">의견 등록하기</button>
+            </div>
+
+            <div id="posts-container">
+                <div style="text-align: center; color: #6B7280;">게시글을 불러오는 중...</div>
+            </div>
+        </div>
+
+        <div class="back-btn-container">
+            <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> 메인 화면으로 돌아가기</a>
+        </div>
+        
+        <!-- 선생님 모드 스위치 (체크하면 업데이트 완료 버튼이 보임) -->
+        <div class="admin-toggle-container">
+            <label><input type="checkbox" id="admin-mode-toggle" onchange="toggleAdminMode()"> <span>선생님(관리자) 모드 켜기</span></label>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // 선생님의 실제 Firebase 주소 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyDHCnRrVE2dVuJpf77P-1oftGpczR5WDd4",
+            authDomain: "eng-activity.firebaseapp.com",
+            projectId: "eng-activity",
+            storageBucket: "eng-activity.firebasestorage.app",
+            messagingSenderId: "528859753713",
+            appId: "1:528859753713:web:a24c5f34f2760a89c10d50",
+            measurementId: "G-HNY42JNB8Q"
+        };
+
+        // 앱 목록 데이터
+        const appsData = [
+            { id: "wordtyping", title: "단어 타자 연습", icon: "fas fa-keyboard", theme: "#3B82F6", bgTheme: "#EFF6FF" },
+            { id: "hangman", title: "행맨 게임", icon: "fas fa-gamepad", theme: "#8B5CF6", bgTheme: "#F5F3FF" },
+            { id: "alchemist", title: "연금술사", icon: "fas fa-flask", theme: "#F97316", bgTheme: "#FFF7ED" },
+            { id: "reading", title: "영어 읽기", icon: "fas fa-glasses", theme: "#DB2777", bgTheme: "#FDF2F8" },
+            { id: "swarm", title: "Swarm 게임", icon: "fas fa-users", theme: "#0891B2", bgTheme: "#ECFEFF" },
+            { id: "tictac", title: "Tic Tac Toe", icon: "fas fa-hashtag", theme: "#D97706", bgTheme: "#FEF3C7" },
+            { id: "file_upload", title: "파일 제출", icon: "fas fa-cloud-upload-alt", theme: "#6366F1", bgTheme: "#EEF2FF" },
+            { id: "baseball", title: "야구게임", icon: "fas fa-baseball-ball", theme: "#14B8A6", bgTheme: "#CCFBF1" },
+            { id: "where", title: "길 찾기 게임", icon: "fas fa-map-marker-alt", theme: "#84CC16", bgTheme: "#ECFCCB" },
+            { id: "bingo", title: "빙고 게임", icon: "fas fa-star", theme: "#EC4899", bgTheme: "#FCE7F3" },
+            { id: "skribble", title: "Skribble 게임", icon: "fas fa-pen-nib", theme: "#0EA5E9", bgTheme: "#E0F2FE" },
+            { id: "bluemarble", title: "부루마불", icon: "fas fa-dice", theme: "#EAB308", bgTheme: "#FEF9C3" },
+            { id: "flip", title: "카드 뒤집기", icon: "fas fa-sync", theme: "#8B5CF6", bgTheme: "#EDE9FE" },
+            { id: "sudoku", title: "스도쿠 게임", icon: "fas fa-th", theme: "#4F46E5", bgTheme: "#E0E7FF" },
+            { id: "earthworm", title: "지렁이 게임", icon: "fas fa-worm", theme: "#16A34A", bgTheme: "#DCFCE7" },
+            { id: "street", title: "Crossy Road", icon: "fas fa-road", theme: "#64748B", bgTheme: "#F1F5F9" },
+            { id: "frog", title: "개구리 게임", icon: "fas fa-frog", theme: "#059669", bgTheme: "#D1FAE5" },
+            { id: "chain", title: "단어 체인", icon: "fas fa-link", theme: "#EA580C", bgTheme: "#FFEDD5" },
+            { id: "general", title: "사이트 전체 / 기타", icon: "fas fa-globe", theme: "#1F2937", bgTheme: "#F3F4F6" }
+        ];
+
+        let app, analytics, db, auth, currentUser;
+        let likesData = []; 
+        let postsData = []; 
+        let isAdmin = false;
+
+        window.switchTab = function(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            if (tab === 'likes') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('tab-likes').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('tab-board').classList.add('active');
+            }
+        };
+
+        window.toggleAdminMode = function() {
+            isAdmin = document.getElementById('admin-mode-toggle').checked;
+            renderPosts(); // 화면 갱신
+        };
+
+        async function init() {
+            // 폼 셀렉트 박스 채우기
+            const selectBox = document.getElementById('app-select');
+            appsData.forEach(appItem => {
+                const option = document.createElement('option');
+                option.value = appItem.id;
+                option.textContent = appItem.title;
+                selectBox.appendChild(option);
+            });
+
+            try {
+                // 선생님의 Firebase 연결
+                app = initializeApp(firebaseConfig);
+                analytics = getAnalytics(app);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // 익명 로그인으로 모두가 바로 사용 가능하도록 처리
+                await signInAnonymously(auth);
+                currentUser = auth.currentUser;
+
+                console.log("Firebase 연결 성공! 실시간 데이터베이스를 불러옵니다.");
+                
+                // 데이터 실시간 감지 시작
+                startLikesListener();
+                startPostsListener();
+            } catch (error) {
+                console.error("Firebase 초기화 에러:", error);
+                document.getElementById('likes-container').innerHTML = '<div style="color: red; text-align: center; width: 100%;">데이터베이스 연결에 실패했습니다. Firebase 콘솔 설정을 확인해주세요.</div>';
+            }
+        }
+
+        function startLikesListener() {
+            if (!currentUser) return;
+            // 'app_likes'라는 이름의 데이터베이스 컬렉션 연결
+            const likesRef = collection(db, 'app_likes');
+            
+            onSnapshot(likesRef, (snapshot) => {
+                likesData = [];
+                snapshot.forEach((doc) => {
+                    likesData.push({ id: doc.id, ...doc.data() });
+                });
+                renderLikes();
+            }, (error) => {
+                console.error("좋아요 불러오기 에러:", error);
+            });
+        }
+
+        function renderLikes() {
+            const container = document.getElementById('likes-container');
+            container.innerHTML = '';
+
+            const voteApps = appsData.filter(a => a.id !== 'general');
+
+            voteApps.forEach(appItem => {
+                const appLikes = likesData.filter(like => like.targetApp === appItem.id);
+                const hasLiked = appLikes.some(like => like.userId === currentUser.uid);
+
+                const card = document.createElement('div');
+                card.className = 'like-card';
+                card.innerHTML = `
+                    <div class="app-info">
+                        <div class="app-icon" style="background-color: ${appItem.bgTheme}; color: ${appItem.theme};">
+                            <i class="${appItem.icon}"></i>
+                        </div>
+                        <div class="app-name">${appItem.title}</div>
+                    </div>
+                    <button class="like-btn ${hasLiked ? 'liked' : ''}" onclick="toggleLike('${appItem.id}', ${hasLiked})">
+                        <i class="${hasLiked ? 'fas' : 'far'} fa-heart"></i> ${appLikes.length}
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        window.toggleLike = async function(targetApp, hasLiked) {
+            if (!currentUser) return;
+            try {
+                if (hasLiked) {
+                    const likeDoc = likesData.find(like => like.targetApp === targetApp && like.userId === currentUser.uid);
+                    if (likeDoc) {
+                        await deleteDoc(doc(db, 'app_likes', likeDoc.id));
+                    }
+                } else {
+                    await addDoc(collection(db, 'app_likes'), {
+                        targetApp: targetApp,
+                        userId: currentUser.uid,
+                        timestamp: Date.now()
+                    });
+                }
+            } catch (e) {
+                console.error("좋아요 처리 오류 (Firestore 권한이 부족할 수 있습니다):", e);
+                alert("좋아요 저장 실패: Firestore 규칙(Rules)이 허용되어 있는지 확인하세요.");
+            }
+        };
+
+        function startPostsListener() {
+            if (!currentUser) return;
+            const postsRef = collection(db, 'suggestions');
+            
+            onSnapshot(postsRef, (snapshot) => {
+                postsData = [];
+                snapshot.forEach((doc) => {
+                    postsData.push({ id: doc.id, ...doc.data() });
+                });
+                
+                postsData.sort((a, b) => b.timestamp - a.timestamp); // 최신순 정렬
+                renderPosts();
+            }, (error) => {
+                console.error("게시판 불러오기 에러:", error);
+            });
+        }
+
+        window.submitSuggestion = async function() {
+            if (!currentUser) return;
+            const targetApp = document.getElementById('app-select').value;
+            const text = document.getElementById('suggestion-text').value.trim();
+
+            if (!text) {
+                const ta = document.getElementById('suggestion-text');
+                const origPh = ta.placeholder;
+                ta.placeholder = "내용을 입력해 주세요!";
+                setTimeout(() => ta.placeholder = origPh, 2000);
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, 'suggestions'), {
+                    targetApp: targetApp,
+                    text: text,
+                    userId: currentUser.uid,
+                    timestamp: Date.now(),
+                    isResolved: false
+                });
+                document.getElementById('suggestion-text').value = '';
+            } catch (e) {
+                console.error("게시글 등록 오류:", e);
+                alert("게시글 등록 실패: Firestore 규칙(Rules)이 허용되어 있는지 확인하세요.");
+            }
+        };
+
+        function renderPosts() {
+            const container = document.getElementById('posts-container');
+            container.innerHTML = '';
+
+            if (postsData.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #6B7280; padding: 2rem;">등록된 의견이 없습니다. 첫 번째 의견을 남겨주세요!</div>';
+                return;
+            }
+
+            postsData.forEach(post => {
+                const appInfo = appsData.find(a => a.id === post.targetApp) || appsData[appsData.length - 1];
+                const dateStr = new Date(post.timestamp).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                
+                const card = document.createElement('div');
+                card.className = `post-card ${post.isResolved ? 'resolved' : ''}`;
+                
+                let resolvedHtml = '';
+                if (post.isResolved) {
+                    resolvedHtml = `<div class="resolved-badge"><i class="fas fa-check-circle"></i> 업데이트 완료!</div>`;
+                }
+
+                let adminHtml = '';
+                if (isAdmin) {
+                    adminHtml = `
+                        <div class="admin-action" style="display: block;">
+                            ${post.isResolved 
+                                ? `<button class="resolve-btn cancel" onclick="toggleResolve('${post.id}', false)"><i class="fas fa-undo"></i> 완료 취소</button>` 
+                                : `<button class="resolve-btn" onclick="toggleResolve('${post.id}', true)"><i class="fas fa-check"></i> 업데이트 완료 처리</button>`
+                            }
+                            <button class="resolve-btn cancel" style="margin-left: 0.5rem;" onclick="deletePost('${post.id}')"><i class="fas fa-trash"></i> 삭제</button>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="post-header">
+                        <span class="post-badge" style="background-color: ${appInfo.bgTheme}; color: ${appInfo.theme};">
+                            <i class="${appInfo.icon}"></i> ${appInfo.title}
+                        </span>
+                        <span class="post-date">${dateStr}</span>
+                    </div>
+                    <div class="post-content">${post.text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+                    ${resolvedHtml}
+                    ${adminHtml}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        window.toggleResolve = async function(postId, status) {
+            if (!currentUser || !isAdmin) return;
+            try {
+                const postRef = doc(db, 'suggestions', postId);
+                await updateDoc(postRef, { isResolved: status });
+            } catch (e) {
+                console.error("업데이트 상태 변경 오류:", e);
+            }
+        };
+
+        window.deletePost = async function(postId) {
+            if (!currentUser || !isAdmin) return;
+            if(!confirm("이 의견을 완전히 삭제하시겠습니까? (이 동작은 브라우저 기본 알림을 사용합니다)")) return;
+            try {
+                const postRef = doc(db, 'suggestions', postId);
+                await deleteDoc(postRef);
+            } catch (e) {
+                console.error("게시글 삭제 오류:", e);
+            }
+        };
+
+        // 앱 구동
+        window.onload = init;
+    </script>
+</body>
+</html>
