@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>평가 및 의견 - 에듀테크 학습 놀이터</title>
-    <!-- 폰트 및 아이콘 불러오기 -->
+    
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -50,6 +50,9 @@
             font-family: 'GmarketSansBold', 'Pretendard', sans-serif;
             margin: 0;
             font-size: 1.8rem;
+            /* 클릭 가능한 느낌을 주면서 글자 드래그 방지 */
+            cursor: pointer; 
+            user-select: none;
         }
 
         header p {
@@ -237,39 +240,39 @@
         }
         .resolve-btn.cancel { background: #EF4444; }
 
-        /* 공통 버튼 */
         .back-btn-container { text-align: center; margin: 2rem 0; }
         .back-btn {
             display: inline-block; padding: 0.8rem 2rem; background: var(--text-main);
             color: white; text-decoration: none; border-radius: 2rem; font-weight: 600;
         }
-
-        /* 관리자 모드 토글 */
-        .admin-toggle-container { text-align: center; margin-bottom: 1rem; font-size: 0.85rem; color: #9CA3AF; }
-        .admin-toggle-container label { cursor: pointer; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>의견 및 업데이트 게시판</h1>
+        <h1 onclick="triggerAdminMode()">의견 및 업데이트 게시판</h1>
         <p>어떤 앱이 가장 재미있었나요? 바라는 점이 있다면 남겨주세요!</p>
     </header>
 
     <div class="container">
+        
+        <!-- 숨겨진 관리자 도구 바 (관리자 모드일 때만 나타남) -->
+        <div id="admin-tools" style="display: none; background-color: #1F2937; color: white; padding: 1rem; margin-bottom: 1.5rem; border-radius: 0.5rem; justify-content: space-between; align-items: center;">
+            <span style="font-weight: bold; font-size: 0.9rem;"><i class="fas fa-user-shield"></i> 관리자 모드 작동 중</span>
+            <button onclick="changeAdminPassword()" style="background-color: #3B82F6; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 0.3rem; font-size: 0.85rem; cursor: pointer; transition: background 0.2s;"><i class="fas fa-key"></i> 비밀번호 변경</button>
+        </div>
+
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('likes')"><i class="fas fa-heart"></i> 좋아요 투표</button>
             <button class="tab-btn" onclick="switchTab('board')"><i class="fas fa-comment-dots"></i> 개선점 게시판</button>
         </div>
 
-        <!-- 좋아요 탭 -->
         <div id="tab-likes" class="tab-content active">
             <div class="likes-grid" id="likes-container">
                 <div style="text-align: center; width: 100%; color: #6B7280;">데이터를 불러오는 중...</div>
             </div>
         </div>
 
-        <!-- 게시판 탭 -->
         <div id="tab-board" class="tab-content">
             <div class="board-form">
                 <div class="form-group">
@@ -288,13 +291,9 @@
             </div>
         </div>
 
+        <!-- ⚠️ 하단 체크박스를 완전히 제거했습니다! -->
         <div class="back-btn-container">
             <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> 메인 화면으로 돌아가기</a>
-        </div>
-        
-        <!-- 선생님 모드 스위치 (체크하면 업데이트 완료 버튼이 보임) -->
-        <div class="admin-toggle-container">
-            <label><input type="checkbox" id="admin-mode-toggle" onchange="toggleAdminMode()"> <span>선생님(관리자) 모드 켜기</span></label>
         </div>
     </div>
 
@@ -315,7 +314,6 @@
             measurementId: "G-HNY42JNB8Q"
         };
 
-        // 앱 목록 데이터
         const appsData = [
             { id: "wordtyping", title: "단어 타자 연습", icon: "fas fa-keyboard", theme: "#3B82F6", bgTheme: "#EFF6FF" },
             { id: "hangman", title: "행맨 게임", icon: "fas fa-gamepad", theme: "#8B5CF6", bgTheme: "#F5F3FF" },
@@ -342,11 +340,64 @@
         let likesData = []; 
         let postsData = []; 
         let isAdmin = false;
+        
+        let clickCount = 0;
+        let clickTimer = null;
 
+        const getAdminPassword = () => localStorage.getItem('admin_pw') || "1234";
+
+        // 숨겨진 비밀 관리자 모드 (제목 5번 클릭)
+        window.triggerAdminMode = function() {
+            clickCount++;
+            clearTimeout(clickTimer);
+            
+            // 1초 안에 5번을 연속으로 누르는지 확인
+            clickTimer = setTimeout(() => { clickCount = 0; }, 1000);
+
+            if (clickCount >= 5) {
+                clickCount = 0; // 카운트 초기화
+                clearTimeout(clickTimer);
+                
+                if (isAdmin) {
+                    isAdmin = false;
+                    document.getElementById('admin-tools').style.display = 'none'; // 도구 바 숨기기
+                    alert("선생님(관리자) 모드가 종료되었습니다.");
+                    renderPosts();
+                } else {
+                    const pw = prompt("선생님 전용 비밀번호를 입력하세요 (기본값: 1234)");
+                    if (pw === getAdminPassword()) {
+                        isAdmin = true;
+                        document.getElementById('admin-tools').style.display = 'flex'; // 도구 바 보이기
+                        alert("관리자 모드가 활성화되었습니다. 게시글 삭제 및 완료 처리가 가능합니다.");
+                        renderPosts();
+                    } else if (pw !== null) {
+                        alert("비밀번호가 틀렸습니다.");
+                    }
+                }
+            }
+        };
+
+        window.changeAdminPassword = function() {
+            if (!isAdmin) return;
+            const newPw = prompt("새로운 관리자 비밀번호를 입력하세요:");
+            
+            if (newPw) {
+                const confirmPw = prompt("확인을 위해 새로운 비밀번호를 한 번 더 입력하세요:");
+                if (newPw === confirmPw) {
+                    localStorage.setItem('admin_pw', newPw);
+                    alert("비밀번호가 성공적으로 변경되었습니다!");
+                } else {
+                    alert("비밀번호가 일치하지 않습니다. 변경이 취소되었습니다.");
+                }
+            }
+        };
+
+        // 정상적인 탭 전환 기능
         window.switchTab = function(tab) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            if (tab === 'likes') {
+
+            if(tab === 'likes') {
                 document.querySelectorAll('.tab-btn')[0].classList.add('active');
                 document.getElementById('tab-likes').classList.add('active');
             } else {
@@ -355,13 +406,7 @@
             }
         };
 
-        window.toggleAdminMode = function() {
-            isAdmin = document.getElementById('admin-mode-toggle').checked;
-            renderPosts(); // 화면 갱신
-        };
-
         async function init() {
-            // 폼 셀렉트 박스 채우기
             const selectBox = document.getElementById('app-select');
             appsData.forEach(appItem => {
                 const option = document.createElement('option');
@@ -371,19 +416,15 @@
             });
 
             try {
-                // 선생님의 Firebase 연결
                 app = initializeApp(firebaseConfig);
                 analytics = getAnalytics(app);
                 db = getFirestore(app);
                 auth = getAuth(app);
 
-                // 익명 로그인으로 모두가 바로 사용 가능하도록 처리
                 await signInAnonymously(auth);
                 currentUser = auth.currentUser;
 
-                console.log("Firebase 연결 성공! 실시간 데이터베이스를 불러옵니다.");
-                
-                // 데이터 실시간 감지 시작
+                console.log("Firebase 연결 성공!");
                 startLikesListener();
                 startPostsListener();
             } catch (error) {
@@ -394,9 +435,7 @@
 
         function startLikesListener() {
             if (!currentUser) return;
-            // 'app_likes'라는 이름의 데이터베이스 컬렉션 연결
             const likesRef = collection(db, 'app_likes');
-            
             onSnapshot(likesRef, (snapshot) => {
                 likesData = [];
                 snapshot.forEach((doc) => {
@@ -451,7 +490,7 @@
                     });
                 }
             } catch (e) {
-                console.error("좋아요 처리 오류 (Firestore 권한이 부족할 수 있습니다):", e);
+                console.error("좋아요 처리 오류:", e);
                 alert("좋아요 저장 실패: Firestore 규칙(Rules)이 허용되어 있는지 확인하세요.");
             }
         };
@@ -459,14 +498,13 @@
         function startPostsListener() {
             if (!currentUser) return;
             const postsRef = collection(db, 'suggestions');
-            
             onSnapshot(postsRef, (snapshot) => {
                 postsData = [];
                 snapshot.forEach((doc) => {
                     postsData.push({ id: doc.id, ...doc.data() });
                 });
                 
-                postsData.sort((a, b) => b.timestamp - a.timestamp); // 최신순 정렬
+                postsData.sort((a, b) => b.timestamp - a.timestamp);
                 renderPosts();
             }, (error) => {
                 console.error("게시판 불러오기 에러:", error);
@@ -571,7 +609,6 @@
             }
         };
 
-        // 앱 구동
         window.onload = init;
     </script>
 </body>
