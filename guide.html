@@ -7,6 +7,8 @@
     <!-- 폰트 및 아이콘 불러오기 -->
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="common/waurimal-theme.css">
+    <script src="common/waurimal-nav.js"></script>
     <style>
         /* 메인 페이지와 동일한 폰트 및 기본 설정 */
         @font-face {
@@ -229,8 +231,8 @@
         const guideData = {
             "wordtyping": {
                 title: "단어 타자 연습",
-                teacher: "1. 학생들에게 제공할 단어장 텍스트 파일(.txt)을 미리 준비하거나, 화면의 텍스트 박스에 직접 단어를 입력합니다.\n2. 화면에 단어가 나오면 학생들이 정확한 스펠링을 입력하도록 지도합니다.\n3. 타이핑 속도보다는 '오타 없이 정확하게 치는 것'이 중요함을 강조해 주세요.",
-                student: "1. 화면 중앙에 나타나는 영어 단어를 확인합니다.\n2. 아래쪽 입력창에 똑같이 타이핑하고 [Enter] 키를 누릅니다.\n3. 틀린 글자가 있으면 지우고 다시 정확하게 입력해 보세요!"
+                teacher: "1. 우측 하단 [🔒 교사 모드]에서 학습할 단원별 단어와 뜻을 추가하거나 수정합니다.\n2. 실시간 클라우드 DB 연동으로 학생들의 성적이 즉시 기록되며, 단원별·학년별·반별·기간별 명예의 전당을 조회할 수 있습니다.\n3. 비속어 닉네임 자동 감지(🚨) 및 부적절한 성적 기록 즉시 삭제 기능이 지원됩니다.\n4. 단원 편집 완료 후 [설정 파일 (config.json) 다운로드]를 통해 전교생 기기에 손쉽게 일괄 배포할 수 있습니다.",
+                student: "1. 상단 바(GNB)에서 자신의 학년, 반, 번호, 이름을 확인 및 설정합니다. (비속어 사용 불가)\n2. [게임 시작하기]를 누르고 학습할 단원을 선택한 후 [다음 단계]로 이동합니다.\n3. 화면에 나타나는 영어 단어를 보고 정확하게 타이핑한 뒤 [Enter] 키를 누릅니다. (빠르게 연속 정답 시 콤보 보너스 획득)\n4. 연습 완료 후 점수와 정확도가 자동 저장되며, 메인 화면 [명예의 전당]에서 내 순위를 확인할 수 있습니다!"
             },
             "hangman": {
                 title: "행맨 게임",

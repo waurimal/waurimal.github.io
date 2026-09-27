@@ -1,0 +1,503 @@
+/**
+ * 에듀테크 영어 놀이터 공통 통합 디자인 시스템 (Waurimal Unified Theme)
+ * 2026 Eui Elementary School - Waurimal Project
+ * 모든 19개 웹앱의 시각적 아이덴티티, 카드 레이아웃, 버튼 및 원클릭 입장을 완벽하게 통일합니다.
+ */
+
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
+:root {
+    --w-font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    --w-blue: #2563EB;
+    --w-blue-hover: #1D4ED8;
+    --w-blue-light: #EFF6FF;
+    --w-green: #10B981;
+    --w-green-hover: #059669;
+    --w-green-light: #ECFDF5;
+    --w-amber: #F59E0B;
+    --w-amber-light: #FEF3C7;
+    --w-purple: #8B5CF6;
+    --w-purple-light: #F5F3FF;
+    --w-slate-900: #0F172A;
+    --w-slate-800: #1E293B;
+    --w-slate-700: #334155;
+    --w-slate-600: #475569;
+    --w-slate-500: #64748B;
+    --w-slate-400: #94A3B8;
+    --w-slate-200: #E2E8F0;
+    --w-slate-100: #F1F5F9;
+    --w-slate-50: #F8FAFC;
+    --w-radius-sm: 8px;
+    --w-radius-md: 12px;
+    --w-radius-lg: 16px;
+    --w-radius-xl: 20px;
+    --w-radius-2xl: 24px;
+    --w-radius-full: 9999px;
+    --w-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+    --w-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+    --w-shadow-lg: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+    --w-shadow-xl: 0 20px 35px -10px rgba(15, 23, 42, 0.12);
+}
+
+/* =========================================================
+   1. 글로벌 바디 배경 및 폰트 강제 통일 (전체 19개 앱 공통)
+   ========================================================= */
+html {
+    font-family: var(--w-font-sans) !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scrollbar-gutter: stable;
+}
+
+body {
+    font-family: var(--w-font-sans) !important;
+    background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 45%, #f1f5f9 100%) !important;
+    min-height: 100vh !important;
+    color: #1e293b !important;
+    padding-top: 54px !important; /* 상단 고정 GNB 공간 확보 */
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    -webkit-font-smoothing: antialiased;
+}
+
+button, input, select, textarea {
+    font-family: var(--w-font-sans) !important;
+}
+
+/* 2. 스크롤바 모던화 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* =========================================================
+   3. 메인 컨테이너 및 카드 공통 모던화 (20px 라운드, 소프트 섀도우)
+   ========================================================= */
+.container,
+.main-wrapper,
+.wrap,
+#app,
+.app-container,
+.setup-box,
+.glass-panel,
+#login-view,
+.login-card,
+.card-login,
+.start-box {
+    font-family: var(--w-font-sans) !important;
+}
+
+/* 메인 프레임 카드 */
+.container:not(#waurimal-gnb *),
+.setup-box,
+.glass-panel,
+#login-view,
+.wrap > .card,
+.login-card {
+    background: #ffffff !important;
+    border-radius: 22px !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04) !important;
+    color: #1e293b !important;
+}
+
+/* 타이틀 및 헤더 */
+h1:not(#waurimal-gnb h1):not(header h1) {
+    color: #0f172a !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.02em !important;
+}
+h2:not(#waurimal-gnb h2), h3:not(#waurimal-gnb h3) {
+    color: #1e293b !important;
+    font-weight: 700 !important;
+}
+p:not(#waurimal-gnb p):not(header p) {
+    color: #475569;
+}
+
+/* 포털 및 앱 상단 헤더 영역 텍스트 가시성 보장 */
+header:not(#waurimal-gnb) {
+    color: #ffffff !important;
+}
+header:not(#waurimal-gnb) h1 {
+    color: #ffffff !important;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35) !important;
+}
+header:not(#waurimal-gnb) p {
+    color: #e0f2fe !important;
+    opacity: 1 !important;
+    font-weight: 600 !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* =========================================================
+   4. 입력 필드 (Input & Select) 통합 디자인
+   ========================================================= */
+input[type="text"]:not(#waurimal-gnb input):not(#app-search),
+input[type="number"]:not(#waurimal-gnb input),
+input[type="password"]:not(#waurimal-gnb input),
+select:not(#waurimal-gnb select),
+textarea:not(#waurimal-gnb textarea) {
+    font-family: var(--w-font-sans) !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 12px !important;
+    padding: 0.65rem 0.9rem !important;
+    font-size: 0.95rem !important;
+    color: #0f172a !important;
+    background-color: #ffffff !important;
+    box-sizing: border-box !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
+    outline: none !important;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="password"]:focus,
+select:focus,
+textarea:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18) !important;
+}
+
+/* =========================================================
+   5. 버튼 공통 스타일 (시그니처 블루 그라디언트 & 소프트 엘리베이션)
+   ========================================================= */
+.btn-waurimal-primary,
+button#btn-login,
+button#btn-go-login,
+button#btn-goto-login,
+button#start-btn,
+button#btn-next-step,
+button#btn-create-room,
+button.primary,
+.btn-primary:not(#waurimal-gnb .btn):not(.card .btn) {
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 0.75rem 1.4rem !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.4rem !important;
+}
+
+.btn-waurimal-primary:hover,
+button#btn-login:hover,
+button#btn-go-login:hover,
+button#btn-goto-login:hover,
+button#start-btn:hover,
+button#btn-next-step:hover,
+button#btn-create-room:hover,
+button.primary:hover,
+.btn-primary:not(#waurimal-gnb .btn):not(.card .btn):hover {
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35) !important;
+}
+
+.btn-waurimal-primary:active,
+button#btn-login:active,
+button#btn-go-login:active,
+button#btn-goto-login:active,
+button#start-btn:active,
+button#btn-next-step:active,
+button#btn-create-room:active,
+button.primary:active,
+.btn-primary:not(#waurimal-gnb .btn):not(.card .btn):active {
+    transform: translateY(0) !important;
+}
+
+/* 뒤로가기 / 보조 버튼 */
+button#btn-back-intro,
+button#btn-back-intro1,
+button#btn-back-lobby,
+button#btn-close-teacher,
+.btn.secondary:not(.card .btn),
+button.secondary:not(.card .btn) {
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+    font-weight: 600 !important;
+    transition: all 0.15s ease !important;
+}
+
+button#btn-back-intro:hover,
+button#btn-back-intro1:hover,
+button#btn-back-lobby:hover,
+button#btn-close-teacher:hover,
+.btn.secondary:not(.card .btn):hover,
+button.secondary:not(.card .btn):hover {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+
+/* =========================================================
+   6. [핵심] 와우리말 원클릭 통합 로그인 카드 (Quick Start Hero Card)
+   ========================================================= */
+.w-quick-start-box {
+    background: linear-gradient(135deg, #EFF6FF 0%, #F0FDF4 100%);
+    border: 2px solid #BFDBFE;
+    border-radius: 18px;
+    padding: 1.25rem 1.4rem;
+    margin: 1rem auto 1.4rem;
+    max-width: 520px;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.08);
+    text-align: center;
+    animation: wFadeDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    box-sizing: border-box;
+}
+
+.w-qsb-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.85rem;
+}
+
+.w-qsb-tag {
+    background: #DBEAFE;
+    color: #1D4ED8;
+    font-size: 0.76rem;
+    font-weight: 800;
+    padding: 0.22rem 0.65rem;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.w-qsb-edit-btn {
+    background: #FFFFFF !important;
+    border: 1px solid #CBD5E1 !important;
+    color: #475569 !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    padding: 0.3rem 0.65rem !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+}
+
+.w-qsb-edit-btn:hover {
+    background: #F1F5F9 !important;
+    border-color: #94A3B8 !important;
+    color: #0F172A !important;
+}
+
+.w-qsb-profile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.85rem;
+    margin-bottom: 1.1rem;
+}
+
+.w-qsb-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #2563EB;
+    color: #FFFFFF;
+    font-size: 1.45rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+    flex-shrink: 0;
+}
+
+.w-qsb-meta {
+    text-align: left;
+}
+
+.w-qsb-class {
+    font-size: 0.84rem;
+    color: #475569;
+    font-weight: 700;
+    margin-bottom: 0.15rem;
+}
+
+.w-qsb-name {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: #0F172A;
+    letter-spacing: -0.01em;
+}
+
+.w-qsb-btn-play {
+    width: 100% !important;
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%) !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 0.88rem 1.2rem !important;
+    font-size: 1.05rem !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.w-qsb-btn-play:hover {
+    transform: translateY(-2px) scale(1.01) !important;
+    box-shadow: 0 8px 22px rgba(37, 99, 235, 0.45) !important;
+}
+
+.w-qsb-btn-play:active {
+    transform: translateY(0) !important;
+}
+
+/* 학생 미등록 시 상태 */
+.w-quick-start-box.unregistered {
+    background: linear-gradient(135deg, #FEF3C7 0%, #EFF6FF 100%);
+    border-color: #FCD34D;
+}
+.w-quick-start-box.unregistered .w-qsb-tag {
+    background: #FEF3C7;
+    color: #B45309;
+}
+.w-quick-start-box.unregistered .w-qsb-btn-play {
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
+    box-shadow: 0 4px 15px rgba(217, 119, 6, 0.35) !important;
+}
+
+@keyframes wFadeDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================================
+   7. 특정 개별 앱 맞춤 오버라이드 (Hangman, Where, Baseball 등)
+   ========================================================= */
+
+/* Hangman 앱 라이트 모던 테마화 */
+#app:has(#screen-home) {
+    background: #ffffff !important;
+    color: #1e293b !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08) !important;
+    border-radius: 24px !important;
+}
+.mode-card {
+    background: #ffffff !important;
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03) !important;
+}
+.mode-card:hover {
+    background: #eff6ff !important;
+    border-color: #3b82f6 !important;
+    transform: translateY(-2px) !important;
+}
+.mode-card .label {
+    color: #1e293b !important;
+    font-weight: 700 !important;
+}
+.mode-card .desc {
+    color: #64748b !important;
+}
+.bgm-container {
+    top: 56px !important;
+}
+
+/* Where 앱 오버레이 보정 */
+#lobby-overlay.overlay {
+    background: rgba(15, 23, 42, 0.65) !important;
+    backdrop-filter: blur(6px) !important;
+}
+
+/* Baseball & Tic Tac Toe 야구/보드 헤더 보정 */
+#game-info {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+    border-radius: 12px !important;
+}
+
+/* =========================================================
+   8. 공통 토스트 알림 및 플로팅 교사 관리자 버튼
+   ========================================================= */
+#waurimal-toast-container {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000000;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.w-toast-item {
+    background: rgba(15, 23, 42, 0.94);
+    backdrop-filter: blur(12px);
+    color: #ffffff;
+    padding: 0.65rem 1.3rem;
+    border-radius: 9999px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    animation: wToastPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes wToastPop {
+    from { opacity: 0; transform: scale(0.9) translateY(-10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 교사 모드 플로팅 빠른 버튼 (우측 하단) */
+.w-floating-teacher-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #1E293B;
+    color: #F8FAFC;
+    border: 1px solid #334155;
+    padding: 0.5rem 0.9rem;
+    border-radius: 9999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: all 0.2s;
+    opacity: 0.75;
+}
+
+.w-floating-teacher-btn:hover {
+    opacity: 1;
+    transform: scale(1.05);
+    background: #0F172A;
+    border-color: #3B82F6;
+}
