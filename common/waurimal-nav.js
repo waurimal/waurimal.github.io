@@ -938,32 +938,41 @@
         `;
 
         // 교사 설정 플로팅 버튼 (우측 하단)
-        const teacherBtn = document.createElement('button');
-        teacherBtn.type = 'button';
-        teacherBtn.className = 'w-floating-teacher-btn';
-        teacherBtn.innerHTML = '<span>🔒</span> 교사 모드';
-        teacherBtn.title = '교사 전용 설정 열기';
-        teacherBtn.addEventListener('click', () => {
-            const targets = [
-                '#btn-teacher-entry', '#btn-show-teacher-auth', '.teacher-btn', '#open-admin-btn',
-                '#btn-go-teacher-auth', '#btn-admin-open', 'button[onclick*="teacher"]',
-                'button[onclick*="Teacher"]', 'button[onclick*="admin"]', 'button[onclick*="Admin"]'
-            ];
-            for (const sel of targets) {
-                const el = document.querySelector(sel);
-                if (el) {
-                    el.click();
-                    WaurimalToast('교사 설정 모드로 진입합니다.', '🔒');
+        let teacherBtn = document.querySelector('.w-floating-teacher-btn');
+        if (!teacherBtn) {
+            teacherBtn = document.createElement('button');
+            teacherBtn.type = 'button';
+            teacherBtn.className = 'w-floating-teacher-btn';
+            teacherBtn.innerHTML = '<span>🔒</span> 교사 모드';
+            teacherBtn.title = '교사 전용 설정 열기';
+            teacherBtn.addEventListener('click', () => {
+                if (typeof window.openCurriculumAdmin === 'function') {
+                    window.openCurriculumAdmin();
                     return;
                 }
-            }
-            WaurimalToast('이 게임의 교사 설정 메뉴를 찾을 수 없습니다.', 'ℹ️');
-        });
-
-        document.body.prepend(wrapper);
-        document.body.appendChild(studentModal);
-        document.body.appendChild(guideModal);
-        document.body.appendChild(teacherBtn);
+                const targets = [
+                    '#btn-teacher-entry', '#btn-show-teacher-auth', '.teacher-btn', '#open-admin-btn',
+                    '#btn-go-teacher-auth', '#btn-admin-open', 'button[onclick*="teacher"]',
+                    'button[onclick*="Teacher"]', 'button[onclick*="admin"]', 'button[onclick*="Admin"]'
+                ];
+                for (const sel of targets) {
+                    const el = document.querySelector(sel);
+                    if (el && el !== teacherBtn) {
+                        el.click();
+                        WaurimalToast('교사 설정 모드로 진입합니다.', '🔒');
+                        return;
+                    }
+                }
+                WaurimalToast('이 게임의 교사 설정 메뉴를 찾을 수 없습니다.', 'ℹ️');
+            });
+            document.body.appendChild(teacherBtn);
+        } else {
+            teacherBtn.addEventListener('click', () => {
+                if (typeof window.openCurriculumAdmin === 'function') {
+                    window.openCurriculumAdmin();
+                }
+            });
+        }
 
         // 프로필 모달 바인딩
         const profileBtn = document.getElementById('w-btn-student-profile');

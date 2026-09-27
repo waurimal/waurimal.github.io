@@ -374,28 +374,37 @@
         }
 
         /* ══════════════════════════════════════════════════════════════ */
-        /* 통합 교육과정 관리자 모달 및 버튼 스타일 */
+        /* 통합 교육과정 관리자 모달 및 우측 하단 교사 모드 버튼 스타일 */
         /* ══════════════════════════════════════════════════════════════ */
-        .admin-portal-btn {
-            background: #ffffff !important;
-            border: 1.5px solid rgba(255, 255, 255, 0.95) !important;
-            color: #1E3A8A !important;
-            font-size: 0.82rem !important;
-            font-weight: 800 !important;
-            padding: 0.42rem 1.15rem !important;
+        .w-floating-teacher-btn {
+            position: fixed !important;
+            bottom: 22px !important;
+            right: 22px !important;
+            background: #1E293B !important;
+            color: #F8FAFC !important;
+            border: 1.5px solid #334155 !important;
+            padding: 0.52rem 1.05rem !important;
             border-radius: 9999px !important;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.45rem;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16) !important;
-            transition: all 0.18s ease;
+            font-size: 0.8rem !important;
+            font-weight: 700 !important;
+            cursor: pointer !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+            z-index: 9999 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 0.4rem !important;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            opacity: 0.92 !important;
+            text-decoration: none !important;
         }
-        .admin-portal-btn:hover {
-            background: #F0FDF4 !important;
-            color: #166534 !important;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22) !important;
+
+        .w-floating-teacher-btn:hover {
+            opacity: 1 !important;
+            transform: scale(1.06) translateY(-2px) !important;
+            background: #0F172A !important;
+            border-color: #3B82F6 !important;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
+            color: #60A5FA !important;
         }
 
         .admin-modal-backdrop {
@@ -646,11 +655,6 @@
                 <button class="cat-btn" data-cat="battle">⚔️ 실시간 대결 <span class="cat-count" id="count-battle">4</span></button>
                 <button class="cat-btn" data-cat="puzzle">🧩 퍼즐·탐험 <span class="cat-count" id="count-puzzle">3</span></button>
                 <button class="cat-btn" data-cat="tool">🛠️ 수업 도구 <span class="cat-count" id="count-tool">1</span></button>
-            </div>
-            <div style="margin-top: 0.15rem; display: flex; justify-content: center;">
-                <button type="button" id="btn-curriculum-admin" onclick="openCurriculumAdmin()" class="admin-portal-btn">
-                    <i class="fas fa-sliders-h"></i> ⚙️ 단원·어휘·문장 통합 관리자 (선생님 전용)
-                </button>
             </div>
         </div>
     </header>
@@ -1266,5 +1270,12 @@
             </div>
         </div>
     </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- 🔒 우측 하단 플로팅 교사 모드 (통합 교육과정 관리자) 버튼 -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <button type="button" id="btn-floating-curriculum-admin" onclick="openCurriculumAdmin()" class="w-floating-teacher-btn" title="초등 영어 통합 교육과정 관리자 (단원·어휘·문장 제어)">
+        <span>🔒</span> 교사 모드
+    </button>
 </body>
 </html>
