@@ -408,20 +408,20 @@
         }
 
         .admin-modal-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.65);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
+            position: fixed !important;
+            inset: 0 !important;
+            background: rgba(15, 23, 42, 0.75) !important;
+            backdrop-filter: blur(6px) !important;
+            -webkit-backdrop-filter: blur(6px) !important;
             display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            padding: 1rem;
-            box-sizing: border-box;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 100000000 !important;
+            padding: 1rem !important;
+            box-sizing: border-box !important;
         }
         .admin-modal-backdrop.active {
-            display: flex;
+            display: flex !important;
         }
 
         .admin-modal-container {
@@ -809,17 +809,25 @@
             if (isAdminAuthenticated) {
                 showCurriculumAdminModal();
             } else {
-                document.getElementById('curriculum-pw-modal').classList.add('active');
+                const pwModal = document.getElementById('curriculum-pw-modal');
+                if (pwModal) {
+                    pwModal.classList.add('active');
+                    pwModal.style.display = 'flex';
+                }
                 const pwInput = document.getElementById('curriculum-admin-pw-input');
                 if (pwInput) {
                     pwInput.value = '';
-                    setTimeout(() => pwInput.focus(), 100);
+                    setTimeout(() => pwInput.focus(), 150);
                 }
             }
         }
 
         function closeCurriculumPwModal() {
-            document.getElementById('curriculum-pw-modal').classList.remove('active');
+            const pwModal = document.getElementById('curriculum-pw-modal');
+            if (pwModal) {
+                pwModal.classList.remove('active');
+                pwModal.style.display = 'none';
+            }
         }
 
         function verifyCurriculumAdminPw() {
@@ -858,7 +866,11 @@
                 ];
             }
 
-            document.getElementById('curriculum-admin-modal').classList.add('active');
+            const adminModal = document.getElementById('curriculum-admin-modal');
+            if (adminModal) {
+                adminModal.classList.add('active');
+                adminModal.style.display = 'flex';
+            }
             filterAdminGrade(adminCurrentGradeFilter || 'all');
 
             const wordsEl = document.getElementById('admin-words-text');
@@ -868,7 +880,11 @@
         }
 
         function closeCurriculumAdminModal() {
-            document.getElementById('curriculum-admin-modal').classList.remove('active');
+            const adminModal = document.getElementById('curriculum-admin-modal');
+            if (adminModal) {
+                adminModal.classList.remove('active');
+                adminModal.style.display = 'none';
+            }
         }
 
         function filterAdminGrade(grade) {
@@ -1085,6 +1101,39 @@
 
             localStorage.setItem('waurimal_admin_pw', newPw.trim());
             alert("관리자 비밀번호가 성공적으로 변경되었습니다.");
+        }
+
+        // 전역 window 명시적 바인딩
+        window.openCurriculumAdmin = openCurriculumAdmin;
+        window.closeCurriculumPwModal = closeCurriculumPwModal;
+        window.verifyCurriculumAdminPw = verifyCurriculumAdminPw;
+        window.showCurriculumAdminModal = showCurriculumAdminModal;
+        window.closeCurriculumAdminModal = closeCurriculumAdminModal;
+        window.filterAdminGrade = filterAdminGrade;
+        window.renderAdminUnitSelect = renderAdminUnitSelect;
+        window.onAdminUnitSelectChange = onAdminUnitSelectChange;
+        window.adminCreateNewUnit = adminCreateNewUnit;
+        window.adminDeleteUnit = adminDeleteUnit;
+        window.adminSaveAndApply = adminSaveAndApply;
+        window.adminResetToDefault = adminResetToDefault;
+        window.adminExportJson = adminExportJson;
+        window.adminImportJsonFile = adminImportJsonFile;
+        window.adminChangePassword = adminChangePassword;
+
+        // 플로팅 교사 모드 버튼 클릭 이벤트 보강 바인딩
+        function bindFloatingAdminBtn() {
+            const btn = document.getElementById('btn-floating-curriculum-admin');
+            if (btn) {
+                btn.onclick = function(e) {
+                    if (e) { e.preventDefault(); e.stopPropagation(); }
+                    openCurriculumAdmin();
+                };
+            }
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bindFloatingAdminBtn);
+        } else {
+            bindFloatingAdminBtn();
         }
     </script>
 
