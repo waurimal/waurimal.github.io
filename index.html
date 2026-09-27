@@ -372,7 +372,260 @@
                 font-size: 0.74rem;
             }
         }
+
+        /* ══════════════════════════════════════════════════════════════ */
+        /* 통합 교육과정 관리자 모달 및 버튼 스타일 */
+        /* ══════════════════════════════════════════════════════════════ */
+        .admin-portal-btn {
+            background: #ffffff !important;
+            border: 1.5px solid rgba(255, 255, 255, 0.95) !important;
+            color: #1E3A8A !important;
+            font-size: 0.82rem !important;
+            font-weight: 800 !important;
+            padding: 0.42rem 1.15rem !important;
+            border-radius: 9999px !important;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16) !important;
+            transition: all 0.18s ease;
+        }
+        .admin-portal-btn:hover {
+            background: #F0FDF4 !important;
+            color: #166534 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22) !important;
+        }
+
+        .admin-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+        .admin-modal-backdrop.active {
+            display: flex;
+        }
+
+        .admin-modal-container {
+            background: #ffffff;
+            border-radius: 1.15rem;
+            max-width: 980px;
+            width: 100%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            border: 1px solid #E2E8F0;
+            box-sizing: border-box;
+            animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.96) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .admin-modal-header {
+            padding: 1rem 1.4rem;
+            background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .admin-close-btn {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 1.7rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.375rem;
+            transition: background 0.15s;
+        }
+        .admin-close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .admin-modal-body {
+            padding: 1.2rem 1.4rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.9rem;
+            box-sizing: border-box;
+        }
+
+        .admin-card {
+            background: #ffffff;
+            border: 1px solid #E2E8F0;
+            border-radius: 0.75rem;
+            padding: 0.85rem 1rem;
+            box-sizing: border-box;
+        }
+
+        .admin-filter-btn {
+            background: #F1F5F9;
+            border: 1px solid #CBD5E1;
+            color: #475569;
+            padding: 0.3rem 0.7rem;
+            border-radius: 9999px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .admin-filter-btn:hover {
+            background: #E2E8F0;
+            color: #1E293B;
+        }
+        .admin-filter-btn.active {
+            background: #2563EB;
+            border-color: #2563EB;
+            color: #ffffff;
+        }
+
+        .admin-btn {
+            padding: 0.45rem 0.85rem;
+            border-radius: 0.5rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            border: none;
+            line-height: 1.2;
+        }
+        .admin-btn-primary {
+            background: #2563EB;
+            color: #ffffff;
+        }
+        .admin-btn-primary:hover {
+            background: #1D4ED8;
+        }
+        .admin-btn-accent {
+            background: #10B981;
+            color: #ffffff;
+        }
+        .admin-btn-accent:hover {
+            background: #059669;
+        }
+        .admin-btn-danger {
+            background: #EF4444;
+            color: #ffffff;
+        }
+        .admin-btn-danger:hover {
+            background: #DC2626;
+        }
+        .admin-btn-secondary {
+            background: #F1F5F9;
+            color: #475569;
+            border: 1px solid #CBD5E1;
+        }
+        .admin-btn-secondary:hover {
+            background: #E2E8F0;
+            color: #1E293B;
+        }
+
+        .admin-input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #CBD5E1;
+            border-radius: 0.5rem;
+            font-size: 0.84rem;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            box-sizing: border-box;
+            background: #ffffff;
+            color: #1E293B;
+            font-family: inherit;
+        }
+        .admin-input:focus {
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+        }
+
+        .admin-editors-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.9rem;
+        }
+        @media (max-width: 768px) {
+            .admin-editors-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .admin-textarea {
+            width: 100%;
+            padding: 0.65rem 0.8rem;
+            border: 1px solid #CBD5E1;
+            border-radius: 0.5rem;
+            font-size: 0.84rem;
+            font-family: 'Pretendard', sans-serif;
+            line-height: 1.55;
+            resize: vertical;
+            outline: none;
+            box-sizing: border-box;
+            background: #F8FAFC;
+            color: #1E293B;
+            transition: border-color 0.15s, background-color 0.15s;
+        }
+        .admin-textarea:focus {
+            background: #FFFFFF;
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .admin-badge {
+            display: inline-block;
+            padding: 0.15rem 0.55rem;
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+        .admin-badge-blue {
+            background: #EFF6FF;
+            color: #1D4ED8;
+            border: 1px solid #BFDBFE;
+        }
+        .admin-badge-rose {
+            background: #FFF1F2;
+            color: #BE123C;
+            border: 1px solid #FECDD3;
+        }
+
+        .admin-modal-footer {
+            padding: 0.85rem 1.4rem;
+            background: #F8FAFC;
+            border-top: 1px solid #E2E8F0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            flex-shrink: 0;
+        }
     </style>
+    <!-- Firebase SDK (v9 compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="common/firebase-config.js"></script>
+    <script src="common/curriculum.js"></script>
     <script src="common/waurimal-nav.js"></script>
 </head>
 <body>
@@ -393,6 +646,11 @@
                 <button class="cat-btn" data-cat="battle">⚔️ 실시간 대결 <span class="cat-count" id="count-battle">4</span></button>
                 <button class="cat-btn" data-cat="puzzle">🧩 퍼즐·탐험 <span class="cat-count" id="count-puzzle">3</span></button>
                 <button class="cat-btn" data-cat="tool">🛠️ 수업 도구 <span class="cat-count" id="count-tool">1</span></button>
+            </div>
+            <div style="margin-top: 0.15rem; display: flex; justify-content: center;">
+                <button type="button" id="btn-curriculum-admin" onclick="openCurriculumAdmin()" class="admin-portal-btn">
+                    <i class="fas fa-sliders-h"></i> ⚙️ 단원·어휘·문장 통합 관리자 (선생님 전용)
+                </button>
             </div>
         </div>
     </header>
@@ -534,6 +792,479 @@
         });
 
         renderApps();
+
+        // ══════════════════════════════════════════════════════════════════
+        // 🔒 통합 교육과정 관리자 모드 (Teacher Curriculum Admin Controller)
+        // ══════════════════════════════════════════════════════════════════
+        let adminLessons = [];
+        let adminCurrentUnitCode = null;
+        let adminCurrentGradeFilter = 'all';
+        let isAdminAuthenticated = false;
+
+        function openCurriculumAdmin() {
+            if (isAdminAuthenticated) {
+                showCurriculumAdminModal();
+            } else {
+                document.getElementById('curriculum-pw-modal').classList.add('active');
+                const pwInput = document.getElementById('curriculum-admin-pw-input');
+                if (pwInput) {
+                    pwInput.value = '';
+                    setTimeout(() => pwInput.focus(), 100);
+                }
+            }
+        }
+
+        function closeCurriculumPwModal() {
+            document.getElementById('curriculum-pw-modal').classList.remove('active');
+        }
+
+        function verifyCurriculumAdminPw() {
+            const entered = document.getElementById('curriculum-admin-pw-input').value.trim();
+            const currentPw = localStorage.getItem('waurimal_admin_pw') || '1234';
+            if (entered === currentPw) {
+                isAdminAuthenticated = true;
+                closeCurriculumPwModal();
+                showCurriculumAdminModal();
+            } else {
+                alert('비밀번호가 올바르지 않습니다.');
+                const pwInput = document.getElementById('curriculum-admin-pw-input');
+                if (pwInput) {
+                    pwInput.value = '';
+                    pwInput.focus();
+                }
+            }
+        }
+
+        function showCurriculumAdminModal() {
+            if (window.WaurimalCurriculum) {
+                adminLessons = JSON.parse(JSON.stringify(window.WaurimalCurriculum.getLessons()));
+            } else {
+                adminLessons = [];
+            }
+
+            if (!adminLessons || adminLessons.length === 0) {
+                adminLessons = [
+                    {
+                        code: "6G_L09_CANVA",
+                        grade: 6,
+                        name: "6학년 Lesson 09 - Sparkle Sentence Activity",
+                        words: [],
+                        sentences: []
+                    }
+                ];
+            }
+
+            document.getElementById('curriculum-admin-modal').classList.add('active');
+            filterAdminGrade(adminCurrentGradeFilter || 'all');
+
+            const wordsEl = document.getElementById('admin-words-text');
+            const sentsEl = document.getElementById('admin-sentences-text');
+            if (wordsEl) wordsEl.oninput = updateAdminBadges;
+            if (sentsEl) sentsEl.oninput = updateAdminBadges;
+        }
+
+        function closeCurriculumAdminModal() {
+            document.getElementById('curriculum-admin-modal').classList.remove('active');
+        }
+
+        function filterAdminGrade(grade) {
+            adminCurrentGradeFilter = grade;
+            document.querySelectorAll('#admin-grade-filter-group .admin-filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-grade') === String(grade));
+            });
+
+            renderAdminUnitSelect();
+        }
+
+        function renderAdminUnitSelect(preserveCode) {
+            const sel = document.getElementById('admin-unit-select');
+            if (!sel) return;
+            sel.innerHTML = '';
+
+            const filtered = adminLessons.filter(l => {
+                if (adminCurrentGradeFilter === 'all') return true;
+                return String(l.grade) === String(adminCurrentGradeFilter);
+            });
+
+            if (filtered.length === 0) {
+                sel.innerHTML = '<option value="">(해당 학년에 등록된 단원이 없습니다)</option>';
+                adminCurrentUnitCode = null;
+                loadAdminUnitForm(null);
+                return;
+            }
+
+            filtered.forEach(l => {
+                const opt = document.createElement('option');
+                opt.value = l.code;
+                const wCount = (l.words || []).length;
+                const sCount = (l.sentences || []).length;
+                opt.textContent = `[${l.grade}학년] ${l.name} (${wCount}단어 / ${sCount}문장)`;
+                sel.appendChild(opt);
+            });
+
+            let targetCode = preserveCode || (filtered.find(l => l.code === adminCurrentUnitCode) ? adminCurrentUnitCode : filtered[0].code);
+            sel.value = targetCode;
+            adminCurrentUnitCode = targetCode;
+
+            loadAdminUnitForm(adminLessons.find(l => l.code === targetCode));
+        }
+
+        function onAdminUnitSelectChange() {
+            saveCurrentFormToBuffer();
+            const selVal = document.getElementById('admin-unit-select').value;
+            adminCurrentUnitCode = selVal;
+            loadAdminUnitForm(adminLessons.find(l => l.code === selVal));
+        }
+
+        function saveCurrentFormToBuffer() {
+            if (!adminCurrentUnitCode) return;
+            const unit = adminLessons.find(l => l.code === adminCurrentUnitCode);
+            if (!unit) return;
+
+            unit.grade = parseInt(document.getElementById('admin-unit-grade').value, 10) || 6;
+            unit.code = document.getElementById('admin-unit-code').value.trim() || unit.code;
+            unit.name = document.getElementById('admin-unit-name').value.trim() || unit.name;
+            
+            const wordsRaw = document.getElementById('admin-words-text').value;
+            const sentsRaw = document.getElementById('admin-sentences-text').value;
+            unit.words = window.WaurimalCurriculum ? window.WaurimalCurriculum.parseWords(wordsRaw) : [];
+            unit.sentences = window.WaurimalCurriculum ? window.WaurimalCurriculum.parseSentences(sentsRaw) : [];
+        }
+
+        function loadAdminUnitForm(unit) {
+            if (!unit) {
+                document.getElementById('admin-unit-grade').value = "6";
+                document.getElementById('admin-unit-code').value = "";
+                document.getElementById('admin-unit-name').value = "";
+                document.getElementById('admin-words-text').value = "";
+                document.getElementById('admin-sentences-text').value = "";
+                updateAdminBadges();
+                return;
+            }
+
+            document.getElementById('admin-unit-grade').value = String(unit.grade || 6);
+            document.getElementById('admin-unit-code').value = unit.code || "";
+            document.getElementById('admin-unit-name').value = unit.name || "";
+            document.getElementById('admin-words-text').value = window.WaurimalCurriculum ? window.WaurimalCurriculum.wordsToText(unit.words || []) : '';
+            document.getElementById('admin-sentences-text').value = window.WaurimalCurriculum ? window.WaurimalCurriculum.sentencesToText(unit.sentences || []) : '';
+            updateAdminBadges();
+        }
+
+        function updateAdminBadges() {
+            const wordsRaw = document.getElementById('admin-words-text').value;
+            const sentsRaw = document.getElementById('admin-sentences-text').value;
+            const wordsCount = window.WaurimalCurriculum ? window.WaurimalCurriculum.parseWords(wordsRaw).length : 0;
+            const sentsCount = window.WaurimalCurriculum ? window.WaurimalCurriculum.parseSentences(sentsRaw).length : 0;
+
+            const wb = document.getElementById('admin-words-count-badge');
+            const sb = document.getElementById('admin-sentences-count-badge');
+            if (wb) wb.textContent = `${wordsCount}개 단어`;
+            if (sb) sb.textContent = `${sentsCount}개 문장`;
+        }
+
+        function adminCreateNewUnit() {
+            saveCurrentFormToBuffer();
+            const newGrade = (adminCurrentGradeFilter !== 'all') ? parseInt(adminCurrentGradeFilter, 10) : 6;
+            const timestamp = Date.now().toString().slice(-4);
+            const newCode = `${newGrade}G_UNIT_${timestamp}`;
+            const newUnit = {
+                code: newCode,
+                grade: newGrade,
+                name: `${newGrade}학년 새 단원 ${timestamp}`,
+                words: [
+                    { en: "hello", kr: "안녕" },
+                    { en: "school", kr: "학교" }
+                ],
+                sentences: [
+                    { en: "Nice to meet you.", kr: "만나서 반가워." },
+                    { en: "How are you today?", kr: "오늘 기분이 어떠니?" }
+                ]
+            };
+            adminLessons.unshift(newUnit);
+            adminCurrentUnitCode = newCode;
+            renderAdminUnitSelect(newCode);
+            document.getElementById('admin-unit-name').focus();
+        }
+
+        function adminDeleteUnit() {
+            if (!adminCurrentUnitCode) return;
+            const unit = adminLessons.find(l => l.code === adminCurrentUnitCode);
+            const unitName = unit ? unit.name : adminCurrentUnitCode;
+            if (!confirm(`[${unitName}] 단원을 정말 삭제하시겠습니까?`)) return;
+
+            adminLessons = adminLessons.filter(l => l.code !== adminCurrentUnitCode);
+            adminCurrentUnitCode = null;
+            renderAdminUnitSelect();
+        }
+
+        async function adminSaveAndApply() {
+            saveCurrentFormToBuffer();
+
+            const bannerText = document.getElementById('admin-sync-text');
+            if (bannerText) bannerText.textContent = "⏳ 클라우드 Firestore 동기화 및 20개 앱 일괄 적용 중...";
+
+            try {
+                if (window.WaurimalCurriculum) {
+                    await window.WaurimalCurriculum.setLessons(adminLessons, true);
+                }
+                if (bannerText) bannerText.textContent = "✅ 클라우드 저장 완료! 모든 앱에 실시간 적용되었습니다.";
+                alert("🎉 교육과정이 성공적으로 저장되었습니다!\n\n포털 내 20개 모든 게임(단어 타자, 문장 타자, Sparkle DIE, 행맨 등)에 즉시 일괄 적용되었습니다.");
+                renderAdminUnitSelect(adminCurrentUnitCode);
+            } catch (e) {
+                console.error("Save error:", e);
+                alert("저장 중 오류가 발생했습니다: " + e.message);
+            }
+        }
+
+        async function adminResetToDefault() {
+            if (!confirm("⚠️ 주의: 추가하거나 수정한 모든 단원이 초기 기본값으로 리셋됩니다. 계속하시겠습니까?")) return;
+            
+            if (window.WaurimalCurriculum) {
+                await window.WaurimalCurriculum.resetToDefault(true);
+                adminLessons = JSON.parse(JSON.stringify(window.WaurimalCurriculum.getLessons()));
+            }
+            renderAdminUnitSelect();
+            alert("초기 기본 교육과정으로 복원되었습니다.");
+        }
+
+        function adminExportJson() {
+            saveCurrentFormToBuffer();
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(adminLessons, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `waurimal_curriculum_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+        }
+
+        function adminImportJsonFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        adminLessons = parsed;
+                        if (window.WaurimalCurriculum) {
+                            await window.WaurimalCurriculum.setLessons(adminLessons, true);
+                        }
+                        renderAdminUnitSelect();
+                        alert(`성공적으로 ${adminLessons.length}개 단원을 불러와 전체 앱에 적용했습니다!`);
+                    } else {
+                        alert("올바른 단원 데이터 형식의 JSON 파일이 아닙니다.");
+                    }
+                } catch (err) {
+                    alert("JSON 파일 파싱 실패: " + err.message);
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function adminChangePassword() {
+            const curPw = localStorage.getItem('waurimal_admin_pw') || '1234';
+            const oldInput = prompt("현재 관리자 비밀번호를 입력해주세요:");
+            if (oldInput === null) return;
+            if (oldInput !== curPw) {
+                alert("현재 비밀번호가 일치하지 않습니다.");
+                return;
+            }
+
+            const newPw = prompt("새로운 관리자 비밀번호를 입력해주세요 (4자리 이상):");
+            if (!newPw || newPw.trim().length < 4) {
+                alert("비밀번호는 4자리 이상으로 설정해야 합니다.");
+                return;
+            }
+
+            localStorage.setItem('waurimal_admin_pw', newPw.trim());
+            alert("관리자 비밀번호가 성공적으로 변경되었습니다.");
+        }
     </script>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- 🔒 관리자 인증 모달 -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <div id="curriculum-pw-modal" class="admin-modal-backdrop" onclick="if(event.target===this)closeCurriculumPwModal()">
+        <div class="admin-modal-container" style="max-width: 420px; border-radius: 1.25rem;">
+            <div class="admin-modal-header" style="background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                    <i class="fas fa-lock" style="font-size: 1.2rem; color: #93C5FD;"></i>
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #fff;">선생님 관리자 인증</h3>
+                </div>
+                <button type="button" onclick="closeCurriculumPwModal()" class="admin-close-btn">&times;</button>
+            </div>
+            <div class="admin-modal-body" style="padding: 1.5rem; text-align: center;">
+                <p style="margin: 0 0 1rem; font-size: 0.9rem; color: #475569; font-weight: 600;">
+                    단원 및 어휘·문장 관리를 위해<br>선생님 비밀번호를 입력해주세요.
+                </p>
+                <input type="password" id="curriculum-admin-pw-input" placeholder="비밀번호 입력 (기본: 1234)" 
+                    style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #CBD5E1; border-radius: 0.75rem; font-size: 1.05rem; text-align: center; letter-spacing: 0.15em; font-weight: 700; outline: none; margin-bottom: 0.5rem;"
+                    onkeydown="if(event.key==='Enter')verifyCurriculumAdminPw()" />
+                <div style="font-size: 0.76rem; color: #94A3B8; margin-bottom: 1.2rem;">
+                    * 처음 이용 시 기본 비밀번호는 <strong>1234</strong> 입니다.
+                </div>
+                <div style="display: flex; gap: 0.6rem;">
+                    <button type="button" onclick="closeCurriculumPwModal()" class="admin-btn admin-btn-secondary" style="flex: 1; padding: 0.65rem;">취소</button>
+                    <button type="button" onclick="verifyCurriculumAdminPw()" class="admin-btn admin-btn-primary" style="flex: 1.5; padding: 0.65rem;">확인</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- ⚙️ 단원 · 어휘 · 문장 통합 관리자 대시보드 모달 -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <div id="curriculum-admin-modal" class="admin-modal-backdrop" onclick="if(event.target===this)closeCurriculumAdminModal()">
+        <div class="admin-modal-container">
+            <!-- 모달 상단 헤더 -->
+            <div class="admin-modal-header">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 0.6rem;">
+                        <i class="fas fa-layer-group" style="font-size: 1.25rem; color: #60A5FA;"></i>
+                        <h2 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: #ffffff;">초등 영어 교육과정 통합 관리자</h2>
+                    </div>
+                    <p style="margin: 0.2rem 0 0 0; font-size: 0.8rem; color: #DBEAFE;">
+                        여기서 등록·수정한 단원과 단어·문장은 20개 모든 게임과 활동에 실시간으로 일괄 동기화됩니다.
+                    </p>
+                </div>
+                <button type="button" onclick="closeCurriculumAdminModal()" class="admin-close-btn">&times;</button>
+            </div>
+
+            <!-- 모달 메인 콘텐츠 본문 -->
+            <div class="admin-modal-body">
+                <!-- 1. 단원 선택 및 제어 툴바 -->
+                <div class="admin-card">
+                    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.6rem; margin-bottom: 0.8rem;">
+                        <!-- 학년 탭 필터 -->
+                        <div style="display: flex; gap: 0.3rem;" id="admin-grade-filter-group">
+                            <button type="button" class="admin-filter-btn active" data-grade="all" onclick="filterAdminGrade('all')">전체</button>
+                            <button type="button" class="admin-filter-btn" data-grade="3" onclick="filterAdminGrade('3')">3학년</button>
+                            <button type="button" class="admin-filter-btn" data-grade="4" onclick="filterAdminGrade('4')">4학년</button>
+                            <button type="button" class="admin-filter-btn" data-grade="5" onclick="filterAdminGrade('5')">5학년</button>
+                            <button type="button" class="admin-filter-btn" data-grade="6" onclick="filterAdminGrade('6')">6학년</button>
+                        </div>
+                        <!-- 단원 추가/삭제 버튼 -->
+                        <div style="display: flex; gap: 0.4rem;">
+                            <button type="button" onclick="adminCreateNewUnit()" class="admin-btn admin-btn-accent">
+                                <i class="fas fa-plus"></i> 새 단원 추가
+                            </button>
+                            <button type="button" onclick="adminDeleteUnit()" class="admin-btn admin-btn-danger">
+                                <i class="fas fa-trash-alt"></i> 선택 단원 삭제
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 단원 드롭다운 선택창 -->
+                    <div style="display: flex; align-items: center; gap: 0.6rem;">
+                        <label for="admin-unit-select" style="font-weight: 700; font-size: 0.86rem; color: #1E293B; white-space: nowrap;">
+                            <i class="fas fa-book-open" style="color: #2563EB;"></i> 편집할 단원:
+                        </label>
+                        <select id="admin-unit-select" onchange="onAdminUnitSelectChange()" class="admin-input" style="flex: 1; font-weight: 700;">
+                            <!-- 동적 옵션 생성 -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 2. 선택된 단원 기본 정보 (학년 / 단원코드 / 단원명) -->
+                <div class="admin-card" style="background: #F1F5F9; border-color: #CBD5E1;">
+                    <div style="display: grid; grid-template-columns: 120px 1.2fr 2fr; gap: 0.75rem;">
+                        <div>
+                            <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #475569; margin-bottom: 0.25rem;">학년</label>
+                            <select id="admin-unit-grade" class="admin-input" style="font-weight: 700; padding: 0.45rem;">
+                                <option value="3">3학년</option>
+                                <option value="4">4학년</option>
+                                <option value="5">5학년</option>
+                                <option value="6">6학년</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #475569; margin-bottom: 0.25rem;">단원 고유 코드</label>
+                            <input type="text" id="admin-unit-code" placeholder="예: 6G_L09_CANVA" class="admin-input" style="font-weight: 700; font-family: monospace;" />
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #475569; margin-bottom: 0.25rem;">단원명 / 주제</label>
+                            <input type="text" id="admin-unit-name" placeholder="예: 6학년 Lesson 09 - Sparkle Activity" class="admin-input" style="font-weight: 700;" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. 좌우 2열 에디터 (단어 목록 vs 문장 목록) -->
+                <div class="admin-editors-grid">
+                    <!-- 좌측: 단어 편집기 -->
+                    <div class="admin-card" style="display: flex; flex-direction: column;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                            <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                <span style="font-size: 1.05rem;">🔤</span>
+                                <strong style="font-size: 0.9rem; color: #1E293B;">단어 목록</strong>
+                                <span style="font-size: 0.72rem; color: #64748B;">(단어 타자, 행맨, 빙고 등)</span>
+                            </div>
+                            <span id="admin-words-count-badge" class="admin-badge admin-badge-blue">0개 단어</span>
+                        </div>
+                        <p style="margin: 0 0 0.5rem; font-size: 0.76rem; color: #64748B;">
+                            형식: <code>영단어 : 한글뜻</code> (줄바꿈 구분, 예: <code>apple : 사과</code>)
+                        </p>
+                        <textarea id="admin-words-text" class="admin-textarea" rows="11" spellcheck="false" 
+                            placeholder="apple : 사과&#10;banana : 바나나&#10;orange : 오렌지"></textarea>
+                    </div>
+
+                    <!-- 우측: 문장 편집기 -->
+                    <div class="admin-card" style="display: flex; flex-direction: column;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                            <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                <span style="font-size: 1.05rem;">📝</span>
+                                <strong style="font-size: 0.9rem; color: #1E293B;">문장 목록</strong>
+                                <span style="font-size: 0.72rem; color: #64748B;">(Sparkle DIE, 문장타자, 독해 등)</span>
+                            </div>
+                            <span id="admin-sentences-count-badge" class="admin-badge admin-badge-rose">0개 문장</span>
+                        </div>
+                        <p style="margin: 0 0 0.5rem; font-size: 0.76rem; color: #64748B;">
+                            형식: <code>영어 문장 : 한글 해석</code> (줄바꿈 구분, 예: <code>I like hiking. : 나는 하이킹을 좋아해.</code>)
+                        </p>
+                        <textarea id="admin-sentences-text" class="admin-textarea" rows="11" spellcheck="false" 
+                            placeholder="I do not have any plans. : 나는 아무 계획도 없어.&#10;They play soccer with children. : 그들은 아이들과 축구를 해."></textarea>
+                    </div>
+                </div>
+
+                <!-- 4. 클라우드 연동 상태 알림 바 -->
+                <div id="admin-sync-banner" style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 0.65rem; padding: 0.6rem 0.9rem; display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: #1E40AF;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="live-dot" style="background:#2563EB; box-shadow: 0 0 6px #2563EB;"></span>
+                        <span id="admin-sync-text">클라우드 중앙 데이터베이스(Firestore) 및 로컬 스토리지 자동 연동 대기 중</span>
+                    </div>
+                    <span style="font-size: 0.75rem; color: #3B82F6; font-weight: 600;">⚡ 전 게임 즉시 반영 지원</span>
+                </div>
+            </div>
+
+            <!-- 모달 하단 푸터 액션 바 -->
+            <div class="admin-modal-footer">
+                <div style="display: flex; flex-wrap: wrap; gap: 0.45rem;">
+                    <button type="button" onclick="adminResetToDefault()" class="admin-btn admin-btn-secondary" title="모든 단원을 초기 기본 데이터로 복원합니다">
+                        <i class="fas fa-undo"></i> 기본 단원 복원
+                    </button>
+                    <button type="button" onclick="adminExportJson()" class="admin-btn admin-btn-secondary" title="현재 전체 단원/어휘/문장을 JSON 파일로 다운로드합니다">
+                        <i class="fas fa-download"></i> JSON 백업
+                    </button>
+                    <button type="button" onclick="document.getElementById('admin-json-file').click()" class="admin-btn admin-btn-secondary" title="저장해둔 JSON 백업 파일을 불러옵니다">
+                        <i class="fas fa-upload"></i> JSON 불러오기
+                    </button>
+                    <input type="file" id="admin-json-file" accept=".json" style="display:none;" onchange="adminImportJsonFile(event)" />
+                    <button type="button" onclick="adminChangePassword()" class="admin-btn admin-btn-secondary" title="관리자 비밀번호를 변경합니다">
+                        <i class="fas fa-key"></i> 비밀번호 변경
+                    </button>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button type="button" onclick="closeCurriculumAdminModal()" class="admin-btn admin-btn-secondary" style="padding: 0.55rem 1rem;">
+                        닫기
+                    </button>
+                    <button type="button" onclick="adminSaveAndApply()" class="admin-btn admin-btn-primary" style="padding: 0.55rem 1.4rem; font-weight: 800; font-size: 0.88rem; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);">
+                        <i class="fas fa-save"></i> 💾 클라우드 저장 및 전체 앱 즉시 적용
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

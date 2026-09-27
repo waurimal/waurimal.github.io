@@ -22,6 +22,20 @@
         document.head.appendChild(link);
     }
 
+    // 1-2. 공통 Firebase 설정 및 통합 교육과정 모듈 자동 주입
+    if (!window.WaurimalFirebase && !document.getElementById('waurimal-firebase-script')) {
+        const fbScript = document.createElement('script');
+        fbScript.id = 'waurimal-firebase-script';
+        fbScript.src = (window.location.protocol === 'file:') ? '../common/firebase-config.js' : 'https://waurimal.github.io/common/firebase-config.js';
+        document.head.appendChild(fbScript);
+    }
+    if (!window.WaurimalCurriculum && !document.getElementById('waurimal-curriculum-script')) {
+        const currScript = document.createElement('script');
+        currScript.id = 'waurimal-curriculum-script';
+        currScript.src = (window.location.protocol === 'file:') ? '../common/curriculum.js' : 'https://waurimal.github.io/common/curriculum.js';
+        document.head.appendChild(currScript);
+    }
+
     // 1-1. 비속어 및 부적절한 단어 필터링 엔진 (WaurimalProfanity)
     const PROFANITY_PATTERNS = [
         /시[^\w가-힣]*[발벌빨바파펄팔8]|씨[^\w가-힣]*[발벌빨바파팔8]|ㅅ[^\w가-힣]*ㅂ|ㅆ[^\w가-힣]*ㅂ|shib[ao]l|sibal/i,

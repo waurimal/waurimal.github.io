@@ -249,53 +249,320 @@
                 { en: "I will go camping in the forest.", kr: "숲으로 캠핑을 갈 거야." },
                 { en: "I plan to visit my grandparents.", kr: "조부모님 댁을 방문할 계획이야." }
             ]
+        },
+        {
+            code: "6G_L09_CANVA",
+            grade: 6,
+            name: "6학년 Lesson 09 - 방학 계획 (Canva Sparkle Standard)",
+            words: [
+                { en: "plan", kr: "계획" },
+                { en: "children", kr: "아이들" },
+                { en: "soccer", kr: "축구" },
+                { en: "hiking", kr: "하이킹" },
+                { en: "forest", kr: "숲" },
+                { en: "hamburger", kr: "햄버거" },
+                { en: "program", kr: "프로그램" },
+                { en: "clean", kr: "청소하다" },
+                { en: "tent", kr: "텐트" },
+                { en: "village", kr: "마을" },
+                { en: "zoo", kr: "동물원" }
+            ],
+            sentences: [
+                { en: "I do not have any plans.", kr: "나는 아무 계획이 없어." },
+                { en: "They play soccer with children.", kr: "그들은 아이들과 축구를 해." },
+                { en: "I like hiking in a forest.", kr: "나는 숲에서 하이킹하는 것을 좋아해." },
+                { en: "I like hamburgers.", kr: "나는 햄버거를 좋아해." },
+                { en: "Choose your favorite program, please.", kr: "가장 좋아하는 프로그램을 골라주세요." },
+                { en: "I am going to clean my room.", kr: "나는 방을 청소할 예정이야." },
+                { en: "I am going to stay home.", kr: "나는 집에 머무를 예정이야." },
+                { en: "We are going to sleep in a tent.", kr: "우리는 텐트에서 잘 거야." },
+                { en: "We are going to visit a small village.", kr: "우리는 작은 마을을 방문할 거야." },
+                { en: "I am going to clean the zoo.", kr: "나는 동물원을 청소할 거야." }
+            ]
         }
     ];
 
-    window.WaurimalCurriculum = {
-        lessons: RAW_LESSONS,
+    const STORAGE_KEY = 'waurimal_custom_curriculum';
+
+    // 로컬 스토리지에 캐시된 커스텀 단원 확인 (오프라인 0ms 즉시 응답)
+    let currentLessons = [...RAW_LESSONS];
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                currentLessons = parsed;
+            }
+        }
+    } catch (e) {
+        console.warn("Curriculum local storage error:", e);
+    }
+
+    const WaurimalCurriculum = {
+        // 기본 제공 원본 데이터
+        defaultLessons: RAW_LESSONS,
+
+        // 현재 활성화된 교육과정 목록 (기본 + 교사 커스텀)
+        lessons: currentLessons,
+
+        // 전체 단원 목록 조회
+        getLessons: function() {
+            return this.lessons;
+        },
 
         // 단원 코드로 조회
         getLesson: function(code) {
-            return RAW_LESSONS.find(l => l.code === code) || null;
+            if (!code) return null;
+            const target = String(code).trim().toLowerCase();
+            return this.lessons.find(l => 
+                (l.code && l.code.toLowerCase() === target) || 
+                (l.id && l.id.toLowerCase() === target)
+            ) || null;
         },
 
-        // 학년별 단원 목록
+        // 학년별 단원 목록 조회
         getLessonsByGrade: function(grade) {
-            return RAW_LESSONS.filter(l => l.grade === Number(grade));
+            if (!grade || grade === 'all' || grade === 'ALL') return this.lessons;
+            return this.lessons.filter(l => Number(l.grade) === Number(grade));
+        },
+
+        // 특정 단원의 단어 목록 ({ en, kr } 객체 배열) 반환
+        getLessonWords: function(code) {
+            const l = this.getLesson(code);
+            return (l && Array.isArray(l.words)) ? l.words : [];
+        },
+
+        // 특정 단원의 단어 목록 텍스트 ("en : kr\n...") 반환
+        getLessonWordsText: function(code) {
+            const words = this.getLessonWords(code);
+            return this.wordsToText(words);
+        },
+
+        // 특정 단원의 문장 목록 ({ en, kr } 객체 배열) 반환
+        getLessonSentences: function(code) {
+            const l = this.getLesson(code);
+            if (!l) return [];
+            if (Array.isArray(l.sentences)) {
+                return l.sentences.map(s => {
+                    if (typeof s === 'string') return { en: s, kr: '' };
+                    return { en: s.en || s.sentence || '', kr: s.kr || s.meaning || '' };
+                });
+            }
+            return [];
+        },
+
+        // 특정 단원의 문장 문자열 배열 (["I am happy.", ...]) 반환 (Sparkle 등 간편 사용)
+        getLessonSentencesList: function(code) {
+            const sentences = this.getLessonSentences(code);
+            return sentences.map(s => s.en).filter(s => s && s.length > 0);
+        },
+
+        // 특정 단원의 문장 목록 텍스트 ("en : kr\n...") 반환
+        getLessonSentencesText: function(code) {
+            const sentences = this.getLessonSentences(code);
+            return this.sentencesToText(sentences);
         },
 
         // 전체 단어 평탄화 목록 반환
         getAllWords: function() {
             const list = [];
-            RAW_LESSONS.forEach(l => {
-                l.words.forEach(w => {
-                    list.push({ ...w, lessonCode: l.code, lessonName: l.name, grade: l.grade });
-                });
+            this.lessons.forEach(l => {
+                if (Array.isArray(l.words)) {
+                    l.words.forEach(w => {
+                        list.push({ ...w, lessonCode: l.code, lessonName: l.name, grade: l.grade });
+                    });
+                }
             });
             return list;
         },
 
-        // 텍스트 기반 단어 목록 파싱 (예: "apple : 사과\nbanana : 바나나")
+        // 전체 문장 평탄화 목록 반환
+        getAllSentences: function() {
+            const list = [];
+            this.lessons.forEach(l => {
+                if (Array.isArray(l.sentences)) {
+                    l.sentences.forEach(s => {
+                        const item = typeof s === 'string' ? { en: s, kr: '' } : { en: s.en || '', kr: s.kr || '' };
+                        list.push({ ...item, lessonCode: l.code, lessonName: l.name, grade: l.grade });
+                    });
+                }
+            });
+            return list;
+        },
+
+        // 랜덤 단어 추출
+        getRandomWords: function(count, grade) {
+            let pool = grade ? this.getLessonsByGrade(grade).flatMap(l => l.words || []) : this.getAllWords();
+            const shuffled = [...pool].sort(() => Math.random() - 0.5);
+            return shuffled.slice(0, count);
+        },
+
+        // ── 텍스트 파싱 & 포맷팅 헬퍼 ──
         parseWords: function(rawText) {
             if (!rawText) return [];
             return rawText.split('\n')
                 .map(line => line.trim())
-                .filter(line => line && line.includes(':'))
+                .filter(line => line.length > 0)
                 .map(line => {
-                    const parts = line.split(':');
-                    return {
-                        en: parts[0].trim(),
-                        kr: parts.slice(1).join(':').trim()
-                    };
+                    if (line.includes(':')) {
+                        const parts = line.split(':');
+                        return { en: parts[0].trim(), kr: parts.slice(1).join(':').trim() };
+                    }
+                    return { en: line.trim(), kr: '' };
                 });
         },
 
-        // 랜덤 단어 N개 추출
-        getRandomWords: function(count, grade) {
-            let pool = grade ? this.getLessonsByGrade(grade).flatMap(l => l.words) : this.getAllWords();
-            const shuffled = [...pool].sort(() => Math.random() - 0.5);
-            return shuffled.slice(0, count);
+        wordsToText: function(wordsArray) {
+            if (!Array.isArray(wordsArray)) return '';
+            return wordsArray.map(w => w.kr ? `${w.en} : ${w.kr}` : w.en).join('\n');
+        },
+
+        parseSentences: function(rawText) {
+            if (!rawText) return [];
+            return rawText.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0)
+                .map(line => {
+                    if (line.includes(':')) {
+                        const parts = line.split(':');
+                        return { en: parts[0].trim(), kr: parts.slice(1).join(':').trim() };
+                    }
+                    return { en: line.trim(), kr: '' };
+                });
+        },
+
+        sentencesToText: function(sentencesArray) {
+            if (!Array.isArray(sentencesArray)) return '';
+            return sentencesArray.map(s => {
+                const en = typeof s === 'string' ? s : (s.en || s.sentence || '');
+                const kr = typeof s === 'string' ? '' : (s.kr || s.meaning || '');
+                return kr ? `${en} : ${kr}` : en;
+            }).join('\n');
+        },
+
+        // ── 로컬 및 클라우드 동기화 메서드 ──
+        // 단원 목록 업데이트 및 로컬/이벤트 통지
+        setLessons: function(newLessons, syncToCloud) {
+            if (!Array.isArray(newLessons)) return false;
+            this.lessons = newLessons;
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(newLessons));
+            } catch (e) {
+                console.warn("Storage save error:", e);
+            }
+            window.dispatchEvent(new CustomEvent('waurimal_curriculum_updated', { detail: newLessons }));
+
+            if (syncToCloud) {
+                return this.saveToCloud();
+            }
+            return Promise.resolve(true);
+        },
+
+        // Firebase Firestore 중앙 클라우드 저장
+        saveToCloud: async function() {
+            try {
+                if (window.firebase && typeof firebase.firestore === 'function') {
+                    if (!firebase.apps.length && window.WaurimalFirebase) {
+                        firebase.initializeApp(WaurimalFirebase.getConfig());
+                    }
+                    const db = firebase.firestore();
+                    await db.collection('settings').doc('curriculum').set({
+                        lessons: this.lessons,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                    console.log("WaurimalCurriculum: Firestore synced successfully!");
+                    return true;
+                } else {
+                    console.warn("Firebase Firestore not initialized, stored in localStorage only.");
+                    return true;
+                }
+            } catch (e) {
+                console.error("WaurimalCurriculum cloud sync error:", e);
+                return false;
+            }
+        },
+
+        // Firebase Firestore 중앙 클라우드에서 최신 데이터 로드
+        loadFromCloud: async function() {
+            try {
+                if (window.firebase && typeof firebase.firestore === 'function') {
+                    if (!firebase.apps.length && window.WaurimalFirebase) {
+                        firebase.initializeApp(WaurimalFirebase.getConfig());
+                    }
+                    const db = firebase.firestore();
+                    const docSnap = await db.collection('settings').doc('curriculum').get();
+                    if (docSnap.exists && docSnap.data().lessons && Array.isArray(docSnap.data().lessons)) {
+                        const cloudLessons = docSnap.data().lessons;
+                        if (cloudLessons.length > 0) {
+                            this.lessons = cloudLessons;
+                            localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudLessons));
+                            window.dispatchEvent(new CustomEvent('waurimal_curriculum_updated', { detail: cloudLessons }));
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn("WaurimalCurriculum cloud load notice (offline fallback):", e);
+            }
+            return false;
+        },
+
+        // 실시간 클라우드 리스너 등록
+        listenToCloud: function() {
+            try {
+                if (window.firebase && typeof firebase.firestore === 'function') {
+                    if (!firebase.apps.length && window.WaurimalFirebase) {
+                        firebase.initializeApp(WaurimalFirebase.getConfig());
+                    }
+                    const db = firebase.firestore();
+                    return db.collection('settings').doc('curriculum').onSnapshot(docSnap => {
+                        if (docSnap.exists && docSnap.data().lessons && Array.isArray(docSnap.data().lessons)) {
+                            const cloudLessons = docSnap.data().lessons;
+                            if (cloudLessons.length > 0) {
+                                this.lessons = cloudLessons;
+                                localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudLessons));
+                                window.dispatchEvent(new CustomEvent('waurimal_curriculum_updated', { detail: cloudLessons }));
+                            }
+                        }
+                    });
+                }
+            } catch (e) {
+                console.warn("WaurimalCurriculum listen error:", e);
+            }
+            return null;
+        },
+
+        // 초기 기본 교육과정으로 리셋
+        resetToDefault: async function(syncToCloud) {
+            return this.setLessons([...RAW_LESSONS], syncToCloud);
+        },
+
+        // JSON 내보내기 & 불러오기
+        exportJson: function() {
+            return JSON.stringify(this.lessons, null, 2);
+        },
+
+        importJson: function(jsonString, syncToCloud) {
+            try {
+                const parsed = JSON.parse(jsonString);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    return this.setLessons(parsed, syncToCloud);
+                }
+                return false;
+            } catch (e) {
+                console.error("JSON import error:", e);
+                return false;
+            }
         }
     };
+
+    // 전역 등록 및 백그라운드 클라우드 동기화 시도
+    if (typeof window !== 'undefined') {
+        window.WaurimalCurriculum = WaurimalCurriculum;
+        setTimeout(() => {
+            if (typeof WaurimalCurriculum.loadFromCloud === 'function') {
+                WaurimalCurriculum.loadFromCloud();
+            }
+        }, 500);
+    }
 })();
