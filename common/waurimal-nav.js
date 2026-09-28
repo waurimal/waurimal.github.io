@@ -130,7 +130,7 @@
         },
 
         getDisplayText: function(profile) {
-            if (!profile || !profile.name) return "학교명 / 학생 정보 등록";
+            if (!profile || !profile.name) return "학생 로그인 / 정보 등록";
             const school = (profile.school && profile.school.trim()) || "이의초등학교";
             const g = profile.grade ? `${profile.grade}학년 ` : '';
             const c = profile.classNum ? `${profile.classNum}반 ` : '';
@@ -616,6 +616,18 @@
         .w-feedback-text::after {
             content: " 남기기";
         }
+        .w-gnb-btn-teacher {
+            background: rgba(30, 41, 59, 0.85) !important;
+            border-color: #3b82f6 !important;
+            color: #93c5fd !important;
+            font-weight: 700 !important;
+        }
+        .w-gnb-btn-teacher:hover {
+            background: #2563eb !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5) !important;
+            transform: translateY(-1px);
+        }
         .w-gnb-btn-primary {
             background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
             border-color: #60a5fa !important;
@@ -653,7 +665,7 @@
             bottom: 0;
             background: rgba(15, 23, 42, 0.65);
             backdrop-filter: blur(4px);
-            z-index: 1000000;
+            z-index: 9999999 !important;
             display: none;
             align-items: center;
             justify-content: center;
@@ -770,6 +782,9 @@
             .w-guide-text {
                 display: none;
             }
+            .w-teacher-text {
+                display: none;
+            }
             .w-gnb-student-chip {
                 max-width: 230px;
                 font-size: 0.78rem;
@@ -831,13 +846,16 @@
                     </div>
                 </div>
                 <div class="w-gnb-center">
-                    <button type="button" class="w-gnb-student-chip ${isEmpty ? 'empty' : ''}" id="w-btn-student-profile" title="학생 정보 설정 (모든 게임에 자동 적용)">
+                    <button type="button" class="w-gnb-student-chip ${isEmpty ? 'empty' : ''}" id="w-btn-student-profile" title="학생 로그인 및 정보 설정 (모든 게임에 자동 적용)">
                         <span>👤</span>
                         <span id="w-student-chip-name">${studentText}</span>
                         <span style="font-size:0.75rem; opacity:0.8;">✏️</span>
                     </button>
                 </div>
                 <div class="w-gnb-right">
+                    <button type="button" class="w-gnb-btn w-gnb-btn-teacher" id="w-btn-teacher-gnb" title="선생님 관리자 모드 (교육과정 및 설정)">
+                        <span>🔒</span><span class="w-teacher-text"> 교사 모드</span>
+                    </button>
                     <a href="${feedbackUrl}" class="w-gnb-btn w-gnb-btn-feedback" id="w-btn-feedback" title="앱 평가 및 의견 남기기">
                         <span>💬</span> <span class="w-feedback-text">앱 평가 및 의견</span>
                     </a>
@@ -863,7 +881,7 @@
             <div class="w-modal-card">
                 <div class="w-modal-header">
                     <div class="w-modal-title">
-                        <span>👤</span> 내 학생 정보 설정
+                        <span>👤</span> 학생 로그인 / 프로필 설정
                     </div>
                     <button type="button" class="w-modal-close" id="w-student-modal-close">&times;</button>
                 </div>
@@ -898,13 +916,13 @@
                         <input type="text" class="w-form-input" id="w-input-name" value="${(profile && profile.name) || ''}" placeholder="이름을 입력하세요 (예: 홍길동)">
                     </div>
                     <div class="w-modal-tip">
-                        💡 <strong>한 번만 입력하면 끝!</strong><br>
-                        여기서 저장한 정보는 모든 영어 게임에 자동으로 로그인/입장됩니다.
+                        💡 <strong>한 번만 입력하면 자동 로그인 완료!</strong><br>
+                        여기서 로그인(저장)한 정보는 모든 영어 게임에 자동으로 연동되어 입장됩니다.
                     </div>
                 </div>
                 <div class="w-modal-footer">
                     <button type="button" class="w-gnb-btn" id="w-btn-student-clear" style="color:#ef4444; border-color:#fca5a5;">초기화</button>
-                    <button type="button" class="w-gnb-btn w-gnb-btn-primary" id="w-btn-student-save">저장하고 적용하기</button>
+                    <button type="button" class="w-gnb-btn w-gnb-btn-primary" id="w-btn-student-save">로그인 및 저장하기</button>
                 </div>
             </div>
         `;
@@ -937,6 +955,27 @@
             </div>
         `;
 
+        function handleTeacherMode() {
+            if (typeof window.openCurriculumAdmin === 'function') {
+                window.openCurriculumAdmin();
+                return;
+            }
+            const targets = [
+                '#btn-teacher-entry', '#btn-show-teacher-auth', '.teacher-btn', '#open-admin-btn',
+                '#btn-go-teacher-auth', '#btn-admin-open', 'button[onclick*="teacher"]',
+                'button[onclick*="Teacher"]', 'button[onclick*="admin"]', 'button[onclick*="Admin"]'
+            ];
+            for (const sel of targets) {
+                const el = document.querySelector(sel);
+                if (el && el !== teacherBtn && el !== gnbTeacherBtn) {
+                    el.click();
+                    WaurimalToast('교사 설정 모드로 진입합니다.', '🔒');
+                    return;
+                }
+            }
+            WaurimalToast('이 게임의 교사 설정 메뉴를 찾을 수 없습니다.', 'ℹ️');
+        }
+
         // 교사 설정 플로팅 버튼 (우측 하단)
         let teacherBtn = document.querySelector('.w-floating-teacher-btn');
         if (!teacherBtn) {
@@ -945,26 +984,7 @@
             teacherBtn.className = 'w-floating-teacher-btn';
             teacherBtn.innerHTML = '<span>🔒</span> 교사 모드';
             teacherBtn.title = '교사 전용 설정 열기';
-            teacherBtn.addEventListener('click', () => {
-                if (typeof window.openCurriculumAdmin === 'function') {
-                    window.openCurriculumAdmin();
-                    return;
-                }
-                const targets = [
-                    '#btn-teacher-entry', '#btn-show-teacher-auth', '.teacher-btn', '#open-admin-btn',
-                    '#btn-go-teacher-auth', '#btn-admin-open', 'button[onclick*="teacher"]',
-                    'button[onclick*="Teacher"]', 'button[onclick*="admin"]', 'button[onclick*="Admin"]'
-                ];
-                for (const sel of targets) {
-                    const el = document.querySelector(sel);
-                    if (el && el !== teacherBtn) {
-                        el.click();
-                        WaurimalToast('교사 설정 모드로 진입합니다.', '🔒');
-                        return;
-                    }
-                }
-                WaurimalToast('이 게임의 교사 설정 메뉴를 찾을 수 없습니다.', 'ℹ️');
-            });
+            teacherBtn.addEventListener('click', handleTeacherMode);
             document.body.appendChild(teacherBtn);
         } else {
             teacherBtn.addEventListener('click', () => {
@@ -974,11 +994,34 @@
             });
         }
 
+        // ═════════════════════════════════════════════════════════════
+        // GNB 바 및 모달 DOM 주입 (CRITICAL: GNB, 학생 모달, 가이드 모달 바디 삽입)
+        // ═════════════════════════════════════════════════════════════
+        document.body.prepend(wrapper);
+        document.body.appendChild(studentModal);
+        document.body.appendChild(guideModal);
+
+        // GNB 교사 모드 버튼 바인딩
+        const gnbTeacherBtn = document.getElementById('w-btn-teacher-gnb');
+        if (gnbTeacherBtn) {
+            gnbTeacherBtn.addEventListener('click', handleTeacherMode);
+        }
+
         // 프로필 모달 바인딩
         const profileBtn = document.getElementById('w-btn-student-profile');
         profileBtn.addEventListener('click', () => { studentModal.style.display = 'flex'; });
         document.getElementById('w-student-modal-close').addEventListener('click', () => { studentModal.style.display = 'none'; });
         studentModal.addEventListener('click', (e) => { if (e.target === studentModal) studentModal.style.display = 'none'; });
+
+        // 이름 입력란에서 Enter 누르면 바로 로그인/저장
+        const nameInput = document.getElementById('w-input-name');
+        if (nameInput) {
+            nameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('w-btn-student-save').click();
+                }
+            });
+        }
 
         document.getElementById('w-btn-student-save').addEventListener('click', () => {
             const name = document.getElementById('w-input-name').value.trim();
@@ -1014,7 +1057,7 @@
                 studentModal.style.display = 'none';
                 const chip = document.getElementById('w-btn-student-profile');
                 chip.classList.add('empty');
-                document.getElementById('w-student-chip-name').innerText = "학교명 / 학생 정보 등록";
+                document.getElementById('w-student-chip-name').innerText = "학생 로그인 / 정보 등록";
                 WaurimalToast('학생 정보가 초기화되었습니다.', '🔄');
             }
         });
