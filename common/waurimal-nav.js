@@ -138,6 +138,29 @@
             return `${school} / ${g}${c}${n}${profile.name}`.trim();
         },
 
+        isLoggedIn: function() {
+            const profile = this.get();
+            return !!(profile && profile.name && profile.name.trim());
+        },
+
+        openModal: function() {
+            const modal = document.getElementById('w-student-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                const nameInp = document.getElementById('w-input-name');
+                if (nameInp) setTimeout(() => nameInp.focus(), 100);
+            }
+        },
+
+        requireLogin: function(actionText = "게임을 플레이") {
+            if (!this.isLoggedIn()) {
+                alert(`${actionText}하려면 먼저 학생 정보(학교, 학년, 반, 번호, 이름)를 등록해야 합니다.`);
+                this.openModal();
+                return false;
+            }
+            return true;
+        },
+
         // 19개 모든 게임 내 학적 폼 자동 채우기
         autoFillForms: function() {
             const profile = this.get();
