@@ -714,29 +714,12 @@
                         ${bulletsHtml}
                     </ul>
                     <div class="btn-group">
-                        <a href="${getAppLaunchUrl(app)}" onclick="return onAppLaunchClick(event, '${app.id}', '${app.title}')" class="btn btn-primary" style="background-color: ${app.theme};" target="_blank">실행</a>
+                        <a href="${getAppLaunchUrl(app)}" class="btn btn-primary" style="background-color: ${app.theme};" target="_blank">실행</a>
                         <a href="guide.html?app=${app.id}" class="btn btn-secondary">방법</a>
                     </div>
                 `;
                 container.appendChild(card);
             });
-        }
-
-        function onAppLaunchClick(e, appId, appTitle) {
-            if (appId === 'file_upload') return true;
-            if (window.WaurimalStudent && typeof window.WaurimalStudent.isLoggedIn === 'function') {
-                if (!window.WaurimalStudent.isLoggedIn()) {
-                    e.preventDefault();
-                    if (typeof window.WaurimalStudent.requireLogin === 'function') {
-                        window.WaurimalStudent.requireLogin(`${appTitle}을(를) 실행`);
-                    } else if (typeof window.WaurimalStudent.openModal === 'function') {
-                        alert(`${appTitle}을(를) 실행하려면 먼저 학생 정보(학교, 학년, 반, 번호, 이름)를 등록해야 합니다.`);
-                        window.WaurimalStudent.openModal();
-                    }
-                    return false;
-                }
-            }
-            return true;
         }
 
         document.querySelectorAll('.cat-btn').forEach(btn => {
