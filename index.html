@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>에듀테크(Edtech) 영어 학습 놀이터</title>
     <!-- 폰트 및 아이콘 불러오기 -->
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
@@ -732,7 +735,8 @@
         });
 
         function getAppLaunchUrl(app) {
-            return app.url;
+            const separator = app.url.includes('?') ? '&' : '?';
+            return `${app.url}${separator}v=${Date.now()}`;
         }
 
         window.addEventListener('waurimal_student_updated', () => {
