@@ -175,7 +175,7 @@
                 classNum: [
                     '#classNum', '#p-class', '#loginClass', '#student-class', '#class-select',
                     '#class-input', '#st-class', '#inp-class', '#input-class', '#host-st-class',
-                    '#guest-st-class', '#classCodeInput', '#filter-score-class', 'select[name="class"]'
+                    '#guest-st-class', '#filter-score-class', 'select[name="class"]'
                 ],
                 studentNum: [
                     '#studentNum', '#p-num', '#st-num', '#loginNumber', '#student-num',
