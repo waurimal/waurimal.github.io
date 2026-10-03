@@ -390,6 +390,60 @@
                     gain.gain.linearRampToValueAtTime(0.001, now + 0.22);
                     osc.start(now);
                     osc.stop(now + 0.22);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(190, now);
+                    osc.frequency.linearRampToValueAtTime(110, now + 0.25);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'complete') {
+                    const freqs = [523.25, 659.25, 783.99, 1046.50];
+                    freqs.forEach((f, idx) => {
+                        const o = this.ctx.createOscillator();
+                        const g = this.ctx.createGain();
+                        o.type = 'triangle';
+                        o.frequency.setValueAtTime(f, now + idx * 0.08);
+                        g.gain.setValueAtTime(0.09, now + idx * 0.08);
+                        g.gain.linearRampToValueAtTime(0.001, now + idx * 0.08 + 0.2);
+                        o.connect(g);
+                        g.connect(this.ctx.destination);
+                        o.start(now + idx * 0.08);
+                        o.stop(now + idx * 0.08 + 0.2);
+                    });
+                } else if (type === 'eat') {
+                    if (typeof window.playEatSound === 'function') {
+                        window.playEatSound();
+                    } else {
+                        // 절차적 바삭한 음식 섭취 효과음 (Minecraft 스타일)
+                        const bufLen = Math.floor(this.ctx.sampleRate * 0.16);
+                        const nBuf = this.ctx.createBuffer(1, bufLen, this.ctx.sampleRate);
+                        const data = nBuf.getChannelData(0);
+                        for (let i = 0; i < bufLen; i++) data[i] = (Math.random() * 2 - 1) * 0.8;
+                        const nSrc = this.ctx.createBufferSource();
+                        nSrc.buffer = nBuf;
+                        const bp = this.ctx.createBiquadFilter();
+                        bp.type = 'bandpass';
+                        bp.frequency.setValueAtTime(1700 + Math.random() * 400, now);
+                        bp.Q.setValueAtTime(2.4, now);
+                        const nGain = this.ctx.createGain();
+                        nGain.gain.setValueAtTime(0.28, now);
+                        nGain.gain.exponentialRampToValueAtTime(0.005, now + 0.14);
+                        nSrc.connect(bp);
+                        bp.connect(nGain);
+                        nGain.connect(this.ctx.destination);
+                        nSrc.start(now);
+                        nSrc.stop(now + 0.15);
+
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(320, now);
+                        osc.frequency.exponentialRampToValueAtTime(130, now + 0.12);
+                        gain.gain.setValueAtTime(0.18, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+                        osc.start(now);
+                        osc.stop(now + 0.12);
+                    }
                 }
             } catch(e) {}
         }
