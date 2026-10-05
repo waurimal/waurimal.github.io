@@ -754,7 +754,8 @@
         let isAdminAuthenticated = false;
 
         function openCurriculumAdmin() {
-            if (isAdminAuthenticated) {
+            if (isAdminAuthenticated || (window.WaurimalAuth && window.WaurimalAuth.isAuthenticated())) {
+                isAdminAuthenticated = true;
                 showCurriculumAdminModal();
             } else {
                 const pwModal = document.getElementById('curriculum-pw-modal');
@@ -780,8 +781,8 @@
 
         function verifyCurriculumAdminPw() {
             const entered = document.getElementById('curriculum-admin-pw-input').value.trim();
-            const currentPw = localStorage.getItem('waurimal_admin_pw') || '1234';
-            if (entered === currentPw) {
+            const isValid = window.WaurimalAuth ? window.WaurimalAuth.authenticate(entered) : (entered === (localStorage.getItem('waurimal_admin_pw') || '1234'));
+            if (isValid) {
                 isAdminAuthenticated = true;
                 closeCurriculumPwModal();
                 showCurriculumAdminModal();
@@ -796,6 +797,10 @@
         }
 
         function showCurriculumAdminModal() {
+            if (!isAdminAuthenticated && (!window.WaurimalAuth || !window.WaurimalAuth.isAuthenticated())) {
+                openCurriculumAdmin();
+                return;
+            }
             if (window.WaurimalCurriculum) {
                 adminLessons = JSON.parse(JSON.stringify(window.WaurimalCurriculum.getLessons()));
             } else {
@@ -1033,10 +1038,10 @@
         }
 
         function adminChangePassword() {
-            const curPw = localStorage.getItem('waurimal_admin_pw') || '1234';
             const oldInput = prompt("현재 관리자 비밀번호를 입력해주세요:");
             if (oldInput === null) return;
-            if (oldInput !== curPw) {
+            const isOldValid = window.WaurimalAuth ? window.WaurimalAuth.verify(oldInput) : (oldInput === (localStorage.getItem('waurimal_admin_pw') || '1234'));
+            if (!isOldValid) {
                 alert("현재 비밀번호가 일치하지 않습니다.");
                 return;
             }
@@ -1047,8 +1052,17 @@
                 return;
             }
 
-            localStorage.setItem('waurimal_admin_pw', newPw.trim());
-            alert("관리자 비밀번호가 성공적으로 변경되었습니다.");
+            if (window.WaurimalAuth) {
+                const res = window.WaurimalAuth.setPw(newPw);
+                if (res.success) {
+                    alert("관리자 비밀번호가 성공적으로 변경되었습니다.");
+                } else {
+                    alert("변경 실패: " + res.message);
+                }
+            } else {
+                localStorage.setItem('waurimal_admin_pw', newPw.trim());
+                alert("관리자 비밀번호가 성공적으로 변경되었습니다.");
+            }
         }
 
         // 전역 window 명시적 바인딩

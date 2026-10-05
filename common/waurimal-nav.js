@@ -36,6 +36,80 @@
         document.head.appendChild(currScript);
     }
 
+    // 1-0. 보안 XSS 방지 유틸리티 (WaurimalSanitize)
+    function WaurimalSanitize(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+    window.WaurimalSanitize = WaurimalSanitize;
+
+    // 1-0-1. 통합 교사 모드 인증 관리자 (WaurimalAuth)
+    // 백도어 비밀번호를 전면 차단하고 세션 인증 검증(F12 콘솔 우회 방지)을 지원합니다.
+    const WaurimalAuth = {
+        STORAGE_KEY: 'waurimal_admin_pw',
+        SESSION_KEY: 'waurimal_teacher_auth',
+        DEFAULT_PW: '1234',
+
+        getPw: function() {
+            try {
+                const saved = localStorage.getItem(this.STORAGE_KEY);
+                if (saved && saved.trim()) return saved.trim();
+            } catch (e) {}
+            return this.DEFAULT_PW;
+        },
+
+        verify: function(inputPw) {
+            if (!inputPw) return false;
+            return String(inputPw).trim() === this.getPw();
+        },
+
+        authenticate: function(inputPw) {
+            if (this.verify(inputPw)) {
+                try {
+                    sessionStorage.setItem(this.SESSION_KEY, 'true');
+                } catch (e) {}
+                return true;
+            }
+            return false;
+        },
+
+        isAuthenticated: function() {
+            try {
+                return sessionStorage.getItem(this.SESSION_KEY) === 'true';
+            } catch (e) {
+                return false;
+            }
+        },
+
+        setPw: function(newPw) {
+            if (!newPw || String(newPw).trim().length < 4) {
+                return { success: false, message: '비밀번호는 4자리 이상이어야 합니다.' };
+            }
+            const cleanPw = String(newPw).trim();
+            try {
+                localStorage.setItem(this.STORAGE_KEY, cleanPw);
+                try {
+                    sessionStorage.setItem(this.SESSION_KEY, 'true');
+                } catch (e) {}
+                return { success: true };
+            } catch (e) {
+                return { success: false, message: '저장 실패: ' + e.message };
+            }
+        },
+
+        logout: function() {
+            try {
+                sessionStorage.removeItem(this.SESSION_KEY);
+            } catch (e) {}
+        }
+    };
+    window.WaurimalAuth = WaurimalAuth;
+
     // 1-1. 비속어 및 부적절한 단어 필터링 엔진 (WaurimalProfanity)
     const PROFANITY_PATTERNS = [
         /시[^\w가-힣]*[발벌빨바파펄팔8]|씨[^\w가-힣]*[발벌빨바파팔8]|ㅅ[^\w가-힣]*ㅂ|ㅆ[^\w가-힣]*ㅂ|shib[ao]l|sibal/i,
@@ -85,11 +159,11 @@
 
             if (qName && (qGrade || qClass || qNum)) {
                 const urlProfile = {
-                    school: qSchool || "이의초등학교",
-                    grade: qGrade || "6",
-                    classNum: qClass || "1",
-                    studentNum: qNum || "1",
-                    name: qName
+                    school: WaurimalSanitize(qSchool || "이의초등학교").slice(0, 30),
+                    grade: String(qGrade || "6").replace(/\D/g, '').slice(0, 2),
+                    classNum: String(qClass || "1").replace(/\D/g, '').slice(0, 3),
+                    studentNum: String(qNum || "1").replace(/\D/g, '').slice(0, 3),
+                    name: WaurimalSanitize(String(qName).trim()).slice(0, 20)
                 };
                 this.save(urlProfile);
                 return urlProfile;
@@ -98,7 +172,18 @@
             // 2) localStorage 확인
             try {
                 const saved = localStorage.getItem(STORAGE_KEY);
-                if (saved) return JSON.parse(saved);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && typeof parsed === 'object') {
+                        return {
+                            school: WaurimalSanitize(parsed.school || "이의초등학교").slice(0, 30),
+                            grade: String(parsed.grade || "6").replace(/\D/g, '').slice(0, 2),
+                            classNum: String(parsed.classNum || "1").replace(/\D/g, '').slice(0, 3),
+                            studentNum: String(parsed.studentNum || "1").replace(/\D/g, '').slice(0, 3),
+                            name: WaurimalSanitize(String(parsed.name || '').trim()).slice(0, 20)
+                        };
+                    }
+                }
             } catch (e) {
                 console.warn("Storage access error:", e);
             }
@@ -106,13 +191,22 @@
         },
 
         save: function(profile) {
-            if (profile && profile.name && WaurimalProfanity.check(profile.name)) {
-                console.warn("Profanity blocked in WaurimalStudent.save:", profile.name);
+            if (!profile || typeof profile !== 'object') return false;
+            const cleanProfile = {
+                school: WaurimalSanitize(profile.school || "이의초등학교").slice(0, 30),
+                grade: String(profile.grade || "6").replace(/\D/g, '').slice(0, 2),
+                classNum: String(profile.classNum || "1").replace(/\D/g, '').slice(0, 3),
+                studentNum: String(profile.studentNum || "1").replace(/\D/g, '').slice(0, 3),
+                name: WaurimalSanitize(String(profile.name || '').trim()).slice(0, 20)
+            };
+
+            if (cleanProfile.name && WaurimalProfanity.check(cleanProfile.name)) {
+                console.warn("Profanity blocked in WaurimalStudent.save:", cleanProfile.name);
                 return false;
             }
             try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
-                window.dispatchEvent(new CustomEvent('waurimal_student_updated', { detail: profile }));
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanProfile));
+                window.dispatchEvent(new CustomEvent('waurimal_student_updated', { detail: cleanProfile }));
             } catch (e) {
                 console.warn("Storage save error:", e);
             }
@@ -931,7 +1025,7 @@
                 <div class="w-gnb-center">
                     <button type="button" class="w-gnb-student-chip ${isEmpty ? 'empty' : ''}" id="w-btn-student-profile" title="학생 로그인 및 정보 설정 (모든 게임에 자동 적용)">
                         <span>👤</span>
-                        <span id="w-student-chip-name">${studentText}</span>
+                        <span id="w-student-chip-name">${WaurimalSanitize(studentText)}</span>
                         <span style="font-size:0.75rem; opacity:0.8;">✏️</span>
                     </button>
                 </div>
@@ -971,7 +1065,7 @@
                 <div class="w-modal-body">
                     <div class="w-form-group">
                         <label class="w-form-label">학교명</label>
-                        <input type="text" class="w-form-input" id="w-input-school" value="${(profile && profile.school) || '이의초등학교'}" placeholder="예: 이의초등학교">
+                        <input type="text" class="w-form-input" id="w-input-school" value="${WaurimalSanitize((profile && profile.school) || '이의초등학교')}" placeholder="예: 이의초등학교">
                     </div>
                     <div class="w-form-row">
                         <div class="w-form-group" style="flex:1;">
@@ -991,12 +1085,12 @@
                         </div>
                         <div class="w-form-group" style="flex:1;">
                             <label class="w-form-label">번호</label>
-                            <input type="number" class="w-form-input" id="w-input-num" min="1" max="40" value="${(profile && profile.studentNum) || ''}" placeholder="번호">
+                            <input type="number" class="w-form-input" id="w-input-num" min="1" max="40" value="${WaurimalSanitize((profile && profile.studentNum) || '')}" placeholder="번호">
                         </div>
                     </div>
                     <div class="w-form-group">
                         <label class="w-form-label">이름 (실명)</label>
-                        <input type="text" class="w-form-input" id="w-input-name" value="${(profile && profile.name) || ''}" placeholder="이름을 입력하세요 (예: 홍길동)">
+                        <input type="text" class="w-form-input" id="w-input-name" value="${WaurimalSanitize((profile && profile.name) || '')}" placeholder="이름을 입력하세요 (예: 홍길동)">
                     </div>
                     <div class="w-modal-tip">
                         💡 <strong>한 번만 입력하면 자동 로그인 완료!</strong><br>
