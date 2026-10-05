@@ -48,6 +48,43 @@
     }
     window.WaurimalSanitize = WaurimalSanitize;
 
+    // 1-0-0. 학생 개인정보 보호 실명 안심 마스킹 엔진 (WaurimalMask)
+    // 2글자(김O), 3글자(이O연), 4글자이상(남OO수), 학적 포함(6-1 홍O동) 표준 처리
+    function maskSingleName(name) {
+        if (!name) return '';
+        const s = String(name).trim();
+        if (s.length <= 1) return s;
+        if (s.length === 2) return s[0] + 'O';
+        if (s.length === 3) return s[0] + 'O' + s[2];
+        return s[0] + 'O'.repeat(s.length - 2) + s[s.length - 1];
+    }
+
+    function maskStudentName(nameStr) {
+        if (!nameStr) return '학생';
+        let str = String(nameStr).trim();
+        str = str.replace(/\*/g, 'O');
+        if (str.includes('선생님') || str.includes('관리자') || str.includes('admin') || str.includes('teacher') || str.includes('도전자') || str.includes('게스트') || str.includes('AI') || str.includes('컴퓨터')) return str;
+
+        const parts = str.split(/\s+/);
+        if (parts.length > 1) {
+            const rawName = parts[parts.length - 1];
+            if (!rawName.endsWith('반') && !rawName.endsWith('번') && !rawName.endsWith('학년')) {
+                const prefix = parts.slice(0, -1).join(' ');
+                return prefix + ' ' + maskSingleName(rawName);
+            }
+        }
+        return maskSingleName(str);
+    }
+
+    const WaurimalMask = {
+        maskName: maskStudentName,
+        maskStudentName: maskStudentName,
+        maskSingleName: maskSingleName
+    };
+    window.WaurimalMask = WaurimalMask;
+    if (!window.maskStudentName) window.maskStudentName = maskStudentName;
+    if (!window.maskName) window.maskName = maskStudentName;
+
     // 1-0-1. 통합 교사 모드 인증 관리자 (WaurimalAuth)
     // 백도어 비밀번호를 전면 차단하고 세션 인증 검증(F12 콘솔 우회 방지)을 지원합니다.
     const WaurimalAuth = {
