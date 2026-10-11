@@ -85,6 +85,36 @@
     if (!window.maskStudentName) window.maskStudentName = maskStudentName;
     if (!window.maskName) window.maskName = maskStudentName;
 
+    // 1-0-2. 명예의 전당 표준 경쟁 순위(Standard Competition Ranking, 1224 순위제) 엔진
+    // 동점인 경우 동일 등수를 부여하고, 그 다음 순위는 동점자 수만큼 건너뜁니다. (예: 1등 2명이면 1등, 1등, 3등)
+    function computeCompetitionRank(item, idx, arr, scoreKey = 'score') {
+        if (!arr || !Array.isArray(arr)) return idx + 1;
+        const getVal = (obj) => {
+            if (!obj || typeof obj !== 'object') return 0;
+            if (scoreKey && obj[scoreKey] !== undefined) return Number(obj[scoreKey] || 0);
+            if (obj.effectiveWins !== undefined) return Number(obj.effectiveWins || 0);
+            if (obj.score !== undefined) return Number(obj.score || 0);
+            if (obj.totalAsset !== undefined) return Number(obj.totalAsset || 0);
+            return 0;
+        };
+        const targetScore = getVal(item);
+        const firstIdx = arr.findIndex(x => getVal(x) <= targetScore);
+        return (firstIdx >= 0 ? firstIdx + 1 : idx + 1);
+    }
+
+    const WaurimalRank = {
+        getRank: computeCompetitionRank,
+        compute: function(list, scoreKey = 'score') {
+            if (!Array.isArray(list)) return list;
+            return list.map((item, idx, arr) => {
+                const rank = computeCompetitionRank(item, idx, arr, scoreKey);
+                return Object.assign(item, { _rank: rank, rank: rank });
+            });
+        }
+    };
+    window.WaurimalRank = WaurimalRank;
+    if (!window.computeCompetitionRank) window.computeCompetitionRank = computeCompetitionRank;
+
     // 1-0-1. 통합 교사 모드 인증 관리자 (WaurimalAuth)
     // 백도어 비밀번호를 전면 차단하고 세션 인증 검증(F12 콘솔 우회 방지)을 지원합니다.
     const WaurimalAuth = {
