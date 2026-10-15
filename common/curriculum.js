@@ -279,6 +279,84 @@
                 { en: "We are going to visit a small village.", kr: "우리는 작은 마을을 방문할 거야." },
                 { en: "I am going to clean the zoo.", kr: "나는 동물원을 청소할 거야." }
             ]
+        },
+        {
+            code: "6G_L10",
+            grade: 6,
+            name: "6학년 Lesson 10 - 가격 묻기와 쇼핑",
+            words: [
+                { en: "shirt", kr: "셔츠" },
+                { en: "pants", kr: "바지" },
+                { en: "shoes", kr: "신발" },
+                { en: "dollar", kr: "달러" },
+                { en: "cent", kr: "센트" },
+                { en: "cheap", kr: "값싼" },
+                { en: "expensive", kr: "비싼" },
+                { en: "buy", kr: "사다" },
+                { en: "sell", kr: "팔다" },
+                { en: "money", kr: "돈" },
+                { en: "market", kr: "시장" },
+                { en: "present", kr: "선물" }
+            ],
+            sentences: [
+                { en: "May I help you?", kr: "도와드릴까요?" },
+                { en: "How much is this shirt?", kr: "이 셔츠는 얼마인가요?" },
+                { en: "It is fifteen dollars.", kr: "15달러입니다." },
+                { en: "Can I try this on?", kr: "이것을 입어봐도 될까요?" },
+                { en: "I want to buy a present.", kr: "선물을 사고 싶어요." }
+            ]
+        },
+        {
+            code: "6G_L11",
+            grade: 6,
+            name: "6학년 Lesson 11 - 건강 상태와 조언",
+            words: [
+                { en: "headache", kr: "두통, 머리 아픔" },
+                { en: "stomachache", kr: "복통, 배 아픔" },
+                { en: "toothache", kr: "치통, 이 아픔" },
+                { en: "fever", kr: "열" },
+                { en: "cold", kr: "감기, 추운" },
+                { en: "matter", kr: "문제, 일" },
+                { en: "doctor", kr: "의사" },
+                { en: "hospital", kr: "병원" },
+                { en: "medicine", kr: "약" },
+                { en: "rest", kr: "휴식, 쉬다" },
+                { en: "warm", kr: "따뜻한" },
+                { en: "healthy", kr: "건강한" }
+            ],
+            sentences: [
+                { en: "What's the matter?", kr: "무슨 일 있니? 어디 아프니?" },
+                { en: "I have a headache.", kr: "머리가 아파요." },
+                { en: "I have a fever and a cold.", kr: "열이 나고 감기에 걸렸어요." },
+                { en: "You should see a doctor.", kr: "너는 의사 선생님 진료를 받아야 해." },
+                { en: "Take this medicine and get some rest.", kr: "이 약을 먹고 좀 쉬렴." }
+            ]
+        },
+        {
+            code: "6G_L12",
+            grade: 6,
+            name: "6학년 Lesson 12 - 제안하기와 여가 활동",
+            words: [
+                { en: "idea", kr: "생각, 아이디어" },
+                { en: "together", kr: "함께" },
+                { en: "park", kr: "공원" },
+                { en: "movie", kr: "영화" },
+                { en: "sound", kr: "들리다" },
+                { en: "wonderful", kr: "멋진" },
+                { en: "badminton", kr: "배드민턴" },
+                { en: "afternoon", kr: "오후" },
+                { en: "tomorrow", kr: "내일" },
+                { en: "weekend", kr: "주말" },
+                { en: "busy", kr: "바쁜" },
+                { en: "finish", kr: "끝내다" }
+            ],
+            sentences: [
+                { en: "Why don't we go to the park?", kr: "우리 공원에 가는 게 어때?" },
+                { en: "Sounds like a great idea!", kr: "좋은 생각이야!" },
+                { en: "Shall we play badminton together?", kr: "우리 같이 배드민턴 칠까?" },
+                { en: "How about watching a movie this Saturday?", kr: "이번 주 토요일에 영화 보는 건 어때?" },
+                { en: "I'm sorry, but I am busy today.", kr: "미안하지만, 오늘은 내가 바빠." }
+            ]
         }
     ];
 
