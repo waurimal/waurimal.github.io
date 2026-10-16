@@ -348,7 +348,7 @@
         let clickCount = 0;
         let clickTimer = null;
 
-        const getAdminPassword = () => localStorage.getItem('admin_pw') || "1234";
+        const getAdminPassword = () => (window.WaurimalAuth ? window.WaurimalAuth.getPw() : (localStorage.getItem('waurimal_admin_pw') || "4657"));
 
         // 숨겨진 비밀 관리자 모드 (제목 5번 클릭)
         window.triggerAdminMode = function() {
@@ -368,7 +368,7 @@
                     alert("선생님(관리자) 모드가 종료되었습니다.");
                     renderPosts();
                 } else {
-                    const pw = prompt("선생님 전용 비밀번호를 입력하세요 (기본값: 1234)");
+                    const pw = prompt("선생님 전용 비밀번호를 입력하세요:");
                     if (pw === getAdminPassword()) {
                         isAdmin = true;
                         document.getElementById('admin-tools').style.display = 'flex'; // 도구 바 보이기
@@ -388,6 +388,8 @@
             if (newPw) {
                 const confirmPw = prompt("확인을 위해 새로운 비밀번호를 한 번 더 입력하세요:");
                 if (newPw === confirmPw) {
+                    if (window.WaurimalAuth) window.WaurimalAuth.setPw(newPw);
+                    localStorage.setItem('waurimal_admin_pw', newPw);
                     localStorage.setItem('admin_pw', newPw);
                     alert("비밀번호가 성공적으로 변경되었습니다!");
                 } else {

@@ -120,19 +120,32 @@
     const WaurimalAuth = {
         STORAGE_KEY: 'waurimal_admin_pw',
         SESSION_KEY: 'waurimal_teacher_auth',
-        DEFAULT_PW: '1234',
+        DEFAULT_PW: '4657',
 
         getPw: function() {
             try {
                 const saved = localStorage.getItem(this.STORAGE_KEY);
-                if (saved && saved.trim()) return saved.trim();
+                if (saved && saved.trim()) {
+                    const clean = saved.trim();
+                    // 구버전 기본값('1234', '0000', 'admin')이 저장되어 있다면 무효화하고 새 기본값('4657')으로 갱신
+                    if (['1234', '0000', 'admin'].includes(clean)) {
+                        localStorage.setItem(this.STORAGE_KEY, this.DEFAULT_PW);
+                        return this.DEFAULT_PW;
+                    }
+                    return clean;
+                }
             } catch (e) {}
             return this.DEFAULT_PW;
         },
 
         verify: function(inputPw) {
             if (!inputPw) return false;
-            return String(inputPw).trim() === this.getPw();
+            const clean = String(inputPw).trim();
+            // 구 기본값('1234', '0000', 'admin') 접속 원천 차단
+            if (['1234', '0000', 'admin'].includes(clean) && this.getPw() !== clean) {
+                return false;
+            }
+            return clean === this.getPw();
         },
 
         authenticate: function(inputPw) {

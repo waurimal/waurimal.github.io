@@ -782,7 +782,7 @@
 
         function verifyCurriculumAdminPw() {
             const entered = document.getElementById('curriculum-admin-pw-input').value.trim();
-            const isValid = window.WaurimalAuth ? window.WaurimalAuth.authenticate(entered) : (entered === (localStorage.getItem('waurimal_admin_pw') || '1234'));
+            const isValid = window.WaurimalAuth ? window.WaurimalAuth.authenticate(entered) : (entered === (localStorage.getItem('waurimal_admin_pw') || '4657'));
             if (isValid) {
                 isAdminAuthenticated = true;
                 closeCurriculumPwModal();
@@ -1041,7 +1041,7 @@
         function adminChangePassword() {
             const oldInput = prompt("현재 관리자 비밀번호를 입력해주세요:");
             if (oldInput === null) return;
-            const isOldValid = window.WaurimalAuth ? window.WaurimalAuth.verify(oldInput) : (oldInput === (localStorage.getItem('waurimal_admin_pw') || '1234'));
+            const isOldValid = window.WaurimalAuth ? window.WaurimalAuth.verify(oldInput) : (oldInput === (localStorage.getItem('waurimal_admin_pw') || '4657'));
             if (!isOldValid) {
                 alert("현재 비밀번호가 일치하지 않습니다.");
                 return;
@@ -1116,7 +1116,7 @@
                 <p style="margin: 0 0 1rem; font-size: 0.9rem; color: #475569; font-weight: 600;">
                     단원 및 어휘·문장 관리를 위해<br>선생님 비밀번호를 입력해주세요.
                 </p>
-                <input type="password" id="curriculum-admin-pw-input" placeholder="비밀번호 입력 (기본: 1234)" 
+                <input type="password" id="curriculum-admin-pw-input" placeholder="비밀번호 입력" 
                     style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #CBD5E1; border-radius: 0.75rem; font-size: 1.05rem; text-align: center; letter-spacing: 0.15em; font-weight: 700; outline: none; margin-bottom: 0.5rem;"
                     onkeydown="if(event.key==='Enter')verifyCurriculumAdminPw()" />
                 <div style="font-size: 0.76rem; color: #94A3B8; margin-bottom: 1.2rem;">
