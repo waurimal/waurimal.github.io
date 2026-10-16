@@ -104,6 +104,7 @@
 
     const WaurimalRank = {
         getRank: computeCompetitionRank,
+        computeCompetitionRank: computeCompetitionRank,
         compute: function(list, scoreKey = 'score') {
             if (!Array.isArray(list)) return list;
             return list.map((item, idx, arr) => {
