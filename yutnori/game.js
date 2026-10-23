@@ -710,6 +710,9 @@
                 feedbackMessage: document.getElementById('feedbackMessage'),
                 feedbackExplanation: document.getElementById('feedbackExplanation'),
                 feedbackOkBtn: document.getElementById('feedbackOkBtn'),
+                feedbackAutoCloseNotice: document.getElementById('feedbackAutoCloseNotice'),
+                feedbackCountdownText: document.getElementById('feedbackCountdownText'),
+                feedbackOkBtnText: document.getElementById('feedbackOkBtnText'),
 
                 // 승리 모달
                 victoryModal: document.getElementById('victoryModal'),
@@ -799,12 +802,7 @@
 
             if (this.dom.feedbackOkBtn) {
                 this.dom.feedbackOkBtn.addEventListener('click', () => {
-                    this.dom.feedbackModal.classList.add('hidden');
-                    if (this._onFeedbackClosed) {
-                        const cb = this._onFeedbackClosed;
-                        this._onFeedbackClosed = null;
-                        cb();
-                    }
+                    this.closeFeedbackModal();
                 });
             }
 
@@ -1509,6 +1507,7 @@
         handleQuizResult(isCorrect, q, piece, movePath) {
             const currentTeam = this.getCurrentTeam();
             const playerName = this.getCurrentPlayerName();
+            const isAI = currentTeam && currentTeam.isAI;
 
             if (isCorrect) {
                 Sound.playCorrect();
@@ -1516,8 +1515,10 @@
                 this.logMessage(`🎉 [${currentTeam.name}] ${playerName}님이 문제를 맞혔습니다! 말이 ${this.currentRoll.name}만큼 전진합니다.`);
 
                 this.showFeedbackModal({
-                    title: '정답입니다! 👏',
-                    message: `훌륭합니다! 말이 ${this.currentRoll.name}만큼 윷판을 전진합니다!`,
+                    title: isAI ? '컴퓨터 정답! 🤖' : '정답입니다! 👏',
+                    message: isAI
+                        ? `컴퓨터가 정답을 맞혀 말이 ${this.currentRoll.name}만큼 전진합니다!`
+                        : `훌륭합니다! 말이 ${this.currentRoll.name}만큼 윷판을 전진합니다!`,
                     explanation: q.explanation,
                     isSuccess: true,
                     onClose: () => {
@@ -1530,8 +1531,10 @@
                 this.logMessage(`❌ [${currentTeam.name}] ${playerName}님이 아쉽게 문제를 틀렸습니다. (정답: ${q.answer || q.answerSentence}) 전진하지 못합니다.`);
 
                 this.showFeedbackModal({
-                    title: '아쉽습니다! 💡',
-                    message: '문제를 맞히지 못하여 전진하지 못하고 턴이 종료됩니다.',
+                    title: isAI ? '컴퓨터 오답! 🤖' : '아쉽습니다! 💡',
+                    message: isAI
+                        ? '컴퓨터가 문제를 맞히지 못하여 전진하지 못하고 턴이 종료됩니다.'
+                        : '문제를 맞히지 못하여 전진하지 못하고 턴이 종료됩니다.',
                     explanation: q.explanation,
                     isSuccess: false,
                     onClose: () => {
@@ -1542,7 +1545,27 @@
             }
         }
 
+        closeFeedbackModal() {
+            if (this._feedbackAutoCloseTimer) {
+                clearTimeout(this._feedbackAutoCloseTimer);
+                this._feedbackAutoCloseTimer = null;
+            }
+            if (this.dom.feedbackModal) {
+                this.dom.feedbackModal.classList.add('hidden');
+            }
+            if (this._onFeedbackClosed) {
+                const cb = this._onFeedbackClosed;
+                this._onFeedbackClosed = null;
+                cb();
+            }
+        }
+
         showFeedbackModal({ title, message, explanation, isSuccess, onClose }) {
+            if (this._feedbackAutoCloseTimer) {
+                clearTimeout(this._feedbackAutoCloseTimer);
+                this._feedbackAutoCloseTimer = null;
+            }
+
             this.dom.feedbackTitle.textContent = title;
             this.dom.feedbackTitle.className = `font-black text-2xl ${isSuccess ? 'text-emerald-600' : 'text-rose-600'}`;
             this.dom.feedbackMessage.textContent = message;
@@ -1550,6 +1573,34 @@
 
             this._onFeedbackClosed = onClose;
             this.dom.feedbackModal.classList.remove('hidden');
+
+            const currentTeam = this.getCurrentTeam();
+            const isAI = currentTeam && currentTeam.isAI;
+
+            if (isAI) {
+                // 컴퓨터 턴인 경우: 자동 진행 안내 및 1.5초 후 자동 닫힘
+                if (this.dom.feedbackAutoCloseNotice) {
+                    this.dom.feedbackAutoCloseNotice.classList.remove('hidden');
+                }
+                if (this.dom.feedbackCountdownText) {
+                    this.dom.feedbackCountdownText.textContent = '1.5초 후 자동 진행...';
+                }
+                if (this.dom.feedbackOkBtnText) {
+                    this.dom.feedbackOkBtnText.textContent = '확인 (자동 진행 중...)';
+                }
+
+                this._feedbackAutoCloseTimer = setTimeout(() => {
+                    this.closeFeedbackModal();
+                }, 1500);
+            } else {
+                // 사람 플레이어 차례: 수동 확인 대기
+                if (this.dom.feedbackAutoCloseNotice) {
+                    this.dom.feedbackAutoCloseNotice.classList.add('hidden');
+                }
+                if (this.dom.feedbackOkBtnText) {
+                    this.dom.feedbackOkBtnText.textContent = '확인';
+                }
+            }
         }
 
         // ==========================================
