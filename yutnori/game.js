@@ -873,39 +873,12 @@
             this.difficulty = config.difficulty || 'normal';
             this.pieceCount = config.pieceCount || 4;
 
-            // 팀 구성
-            if (this.mode === 'ai') {
-                this.teams = [
-                    { id: 0, name: '플레이어(청팀)', isAI: false, colorClass: 'team-0', players: ['나(플레이어)'], currentPlayerIdx: 0, pieces: [] },
-                    { id: 1, name: '컴퓨터(백팀)', isAI: true, colorClass: 'team-1', players: ['인공지능 봇'], currentPlayerIdx: 0, pieces: [] }
-                ];
-            } else if (this.mode === '1v1') {
-                const p1 = config.player1Name || '1P(청팀)';
-                const p2 = config.player2Name || '2P(백팀)';
-                this.teams = [
-                    { id: 0, name: p1, isAI: false, colorClass: 'team-0', players: [p1], currentPlayerIdx: 0, pieces: [] },
-                    { id: 1, name: p2, isAI: false, colorClass: 'team-1', players: [p2], currentPlayerIdx: 0, pieces: [] }
-                ];
-            } else {
-                // 팀전 (다수:다수)
-                const teamCount = config.teamCount || 2;
-                const team1Players = config.team1Players || ['청팀 1번', '청팀 2번', '청팀 3번'];
-                const team2Players = config.team2Players || ['백팀 1번', '백팀 2번', '백팀 3번'];
-
-                this.teams = [
-                    { id: 0, name: '청팀', isAI: false, colorClass: 'team-0', players: team1Players, currentPlayerIdx: 0, pieces: [] },
-                    { id: 1, name: '백팀', isAI: false, colorClass: 'team-1', players: team2Players, currentPlayerIdx: 0, pieces: [] }
-                ];
-
-                if (teamCount >= 3) {
-                    const team3Players = config.team3Players || ['홍팀 1번', '홍팀 2번'];
-                    this.teams.push({ id: 2, name: '홍팀', isAI: false, colorClass: 'team-2', players: team3Players, currentPlayerIdx: 0, pieces: [] });
-                }
-                if (teamCount >= 4) {
-                    const team4Players = config.team4Players || ['황팀 1번', '황팀 2번'];
-                    this.teams.push({ id: 3, name: '황팀', isAI: false, colorClass: 'team-3', players: team4Players, currentPlayerIdx: 0, pieces: [] });
-                }
-            }
+            // 팀 구성 (컴퓨터 대전 시 학생 실명 반영)
+            const realName = config.playerName || '나(플레이어)';
+            this.teams = [
+                { id: 0, name: `${realName}(청팀)`, isAI: false, colorClass: 'team-0', players: [realName], currentPlayerIdx: 0, pieces: [] },
+                { id: 1, name: '컴퓨터(백팀)', isAI: true, colorClass: 'team-1', players: ['인공지능 봇'], currentPlayerIdx: 0, pieces: [] }
+            ];
 
             // 각 팀 말(Piece) 초기화
             this.teams.forEach(team => {

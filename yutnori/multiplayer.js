@@ -81,6 +81,10 @@ class YutnoriMultiplayerManager {
     // 1. 방 만들기 (Host)
     // ==========================================
     async createRoom({ hostName, mode = '1v1', pieceCount = 4, grade = 'all' }) {
+        const cleanName = (hostName || '').trim();
+        if (!cleanName) {
+            throw new Error("닉네임 대신 학생 본인의 실명을 입력해주세요.");
+        }
         const code = this.generateRoomCode();
         const roomRef = doc(db, ROOMS_COLLECTION, code);
 
@@ -94,7 +98,7 @@ class YutnoriMultiplayerManager {
             players: {
                 [this.mySessionId]: {
                     id: this.mySessionId,
-                    name: hostName || '방장',
+                    name: cleanName,
                     team: 'blue', // 청팀 기본 배정
                     isHost: true,
                     joinedAt: Date.now()
@@ -133,6 +137,11 @@ class YutnoriMultiplayerManager {
     // 2. 방 참여하기 (Join)
     // ==========================================
     async joinRoom(code, playerName) {
+        const cleanName = (playerName || '').trim();
+        if (!cleanName) {
+            throw new Error("닉네임 대신 학생 본인의 실명을 입력해주세요.");
+        }
+
         const cleanCode = (code || '').trim();
         if (cleanCode.length !== 4) {
             throw new Error("4자리 숫자 방 코드를 정확히 입력해주세요.");
@@ -173,7 +182,7 @@ class YutnoriMultiplayerManager {
         if (!updatedPlayers[this.mySessionId]) {
             updatedPlayers[this.mySessionId] = {
                 id: this.mySessionId,
-                name: playerName || '참가자',
+                name: cleanName,
                 team: assignedTeam,
                 isHost: false,
                 joinedAt: Date.now()
@@ -183,7 +192,7 @@ class YutnoriMultiplayerManager {
             }
         } else {
             // 이미 등록되어 있던 유저가 재접속한 경우 이름 갱신
-            updatedPlayers[this.mySessionId].name = playerName || updatedPlayers[this.mySessionId].name;
+            updatedPlayers[this.mySessionId].name = cleanName;
         }
 
         await updateDoc(roomRef, {
