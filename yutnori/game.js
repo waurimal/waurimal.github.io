@@ -660,6 +660,11 @@
             this.gameLogs = [];
             this.matchStats = {}; // 경기 중 플레이어별 기여도 통계
 
+            // 실시간 온라인 멀티플레이 상태
+            this.isOnline = false;
+            this.currentRoomData = null;
+            this._lastHandledActionTimestamp = 0;
+
             // DOM 캐시
             this.dom = {};
         }
@@ -689,6 +694,14 @@
                 turnPlayerName: document.getElementById('turnPlayerName'),
                 teamsStatusContainer: document.getElementById('teamsStatusContainer'),
                 gameLogContainer: document.getElementById('gameLogContainer'),
+
+                // 온라인 멀티플레이 전용 DOM
+                remoteTurnNotice: document.getElementById('remoteTurnNotice'),
+                remoteTurnNoticeText: document.getElementById('remoteTurnNoticeText'),
+                onlineRoomBanner: document.getElementById('onlineRoomBanner'),
+                activeRoomCodeText: document.getElementById('activeRoomCodeText'),
+                activeMyRoleText: document.getElementById('activeMyRoleText'),
+                leaveOnlineRoomBtn: document.getElementById('leaveOnlineRoomBtn'),
 
                 // 퀴즈 모달
                 quizModal: document.getElementById('quizModal'),
@@ -963,6 +976,240 @@
             this.checkAndTriggerAI();
         }
 
+        // ==========================================
+        // 5-B. 실시간 온라인 멀티플레이 게임 시작 & 동기화
+        // ==========================================
+        startOnlineGame(roomData) {
+            this.isOnline = true;
+            this.mode = 'online';
+            this.difficulty = 'normal';
+            this.pieceCount = roomData.pieceCount || 4;
+            this.gradeFilter = roomData.grade || 'all';
+            this.currentRoomData = roomData;
+            this._lastHandledActionTimestamp = 0;
+
+            const players = Object.values(roomData.players || {});
+            const bluePlayers = players.filter(p => p.team === 'blue');
+            const whitePlayers = players.filter(p => p.team === 'white');
+
+            this.teams = [
+                {
+                    id: 0,
+                    name: '청팀',
+                    key: 'blue',
+                    isAI: false,
+                    colorClass: 'team-0',
+                    players: bluePlayers.map(p => p.name || '청팀 플레이어'),
+                    playerUids: bluePlayers.map(p => p.id),
+                    currentPlayerIdx: 0,
+                    pieces: []
+                },
+                {
+                    id: 1,
+                    name: '백팀',
+                    key: 'white',
+                    isAI: false,
+                    colorClass: 'team-1',
+                    players: whitePlayers.map(p => p.name || '백팀 플레이어'),
+                    playerUids: whitePlayers.map(p => p.id),
+                    currentPlayerIdx: 0,
+                    pieces: []
+                }
+            ];
+
+            // 말(Pieces) 초기화
+            this.teams.forEach(team => {
+                team.pieces = [];
+                for (let i = 0; i < this.pieceCount; i++) {
+                    team.pieces.push({
+                        id: i,
+                        teamId: team.id,
+                        pos: -1,
+                        route: 'OUTER',
+                        isHome: true,
+                        isGoal: false,
+                        stackedPieces: [],
+                        history: []
+                    });
+                }
+            });
+
+            // 플레이어별 기여도 통계 초기화
+            this.matchStats = {};
+            this.teams.forEach(team => {
+                team.players.forEach(pName => {
+                    this.matchStats[pName] = {
+                        name: pName,
+                        teamId: team.id,
+                        teamName: team.name,
+                        correctCount: 0,
+                        wrongCount: 0,
+                        goalCount: 0,
+                        catchCount: 0,
+                        stackCount: 0,
+                        yutMoCount: 0,
+                        matchScore: 0
+                    };
+                });
+            });
+
+            this.currentTeamIndex = (roomData.currentTeam === 'white') ? 1 : 0;
+            this.pendingExtraTurn = false;
+            this.currentRoll = null;
+            this.selectedPiece = null;
+            this.gameLogs = [];
+
+            this.logMessage(`🌐 실시간 온라인 방 [${roomData.roomId}] 게임이 시작되었습니다!`);
+
+            // 상단 온라인 배너 활성화
+            if (this.dom.onlineRoomBanner) {
+                this.dom.onlineRoomBanner.classList.remove('hidden');
+                if (this.dom.activeRoomCodeText) {
+                    this.dom.activeRoomCodeText.textContent = roomData.roomId;
+                }
+                if (this.dom.activeMyRoleText && window.YutnoriMultiplayer) {
+                    const myInfo = window.YutnoriMultiplayer.getMyPlayerInfo();
+                    if (myInfo) {
+                        const teamName = myInfo.team === 'blue' ? '청팀' : '백팀';
+                        this.dom.activeMyRoleText.textContent = `${teamName} (${myInfo.name})`;
+                        this.dom.activeMyRoleText.className = `font-black ml-1 ${myInfo.team === 'blue' ? 'text-blue-400' : 'text-rose-400'}`;
+                    }
+                }
+            }
+
+            this.updateTurnUI();
+            this.renderAllPieces();
+
+            // 윷가락 비주얼 초기화
+            const sticks = [this.dom.stick0, this.dom.stick1, this.dom.stick2, this.dom.stick3];
+            const labels = [this.dom.yutLabel0, this.dom.yutLabel1, this.dom.yutLabel2, this.dom.yutLabel3];
+            sticks.forEach((st, idx) => {
+                if (st) {
+                    st.classList.remove('tossing', 'is-back');
+                    st.classList.add('is-front');
+                }
+                if (labels[idx]) {
+                    labels[idx].textContent = (idx === 0) ? '앞 (빽도)' : '앞 (배)';
+                    labels[idx].className = 'yut-stick-label is-front-label text-[11px] px-2 py-0.5 rounded-full border';
+                }
+            });
+            if (this.dom.resultBadge) {
+                this.dom.resultBadge.classList.add('hidden');
+            }
+
+            this.setGameState('WAIT_ROLL');
+            this.syncWithRoomData(roomData, true);
+        }
+
+        syncWithRoomData(roomData, isInitial = false) {
+            this.currentRoomData = roomData;
+            this.currentTeamIndex = (roomData.currentTeam === 'white') ? 1 : 0;
+
+            const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
+            const isMyTurn = (roomData.currentTurnId === mySessionId);
+
+            // 상대방이 진행한 말 위치 상태 동기화 (내가 움직인 턴이 아닐 때)
+            if (roomData.teamsState && (!isMyTurn || isInitial)) {
+                if (roomData.teamsState[0] && roomData.teamsState[0].pieces) {
+                    this.teams[0].pieces = JSON.parse(JSON.stringify(roomData.teamsState[0].pieces));
+                }
+                if (roomData.teamsState[1] && roomData.teamsState[1].pieces) {
+                    this.teams[1].pieces = JSON.parse(JSON.stringify(roomData.teamsState[1].pieces));
+                }
+                this.renderAllPieces();
+            }
+
+            this.updateTurnUI();
+            this.updateRollButtonState();
+
+            // 액션 리스너 처리
+            if (roomData.lastAction && roomData.lastAction.timestamp > this._lastHandledActionTimestamp) {
+                this.handleRemoteAction(roomData.lastAction, roomData);
+            }
+        }
+
+        handleRemoteAction(action, roomData) {
+            this._lastHandledActionTimestamp = action.timestamp;
+            const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
+            const isMe = (action.actorId === mySessionId);
+
+            if (isMe) return; // 내가 전송한 액션은 이미 로컬에서 재생 완료
+
+            const actorPlayer = roomData.players ? roomData.players[action.actorId] : null;
+            const actorName = actorPlayer ? actorPlayer.name : '상대방';
+
+            if (action.type === 'ROLL_AND_QUIZ') {
+                if (action.rollResult) {
+                    this.playRemoteRollAnimation(action.rollResult);
+                }
+                if (this.dom.remoteTurnNotice) {
+                    this.dom.remoteTurnNotice.classList.remove('hidden');
+                    if (this.dom.remoteTurnNoticeText) {
+                        this.dom.remoteTurnNoticeText.textContent = `${actorName}님이 영어 퀴즈를 풀고 있습니다... 🤔`;
+                    }
+                }
+            } else if (action.type === 'QUIZ_CORRECT') {
+                Sound.playCorrect();
+                this.logMessage(`👏 [${actorName}]님이 영어 문제를 맞혔습니다! 말이 전진합니다.`);
+                if (this.dom.remoteTurnNoticeText) {
+                    this.dom.remoteTurnNoticeText.textContent = `${actorName}님이 정답을 맞혀 이동할 말을 고르고 있습니다! 🎯`;
+                }
+            } else if (action.type === 'QUIZ_WRONG') {
+                Sound.playWrong();
+                this.logMessage(`❌ [${actorName}]님이 아쉽게 문제를 틀렸습니다. 전진하지 못합니다.`);
+                if (this.dom.remoteTurnNoticeText) {
+                    this.dom.remoteTurnNoticeText.textContent = `${actorName}님이 문제를 틀려 턴이 넘어옵니다.`;
+                }
+            } else if (action.type === 'END_TURN') {
+                this.logMessage(`🔄 ${actorName}님의 턴이 끝나고 차례가 넘어왔습니다.`);
+                Sound.playStep();
+            } else if (action.type === 'EXTRA_TURN') {
+                this.logMessage(`🎉 ${actorName}님이 윷/모 또는 말 잡기로 한 번 더 윷을 던집니다!`);
+                Sound.playStep();
+            } else if (action.type === 'GAME_OVER') {
+                const winnerTeamObj = this.teams.find(t => t.name === action.winnerTeam) || this.teams[0];
+                this.triggerVictory(winnerTeamObj);
+            }
+        }
+
+        playRemoteRollAnimation(rollResult) {
+            this.currentRoll = rollResult;
+            Sound.playToss();
+
+            const sticks = [this.dom.stick0, this.dom.stick1, this.dom.stick2, this.dom.stick3];
+            const labels = [this.dom.yutLabel0, this.dom.yutLabel1, this.dom.yutLabel2, this.dom.yutLabel3];
+
+            sticks.forEach((st, idx) => {
+                if (st) {
+                    st.classList.remove('tossing');
+                    void st.offsetWidth;
+                    st.classList.add('tossing');
+                }
+                if (labels[idx]) {
+                    labels[idx].textContent = '회전 중...';
+                    labels[idx].className = 'yut-stick-label text-[11px] px-2 py-0.5 rounded-full border bg-slate-700 text-slate-300 border-slate-600 animate-pulse';
+                }
+            });
+
+            setTimeout(() => {
+                sticks.forEach((st, idx) => {
+                    if (st) {
+                        st.classList.remove('tossing', 'is-front', 'is-back');
+                        const isFlat = (rollResult.sticks[idx] === 1);
+                        st.classList.add(isFlat ? 'is-front' : 'is-back');
+                    }
+                    if (labels[idx]) {
+                        const isFlat = (rollResult.sticks[idx] === 1);
+                        labels[idx].textContent = isFlat ? ((idx === 0) ? '앞 (빽도)' : '앞 (배)') : '뒤 (등)';
+                        labels[idx].className = `yut-stick-label ${isFlat ? 'is-front-label' : 'is-back-label'} text-[11px] px-2 py-0.5 rounded-full border`;
+                    }
+                });
+
+                Sound.playLand(rollResult.result);
+                this.displayRollResult(rollResult);
+            }, 700);
+        }
+
         getModeName() {
             if (this.mode === 'ai') return '컴퓨터 대전';
             if (this.mode === '1v1') return '1:1 대전';
@@ -1005,13 +1252,36 @@
 
         updateRollButtonState() {
             if (!this.dom.rollBtn) return;
+
+            if (this.isOnline) {
+                const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
+                const isMyTurn = (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId);
+
+                if (isMyTurn && this.gameState === 'WAIT_ROLL') {
+                    this.dom.rollBtn.disabled = false;
+                    this.dom.rollBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    this.dom.rollBtn.innerHTML = '<i class="fa-solid fa-dice mr-2"></i> 내 차례! 윷 던지기';
+                } else {
+                    this.dom.rollBtn.disabled = true;
+                    this.dom.rollBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    const currentTurnPlayer = (this.currentRoomData && this.currentRoomData.players) 
+                        ? this.currentRoomData.players[this.currentRoomData.currentTurnId] 
+                        : null;
+                    const name = currentTurnPlayer ? currentTurnPlayer.name : '상대방';
+                    this.dom.rollBtn.innerHTML = `<i class="fa-solid fa-hourglass-half mr-2"></i> ${name}님의 차례...`;
+                }
+                return;
+            }
+
             const currentTeam = this.getCurrentTeam();
             if (currentTeam.isAI || this.gameState !== 'WAIT_ROLL') {
                 this.dom.rollBtn.disabled = true;
                 this.dom.rollBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                this.dom.rollBtn.innerHTML = '<i class="fa-solid fa-dice mr-2"></i> 윷 던지기';
             } else {
                 this.dom.rollBtn.disabled = false;
                 this.dom.rollBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                this.dom.rollBtn.innerHTML = '<i class="fa-solid fa-dice mr-2"></i> 윷 던지기';
             }
         }
 
@@ -1024,11 +1294,29 @@
 
             if (this.dom.turnTeamName) {
                 this.dom.turnTeamName.textContent = currentTeam.name;
-                this.dom.turnTeamName.className = `font-black text-lg ${currentTeam.id === 0 ? 'text-blue-600' : (currentTeam.id === 1 ? 'text-rose-600' : 'text-emerald-600')}`;
+                this.dom.turnTeamName.className = `font-black text-lg ${currentTeam.id === 0 ? 'text-blue-500' : 'text-rose-500'}`;
             }
 
             if (this.dom.turnPlayerName) {
-                this.dom.turnPlayerName.textContent = currentTeam.isAI ? '🤖 인공지능이 윷을 던집니다...' : `🎯 차례: ${playerName}`;
+                if (this.isOnline) {
+                    const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
+                    const isMyTurn = (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId);
+
+                    if (isMyTurn) {
+                        this.dom.turnPlayerName.textContent = `🎯 내 차례입니다 (${playerName})`;
+                        if (this.dom.remoteTurnNotice) this.dom.remoteTurnNotice.classList.add('hidden');
+                    } else {
+                        this.dom.turnPlayerName.textContent = `⏳ ${playerName}님의 차례`;
+                        if (this.dom.remoteTurnNotice) {
+                            this.dom.remoteTurnNotice.classList.remove('hidden');
+                            if (this.dom.remoteTurnNoticeText) {
+                                this.dom.remoteTurnNoticeText.textContent = `${playerName}님이 윷을 던지고 있습니다...`;
+                            }
+                        }
+                    }
+                } else {
+                    this.dom.turnPlayerName.textContent = currentTeam.isAI ? '🤖 인공지능이 윷을 던집니다...' : `🎯 차례: ${playerName}`;
+                }
             }
 
             // 팀별 상태 (골인한 말 개수 / 남은 말) 렌더링
@@ -1081,8 +1369,16 @@
         // ==========================================
         onRollClicked() {
             if (this.gameState !== 'WAIT_ROLL') return;
-            const currentTeam = this.getCurrentTeam();
-            if (currentTeam.isAI) return;
+
+            if (this.isOnline) {
+                const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
+                if (!this.currentRoomData || this.currentRoomData.currentTurnId !== mySessionId) {
+                    return; // 내 차례가 아닐 때는 클릭 차단
+                }
+            } else {
+                const currentTeam = this.getCurrentTeam();
+                if (currentTeam.isAI) return;
+            }
 
             this.executeRoll();
         }
@@ -1110,6 +1406,11 @@
             // 윷 확률 계산
             const rollResult = YUT_PROBABILITY.roll();
             this.currentRoll = rollResult;
+
+            // 실시간 온라인 모드일 때 윷 결과를 Firestore로 즉시 전송
+            if (this.isOnline && window.YutnoriMultiplayer) {
+                window.YutnoriMultiplayer.sendRoll(rollResult, rollResult.sticks);
+            }
 
             setTimeout(() => {
                 // 1. tossing 애니메이션 클래스 제거 (forwards 스타일 고정 버그 원천 차단)
@@ -1335,6 +1636,12 @@
 
         onPieceSelected(piece) {
             if (this.gameState !== 'WAIT_PIECE_SELECT') return;
+
+            if (this.isOnline) {
+                const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
+                if (!this.currentRoomData || this.currentRoomData.currentTurnId !== mySessionId) return;
+            }
+
             const currentTeam = this.getCurrentTeam();
             if (piece.teamId !== currentTeam.id) return;
 
@@ -1508,6 +1815,11 @@
             const currentTeam = this.getCurrentTeam();
             const playerName = this.getCurrentPlayerName();
             const isAI = currentTeam && currentTeam.isAI;
+
+            // 실시간 온라인 모드일 때 결과 송신
+            if (this.isOnline && window.YutnoriMultiplayer) {
+                window.YutnoriMultiplayer.sendQuizResult(isCorrect, q.explanation, q.answer || q.answerSentence);
+            }
 
             if (isCorrect) {
                 Sound.playCorrect();
@@ -1789,6 +2101,23 @@
             this.selectedPiece = null;
             this.clearHighlights();
 
+            // 실시간 온라인 모드일 때 Firestore 동기화
+            if (this.isOnline && window.YutnoriMultiplayer) {
+                const mySessionId = window.YutnoriMultiplayer.mySessionId;
+                if (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId) {
+                    const teamsState = this.teams.map(t => ({
+                        key: t.key || (t.id === 0 ? 'blue' : 'white'),
+                        name: t.name,
+                        pieces: t.pieces
+                    }));
+                    window.YutnoriMultiplayer.sendPieceMovement({
+                        teamsState,
+                        hasExtraTurn: this.pendingExtraTurn,
+                        winnerTeam: null
+                    });
+                }
+            }
+
             // 추가 턴(윷, 모, 또는 말 잡기)이 남아있는 경우
             if (this.pendingExtraTurn) {
                 this.pendingExtraTurn = false;
@@ -1908,6 +2237,23 @@
         triggerVictory(winningTeam) {
             this.setGameState('GAME_OVER');
             Sound.playVictory();
+
+            // 실시간 온라인 모드일 때 승리 상태 Firestore 동기화
+            if (this.isOnline && window.YutnoriMultiplayer) {
+                const mySessionId = window.YutnoriMultiplayer.mySessionId;
+                if (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId) {
+                    const teamsState = this.teams.map(t => ({
+                        key: t.key || (t.id === 0 ? 'blue' : 'white'),
+                        name: t.name,
+                        pieces: t.pieces
+                    }));
+                    window.YutnoriMultiplayer.sendPieceMovement({
+                        teamsState,
+                        hasExtraTurn: false,
+                        winnerTeam: winningTeam.name
+                    });
+                }
+            }
 
             // 폭죽 효과 (canvas-confetti)
             if (typeof confetti === 'function') {
