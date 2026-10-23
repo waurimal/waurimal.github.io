@@ -260,9 +260,11 @@ class YutnoriMultiplayerManager {
                     id: i,
                     team: 'blue',
                     pos: -1,
+                    route: 'OUTER',
                     isGoal: false,
                     isHome: true,
                     count: 1,
+                    stackedPieces: [],
                     history: []
                 }))
             },
@@ -273,9 +275,11 @@ class YutnoriMultiplayerManager {
                     id: i,
                     team: 'white',
                     pos: -1,
+                    route: 'OUTER',
                     isGoal: false,
                     isHome: true,
                     count: 1,
+                    stackedPieces: [],
                     history: []
                 }))
             }

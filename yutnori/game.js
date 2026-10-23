@@ -1536,8 +1536,8 @@
 
                 // 대표 말 (업힌 말의 경우 가장 상위 말)
                 const topPiece = piecesAtLocation[0];
-                const isSelectable = selectableSet.has(`${topPiece.teamId}_${topPiece.id}`);
-                const isSelected = (this.selectedPiece && this.selectedPiece.teamId === topPiece.teamId && this.selectedPiece.id === topPiece.id);
+                const isSelectable = piecesAtLocation.some(p => selectableSet.has(`${p.teamId}_${p.id}`));
+                const isSelected = (this.selectedPiece && this.selectedPiece.teamId === topPiece.teamId && piecesAtLocation.some(p => p.id === this.selectedPiece.id));
 
                 const pieceEl = document.createElement('div');
                 pieceEl.className = `yut-piece team-${topPiece.teamId} ${isSelectable ? 'selectable' : ''} ${isSelected ? 'selected' : ''}`;
@@ -1553,6 +1553,9 @@
                     badge.className = 'stacked-badge';
                     badge.textContent = `x${totalStacked}`;
                     pieceEl.appendChild(badge);
+                    pieceEl.title = `[${this.teams[topPiece.teamId].name}] 업힌 말 (${piecesAtLocation.map(p => '#' + (p.id + 1)).join(', ')}) x${totalStacked}`;
+                } else {
+                    pieceEl.title = `[${this.teams[topPiece.teamId].name}] 말 #${topPiece.id + 1}`;
                 }
 
                 if (isSelectable) {
@@ -1578,6 +1581,9 @@
                 const homePieces = team.pieces.filter(p => p.isHome && !p.isGoal);
                 if (homePieces.length === 0) return;
 
+                // 대기실의 말들은 절대로 업힌 상태가 아니므로 stackedPieces = [] 보장
+                homePieces.forEach(p => { p.stackedPieces = []; });
+
                 const teamBox = document.createElement('div');
                 teamBox.className = 'flex items-center gap-2 mb-2 p-2 rounded-xl bg-slate-800/60 border border-slate-700';
 
@@ -1596,7 +1602,7 @@
                     const pBtn = document.createElement('button');
                     pBtn.className = `w-8 h-8 rounded-full border-2 border-white flex items-center justify-center font-black text-xs text-white shadow-md transition-all team-${p.teamId} ${isSelectable ? 'selectable hover:scale-110' : 'opacity-60 cursor-not-allowed'} ${isSelected ? 'ring-4 ring-yellow-400 scale-110' : ''}`;
                     pBtn.textContent = p.id + 1;
-                    pBtn.title = `${team.name} 대기 말 #${p.id + 1} (출발 대기)`;
+                    pBtn.title = `${team.name} 대기 말 #${p.id + 1} (개별 출발 대기)`;
 
                     if (isSelectable) {
                         pBtn.addEventListener('click', () => this.onPieceSelected(p));
@@ -1893,18 +1899,42 @@
         // ==========================================
         // 9. 말 이동 애니메이션 및 말 잡기/업기
         // ==========================================
+        /**
+         * 윷놀이 묶음(업힌 말 그룹) 조회
+         * - 대기실(isHome)이나 완주(isGoal) 상태의 말은 항상 독립된 1개의 말 (대기실에서는 업힌 상태가 절대 불가!)
+         * - 판 위에 있는 말은 동일한 칸(pos)에 위치한 모든 아군 말들을 하나의 묶음으로 취급
+         */
+        getPieceGroup(piece) {
+            if (!piece) return [];
+            if (piece.isHome || piece.isGoal) {
+                return [piece];
+            }
+            const currentTeam = this.teams.find(t => t.id === piece.teamId);
+            if (!currentTeam) return [piece];
+
+            const group = currentTeam.pieces.filter(p => !p.isHome && !p.isGoal && p.pos === piece.pos);
+            return group.length > 0 ? group : [piece];
+        }
+
+        // ==========================================
+        // 9. 말 이동 애니메이션 및 말 잡기/업기
+        // ==========================================
         executePieceMovement(piece, movePath) {
             this.setGameState('MOVING');
             this.clearHighlights();
 
             const currentTeam = this.getCurrentTeam();
 
-            // 이전 위치를 히스토리에 기록 (빽도 용)
-            if (!piece.isHome && piece.pos >= 0) {
-                piece.history.push(piece.pos);
-            }
+            // 뭉쳐있는 아군 말 그룹 가져오기 (대기실 출발 말은 무조건 자기 자신 1마리만!)
+            const movingGroup = this.getPieceGroup(piece);
 
-            piece.isHome = false;
+            // 출발 직전 이전 위치를 히스토리에 기록 (빽도 용)
+            movingGroup.forEach(p => {
+                if (!p.isHome && p.pos >= 0) {
+                    p.history.push(p.pos);
+                }
+                p.isHome = false;
+            });
 
             // 한 칸씩 따각따각 전진 연출
             let stepIndex = 0;
@@ -1913,68 +1943,52 @@
                     const nextNodeId = movePath.path[stepIndex];
                     Sound.playStep();
 
-                    if (nextNodeId === -1) {
-                        // 완주
-                        piece.isGoal = true;
-                    } else {
-                        piece.pos = nextNodeId;
-                    }
-
-                    // 업혀있는 말들도 함께 위치 동기화
-                    if (piece.stackedPieces && piece.stackedPieces.length > 0) {
-                        piece.stackedPieces.forEach(subId => {
-                            const subP = currentTeam.pieces.find(p => p.id === subId);
-                            if (subP) {
-                                subP.isHome = false;
-                                subP.pos = piece.pos;
-                                subP.isGoal = piece.isGoal;
-                            }
-                        });
-                    }
+                    movingGroup.forEach(p => {
+                        if (nextNodeId === -1) {
+                            p.isGoal = true;
+                        } else {
+                            p.pos = nextNodeId;
+                            p.isGoal = false;
+                        }
+                    });
 
                     this.renderAllPieces();
                     stepIndex++;
                     setTimeout(animateStep, 220);
                 } else {
-                    // 최종 착지 처리
-                    this.onPieceLanded(piece, movePath);
+                    // 최종 착지 처리 (함께 이동한 묶음 전체 전달)
+                    this.onPieceLanded(piece, movingGroup, movePath);
                 }
             };
 
             animateStep();
         }
 
-        onPieceLanded(piece, movePath) {
+        onPieceLanded(piece, movingGroup, movePath) {
             const currentTeam = this.getCurrentTeam();
-            piece.route = movePath.finalRoute;
 
-            // 업혀있는 말들의 경로도 동기화
-            if (piece.stackedPieces && piece.stackedPieces.length > 0) {
-                piece.stackedPieces.forEach(subId => {
-                    const subP = currentTeam.pieces.find(p => p.id === subId);
-                    if (subP) {
-                        subP.route = piece.route;
-                        subP.pos = piece.pos;
-                    }
-                });
-            }
+            // 모든 이동한 말들의 경로 동기화
+            movingGroup.forEach(p => {
+                p.route = movePath.finalRoute;
+            });
 
             // 1. 골인(완주) 확인
             if (movePath.isGoal) {
-                piece.isGoal = true;
+                movingGroup.forEach(p => {
+                    p.isGoal = true;
+                    p.isHome = false;
+                    p.stackedPieces = [];
+                });
+
                 Sound.playGoal();
                 const currentPlayerName = this.getCurrentPlayerName();
-                this.recordStat(currentPlayerName, 'goalCount', 1);
-                this.logMessage(`🚩 [${currentTeam.name}] 말이 완주(골인)했습니다!`);
+                const goalCount = movingGroup.length;
+                this.recordStat(currentPlayerName, 'goalCount', goalCount);
 
-                // 함께 업혀있던 말들도 모두 완주!
-                if (piece.stackedPieces && piece.stackedPieces.length > 0) {
-                    this.recordStat(currentPlayerName, 'goalCount', piece.stackedPieces.length);
-                    piece.stackedPieces.forEach(pId => {
-                        const stPiece = currentTeam.pieces.find(p => p.id === pId);
-                        if (stPiece) stPiece.isGoal = true;
-                    });
-                    this.logMessage(`🎉 업혀있던 말들도 함께 완주하여 총 ${piece.stackedPieces.length + 1}마리가 골인했습니다!`);
+                if (goalCount > 1) {
+                    this.logMessage(`🚩 [${currentTeam.name}] 업혀있던 말 ${goalCount}마리가 함께 완주(골인)했습니다! 🎉`);
+                } else {
+                    this.logMessage(`🚩 [${currentTeam.name}] 말이 완주(골인)했습니다!`);
                 }
 
                 // 승리 조건 체크 (팀의 모든 말이 골인했는지)
@@ -1989,74 +2003,62 @@
                 return;
             }
 
-            // 2. 다른 말들과의 상호작용 (업기 or 잡기)
+            // 2. 다른 말들과의 상호작용 (잡기 or 업기)
             const targetNode = movePath.finalNode;
-
-            // 판 위의 다른 말들 탐색
             let caughtEnemy = false;
-            let stackedAlly = false;
+            let totalCaught = 0;
 
-            this.teams.forEach(team => {
-                if (team.id === currentTeam.id) {
-                    // 아군 말: 업기 (포개기)
-                    team.pieces.forEach(otherPiece => {
-                        if (otherPiece.id !== piece.id && !otherPiece.isGoal && !otherPiece.isHome && otherPiece.pos === targetNode) {
-                            stackedAlly = true;
-                            // piece에 otherPiece를 업음
-                            if (!piece.stackedPieces.includes(otherPiece.id)) {
-                                piece.stackedPieces.push(otherPiece.id);
-                            }
-                            if (otherPiece.stackedPieces) {
-                                otherPiece.stackedPieces.forEach(subId => {
-                                    if (!piece.stackedPieces.includes(subId)) piece.stackedPieces.push(subId);
-                                });
-                            }
-                            // otherPiece는 piece의 서브가 됨
-                            otherPiece.pos = targetNode;
-                        }
-                    });
-                } else {
-                    // 적군 말: 잡기!
-                    team.pieces.forEach(enemyPiece => {
-                        if (!enemyPiece.isGoal && !enemyPiece.isHome && enemyPiece.pos === targetNode) {
-                            caughtEnemy = true;
-                            // 상대 말 대기실로 퇴출!
-                            enemyPiece.isHome = true;
-                            enemyPiece.pos = -1;
-                            enemyPiece.route = 'OUTER';
-                            enemyPiece.history = [];
+            // A. 적군 말 잡기!
+            const enemies = this.teams.filter(t => t.id !== currentTeam.id);
+            enemies.forEach(enemyTeam => {
+                const caughtList = enemyTeam.pieces.filter(ep => !ep.isGoal && !ep.isHome && ep.pos === targetNode);
+                if (caughtList.length > 0) {
+                    caughtEnemy = true;
+                    totalCaught += caughtList.length;
 
-                            // 상대 말에 업혀있던 말들도 모두 퇴출!
-                            if (enemyPiece.stackedPieces) {
-                                enemyPiece.stackedPieces.forEach(subId => {
-                                    const subP = team.pieces.find(p => p.id === subId);
-                                    if (subP) {
-                                        subP.isHome = true;
-                                        subP.pos = -1;
-                                        subP.route = 'OUTER';
-                                        subP.history = [];
-                                    }
-                                });
-                                enemyPiece.stackedPieces = [];
-                            }
-
-                            Sound.playCatch();
-                            this.logMessage(`💥 [${currentTeam.name}]이(가) [${team.name}]의 말을 잡았습니다! (윷을 한 번 더 던집니다!)`);
-                            this.pendingExtraTurn = true; // 말 잡으면 한 번 더 던지기!
-                        }
+                    // 잡힌 모든 적군 말: 대기실로 퇴출 & 업힘 완전 해제 (대기실에서 각자 개별 말로 새로 출발!)
+                    caughtList.forEach(ep => {
+                        ep.isHome = true;
+                        ep.pos = -1;
+                        ep.route = 'OUTER';
+                        ep.history = [];
+                        ep.stackedPieces = []; // 업힘 완전 분리! 개별 말로 복귀
                     });
                 }
             });
 
             if (caughtEnemy) {
+                Sound.playCatch();
+                this.pendingExtraTurn = true; // 말 잡으면 한 번 더 던지기!
                 const currentPlayerName = this.getCurrentPlayerName();
-                this.recordStat(currentPlayerName, 'catchCount', 1);
+                this.recordStat(currentPlayerName, 'catchCount', totalCaught);
+
+                if (totalCaught > 1) {
+                    this.logMessage(`💥 [${currentTeam.name}]이(가) [상대 팀]의 뭉쳐있던 말 ${totalCaught}마리를 한 번에 잡았습니다! (대기실로 돌아가 각자 새로 시작합니다. 윷 한 번 더 던지기!)`);
+                } else {
+                    this.logMessage(`💥 [${currentTeam.name}]이(가) [상대 팀]의 말을 잡았습니다! (윷을 한 번 더 던집니다!)`);
+                }
             }
 
-            if (stackedAlly) {
-                const currentPlayerName = this.getCurrentPlayerName();
-                this.recordStat(currentPlayerName, 'stackCount', 1);
-                this.logMessage(`🤝 아군 말을 업었습니다! (함께 전진합니다: x${piece.stackedPieces.length + 1})`);
+            // B. 아군 말 업기 (포개기)
+            // targetNode에 있는 모든 아군 말 확인
+            const alliesAtTarget = currentTeam.pieces.filter(p => !p.isGoal && !p.isHome && p.pos === targetNode);
+            const isNewlyStacked = (alliesAtTarget.length > movingGroup.length);
+
+            if (alliesAtTarget.length > 1) {
+                // targetNode에 있는 모든 아군 말들의 경로와 stackedPieces를 완벽 상호 동기화
+                alliesAtTarget.forEach(p => {
+                    p.route = movePath.finalRoute; // 경로 통일
+                    p.stackedPieces = alliesAtTarget.filter(other => other.id !== p.id).map(other => other.id);
+                });
+
+                if (isNewlyStacked) {
+                    const currentPlayerName = this.getCurrentPlayerName();
+                    this.recordStat(currentPlayerName, 'stackCount', 1);
+                    this.logMessage(`🤝 아군 말을 업었습니다! (총 ${alliesAtTarget.length}마리가 한 몸이 되어 함께 전진합니다: x${alliesAtTarget.length})`);
+                }
+            } else if (alliesAtTarget.length === 1) {
+                alliesAtTarget[0].stackedPieces = [];
             }
 
             this.renderAllPieces();
@@ -2148,35 +2150,42 @@
                 const pathInfo = calculateMovePath(p, roll.result);
                 if (!pathInfo.valid) return;
 
+                const group = this.getPieceGroup(p);
+                const groupSize = group.length;
+
                 if (pathInfo.isGoal) {
-                    score += 80 + (p.stackedPieces ? p.stackedPieces.length * 40 : 0);
+                    score += 80 + (groupSize * 40);
                 } else {
                     const targetNode = pathInfo.finalNode;
 
                     // 상대 말 잡기 가능 여부
                     const enemies = this.teams.filter(t => t.id !== currentTeam.id);
                     let canCatch = false;
+                    let caughtCount = 0;
                     enemies.forEach(et => {
                         et.pieces.forEach(ep => {
-                            if (!ep.isGoal && !ep.isHome && ep.pos === targetNode) canCatch = true;
+                            if (!ep.isGoal && !ep.isHome && ep.pos === targetNode) {
+                                canCatch = true;
+                                caughtCount++;
+                            }
                         });
                     });
-                    if (canCatch) score += 100;
+                    if (canCatch) score += 100 + (caughtCount * 30);
 
                     // 아군 말 업기 가능 여부
                     let canStack = false;
                     currentTeam.pieces.forEach(ap => {
                         if (ap.id !== p.id && !ap.isGoal && !ap.isHome && ap.pos === targetNode) canStack = true;
                     });
-                    if (canStack) score += 50;
+                    if (canStack) score += 60;
 
                     // 지름길(5번 모서리, 10번 모서리, 22번 방) 안착
                     if (targetNode === 5 || targetNode === 10 || targetNode === 22) {
                         score += 35;
                     }
 
-                    // 전진 보너스
-                    if (!p.isHome) score += 15;
+                    // 전진 보너스 (업힌 묶음이면 더 신중하고 값지게 전진)
+                    if (!p.isHome) score += 15 + (groupSize * 10);
                 }
 
                 // 약간의 랜덤성 가미
