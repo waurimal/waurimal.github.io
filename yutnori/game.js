@@ -475,9 +475,16 @@
                 stick1: document.getElementById('yutStick1'),
                 stick2: document.getElementById('yutStick2'),
                 stick3: document.getElementById('yutStick3'),
+                yutLabel0: document.getElementById('yutLabel0'),
+                yutLabel1: document.getElementById('yutLabel1'),
+                yutLabel2: document.getElementById('yutLabel2'),
+                yutLabel3: document.getElementById('yutLabel3'),
                 rollBtn: document.getElementById('rollBtn'),
                 resultBadge: document.getElementById('resultBadge'),
                 resultText: document.getElementById('resultText'),
+                resultStepsBadge: document.getElementById('resultStepsBadge'),
+                resultDetailText: document.getElementById('resultDetailText'),
+                extraTurnBadge: document.getElementById('extraTurnBadge'),
                 turnBanner: document.getElementById('turnBanner'),
                 turnTeamName: document.getElementById('turnTeamName'),
                 turnPlayerName: document.getElementById('turnPlayerName'),
@@ -680,6 +687,24 @@
             this.logMessage(`✨ 새 윷놀이 게임이 시작되었습니다! (${this.getModeName()} 모드)`);
             this.updateTurnUI();
             this.renderAllPieces();
+
+            // 윷가락 비주얼 초기화
+            const sticks = [this.dom.stick0, this.dom.stick1, this.dom.stick2, this.dom.stick3];
+            const labels = [this.dom.yutLabel0, this.dom.yutLabel1, this.dom.yutLabel2, this.dom.yutLabel3];
+            sticks.forEach((st, idx) => {
+                if (st) {
+                    st.classList.remove('tossing', 'is-back');
+                    st.classList.add('is-front');
+                }
+                if (labels[idx]) {
+                    labels[idx].textContent = (idx === 0) ? '앞 (빽도)' : '앞 (배)';
+                    labels[idx].className = 'yut-stick-label is-front-label text-[11px] px-2 py-0.5 rounded-full border';
+                }
+            });
+            if (this.dom.resultBadge) {
+                this.dom.resultBadge.classList.add('hidden');
+            }
+
             this.setGameState('WAIT_ROLL');
 
             // 첫 턴이 AI면 자동 롤 실행
@@ -796,11 +821,17 @@
 
             // 윷가락 애니메이션 트리거
             const sticks = [this.dom.stick0, this.dom.stick1, this.dom.stick2, this.dom.stick3];
-            sticks.forEach(st => {
+            const labels = [this.dom.yutLabel0, this.dom.yutLabel1, this.dom.yutLabel2, this.dom.yutLabel3];
+
+            sticks.forEach((st, idx) => {
                 if (st) {
                     st.classList.remove('tossing');
-                    void st.offsetWidth; // 리플로우
+                    void st.offsetWidth; // 리플로우 강제
                     st.classList.add('tossing');
+                }
+                if (labels[idx]) {
+                    labels[idx].textContent = '회전 중...';
+                    labels[idx].className = 'yut-stick-label text-[11px] px-2 py-0.5 rounded-full border bg-slate-700 text-slate-300 border-slate-600 animate-pulse';
                 }
             });
 
@@ -809,15 +840,34 @@
             this.currentRoll = rollResult;
 
             setTimeout(() => {
-                // 윷가락 시각적 뒤집기 설정 (1: 배(앞, 평평함 rotateY 0deg), 0: 등(뒤, 둥긂 rotateY 180deg))
+                // 1. tossing 애니메이션 클래스 제거 (forwards 스타일 고정 버그 원천 차단)
                 sticks.forEach((st, idx) => {
                     if (st) {
-                        const isFlat = rollResult.sticks[idx] === 1;
-                        st.style.transform = isFlat ? 'rotateY(0deg)' : 'rotateY(180deg)';
+                        st.classList.remove('tossing');
+                        const isFlat = (rollResult.sticks[idx] === 1); // 1: 배(앞), 0: 등(뒤)
+
+                        st.classList.remove('is-front', 'is-back');
+                        if (isFlat) {
+                            st.classList.add('is-front');
+                        } else {
+                            st.classList.add('is-back');
+                        }
+                    }
+
+                    // 2. 윷가락 하단 레이블 상태 갱신
+                    if (labels[idx]) {
+                        const isFlat = (rollResult.sticks[idx] === 1);
+                        if (isFlat) {
+                            labels[idx].textContent = (idx === 0) ? '앞 (빽도)' : '앞 (배)';
+                            labels[idx].className = 'yut-stick-label is-front-label text-[11px] px-2 py-0.5 rounded-full border';
+                        } else {
+                            labels[idx].textContent = '뒤 (등)';
+                            labels[idx].className = 'yut-stick-label is-back-label text-[11px] px-2 py-0.5 rounded-full border';
+                        }
                     }
                 });
 
-                // 결과 효과음 및 배지 표시
+                // 3. 결과 효과음 및 결과 뱃지 표시
                 Sound.playLand(rollResult.result);
                 this.displayRollResult(rollResult);
 
@@ -838,7 +888,36 @@
 
         displayRollResult(rollResult) {
             if (!this.dom.resultBadge || !this.dom.resultText) return;
+
+            // 1. 결과 이름 및 스텝 수 뱃지
             this.dom.resultText.textContent = rollResult.name;
+            if (this.dom.resultStepsBadge) {
+                const stepText = (rollResult.steps > 0) ? `+${rollResult.steps}칸` : `${rollResult.steps}칸`;
+                this.dom.resultStepsBadge.textContent = stepText;
+            }
+
+            // 2. 상세 설명 문구 (앞/뒤 개수 및 전진 칸수)
+            if (this.dom.resultDetailText) {
+                const detailMap = {
+                    'back_do': '[ 빽도 윷 1개만 앞(배) = 뒤로 1칸 후퇴! ]',
+                    'do': '[ 앞(배) 1개, 뒤(등) 3개 = 1칸 전진 ]',
+                    'gae': '[ 앞(배) 2개, 뒤(등) 2개 = 2칸 전진 ]',
+                    'geol': '[ 앞(배) 3개, 뒤(등) 1개 = 3칸 전진 ]',
+                    'yut': '[ 앞(배) 4개 모두 뒤집힘 = 4칸 전진! ]',
+                    'mo': '[ 뒤(등) 4개 모두 뒤집힘 = 5칸 전진! ]'
+                };
+                this.dom.resultDetailText.textContent = detailMap[rollResult.result] || `[ ${rollResult.steps}칸 이동 ]`;
+            }
+
+            // 3. 보너스 턴 뱃지
+            if (this.dom.extraTurnBadge) {
+                if (rollResult.extraTurn) {
+                    this.dom.extraTurnBadge.classList.remove('hidden');
+                } else {
+                    this.dom.extraTurnBadge.classList.add('hidden');
+                }
+            }
+
             this.dom.resultBadge.classList.remove('hidden');
             this.dom.resultBadge.classList.remove('yut-result-badge');
             void this.dom.resultBadge.offsetWidth;

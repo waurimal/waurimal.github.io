@@ -206,69 +206,142 @@ body {
 /* 윷가락 (Yut Sticks) 3D 컨테이너 */
 .yut-sticks-container {
     display: flex;
-    gap: 14px;
+    gap: 16px;
     justify-content: center;
+    align-items: flex-start;
+    perspective: 900px;
+    padding: 14px 0 6px 0;
+}
+
+.yut-stick-col {
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    perspective: 800px;
-    padding: 12px 0;
+    gap: 8px;
 }
 
 .yut-stick {
     position: relative;
-    width: 32px;
-    height: 120px;
-    border-radius: 16px;
+    width: 44px;
+    height: 135px;
+    border-radius: 20px;
     transform-style: preserve-3d;
     transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 12px 20px -4px rgba(0, 0, 0, 0.5);
 }
 
-/* 윷가락 앞면 (평평한 배, 밝은 갈색 / 윷눈 표시) */
+/* 상태별 확실한 3D 회전 제어 (forwards 충돌 완전 방지) */
+.yut-stick.is-front {
+    transform: rotateY(0deg);
+}
+.yut-stick.is-back {
+    transform: rotateY(180deg);
+}
+
+/* 윷가락 앞면 (평평한 배, 밝은 원목 톤 / 전통 X자 음각) */
 .yut-stick-front {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to right, #fde68a, #fef3c7, #fde68a);
-    border: 2px solid #b45309;
-    border-radius: 16px;
+    background: linear-gradient(to right, #fde68a 0%, #fffbeb 50%, #fde68a 100%);
+    border: 3px solid #b45309;
+    border-radius: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-evenly;
     backface-visibility: hidden;
+    box-shadow: inset 0 0 10px rgba(180, 83, 9, 0.25);
 }
 
-/* 윷가락 뒷면 (둥근 등, 짙은 밤색) */
+/* 앞면 배 텍스트 라벨 태그 */
+.yut-face-badge {
+    font-size: 10px;
+    font-weight: 900;
+    padding: 2px 5px;
+    border-radius: 6px;
+    letter-spacing: -0.5px;
+}
+.yut-face-badge.front-badge {
+    background: #f59e0b;
+    color: #451a03;
+    border: 1px solid #d97706;
+}
+.yut-face-badge.back-badge {
+    background: #290f02;
+    color: #fde68a;
+    border: 1px solid #78350f;
+}
+
+/* 윷가락 뒷면 (둥근 통나무 등껍질, 짙은 밤색 나무결) */
 .yut-stick-back {
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, #78350f 0%, #451a03 100%);
-    border: 2px solid #290f02;
-    border-radius: 16px;
+    background: repeating-linear-gradient(
+        90deg,
+        #451a03 0px,
+        #78350f 7px,
+        #290f02 14px,
+        #572207 21px
+    );
+    border: 3px solid #1c0a02;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
     backface-visibility: hidden;
     transform: rotateY(180deg);
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8), inset 0 2px 4px rgba(255, 255, 255, 0.15);
+}
+
+/* 등(뒤) 면의 둥근 통나무 나이테/곡면 무늬 */
+.yut-bark-ridge {
+    width: 70%;
+    height: 4px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 2px;
 }
 
 /* 윷눈 X 표식 (배에 새겨진 전통 X자 눈) */
 .yut-mark-x {
     color: #92400e;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 900;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
 }
 
 /* 빽도(뒷도) 윷 표시 */
 .yut-stick.back-do .yut-mark-x.special-backdo {
     color: #dc2626;
-    font-size: 19px;
-    animation: pulse 1s infinite;
+    font-size: 22px;
+    text-shadow: 0 0 4px rgba(220, 38, 38, 0.6);
 }
 
-/* 윷 던질 때의 회전 애니메이션 */
+/* 윷가락 하단 상태 배지 */
+.yut-stick-label {
+    transition: all 0.25s ease;
+}
+.yut-stick-label.is-front-label {
+    background: #f59e0b;
+    color: #451a03;
+    border-color: #fbbf24;
+    font-weight: 900;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+}
+.yut-stick-label.is-back-label {
+    background: #475569;
+    color: #f1f5f9;
+    border-color: #64748b;
+    font-weight: 700;
+}
+
+/* 윷 던질 때의 회전 애니메이션 (forwards 제거로 덮어쓰기 버그 원천 해결) */
 @keyframes yutToss {
     0% {
         transform: translateY(0) rotateX(0deg) rotateY(0deg) scale(1);
     }
     30% {
-        transform: translateY(-80px) rotateX(720deg) rotateY(360deg) scale(1.15);
+        transform: translateY(-90px) rotateX(720deg) rotateY(360deg) scale(1.15);
     }
     60% {
         transform: translateY(-40px) rotateX(1080deg) rotateY(720deg) scale(1.05);
@@ -279,7 +352,7 @@ body {
 }
 
 .yut-stick.tossing {
-    animation: yutToss 0.7s ease-out forwards;
+    animation: yutToss 0.7s ease-out;
 }
 
 /* 윷 결과 알림 배너 */

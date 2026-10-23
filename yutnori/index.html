@@ -96,59 +96,118 @@
                     </div>
                 </div>
 
-                <!-- 2. 윷 던지기 영역 (3D 윷가락 4개 + 던지기 버튼) -->
+                <!-- 2. 윷 던지기 영역 (3D 윷가락 4개 + 상태 레이블 + 던지기 버튼) -->
                 <div class="p-5 rounded-2xl bg-slate-800/90 border border-slate-700 shadow-xl flex flex-col items-center">
-                    <div class="text-xs font-black text-slate-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">
-                        <i class="fa-solid fa-hand-fist text-amber-400"></i> 전통 윷 던지기
+                    <div class="flex items-center justify-between w-full mb-2">
+                        <span class="text-xs font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-hand-fist text-amber-400"></i> 전통 윷 던지기
+                        </span>
+                        <span class="text-[11px] text-amber-400/90 font-bold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30">
+                            밝은면=앞(배) · 짙은면=뒤(등)
+                        </span>
                     </div>
 
-                    <!-- 윷가락 4개 3D 뷰어 -->
+                    <!-- 윷가락 4개 3D 뷰어 & 개별 상태 레이블 -->
                     <div class="yut-sticks-container w-full">
                         <!-- 윷가락 0 (뒷도/빽도 표시 윷) -->
-                        <div id="yutStick0" class="yut-stick back-do">
-                            <div class="yut-stick-front">
-                                <span class="yut-mark-x special-backdo"><i class="fa-solid fa-xmark"></i></span>
-                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
-                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                        <div class="yut-stick-col">
+                            <div id="yutStick0" class="yut-stick back-do is-front">
+                                <div class="yut-stick-front">
+                                    <span class="yut-face-badge front-badge">앞(배)</span>
+                                    <span class="yut-mark-x special-backdo" title="빽도 표시 윷눈"><i class="fa-solid fa-xmark"></i></span>
+                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                    <span class="text-[9px] font-black text-rose-600 bg-rose-100 px-1 rounded border border-rose-300">빽도윷</span>
+                                </div>
+                                <div class="yut-stick-back">
+                                    <span class="yut-face-badge back-badge">뒤(등)</span>
+                                    <div class="yut-bark-ridge"></div>
+                                    <div class="yut-bark-ridge"></div>
+                                    <div class="yut-bark-ridge"></div>
+                                    <span class="text-[9px] font-bold text-stone-400">둥근 등</span>
+                                </div>
                             </div>
-                            <div class="yut-stick-back"></div>
+                            <span id="yutLabel0" class="yut-stick-label is-front-label text-[11px] px-2 py-0.5 rounded-full border">앞(배)</span>
                         </div>
+
                         <!-- 윷가락 1 -->
-                        <div id="yutStick1" class="yut-stick">
-                            <div class="yut-stick-front">
-                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
-                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
-                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                        <div class="yut-stick-col">
+                            <div id="yutStick1" class="yut-stick is-front">
+                                <div class="yut-stick-front">
+                                    <span class="yut-face-badge front-badge">앞(배)</span>
+                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                    <span class="text-[9px] font-bold text-amber-800">평평함</span>
+                                </div>
+                                <div class="yut-stick-back">
+                                    <span class="yut-face-badge back-badge">뒤(등)</span>
+                                    <div class="yut-bark-ridge"></div>
+                                    <div class="yut-bark-ridge"></div>
+                                    <div class="yut-bark-ridge"></div>
+                                    <span class="text-[9px] font-bold text-stone-400">둥근 등</span>
+                                </div>
                             </div>
-                            <div class="yut-stick-back"></div>
+                            <span id="yutLabel1" class="yut-stick-label is-front-label text-[11px] px-2 py-0.5 rounded-full border">앞(배)</span>
                         </div>
+
                         <!-- 윷가락 2 -->
-                        <div id="yutStick2" class="yut-stick">
-                            <div class="yut-stick-front">
-                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
-                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
-                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                        <div class="yut-stick-col">
+                            <div id="yutStick2" class="yut-stick is-front">
+                                <div class="yut-stick-front">
+                                    <span class="yut-face-badge front-badge">앞(배)</span>
+                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                    <span class="text-[9px] font-bold text-amber-800">평평함</span>
+                                </div>
+                                <div class="yut-stick-back">
+                                    <span class="yut-face-badge back-badge">뒤(등)</span>
+                                    <div class="yut-bark-ridge"></div>
+                                    <div class="yut-bark-ridge"></div>
+                                    <div class="yut-bark-ridge"></div>
+                                    <span class="text-[9px] font-bold text-stone-400">둥근 등</span>
+                                </div>
                             </div>
-                            <div class="yut-stick-back"></div>
+                            <span id="yutLabel2" class="yut-stick-label is-front-label text-[11px] px-2 py-0.5 rounded-full border">앞(배)</span>
                         </div>
+
                         <!-- 윷가락 3 -->
-                        <div id="yutStick3" class="yut-stick">
-                            <div class="yut-stick-front">
-                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
-                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
-                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                        <div class="yut-stick-col">
+                            <div id="yutStick3" class="yut-stick is-front">
+                                <div class="yut-stick-front">
+                                    <span class="yut-face-badge front-badge">앞(배)</span>
+                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                    <span class="text-[9px] font-bold text-amber-800">평평함</span>
+                                </div>
+                                <div class="yut-stick-back">
+                                    <span class="yut-face-badge back-badge">뒤(등)</span>
+                                    <div class="yut-bark-ridge"></div>
+                                    <div class="yut-bark-ridge"></div>
+                                    <div class="yut-bark-ridge"></div>
+                                    <span class="text-[9px] font-bold text-stone-400">둥근 등</span>
+                                </div>
                             </div>
-                            <div class="yut-stick-back"></div>
+                            <span id="yutLabel3" class="yut-stick-label is-front-label text-[11px] px-2 py-0.5 rounded-full border">앞(배)</span>
                         </div>
                     </div>
 
-                    <!-- 던진 결과 뱃지 -->
-                    <div id="resultBadge" class="hidden my-2.5 px-6 py-2 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-2xl shadow-lg border-2 border-amber-300">
-                        <span id="resultText">도</span>
+                    <!-- 던진 결과 뱃지 & 상세 설명 영역 -->
+                    <div id="resultBadge" class="hidden my-3 px-6 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 shadow-xl border-2 border-amber-200 text-center flex flex-col items-center">
+                        <div class="flex items-center gap-2">
+                            <span id="resultText" class="font-black text-2xl tracking-wide">도</span>
+                            <span id="resultStepsBadge" class="text-xs font-black bg-slate-950 text-amber-300 px-2 py-0.5 rounded-full">+1칸</span>
+                        </div>
+                        <span id="resultDetailText" class="text-xs font-bold text-amber-950 mt-0.5">[ 앞면 1개, 뒷면 3개 = 1칸 전진 ]</span>
+                        <span id="extraTurnBadge" class="hidden mt-1 text-[11px] font-black px-2.5 py-0.5 rounded-full bg-red-600 text-white animate-bounce shadow">
+                            🎉 보너스 기회! 윷을 한 번 더 던지세요!
+                        </span>
                     </div>
 
                     <!-- 윷 던지기 버튼 -->
-                    <button id="rollBtn" class="w-full mt-3 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 active:scale-98 text-slate-950 font-black text-lg shadow-lg shadow-amber-900/40 transition flex items-center justify-center gap-2">
+                    <button id="rollBtn" class="w-full mt-2 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 active:scale-98 text-slate-950 font-black text-lg shadow-lg shadow-amber-900/40 transition flex items-center justify-center gap-2">
                         <i class="fa-solid fa-bullseye"></i> 윷 던지기!
                     </button>
                 </div>
