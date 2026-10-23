@@ -1211,9 +1211,8 @@
         }
 
         getModeName() {
-            if (this.mode === 'ai') return '컴퓨터 대전';
-            if (this.mode === '1v1') return '1:1 대전';
-            return '다수:다수 팀전';
+            if (this.mode === 'online') return '실시간 온라인 멀티';
+            return '컴퓨터 대전';
         }
 
         getCurrentTeam() {

@@ -308,22 +308,20 @@
                 </button>
             </div>
 
-            <!-- 게임 모드 선택 탭 -->
+            <!-- 게임 모드 선택 탭 (컴퓨터 대전 vs 실시간 온라인 멀티) -->
             <div class="mb-5">
                 <label class="block text-xs font-bold text-slate-400 mb-2">게임 모드 선택</label>
-                <div class="grid grid-cols-3 gap-2">
-                    <button type="button" class="mode-tab-btn py-2.5 px-2 rounded-xl border-2 font-bold text-xs flex flex-col items-center gap-1 transition-all border-amber-500 bg-amber-500/10 text-amber-300" data-mode="ai">
-                        <i class="fa-solid fa-robot text-base"></i>
-                        <span>컴퓨터 대전</span>
+                <div class="grid grid-cols-2 gap-3">
+                    <button type="button" class="mode-tab-btn py-3 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-amber-500 bg-amber-500/10 text-amber-300" data-mode="ai">
+                        <i class="fa-solid fa-robot text-lg"></i>
+                        <span class="text-sm">컴퓨터 대전</span>
+                        <span class="text-[10px] text-slate-400 font-normal">혼자서 AI와 연습하기</span>
                     </button>
-                    <button type="button" class="mode-tab-btn py-2.5 px-2 rounded-xl border-2 font-bold text-xs flex flex-col items-center gap-1 transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600" data-mode="1v1">
-                        <i class="fa-solid fa-user-group text-base"></i>
-                        <span>로컬 1:1 대전</span>
-                    </button>
-                    <button type="button" class="mode-tab-btn py-2.5 px-2 rounded-xl border-2 font-bold text-xs flex flex-col items-center gap-1 transition-all border-emerald-500/60 bg-emerald-500/10 text-emerald-300 hover:border-emerald-500 relative" data-mode="online">
-                        <span class="absolute -top-1.5 -right-1 px-1.5 py-0.2 bg-emerald-500 text-slate-950 text-[9px] font-black rounded-full shadow">추천</span>
-                        <i class="fa-solid fa-wifi text-base"></i>
-                        <span>온라인 멀티</span>
+                    <button type="button" class="mode-tab-btn py-3 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-emerald-500/60 bg-emerald-500/10 text-emerald-300 hover:border-emerald-500 relative" data-mode="online">
+                        <span class="absolute -top-2 -right-1 px-2 py-0.5 bg-emerald-500 text-slate-950 text-[10px] font-black rounded-full shadow">실시간</span>
+                        <i class="fa-solid fa-tower-broadcast text-lg"></i>
+                        <span class="text-sm">실시간 온라인 멀티</span>
+                        <span class="text-[10px] text-emerald-400/80 font-normal">방 코드 공유 대결</span>
                     </button>
                 </div>
             </div>
@@ -394,38 +392,6 @@
                     <label class="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer">
                         <input type="radio" name="aiDifficulty" value="hard" class="text-amber-500"> 매운맛 (도전)
                     </label>
-                </div>
-            </div>
-
-            <!-- 세부 옵션: 1:1 대전 플레이어 이름 -->
-            <div id="oneOnOneSection" class="mb-5 p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700 hidden">
-                <label class="block text-xs font-bold text-slate-300 mb-2">플레이어 이름 입력</label>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <span class="text-[11px] text-blue-400 font-bold block mb-1">1P (청팀)</span>
-                        <input type="text" id="player1Input" value="청팀 1P" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-blue-500 font-bold">
-                    </div>
-                    <div>
-                        <span class="text-[11px] text-rose-400 font-bold block mb-1">2P (백팀)</span>
-                        <input type="text" id="player2Input" value="백팀 2P" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-rose-500 font-bold">
-                    </div>
-                </div>
-            </div>
-
-            <!-- 세부 옵션: 다수:다수 팀전 명단 -->
-            <div id="teamOptionsSection" class="mb-5 p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700 hidden">
-                <label class="block text-xs font-bold text-slate-300 mb-1">팀원 이름 등록 (쉼표로 구분)</label>
-                <p class="text-[11px] text-slate-400 mb-3">각 팀원들이 차례대로 윷을 던지고 문제를 풉니다.</p>
-
-                <div class="flex flex-col gap-3">
-                    <div>
-                        <span class="text-xs text-blue-400 font-bold block mb-1">청팀 참가자 명단</span>
-                        <input type="text" id="team1MembersInput" value="민수, 지우, 서준" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-blue-500">
-                    </div>
-                    <div>
-                        <span class="text-xs text-rose-400 font-bold block mb-1">백팀 참가자 명단</span>
-                        <input type="text" id="team2MembersInput" value="영희, 하은, 도윤" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-rose-500">
-                    </div>
                 </div>
             </div>
 
@@ -855,11 +821,9 @@
             const joinOnlineRoomBtn = document.getElementById('joinOnlineRoomBtn');
             const leaveOnlineRoomBtn = document.getElementById('leaveOnlineRoomBtn');
 
-            // 모드 탭 전환
+            // 모드 탭 전환 (AI 컴퓨터 대전 vs 실시간 온라인 멀티)
             const modeTabs = document.querySelectorAll('.mode-tab-btn');
             const aiOptions = document.getElementById('aiOptionsSection');
-            const oneOnOneSection = document.getElementById('oneOnOneSection');
-            const teamOptions = document.getElementById('teamOptionsSection');
             const onlineOptions = document.getElementById('onlineOptionsSection');
             let selectedMode = 'ai';
 
@@ -867,18 +831,16 @@
                 selectedMode = mode;
                 modeTabs.forEach(t => {
                     if (t.dataset.mode === mode) {
-                        t.className = 'mode-tab-btn py-2.5 px-2 rounded-xl border-2 font-bold text-xs flex flex-col items-center gap-1 transition-all border-amber-500 bg-amber-500/10 text-amber-300';
+                        t.className = 'mode-tab-btn py-3 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-amber-500 bg-amber-500/10 text-amber-300';
                     } else {
-                        t.className = 'mode-tab-btn py-2.5 px-2 rounded-xl border-2 font-bold text-xs flex flex-col items-center gap-1 transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600';
+                        t.className = 'mode-tab-btn py-3 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600';
                     }
                 });
 
                 aiOptions.classList.toggle('hidden', selectedMode !== 'ai');
-                oneOnOneSection.classList.toggle('hidden', selectedMode !== '1v1');
-                teamOptions.classList.toggle('hidden', selectedMode !== 'team');
                 onlineOptions.classList.toggle('hidden', selectedMode !== 'online');
 
-                // 온라인 모드일 때는 하단 로컬 '새 게임 시작하기' 버튼 숨김 (온라인 전용 버튼 사용)
+                // 온라인 모드일 때는 하단 '새 게임 시작하기' 버튼 숨김 (온라인 전용 버튼 사용)
                 if (startGameBtn) {
                     startGameBtn.classList.toggle('hidden', selectedMode === 'online');
                 }
@@ -1119,31 +1081,18 @@
             openRuleBtn.addEventListener('click', () => ruleModal.classList.remove('hidden'));
             closeRuleBtn.addEventListener('click', () => ruleModal.classList.add('hidden'));
 
-            // 로컬 게임 시작 (컴퓨터 또는 1:1)
+            // 컴퓨터 대전 게임 시작하기
             startGameBtn.addEventListener('click', () => {
                 const pieceCount = parseInt(document.getElementById('pieceCountSelect').value, 10);
                 const gradeFilter = document.getElementById('gradeSelect').value;
+                const diffRadio = document.querySelector('input[name="aiDifficulty"]:checked');
 
-                let config = {
-                    mode: selectedMode,
+                const config = {
+                    mode: 'ai',
+                    difficulty: diffRadio ? diffRadio.value : 'normal',
                     pieceCount: pieceCount,
                     grade: gradeFilter
                 };
-
-                if (selectedMode === 'ai') {
-                    const diffRadio = document.querySelector('input[name="aiDifficulty"]:checked');
-                    config.difficulty = diffRadio ? diffRadio.value : 'normal';
-                } else if (selectedMode === '1v1') {
-                    config.player1Name = document.getElementById('player1Input').value.trim() || '1P(청팀)';
-                    config.player2Name = document.getElementById('player2Input').value.trim() || '2P(백팀)';
-                } else if (selectedMode === 'team') {
-                    const t1Raw = document.getElementById('team1MembersInput').value;
-                    const t2Raw = document.getElementById('team2MembersInput').value;
-                    config.team1Players = t1Raw.split(',').map(s => s.trim()).filter(Boolean);
-                    config.team2Players = t2Raw.split(',').map(s => s.trim()).filter(Boolean);
-                    if (config.team1Players.length === 0) config.team1Players = ['청팀 1번'];
-                    if (config.team2Players.length === 0) config.team2Players = ['백팀 1번'];
-                }
 
                 settingsModal.classList.add('hidden');
                 window.YutnoriGameInstance.startNewGame(config);
