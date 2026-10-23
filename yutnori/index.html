@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>와우리말 영어 윷놀이 (English Yutnori) - 에듀테크</title>
+
+    <!-- Pretendard 폰트 -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <!-- Tailwind CSS v4 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome 6.5.1 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Confetti 축포 효과 -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- 와우리말 공통 테마 CSS & 공통 내비게이션 -->
+    <link rel="stylesheet" href="../common/waurimal-theme.css">
+    <script src="../common/curriculum.js"></script>
+    <script src="../common/waurimal-nav.js"></script>
+
+    <!-- 윷놀이 전용 스타일시트 -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between">
+
+    <!-- 상단 헤더 바 -->
+    <header class="bg-slate-800/90 border-b border-slate-700/80 px-4 py-3 sticky top-0 z-40 backdrop-blur-md shadow-md">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 to-amber-400 flex items-center justify-center text-white shadow-lg shadow-amber-900/30">
+                    <i class="fa-solid fa-dice text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-black text-lg md:text-xl text-amber-400 flex items-center gap-2">
+                        영어 윷놀이 챌린지
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">English Yutnori</span>
+                    </h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">윷을 던지고 영어 문제를 맞혀 말을 전진시키세요!</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button id="openRuleBtn" class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-circle-question text-amber-400"></i> 규칙 안내
+                </button>
+                <button id="openSettingsBtn" class="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black transition flex items-center gap-1.5 shadow-md">
+                    <i class="fa-solid fa-gear"></i> 게임 설정 / 모드
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <main class="max-w-7xl mx-auto px-4 py-4 w-full flex-1">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <!-- 좌측: 윷놀이 보드 및 대기실 (7컬럼) -->
+            <div class="lg:col-span-7 flex flex-col items-center gap-4">
+
+                <!-- 윷판 컨테이너 -->
+                <div id="boardWrapper" class="yut-board-wrapper">
+                    <!-- SVG 연결선 -->
+                    <svg id="boardSvg" class="yut-board-svg" viewBox="0 0 100 100"></svg>
+                    <!-- 29개 노드 레이어 -->
+                    <div id="nodesLayer" class="absolute inset-0 pointer-events-auto"></div>
+                    <!-- 말(Pieces) 레이어 -->
+                    <div id="piecesLayer" class="absolute inset-0 pointer-events-auto"></div>
+                </div>
+
+                <!-- 출발 대기실 (아직 판에 나가지 않은 말들) -->
+                <div class="w-full max-w-[580px] bg-slate-800/80 border border-slate-700/80 rounded-2xl p-3.5 shadow-md">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-black text-amber-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-flag-checkered"></i> 출발 대기존 (대기 중인 말)
+                        </span>
+                        <span class="text-[11px] text-slate-400">말을 클릭하면 판으로 진입합니다</span>
+                    </div>
+                    <div id="waitingPiecesArea" class="flex flex-col gap-1">
+                        <!-- 동적 생성 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 우측: 게임 컨트롤, 윷 던지기 3D, 현황판, 중계창 (5컬럼) -->
+            <div class="lg:col-span-5 flex flex-col gap-4">
+
+                <!-- 1. 턴 배너 카드 -->
+                <div id="turnBanner" class="p-4 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-800/90 border-2 border-amber-500/50 shadow-lg flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-bold text-slate-400 mb-0.5">현재 차례</div>
+                        <div id="turnTeamName" class="font-black text-xl text-blue-400">청팀</div>
+                    </div>
+                    <div id="turnPlayerName" class="text-sm font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-xl">
+                        차례 대기 중
+                    </div>
+                </div>
+
+                <!-- 2. 윷 던지기 영역 (3D 윷가락 4개 + 던지기 버튼) -->
+                <div class="p-5 rounded-2xl bg-slate-800/90 border border-slate-700 shadow-xl flex flex-col items-center">
+                    <div class="text-xs font-black text-slate-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-hand-fist text-amber-400"></i> 전통 윷 던지기
+                    </div>
+
+                    <!-- 윷가락 4개 3D 뷰어 -->
+                    <div class="yut-sticks-container w-full">
+                        <!-- 윷가락 0 (뒷도/빽도 표시 윷) -->
+                        <div id="yutStick0" class="yut-stick back-do">
+                            <div class="yut-stick-front">
+                                <span class="yut-mark-x special-backdo"><i class="fa-solid fa-xmark"></i></span>
+                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                            </div>
+                            <div class="yut-stick-back"></div>
+                        </div>
+                        <!-- 윷가락 1 -->
+                        <div id="yutStick1" class="yut-stick">
+                            <div class="yut-stick-front">
+                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                            </div>
+                            <div class="yut-stick-back"></div>
+                        </div>
+                        <!-- 윷가락 2 -->
+                        <div id="yutStick2" class="yut-stick">
+                            <div class="yut-stick-front">
+                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                            </div>
+                            <div class="yut-stick-back"></div>
+                        </div>
+                        <!-- 윷가락 3 -->
+                        <div id="yutStick3" class="yut-stick">
+                            <div class="yut-stick-front">
+                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                            </div>
+                            <div class="yut-stick-back"></div>
+                        </div>
+                    </div>
+
+                    <!-- 던진 결과 뱃지 -->
+                    <div id="resultBadge" class="hidden my-2.5 px-6 py-2 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-2xl shadow-lg border-2 border-amber-300">
+                        <span id="resultText">도</span>
+                    </div>
+
+                    <!-- 윷 던지기 버튼 -->
+                    <button id="rollBtn" class="w-full mt-3 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 active:scale-98 text-slate-950 font-black text-lg shadow-lg shadow-amber-900/40 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-bullseye"></i> 윷 던지기!
+                    </button>
+                </div>
+
+                <!-- 3. 팀별 진행 현황판 -->
+                <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80 shadow-md">
+                    <div class="text-xs font-black text-slate-300 mb-2 flex items-center justify-between">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-trophy text-amber-400"></i> 팀별 완주 현황</span>
+                        <span class="text-[11px] text-slate-400">먼저 모두 완주하면 승리!</span>
+                    </div>
+                    <div id="teamsStatusContainer" class="flex flex-col gap-2">
+                        <!-- 동적 생성 -->
+                    </div>
+                </div>
+
+                <!-- 4. 실시간 게임 중계창 -->
+                <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80 shadow-md">
+                    <div class="text-xs font-black text-slate-400 mb-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-scroll text-amber-400"></i> 윷놀이 실황 중계
+                    </div>
+                    <div id="gameLogContainer" class="h-28 overflow-y-auto pr-1 flex flex-col gap-0.5">
+                        <div class="text-xs text-slate-400">게임을 시작해 주세요.</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="bg-slate-950/80 border-t border-slate-800 py-3 px-4 text-center text-xs text-slate-500">
+        © 2026 와우리말(Waurimal) 프로젝트 - 에듀테크 영어 윷놀이 보드게임
+    </footer>
+
+    <!-- ============================================================== -->
+    <!-- 모달 1: 게임 설정 / 모드 선택 모달 -->
+    <!-- ============================================================== -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+                <h3 class="font-black text-xl text-amber-400 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders"></i> 영어 윷놀이 게임 설정
+                </h3>
+                <button id="closeSettingsBtn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- 게임 모드 선택 탭 -->
+            <div class="mb-5">
+                <label class="block text-xs font-bold text-slate-400 mb-2">게임 모드 선택</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button type="button" class="mode-tab-btn py-2.5 px-2 rounded-xl border-2 font-bold text-xs flex flex-col items-center gap-1 transition-all border-amber-500 bg-amber-500/10 text-amber-300" data-mode="ai">
+                        <i class="fa-solid fa-robot text-base"></i>
+                        <span>컴퓨터 대전</span>
+                    </button>
+                    <button type="button" class="mode-tab-btn py-2.5 px-2 rounded-xl border-2 font-bold text-xs flex flex-col items-center gap-1 transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600" data-mode="1v1">
+                        <i class="fa-solid fa-user-group text-base"></i>
+                        <span>1:1 대전</span>
+                    </button>
+                    <button type="button" class="mode-tab-btn py-2.5 px-2 rounded-xl border-2 font-bold text-xs flex flex-col items-center gap-1 transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600" data-mode="team">
+                        <i class="fa-solid fa-users text-base"></i>
+                        <span>다수:다수 팀전</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 세부 옵션: AI 난이도 (AI 모드일 때만) -->
+            <div id="aiOptionsSection" class="mb-5 p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700">
+                <label class="block text-xs font-bold text-slate-300 mb-2">인공지능 컴퓨터 난이도</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <label class="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer">
+                        <input type="radio" name="aiDifficulty" value="easy" class="text-amber-500"> 순한맛 (쉬움)
+                    </label>
+                    <label class="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer">
+                        <input type="radio" name="aiDifficulty" value="normal" checked class="text-amber-500"> 보통맛 (표준)
+                    </label>
+                    <label class="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer">
+                        <input type="radio" name="aiDifficulty" value="hard" class="text-amber-500"> 매운맛 (도전)
+                    </label>
+                </div>
+            </div>
+
+            <!-- 세부 옵션: 1:1 대전 플레이어 이름 -->
+            <div id="oneOnOneSection" class="mb-5 p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700 hidden">
+                <label class="block text-xs font-bold text-slate-300 mb-2">플레이어 이름 입력</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <span class="text-[11px] text-blue-400 font-bold block mb-1">1P (청팀)</span>
+                        <input type="text" id="player1Input" value="청팀 1P" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-blue-500 font-bold">
+                    </div>
+                    <div>
+                        <span class="text-[11px] text-rose-400 font-bold block mb-1">2P (백팀)</span>
+                        <input type="text" id="player2Input" value="백팀 2P" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-rose-500 font-bold">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 세부 옵션: 다수:다수 팀전 명단 -->
+            <div id="teamOptionsSection" class="mb-5 p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700 hidden">
+                <label class="block text-xs font-bold text-slate-300 mb-1">팀원 이름 등록 (쉼표로 구분)</label>
+                <p class="text-[11px] text-slate-400 mb-3">각 팀원들이 차례대로 윷을 던지고 문제를 풉니다.</p>
+
+                <div class="flex flex-col gap-3">
+                    <div>
+                        <span class="text-xs text-blue-400 font-bold block mb-1">청팀 참가자 명단</span>
+                        <input type="text" id="team1MembersInput" value="민수, 지우, 서준" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <span class="text-xs text-rose-400 font-bold block mb-1">백팀 참가자 명단</span>
+                        <input type="text" id="team2MembersInput" value="영희, 하은, 도윤" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-rose-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 공통 옵션: 팀당 말의 수 & 문제 난이도 -->
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1.5">팀당 말의 개수</label>
+                    <select id="pieceCountSelect" class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-500">
+                        <option value="3">3개 (빠른 스피드전)</option>
+                        <option value="4" selected>4개 (정통 윷놀이 표준)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1.5">영어 문제 범위</label>
+                    <select id="gradeSelect" class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-500">
+                        <option value="all" selected>전체 종합 (초등 3~6 필수)</option>
+                        <option value="3-4">초등 3~4학년 기초</option>
+                        <option value="5-6">초등 5~6학년 심화</option>
+                    </select>
+                </div>
+            </div>
+
+            <button id="startGameBtn" class="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-98 text-slate-950 font-black text-base shadow-lg transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-play"></i> 새 게임 시작하기
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 모달 2: 영어 퀴즈 출제 모달 -->
+    <!-- ============================================================== -->
+    <div id="quizModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="quiz-card max-w-lg w-full p-6 text-slate-900 shadow-2xl relative border-4 border-amber-400/80">
+            <!-- 퀴즈 헤더 -->
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+                <div class="flex items-center gap-2">
+                    <span id="quizCategoryBadge" class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 font-black text-xs border border-amber-300">
+                        단어 퀴즈
+                    </span>
+                    <span class="text-xs text-slate-500 font-bold">문제를 맞혀야 전진합니다!</span>
+                </div>
+                <!-- TTS 음성 재생 버튼 -->
+                <button id="quizTtsBtn" class="w-9 h-9 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 flex items-center justify-center transition shadow-sm" title="원어민 발음 듣기">
+                    <i class="fa-solid fa-volume-high text-base"></i>
+                </button>
+            </div>
+
+            <!-- 문제 프롬프트 -->
+            <p id="quizPrompt" class="text-xs font-bold text-slate-500 mb-1.5">다음 영어 단어의 올바른 뜻을 고르세요.</p>
+
+            <!-- 문제 메인 텍스트 (단어 또는 문장) -->
+            <div class="p-4 rounded-2xl bg-amber-50/70 border-2 border-amber-200/80 text-center mb-3">
+                <h2 id="quizQuestionText" class="font-black text-2xl md:text-3xl text-slate-900 tracking-wide">
+                    delicious
+                </h2>
+                <p id="quizSubText" class="text-xs text-amber-800 mt-1 font-semibold"></p>
+            </div>
+
+            <!-- 1) 4지선다형 객관식 보기 그리드 -->
+            <div id="quizChoicesGrid" class="flex flex-col gap-2.5">
+                <!-- 동적 버튼 생성 -->
+            </div>
+
+            <!-- 2) 어순 배열 (Scramble) 영역 -->
+            <div id="quizScrambleArea" class="hidden flex flex-col gap-3">
+                <!-- 조립된 문장 영역 -->
+                <div class="min-h-16 p-3 rounded-xl bg-slate-100 border-2 border-dashed border-slate-300 flex flex-wrap gap-2 items-center" id="quizAnswerTokensContainer">
+                    <span class="text-slate-400 text-sm">아래 단어들을 눌러 문장을 완성하세요.</span>
+                </div>
+
+                <!-- 선택 가능한 단어 칩들 -->
+                <div class="flex flex-wrap gap-2 justify-center p-2 rounded-xl bg-slate-50 border border-slate-200" id="quizSourceTokensContainer">
+                    <!-- 동적 생성 -->
+                </div>
+
+                <!-- 조립 확인 및 리셋 버튼 -->
+                <div class="flex gap-2 mt-2">
+                    <button id="quizScrambleResetBtn" class="flex-1 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs">
+                        다시 배열하기
+                    </button>
+                    <button id="quizScrambleSubmitBtn" class="flex-2 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm shadow">
+                        제출하기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 모달 3: 정답/오답 결과 피드백 모달 -->
+    <!-- ============================================================== -->
+    <div id="feedbackModal" class="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl">
+            <h3 id="feedbackTitle" class="font-black text-2xl text-emerald-600 mb-2">정답입니다! 👏</h3>
+            <p id="feedbackMessage" class="text-sm font-bold text-slate-700 mb-3">말이 전진합니다!</p>
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 mb-5 text-left font-medium" id="feedbackExplanation">
+                해설 내용
+            </div>
+            <button id="feedbackOkBtn" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm shadow">
+                확인
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 모달 4: 최종 우승 모달 -->
+    <!-- ============================================================== -->
+    <div id="victoryModal" class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 hidden backdrop-blur-md">
+        <div class="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-400 rounded-3xl max-w-md w-full p-8 text-center shadow-2xl relative">
+            <div class="w-20 h-20 mx-auto mb-4 rounded-3xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-slate-950 text-4xl shadow-lg shadow-amber-500/30">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-sm font-black text-amber-400 uppercase tracking-widest mb-1">최종 우승</h2>
+            <h1 id="victoryTeamName" class="font-black text-3xl md:text-4xl text-white mb-3">청팀</h1>
+            <p id="victoryDetail" class="text-sm text-slate-300 mb-6 leading-relaxed">
+                모든 말을 완주하여 최종 승리를 거두었습니다!
+            </p>
+            <button id="restartBtn" class="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-base shadow-lg transition">
+                새 게임 시작하기
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 모달 5: 규칙 안내 모달 -->
+    <!-- ============================================================== -->
+    <div id="ruleModal" class="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl overflow-y-auto max-h-[85vh] text-slate-200">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                <h3 class="font-black text-lg text-amber-400 flex items-center gap-2">
+                    <i class="fa-solid fa-book-open"></i> 영어 윷놀이 규칙 안내
+                </h3>
+                <button id="closeRuleBtn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-xs leading-relaxed">
+                <div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700">
+                    <h4 class="font-bold text-amber-300 text-sm mb-1">1. 윷 던지기 & 전진 규칙</h4>
+                    <p>• <strong>도(1칸), 개(2칸), 걸(3칸), 윷(4칸), 모(5칸), 빽도(-1칸)</strong></p>
+                    <p>• <strong>윷이나 모</strong>가 나오면 <strong>한 번 더 던질 수 있는 보너스 기회</strong>를 얻습니다!</p>
+                </div>
+
+                <div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700">
+                    <h4 class="font-bold text-amber-300 text-sm mb-1">2. 영어 문제 맞히기</h4>
+                    <p>• 윷을 던진 후 이동할 말을 선택하면 <strong>영어 퀴즈</strong>가 출제됩니다.</p>
+                    <p>• 문제를 맞혀야만 말이 신나게 전진하며, 틀리면 이번 턴은 아쉽게 전진하지 못합니다.</p>
+                    <p>• 문제는 초등/중학 필수 <strong>단어 뜻/스펠링과 문장 해석/빈칸/어순 배열</strong>이 모두 출제됩니다.</p>
+                </div>
+
+                <div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700">
+                    <h4 class="font-bold text-amber-300 text-sm mb-1">3. 말 업기 & 말 잡기</h4>
+                    <p>• <strong>말 업기 (포개기)</strong>: 아군 말이 있는 칸에 도착하면 말을 업어 함께 이동합니다. (x2, x3 표시)</p>
+                    <p>• <strong>말 잡기</strong>: 상대 팀의 말이 있는 칸에 도착하면 상대 말을 잡아서 시작점으로 돌려보내고, <strong>윷을 한 번 더 던질 수 있습니다!</strong></p>
+                </div>
+
+                <div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700">
+                    <h4 class="font-bold text-amber-300 text-sm mb-1">4. 지름길 & 골인 (완주)</h4>
+                    <p>• <strong>모서리(첫째, 둘째 모서리)나 중앙 방</strong>에 멈추면 대각선 지름길로 꺾어 더 빠르게 골인할 수 있습니다.</p>
+                    <p>• 한 바퀴를 돌아 참먹이(도착점)를 통과하면 말이 완주하며, 팀의 모든 말을 먼저 완주시키는 팀이 최종 승리합니다!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 스크립트 연결 -->
+    <script src="questions.js"></script>
+    <script src="game.js"></script>
+
+    <!-- UI 제어 스크립트 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const settingsModal = document.getElementById('settingsModal');
+            const openSettingsBtn = document.getElementById('openSettingsBtn');
+            const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+            const startGameBtn = document.getElementById('startGameBtn');
+
+            const ruleModal = document.getElementById('ruleModal');
+            const openRuleBtn = document.getElementById('openRuleBtn');
+            const closeRuleBtn = document.getElementById('closeRuleBtn');
+
+            // 모드 탭 전환
+            const modeTabs = document.querySelectorAll('.mode-tab-btn');
+            const aiOptions = document.getElementById('aiOptionsSection');
+            const oneOnOneSection = document.getElementById('oneOnOneSection');
+            const teamOptions = document.getElementById('teamOptionsSection');
+            let selectedMode = 'ai';
+
+            modeTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    selectedMode = tab.dataset.mode;
+                    modeTabs.forEach(t => {
+                        t.className = 'mode-tab-btn py-2.5 px-2 rounded-xl border-2 font-bold text-xs flex flex-col items-center gap-1 transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600';
+                    });
+                    tab.className = 'mode-tab-btn py-2.5 px-2 rounded-xl border-2 font-bold text-xs flex flex-col items-center gap-1 transition-all border-amber-500 bg-amber-500/10 text-amber-300';
+
+                    aiOptions.classList.toggle('hidden', selectedMode !== 'ai');
+                    oneOnOneSection.classList.toggle('hidden', selectedMode !== '1v1');
+                    teamOptions.classList.toggle('hidden', selectedMode !== 'team');
+                });
+            });
+
+            // 설정 모달 열기/닫기
+            openSettingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
+            closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
+
+            // 규칙 모달 열기/닫기
+            openRuleBtn.addEventListener('click', () => ruleModal.classList.remove('hidden'));
+            closeRuleBtn.addEventListener('click', () => ruleModal.classList.add('hidden'));
+
+            // 게임 시작
+            startGameBtn.addEventListener('click', () => {
+                const pieceCount = parseInt(document.getElementById('pieceCountSelect').value, 10);
+                const gradeFilter = document.getElementById('gradeSelect').value;
+
+                let config = {
+                    mode: selectedMode,
+                    pieceCount: pieceCount,
+                    grade: gradeFilter
+                };
+
+                if (selectedMode === 'ai') {
+                    const diffRadio = document.querySelector('input[name="aiDifficulty"]:checked');
+                    config.difficulty = diffRadio ? diffRadio.value : 'normal';
+                } else if (selectedMode === '1v1') {
+                    config.player1Name = document.getElementById('player1Input').value.trim() || '1P(청팀)';
+                    config.player2Name = document.getElementById('player2Input').value.trim() || '2P(백팀)';
+                } else if (selectedMode === 'team') {
+                    const t1Raw = document.getElementById('team1MembersInput').value;
+                    const t2Raw = document.getElementById('team2MembersInput').value;
+                    config.team1Players = t1Raw.split(',').map(s => s.trim()).filter(Boolean);
+                    config.team2Players = t2Raw.split(',').map(s => s.trim()).filter(Boolean);
+                    if (config.team1Players.length === 0) config.team1Players = ['청팀 1번'];
+                    if (config.team2Players.length === 0) config.team2Players = ['백팀 1번'];
+                }
+
+                settingsModal.classList.add('hidden');
+                window.YutnoriGameInstance.startNewGame(config);
+            });
+
+            // 처음 시작 시 자동 시작
+            window.YutnoriGameInstance.startNewGame({ mode: 'ai', difficulty: 'normal', pieceCount: 4 });
+        });
+    </script>
+</body>
+</html>
