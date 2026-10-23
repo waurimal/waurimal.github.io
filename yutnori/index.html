@@ -297,13 +297,13 @@
     <!-- ============================================================== -->
     <!-- 모달 1: 게임 설정 / 모드 선택 모달 -->
     <!-- ============================================================== -->
-    <div id="settingsModal" class="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+    <div id="settingsModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
             <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
                 <h3 class="font-black text-xl text-amber-400 flex items-center gap-2">
-                    <i class="fa-solid fa-sliders"></i> 영어 윷놀이 게임 설정
+                    <i class="fa-solid fa-gamepad"></i> 영어 윷놀이 게임 시작
                 </h3>
-                <button id="closeSettingsBtn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center">
+                <button id="closeSettingsBtn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center transition" title="닫기">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -311,7 +311,7 @@
             <!-- 학생 실명 입력 섹션 (닉네임 대신 실명 사용) -->
             <div class="mb-5 p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700">
                 <div class="flex items-center justify-between mb-1.5">
-                    <label class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                    <label for="globalStudentNameInput" class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
                         <i class="fa-solid fa-id-card"></i> 학생 실명 (본인 이름)
                     </label>
                     <span class="text-[10px] text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">닉네임 불가 / 실명 필수</span>
@@ -322,20 +322,25 @@
                 </p>
             </div>
 
-            <!-- 게임 모드 선택 탭 (컴퓨터 대전 vs 실시간 온라인 멀티) -->
+            <!-- 게임 모드 선택 (컴퓨터 대전 vs 실시간 온라인 멀티) -->
             <div class="mb-5">
                 <label class="block text-xs font-bold text-slate-400 mb-2">게임 모드 선택</label>
                 <div class="grid grid-cols-2 gap-3">
-                    <button type="button" class="mode-tab-btn py-3 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-amber-500 bg-amber-500/10 text-amber-300" data-mode="ai">
-                        <i class="fa-solid fa-robot text-lg"></i>
-                        <span class="text-sm">컴퓨터 대전</span>
-                        <span class="text-[10px] text-slate-400 font-normal">혼자서 AI와 연습하기</span>
+                    <button type="button" class="mode-tab-btn py-3.5 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-amber-500 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 active:scale-95 cursor-pointer relative shadow-lg" data-mode="ai" id="startAiModeBtn" title="클릭 시 컴퓨터 대전이 바로 시작됩니다">
+                        <span class="absolute -top-2.5 px-2.5 py-0.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 text-[10px] font-black rounded-full shadow animate-pulse">
+                            선택 즉시 게임 시작 ⚡
+                        </span>
+                        <i class="fa-solid fa-robot text-xl text-amber-400 mt-1"></i>
+                        <span class="text-sm font-black text-white">컴퓨터 대전</span>
+                        <span class="text-[10px] text-amber-200/90 font-normal">혼자서 AI와 바로 대결</span>
                     </button>
-                    <button type="button" class="mode-tab-btn py-3 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-emerald-500/60 bg-emerald-500/10 text-emerald-300 hover:border-emerald-500 relative" data-mode="online">
-                        <span class="absolute -top-2 -right-1 px-2 py-0.5 bg-emerald-500 text-slate-950 text-[10px] font-black rounded-full shadow">실시간</span>
-                        <i class="fa-solid fa-tower-broadcast text-lg"></i>
-                        <span class="text-sm">실시간 온라인 멀티</span>
-                        <span class="text-[10px] text-emerald-400/80 font-normal">방 코드 공유 대결</span>
+                    <button type="button" class="mode-tab-btn py-3.5 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-emerald-500/60 bg-emerald-500/10 text-emerald-300 hover:border-emerald-500 hover:bg-emerald-500/20 active:scale-95 cursor-pointer relative shadow-md" data-mode="online" id="selectOnlineTabBtn" title="방 코드 공유 온라인 멀티플레이">
+                        <span class="absolute -top-2.5 px-2 py-0.5 bg-emerald-500 text-slate-950 text-[10px] font-black rounded-full shadow">
+                            실시간 2인~다수
+                        </span>
+                        <i class="fa-solid fa-tower-broadcast text-xl text-emerald-400 mt-1"></i>
+                        <span class="text-sm font-black text-white">실시간 온라인 멀티</span>
+                        <span class="text-[10px] text-emerald-400/90 font-normal">방 코드 공유 대결</span>
                     </button>
                 </div>
             </div>
@@ -385,16 +390,6 @@
                     </div>
                 </div>
             </div>
-                    </div>
-                    <p class="text-[11px] text-slate-400 mb-2.5">공유받은 4자리 숫자 코드를 입력하고 입장하세요.</p>
-                    <div class="flex gap-2">
-                        <input type="text" id="joinOnlineRoomCodeInput" maxlength="4" placeholder="4자리 코드" class="w-2/3 px-3 py-2 text-center text-xl font-mono tracking-widest font-black rounded-xl bg-slate-800 border border-slate-700 text-amber-300 focus:outline-none focus:border-blue-500 uppercase">
-                        <button type="button" id="joinOnlineRoomBtn" class="w-1/3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow transition">
-                            입장하기
-                        </button>
-                    </div>
-                </div>
-            </div>
 
             <!-- 세부 옵션: AI 난이도 (AI 모드일 때만) -->
             <div id="aiOptionsSection" class="mb-5 p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700">
@@ -413,7 +408,7 @@
             </div>
 
             <!-- 공통 옵션: 팀당 말의 수 & 문제 난이도 -->
-            <div class="grid grid-cols-2 gap-3 mb-6">
+            <div id="commonOptionsSection" class="grid grid-cols-2 gap-3 mb-6">
                 <div>
                     <label class="block text-xs font-bold text-slate-400 mb-1.5">팀당 말의 개수</label>
                     <select id="pieceCountSelect" class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-500">
@@ -431,9 +426,11 @@
                 </div>
             </div>
 
-            <button id="startGameBtn" class="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-98 text-slate-950 font-black text-base shadow-lg transition flex items-center justify-center gap-2">
-                <i class="fa-solid fa-play"></i> 새 게임 시작하기
+            <button id="startGameBtn" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 active:scale-98 text-slate-950 font-black text-base shadow-lg transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-play"></i> 컴퓨터 대전 시작하기
             </button>
+        </div>
+    </div>
         </div>
     </div>
 
@@ -875,23 +872,69 @@
                 selectedMode = mode;
                 modeTabs.forEach(t => {
                     if (t.dataset.mode === mode) {
-                        t.className = 'mode-tab-btn py-3 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-amber-500 bg-amber-500/10 text-amber-300';
+                        t.className = 'mode-tab-btn py-3.5 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-amber-500 bg-amber-500/15 text-amber-300 cursor-pointer relative shadow-lg';
                     } else {
-                        t.className = 'mode-tab-btn py-3 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600';
+                        t.className = 'mode-tab-btn py-3.5 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600 cursor-pointer relative';
                     }
                 });
 
                 aiOptions.classList.toggle('hidden', selectedMode !== 'ai');
                 onlineOptions.classList.toggle('hidden', selectedMode !== 'online');
 
-                // 온라인 모드일 때는 하단 '새 게임 시작하기' 버튼 숨김 (온라인 전용 버튼 사용)
+                // 온라인 모드일 때는 하단 '컴퓨터 대전 시작하기' 버튼 숨김 (온라인 전용 버튼 사용)
                 if (startGameBtn) {
                     startGameBtn.classList.toggle('hidden', selectedMode === 'online');
                 }
             }
 
+            // 컴퓨터 대전 즉시 시작 함수 (실명 저장 & 모달 닫기 & 게임 엔진 즉시 구동)
+            function startAiMatch() {
+                let realName = (globalStudentNameInput.value || '').trim();
+                if (!realName) {
+                    realName = getInitialRealName();
+                }
+                if (!realName) {
+                    const prompted = prompt("학생 본인의 실명(이름)을 입력해주세요 (예: 김민수):", "");
+                    if (prompted && prompted.trim()) {
+                        realName = prompted.trim();
+                        globalStudentNameInput.value = realName;
+                        saveRealName(realName);
+                    } else {
+                        alert("실명을 입력하셔야 점수와 기여도가 기록됩니다. 이름을 입력해주세요.");
+                        globalStudentNameInput.focus();
+                        return;
+                    }
+                } else {
+                    saveRealName(realName);
+                }
+
+                const pieceCount = parseInt(document.getElementById('pieceCountSelect').value, 10) || 4;
+                const gradeFilter = document.getElementById('gradeSelect').value || 'all';
+                const diffRadio = document.querySelector('input[name="aiDifficulty"]:checked');
+                const difficulty = diffRadio ? diffRadio.value : 'normal';
+
+                const config = {
+                    mode: 'ai',
+                    playerName: realName,
+                    difficulty: difficulty,
+                    pieceCount: pieceCount,
+                    grade: gradeFilter
+                };
+
+                settingsModal.classList.add('hidden');
+                window.YutnoriGameInstance.startNewGame(config);
+            }
+
             modeTabs.forEach(tab => {
-                tab.addEventListener('click', () => switchModeTab(tab.dataset.mode));
+                tab.addEventListener('click', () => {
+                    const mode = tab.dataset.mode;
+                    if (mode === 'ai') {
+                        // 초기화면 또는 모달에서 '컴퓨터 대전' 선택 시 바로 게임으로 즉시 진입!
+                        startAiMatch();
+                    } else if (mode === 'online') {
+                        switchModeTab('online');
+                    }
+                });
             });
 
             // 헤더 [온라인 방 만들기/참여] 클릭 시 바로 온라인 탭 선택하여 모달 열기
@@ -1138,25 +1181,18 @@
             openRuleBtn.addEventListener('click', () => ruleModal.classList.remove('hidden'));
             closeRuleBtn.addEventListener('click', () => ruleModal.classList.add('hidden'));
 
-            // 컴퓨터 대전 게임 시작하기
-            startGameBtn.addEventListener('click', () => {
-                const pieceCount = parseInt(document.getElementById('pieceCountSelect').value, 10);
-                const gradeFilter = document.getElementById('gradeSelect').value;
-                const diffRadio = document.querySelector('input[name="aiDifficulty"]:checked');
-                const realName = (globalStudentNameInput.value || '').trim();
-                if (realName) saveRealName(realName);
-
-                const config = {
-                    mode: 'ai',
-                    playerName: realName || '나(플레이어)',
-                    difficulty: diffRadio ? diffRadio.value : 'normal',
-                    pieceCount: pieceCount,
-                    grade: gradeFilter
-                };
-
-                settingsModal.classList.add('hidden');
-                window.YutnoriGameInstance.startNewGame(config);
-            });
+            // 컴퓨터 대전 게임 시작하기 (하단 버튼 및 실명 입력창 엔터)
+            if (startGameBtn) {
+                startGameBtn.addEventListener('click', startAiMatch);
+            }
+            if (globalStudentNameInput) {
+                globalStudentNameInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        startAiMatch();
+                    }
+                });
+            }
 
             // 처음 시작 시 자동 시작 (기본 AI 연습 모드)
             const autoRealName = getInitialRealName() || '나(플레이어)';

@@ -869,9 +869,12 @@
                 this.initDOM();
             }
 
+            this.isOnline = false;
+            this.currentRoomData = null;
             this.mode = config.mode || this.mode || 'ai';
             this.difficulty = config.difficulty || 'normal';
             this.pieceCount = config.pieceCount || 4;
+            this.gradeFilter = config.grade || 'all';
 
             // 팀 구성 (컴퓨터 대전 시 학생 실명 반영)
             const realName = config.playerName || '나(플레이어)';
@@ -1651,7 +1654,7 @@
         // ==========================================
         presentQuiz(piece, movePath) {
             this.setGameState('WAIT_QUIZ');
-            const q = window.YutnoriQuestions.generateQuestion();
+            const q = window.YutnoriQuestions.generateQuestion({ grade: this.gradeFilter || 'all' });
             this.currentQuestion = q;
 
             if (!this.dom.quizModal) return;
