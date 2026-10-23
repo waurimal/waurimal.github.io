@@ -399,6 +399,20 @@ body {
     transform: translateY(0);
 }
 
+/* 명예의 전당 (Hall of Fame) 스타일링 */
+.hof-glow-badge {
+    animation: hofGlow 2s infinite alternate ease-in-out;
+}
+
+@keyframes hofGlow {
+    0% {
+        box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+    }
+    100% {
+        box-shadow: 0 0 18px rgba(245, 158, 11, 0.85);
+    }
+}
+
 /* 반응형 모바일 최적화 */
 @media (max-width: 640px) {
     .yut-node {

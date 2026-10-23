@@ -41,6 +41,9 @@
             </div>
 
             <div class="flex items-center gap-2">
+                <button id="openHofHeaderBtn" class="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-black transition flex items-center gap-1.5 border border-amber-500/40 shadow-sm">
+                    <i class="fa-solid fa-trophy text-amber-400"></i> 명예의 전당
+                </button>
                 <button id="openRuleBtn" class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
                     <i class="fa-solid fa-circle-question text-amber-400"></i> 규칙 안내
                 </button>
@@ -228,8 +231,26 @@
                     <div class="text-xs font-black text-slate-400 mb-2 flex items-center gap-1.5">
                         <i class="fa-solid fa-scroll text-amber-400"></i> 윷놀이 실황 중계
                     </div>
-                    <div id="gameLogContainer" class="h-28 overflow-y-auto pr-1 flex flex-col gap-0.5">
+                    <div id="gameLogContainer" class="h-24 overflow-y-auto pr-1 flex flex-col gap-0.5">
                         <div class="text-xs text-slate-400">게임을 시작해 주세요.</div>
+                    </div>
+                </div>
+
+                <!-- 5. 명예의 전당 (실시간 TOP 5 기여도 랭킹) -->
+                <div class="p-4 rounded-2xl bg-slate-800/90 border border-amber-500/40 shadow-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-black text-amber-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-trophy text-amber-400"></i> 명예의 전당 (TOP 5)
+                        </span>
+                        <button id="openHofWidgetBtn" class="text-[11px] font-bold text-amber-300 hover:text-amber-200 transition flex items-center gap-1">
+                            전체보기 <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mb-2.5">
+                        * 승수 + 기여도(정답 50점·완주 150점·잡기 100점·업기 40점) 중심
+                    </p>
+                    <div id="homeHofList" class="flex flex-col gap-1.5">
+                        <!-- 동적 생성 -->
                     </div>
                 </div>
 
@@ -425,20 +446,55 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- 모달 4: 최종 우승 모달 -->
+    <!-- 모달 4: 최종 우승 & 기여도 결과 모달 -->
     <!-- ============================================================== -->
     <div id="victoryModal" class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 hidden backdrop-blur-md">
-        <div class="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-400 rounded-3xl max-w-md w-full p-8 text-center shadow-2xl relative">
-            <div class="w-20 h-20 mx-auto mb-4 rounded-3xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-slate-950 text-4xl shadow-lg shadow-amber-500/30">
+        <div class="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-400 rounded-3xl max-w-lg w-full p-6 md:p-8 text-center shadow-2xl relative max-h-[92vh] overflow-y-auto">
+            <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-slate-950 text-3xl shadow-lg shadow-amber-500/30">
                 <i class="fa-solid fa-trophy"></i>
             </div>
-            <h2 class="text-sm font-black text-amber-400 uppercase tracking-widest mb-1">최종 우승</h2>
-            <h1 id="victoryTeamName" class="font-black text-3xl md:text-4xl text-white mb-3">청팀</h1>
-            <p id="victoryDetail" class="text-sm text-slate-300 mb-6 leading-relaxed">
+            <h2 class="text-xs font-black text-amber-400 uppercase tracking-widest mb-0.5">FINAL VICTORY</h2>
+            <h1 id="victoryTeamName" class="font-black text-3xl text-white mb-2">청팀 승리!</h1>
+            <p id="victoryDetail" class="text-xs text-slate-300 mb-4 leading-relaxed">
                 모든 말을 완주하여 최종 승리를 거두었습니다!
             </p>
-            <button id="restartBtn" class="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-base shadow-lg transition">
-                새 게임 시작하기
+
+            <!-- 이번 경기 MVP 카드 -->
+            <div id="victoryMvpCard" class="mb-4">
+                <!-- 동적 렌더링 -->
+            </div>
+
+            <!-- 이번 경기 기여도 순위표 -->
+            <div class="mb-5 bg-slate-950/60 rounded-2xl border border-slate-800 p-3">
+                <div class="flex items-center justify-between mb-2 px-1">
+                    <span class="text-xs font-black text-slate-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-chart-line text-emerald-400"></i> 이번 경기 기여도 결과표
+                    </span>
+                    <span class="text-[10px] text-amber-400 font-bold">
+                        🏆 명예의 전당 반영 완료
+                    </span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="text-slate-400 border-b border-slate-800 text-center font-bold text-[11px]">
+                                <th class="pb-1.5">순위</th>
+                                <th class="pb-1.5 text-left pl-3">선수</th>
+                                <th class="pb-1.5">기여도 점수</th>
+                                <th class="pb-1.5">정답</th>
+                                <th class="pb-1.5">완주</th>
+                                <th class="pb-1.5">잡기</th>
+                            </tr>
+                        </thead>
+                        <tbody id="victoryStatsTable">
+                            <!-- 동적 생성 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <button id="restartBtn" class="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-base shadow-lg transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-rotate-right"></i> 새 게임 시작하기
             </button>
         </div>
     </div>
@@ -482,6 +538,92 @@
                     <p>• <strong>모서리(첫째, 둘째 모서리)나 중앙 방</strong>에 멈추면 대각선 지름길로 꺾어 더 빠르게 골인할 수 있습니다.</p>
                     <p>• 한 바퀴를 돌아 참먹이(도착점)를 통과하면 말이 완주하며, 팀의 모든 말을 먼저 완주시키는 팀이 최종 승리합니다!</p>
                 </div>
+
+                <div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700">
+                    <h4 class="font-bold text-amber-300 text-sm mb-1">5. 명예의 전당 & 기여도 점수 산출</h4>
+                    <p>• <strong>승리 보너스</strong>: 승리 팀 +500점</p>
+                    <p>• <strong>기여도 점수</strong>: 정답 1개당 +50점, 말 완주 +150점, 상대 말 잡기 +100점, 아군 말 업기 +40점, 윷/모 +30점</p>
+                    <p>• <strong>승수와 기여도 총점</strong>을 종합하여 영예의 명예의 전당 랭킹이 결정됩니다.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 모달 6: 명예의 전당 전체 랭킹 모달 -->
+    <!-- ============================================================== -->
+    <div id="hofModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden backdrop-blur-md">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 shadow-2xl overflow-y-auto max-h-[88vh] text-slate-200">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black text-xl shadow">
+                        🏆
+                    </div>
+                    <div>
+                        <h3 class="font-black text-xl text-amber-400">
+                            와우리말 윷놀이 명예의 전당
+                        </h3>
+                        <p class="text-xs text-slate-400">승수와 기여도를 중심으로 산출한 영예의 랭킹입니다.</p>
+                    </div>
+                </div>
+                <button id="closeHofModalBtn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- 기여도 산출 기준 안내 카드 -->
+            <div class="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/80 mb-4 grid grid-cols-2 sm:grid-cols-3 gap-2 text-center text-xs">
+                <div class="p-2 rounded-xl bg-slate-900/60">
+                    <div class="text-[10px] text-slate-400 font-bold">승리 보너스</div>
+                    <div class="font-black text-amber-300 text-sm">+500점 <span class="text-[10px] text-slate-400 font-normal">/승</span></div>
+                </div>
+                <div class="p-2 rounded-xl bg-slate-900/60">
+                    <div class="text-[10px] text-slate-400 font-bold">문제 정답</div>
+                    <div class="font-black text-emerald-400 text-sm">+50점 <span class="text-[10px] text-slate-400 font-normal">/문제</span></div>
+                </div>
+                <div class="p-2 rounded-xl bg-slate-900/60">
+                    <div class="text-[10px] text-slate-400 font-bold">말 완주(골인)</div>
+                    <div class="font-black text-blue-400 text-sm">+150점 <span class="text-[10px] text-slate-400 font-normal">/마리</span></div>
+                </div>
+                <div class="p-2 rounded-xl bg-slate-900/60">
+                    <div class="text-[10px] text-slate-400 font-bold">상대 말 잡기</div>
+                    <div class="font-black text-rose-400 text-sm">+100점 <span class="text-[10px] text-slate-400 font-normal">/회</span></div>
+                </div>
+                <div class="p-2 rounded-xl bg-slate-900/60">
+                    <div class="text-[10px] text-slate-400 font-bold">아군 말 업기</div>
+                    <div class="font-black text-purple-400 text-sm">+40점 <span class="text-[10px] text-slate-400 font-normal">/회</span></div>
+                </div>
+                <div class="p-2 rounded-xl bg-slate-900/60">
+                    <div class="text-[10px] text-slate-400 font-bold">윷 / 모 성공</div>
+                    <div class="font-black text-cyan-400 text-sm">+30점 <span class="text-[10px] text-slate-400 font-normal">/회</span></div>
+                </div>
+            </div>
+
+            <!-- 전체 순위 테이블 -->
+            <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/60 mb-4">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="text-slate-400 border-b border-slate-800 text-center font-bold text-[11px] bg-slate-900/80">
+                            <th class="py-2.5">순위</th>
+                            <th class="py-2.5 text-left pl-3">선수 이름</th>
+                            <th class="py-2.5">승수 (승률)</th>
+                            <th class="py-2.5 text-right pr-4">기여도 총점</th>
+                            <th class="py-2.5">정답 수</th>
+                            <th class="py-2.5">완주 수</th>
+                            <th class="py-2.5">최근 기록</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalHofList">
+                        <!-- 동적 생성 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex items-center justify-between text-xs pt-2">
+                <button id="resetHofModalBtn" class="text-slate-500 hover:text-rose-400 transition flex items-center gap-1 font-semibold text-[11px]">
+                    <i class="fa-solid fa-trash-can"></i> 명예의 전당 초기화
+                </button>
+                <span class="text-[11px] text-slate-400">* 학생 이름은 개인정보 보호를 위해 마스킹 처리됩니다.</span>
             </div>
         </div>
     </div>
@@ -521,6 +663,24 @@
                     oneOnOneSection.classList.toggle('hidden', selectedMode !== '1v1');
                     teamOptions.classList.toggle('hidden', selectedMode !== 'team');
                 });
+            });
+
+            // 명예의 전당 모달 열기/닫기
+            const hofModal = document.getElementById('hofModal');
+            const openHofHeaderBtn = document.getElementById('openHofHeaderBtn');
+            const openHofWidgetBtn = document.getElementById('openHofWidgetBtn');
+            const closeHofModalBtn = document.getElementById('closeHofModalBtn');
+
+            if (openHofHeaderBtn) openHofHeaderBtn.addEventListener('click', () => {
+                if (window.YutnoriHOF) window.YutnoriHOF.renderAllViews();
+                if (hofModal) hofModal.classList.remove('hidden');
+            });
+            if (openHofWidgetBtn) openHofWidgetBtn.addEventListener('click', () => {
+                if (window.YutnoriHOF) window.YutnoriHOF.renderAllViews();
+                if (hofModal) hofModal.classList.remove('hidden');
+            });
+            if (closeHofModalBtn) closeHofModalBtn.addEventListener('click', () => {
+                if (hofModal) hofModal.classList.add('hidden');
             });
 
             // 설정 모달 열기/닫기

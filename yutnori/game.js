@@ -444,7 +444,205 @@
     };
 
     // ==========================================
-    // 5. 윷놀이 메인 게임 엔진 클래스
+    // 5. 명예의 전당 (Hall of Fame) & 이름 마스킹
+    // ==========================================
+
+    // 학생 이름 개인정보 보호 마스킹 함수 (Waurimal 표준)
+    function maskStudentName(name) {
+        if (!name) return '익명';
+        const str = String(name).trim();
+        if (str.includes('인공지능') || str.includes('AI') || str.includes('컴퓨터')) {
+            return str;
+        }
+        if (str.length <= 1) return str;
+        if (str.length === 2) return str[0] + 'O';
+        if (str.length === 3) return str[0] + 'O' + str[2];
+        return str[0] + 'OO' + str[str.length - 1];
+    }
+
+    class HallOfFameManager {
+        constructor() {
+            this.storageKey = 'waurimal_yutnori_hof';
+            this.defaultRecords = [
+                { id: 'hof_1', name: '세종대왕', wins: 12, totalGames: 14, score: 9850, correctCount: 58, goalCount: 32, catchCount: 18, stackCount: 14, yutMoCount: 24, bestScore: 2150, lastPlayed: '2026-10-22' },
+                { id: 'hof_2', name: '이순신', wins: 10, totalGames: 12, score: 8400, correctCount: 46, goalCount: 27, catchCount: 22, stackCount: 9, yutMoCount: 18, bestScore: 1980, lastPlayed: '2026-10-21' },
+                { id: 'hof_3', name: '신사임당', wins: 8, totalGames: 9, score: 7100, correctCount: 42, goalCount: 21, catchCount: 12, stackCount: 12, yutMoCount: 15, bestScore: 1820, lastPlayed: '2026-10-20' },
+                { id: 'hof_4', name: '율곡이이', wins: 7, totalGames: 8, score: 6250, correctCount: 38, goalCount: 19, catchCount: 10, stackCount: 8, yutMoCount: 12, bestScore: 1650, lastPlayed: '2026-10-19' },
+                { id: 'hof_5', name: '장영실', wins: 6, totalGames: 7, score: 5600, correctCount: 35, goalCount: 16, catchCount: 9, stackCount: 7, yutMoCount: 10, bestScore: 1540, lastPlayed: '2026-10-18' },
+                { id: 'hof_6', name: '홍길동', wins: 5, totalGames: 6, score: 4750, correctCount: 28, goalCount: 14, catchCount: 7, stackCount: 6, yutMoCount: 8, bestScore: 1420, lastPlayed: '2026-10-17' },
+                { id: 'hof_7', name: '김유신', wins: 4, totalGames: 5, score: 3900, correctCount: 24, goalCount: 11, catchCount: 6, stackCount: 5, yutMoCount: 6, bestScore: 1310, lastPlayed: '2026-10-16' }
+            ];
+        }
+
+        getRecords() {
+            try {
+                const raw = localStorage.getItem(this.storageKey);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        return this.sortRecords(parsed);
+                    }
+                }
+            } catch(e) {
+                console.warn("HOF load error:", e);
+            }
+            return this.sortRecords([...this.defaultRecords]);
+        }
+
+        sortRecords(records) {
+            // 정렬 우선순위: 1) 승수(Wins) desc, 2) 기여도 총점(Score) desc, 3) 문제 정답수 desc
+            return records.sort((a, b) => {
+                if ((b.wins || 0) !== (a.wins || 0)) {
+                    return (b.wins || 0) - (a.wins || 0);
+                }
+                if ((b.score || 0) !== (a.score || 0)) {
+                    return (b.score || 0) - (a.score || 0);
+                }
+                return (b.correctCount || 0) - (a.correctCount || 0);
+            });
+        }
+
+        saveRecords(records) {
+            try {
+                localStorage.setItem(this.storageKey, JSON.stringify(records));
+            } catch(e) {
+                console.warn("HOF save error:", e);
+            }
+            this.renderAllViews();
+        }
+
+        resetToDefault() {
+            this.saveRecords([...this.defaultRecords]);
+        }
+
+        recordMatch(winningTeam, participantsStats) {
+            const records = this.getRecords();
+            const today = new Date().toISOString().split('T')[0];
+
+            participantsStats.forEach(stat => {
+                const pName = stat.name.trim();
+                if (!pName || pName.includes('봇') || pName.includes('AI') || pName.includes('인공지능') || pName.includes('컴퓨터')) {
+                    // 컴퓨터는 학생 랭킹에 기록 제외
+                    return;
+                }
+
+                let existing = records.find(r => r.name.trim() === pName);
+                if (existing) {
+                    existing.totalGames = (existing.totalGames || 1) + 1;
+                    if (stat.isWinner) {
+                        existing.wins = (existing.wins || 0) + 1;
+                    }
+                    existing.score = (existing.score || 0) + (stat.matchScore || 0);
+                    existing.correctCount = (existing.correctCount || 0) + (stat.correctCount || 0);
+                    existing.goalCount = (existing.goalCount || 0) + (stat.goalCount || 0);
+                    existing.catchCount = (existing.catchCount || 0) + (stat.catchCount || 0);
+                    existing.stackCount = (existing.stackCount || 0) + (stat.stackCount || 0);
+                    existing.yutMoCount = (existing.yutMoCount || 0) + (stat.yutMoCount || 0);
+                    existing.lastPlayed = today;
+                    if (!existing.bestScore || stat.matchScore > existing.bestScore) {
+                        existing.bestScore = stat.matchScore;
+                    }
+                } else {
+                    records.push({
+                        id: 'hof_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                        name: pName,
+                        wins: stat.isWinner ? 1 : 0,
+                        totalGames: 1,
+                        score: stat.matchScore || 0,
+                        correctCount: stat.correctCount || 0,
+                        goalCount: stat.goalCount || 0,
+                        catchCount: stat.catchCount || 0,
+                        stackCount: stat.stackCount || 0,
+                        yutMoCount: stat.yutMoCount || 0,
+                        bestScore: stat.matchScore || 0,
+                        lastPlayed: today
+                    });
+                }
+            });
+
+            this.saveRecords(records);
+        }
+
+        renderAllViews() {
+            this.renderHomeWidget();
+            this.renderModalList();
+        }
+
+        renderHomeWidget() {
+            if (typeof document === 'undefined' || !document.getElementById) return;
+            const container = document.getElementById('homeHofList');
+            if (!container) return;
+
+            const records = this.getRecords().slice(0, 5); // TOP 5 노출
+            if (records.length === 0) {
+                container.innerHTML = '<div class="text-xs text-slate-400 p-3 text-center">등록된 명예의 전당 기록이 없습니다.</div>';
+                return;
+            }
+
+            container.innerHTML = records.map((r, idx) => {
+                const rank = idx + 1;
+                let rankBadge = `<span class="w-5 h-5 rounded-full bg-slate-700 text-slate-300 flex items-center justify-center text-[10px] font-black">${rank}</span>`;
+                if (rank === 1) rankBadge = `<span class="w-5 h-5 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center text-[10px] font-black shadow shadow-amber-500/50">🥇</span>`;
+                else if (rank === 2) rankBadge = `<span class="w-5 h-5 rounded-full bg-slate-300 text-slate-950 flex items-center justify-center text-[10px] font-black shadow">🥈</span>`;
+                else if (rank === 3) rankBadge = `<span class="w-5 h-5 rounded-full bg-amber-700 text-white flex items-center justify-center text-[10px] font-black shadow">🥉</span>`;
+
+                const masked = maskStudentName(r.name);
+                return `
+                    <div class="flex items-center justify-between p-2 rounded-xl bg-slate-900/70 hover:bg-slate-700/60 border border-slate-700/60 transition text-xs">
+                        <div class="flex items-center gap-2">
+                            ${rankBadge}
+                            <span class="font-bold text-slate-200">${masked}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-black text-[11px] border border-amber-500/30">${r.wins || 0}승</span>
+                            <span class="font-bold text-emerald-400 text-[11px]">${(r.score || 0).toLocaleString()}점</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        renderModalList() {
+            if (typeof document === 'undefined' || !document.getElementById) return;
+            const container = document.getElementById('modalHofList');
+            if (!container) return;
+
+            const records = this.getRecords();
+            if (records.length === 0) {
+                container.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400">기록이 없습니다.</td></tr>';
+                return;
+            }
+
+            container.innerHTML = records.map((r, idx) => {
+                const rank = idx + 1;
+                let medal = `${rank}위`;
+                let rowBg = 'hover:bg-slate-800/60';
+                if (rank === 1) { medal = '🥇 1위'; rowBg = 'bg-amber-500/10 hover:bg-amber-500/20'; }
+                else if (rank === 2) { medal = '🥈 2위'; rowBg = 'bg-slate-300/10 hover:bg-slate-300/20'; }
+                else if (rank === 3) { medal = '🥉 3위'; rowBg = 'bg-amber-700/10 hover:bg-amber-700/20'; }
+
+                const masked = maskStudentName(r.name);
+                const winRate = r.totalGames ? Math.round(((r.wins || 0) / r.totalGames) * 100) : 0;
+
+                return `
+                    <tr class="border-b border-slate-800 ${rowBg} transition text-center text-xs">
+                        <td class="py-3 font-black text-amber-400">${medal}</td>
+                        <td class="py-3 font-bold text-white text-left pl-3">${masked}</td>
+                        <td class="py-3 font-black text-amber-300">${r.wins || 0}승 <span class="text-[10px] text-slate-400 font-normal">(${winRate}%)</span></td>
+                        <td class="py-3 font-black text-emerald-400 text-right pr-4">${(r.score || 0).toLocaleString()}점</td>
+                        <td class="py-3 text-slate-300 font-semibold">${r.correctCount || 0}개</td>
+                        <td class="py-3 text-slate-300 font-semibold">${r.goalCount || 0}마리</td>
+                        <td class="py-3 text-slate-400 text-[11px]">${r.lastPlayed || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    }
+
+    const HallOfFame = new HallOfFameManager();
+
+    // ==========================================
+    // 6. 윷놀이 메인 게임 엔진 클래스
     // ==========================================
     class YutnoriGame {
         constructor() {
@@ -460,6 +658,7 @@
             this.selectedPiece = null;
             this.currentQuestion = null;
             this.gameLogs = [];
+            this.matchStats = {}; // 경기 중 플레이어별 기여도 통계
 
             // DOM 캐시
             this.dom = {};
@@ -516,11 +715,21 @@
                 victoryModal: document.getElementById('victoryModal'),
                 victoryTeamName: document.getElementById('victoryTeamName'),
                 victoryDetail: document.getElementById('victoryDetail'),
-                restartBtn: document.getElementById('restartBtn')
+                restartBtn: document.getElementById('restartBtn'),
+
+                // 명예의 전당 UI
+                homeHofList: document.getElementById('homeHofList'),
+                modalHofList: document.getElementById('modalHofList'),
+                hofModal: document.getElementById('hofModal'),
+                openHofHeaderBtn: document.getElementById('openHofHeaderBtn'),
+                openHofWidgetBtn: document.getElementById('openHofWidgetBtn'),
+                closeHofModalBtn: document.getElementById('closeHofModalBtn'),
+                resetHofModalBtn: document.getElementById('resetHofModalBtn')
             };
 
             this.renderBoardNodes();
             this.bindEvents();
+            HallOfFame.renderAllViews();
         }
 
         /**
@@ -606,6 +815,32 @@
                 });
             }
 
+            // 명예의 전당 모달 열기/닫기/리셋
+            if (this.dom.openHofHeaderBtn) {
+                this.dom.openHofHeaderBtn.addEventListener('click', () => {
+                    HallOfFame.renderAllViews();
+                    if (this.dom.hofModal) this.dom.hofModal.classList.remove('hidden');
+                });
+            }
+            if (this.dom.openHofWidgetBtn) {
+                this.dom.openHofWidgetBtn.addEventListener('click', () => {
+                    HallOfFame.renderAllViews();
+                    if (this.dom.hofModal) this.dom.hofModal.classList.remove('hidden');
+                });
+            }
+            if (this.dom.closeHofModalBtn) {
+                this.dom.closeHofModalBtn.addEventListener('click', () => {
+                    if (this.dom.hofModal) this.dom.hofModal.classList.add('hidden');
+                });
+            }
+            if (this.dom.resetHofModalBtn) {
+                this.dom.resetHofModalBtn.addEventListener('click', () => {
+                    if (confirm("명예의 전당 기록을 초기화하시겠습니까?")) {
+                        HallOfFame.resetToDefault();
+                    }
+                });
+            }
+
             // 어순 배열 버튼들
             if (this.dom.quizScrambleResetBtn) {
                 this.dom.quizScrambleResetBtn.addEventListener('click', () => this.resetScrambleQuiz());
@@ -678,6 +913,25 @@
                 }
             });
 
+            // 플레이어별 기여도 통계 초기화
+            this.matchStats = {};
+            this.teams.forEach(team => {
+                team.players.forEach(pName => {
+                    this.matchStats[pName] = {
+                        name: pName,
+                        teamId: team.id,
+                        teamName: team.name,
+                        correctCount: 0,
+                        wrongCount: 0,
+                        goalCount: 0,
+                        catchCount: 0,
+                        stackCount: 0,
+                        yutMoCount: 0,
+                        matchScore: 0
+                    };
+                });
+            });
+
             this.currentTeamIndex = 0;
             this.pendingExtraTurn = false;
             this.currentRoll = null;
@@ -724,6 +978,26 @@
         getCurrentPlayerName() {
             const team = this.getCurrentTeam();
             return team.players[team.currentPlayerIdx] || team.name;
+        }
+
+        recordStat(playerName, field, amount = 1) {
+            if (!this.matchStats || !playerName) return;
+            if (!this.matchStats[playerName]) {
+                const currentTeam = this.getCurrentTeam();
+                this.matchStats[playerName] = {
+                    name: playerName,
+                    teamId: currentTeam.id,
+                    teamName: currentTeam.name,
+                    correctCount: 0,
+                    wrongCount: 0,
+                    goalCount: 0,
+                    catchCount: 0,
+                    stackCount: 0,
+                    yutMoCount: 0,
+                    matchScore: 0
+                };
+            }
+            this.matchStats[playerName][field] = (this.matchStats[playerName][field] || 0) + amount;
         }
 
         setGameState(newState) {
@@ -875,9 +1149,10 @@
                 const playerName = this.getCurrentPlayerName();
                 this.logMessage(`🎲 [${currentTeam.name}] ${playerName}님이 윷을 던져 <strong>'${rollResult.name}'</strong>이(가) 나왔습니다!`);
 
-                // 윷이나 모가 나온 경우 추가 턴 예약
+                // 윷이나 모가 나온 경우 추가 턴 예약 및 기여도 기록
                 if (rollResult.extraTurn) {
                     this.pendingExtraTurn = true;
+                    this.recordStat(playerName, 'yutMoCount', 1);
                     this.logMessage(`🎉 '${rollResult.name}'(으)로 윷을 한 번 더 던질 기회를 얻었습니다!`);
                 }
 
@@ -1237,6 +1512,7 @@
 
             if (isCorrect) {
                 Sound.playCorrect();
+                this.recordStat(playerName, 'correctCount', 1);
                 this.logMessage(`🎉 [${currentTeam.name}] ${playerName}님이 문제를 맞혔습니다! 말이 ${this.currentRoll.name}만큼 전진합니다.`);
 
                 this.showFeedbackModal({
@@ -1250,6 +1526,7 @@
                 });
             } else {
                 Sound.playWrong();
+                this.recordStat(playerName, 'wrongCount', 1);
                 this.logMessage(`❌ [${currentTeam.name}] ${playerName}님이 아쉽게 문제를 틀렸습니다. (정답: ${q.answer || q.answerSentence}) 전진하지 못합니다.`);
 
                 this.showFeedbackModal({
@@ -1348,10 +1625,13 @@
             if (movePath.isGoal) {
                 piece.isGoal = true;
                 Sound.playGoal();
+                const currentPlayerName = this.getCurrentPlayerName();
+                this.recordStat(currentPlayerName, 'goalCount', 1);
                 this.logMessage(`🚩 [${currentTeam.name}] 말이 완주(골인)했습니다!`);
 
                 // 함께 업혀있던 말들도 모두 완주!
                 if (piece.stackedPieces && piece.stackedPieces.length > 0) {
+                    this.recordStat(currentPlayerName, 'goalCount', piece.stackedPieces.length);
                     piece.stackedPieces.forEach(pId => {
                         const stPiece = currentTeam.pieces.find(p => p.id === pId);
                         if (stPiece) stPiece.isGoal = true;
@@ -1430,7 +1710,14 @@
                 }
             });
 
+            if (caughtEnemy) {
+                const currentPlayerName = this.getCurrentPlayerName();
+                this.recordStat(currentPlayerName, 'catchCount', 1);
+            }
+
             if (stackedAlly) {
+                const currentPlayerName = this.getCurrentPlayerName();
+                this.recordStat(currentPlayerName, 'stackCount', 1);
                 this.logMessage(`🤝 아군 말을 업었습니다! (함께 전진합니다: x${piece.stackedPieces.length + 1})`);
             }
 
@@ -1565,7 +1852,7 @@
         }
 
         // ==========================================
-        // 12. 게임 승리 & 축하 팡파르
+        // 12. 게임 승리 & 축하 팡파르 & 기여도 HOF 저장
         // ==========================================
         triggerVictory(winningTeam) {
             this.setGameState('GAME_OVER');
@@ -1586,9 +1873,78 @@
 
             this.logMessage(`🏆🎉 [${winningTeam.name}]이(가) 모든 말을 완주시켜 최종 승리했습니다!`);
 
+            // 1. 경기 참가자별 기여도 점수 산출
+            // 공식: (승리팀 ? +500 : 0) + (정답수 * 50) + (완주수 * 150) + (잡은말 * 100) + (업은말 * 40) + (윷/모 * 30)
+            const participants = [];
+            Object.values(this.matchStats).forEach(stat => {
+                const isWinner = (stat.teamId === winningTeam.id);
+                const winBonus = isWinner ? 500 : 0;
+                const matchScore = winBonus
+                    + ((stat.correctCount || 0) * 50)
+                    + ((stat.goalCount || 0) * 150)
+                    + ((stat.catchCount || 0) * 100)
+                    + ((stat.stackCount || 0) * 40)
+                    + ((stat.yutMoCount || 0) * 30);
+
+                stat.isWinner = isWinner;
+                stat.matchScore = matchScore;
+                participants.push(stat);
+            });
+
+            // 기여도 점수 높은 순 정렬
+            participants.sort((a, b) => b.matchScore - a.matchScore);
+            const mvp = participants[0];
+
+            // 2. 명예의 전당 저장 및 뷰 갱신
+            HallOfFame.recordMatch(winningTeam, participants);
+
+            // 3. 승리 모달 UI 렌더링
             if (this.dom.victoryModal) {
                 this.dom.victoryTeamName.textContent = winningTeam.name;
                 this.dom.victoryDetail.textContent = `축하합니다! 영어 퀴즈를 맞히며 지혜롭게 말을 완주하여 ${winningTeam.name}이(가) 승리를 거머쥐었습니다!`;
+
+                // 이번 경기 MVP 카드
+                const mvpContainer = document.getElementById('victoryMvpCard');
+                if (mvpContainer && mvp) {
+                    mvpContainer.innerHTML = `
+                        <div class="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/20 via-amber-400/25 to-amber-500/20 border-2 border-amber-400 text-left">
+                            <div class="flex items-center gap-3">
+                                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-300 text-slate-950 flex items-center justify-center font-black text-xl shadow-md">
+                                    👑
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-black text-amber-400 uppercase tracking-widest">이번 경기 MVP</div>
+                                    <div class="font-black text-base text-white">${maskStudentName(mvp.name)} <span class="text-xs text-emerald-400 font-bold ml-1">+${mvp.matchScore.toLocaleString()}점</span></div>
+                                </div>
+                            </div>
+                            <span class="text-xs font-black px-2.5 py-1 rounded-full bg-amber-400 text-slate-950 shadow">
+                                최고 기여도
+                            </span>
+                        </div>
+                    `;
+                }
+
+                // 경기 기여도 순위표
+                const statsTable = document.getElementById('victoryStatsTable');
+                if (statsTable) {
+                    statsTable.innerHTML = participants.map((p, idx) => {
+                        const isMvp = (idx === 0);
+                        const rowBg = isMvp ? 'bg-amber-500/15 font-black text-amber-300' : 'hover:bg-slate-800/60 text-slate-300';
+                        const badge = isMvp ? '🥇 MVP' : `${idx + 1}위`;
+
+                        return `
+                            <tr class="border-b border-slate-800 text-center text-xs ${rowBg}">
+                                <td class="py-2.5 font-bold">${badge}</td>
+                                <td class="py-2.5 text-left pl-3 text-white font-semibold">${maskStudentName(p.name)}</td>
+                                <td class="py-2.5 text-emerald-400 font-black">${p.matchScore.toLocaleString()}점</td>
+                                <td class="py-2.5">${p.correctCount || 0}문제</td>
+                                <td class="py-2.5">${p.goalCount || 0}마리</td>
+                                <td class="py-2.5">${p.catchCount || 0}회</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+
                 this.dom.victoryModal.classList.remove('hidden');
             }
         }
@@ -1596,12 +1952,15 @@
 
     // 전역 싱글턴 등록 및 유틸리티 노출
     window.YutnoriGameInstance = new YutnoriGame();
+    window.YutnoriHOF = HallOfFame;
     window.YutnoriEngine = {
         BOARD_NODES,
         calculateMovePath,
         stepForward,
         YUT_PROBABILITY,
-        Sound
+        Sound,
+        HallOfFame,
+        maskStudentName
     };
 
     // DOM 로드 완료 시 초기화
