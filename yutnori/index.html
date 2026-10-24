@@ -49,7 +49,7 @@
                 <button id="openHofHeaderBtn" class="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-black transition flex items-center gap-1.5 border border-amber-500/40 shadow-sm cursor-pointer">
                     <i class="fa-solid fa-trophy text-amber-400"></i> 명예의 전당
                 </button>
-                <button id="openTeacherModeBtn" class="px-3 py-1.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 hover:text-white text-xs font-black transition flex items-center gap-1.5 border border-indigo-500/40 shadow-sm cursor-pointer">
+                <button id="openTeacherModeBtn" onclick="window.openTeacherMode && window.openTeacherMode()" class="px-3 py-1.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 hover:text-white text-xs font-black transition flex items-center gap-1.5 border border-indigo-500/40 shadow-sm cursor-pointer">
                     <i class="fa-solid fa-chalkboard-user text-indigo-400"></i> 교사 모드
                 </button>
                 <button id="openRuleBtn" class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
@@ -255,7 +255,7 @@
                             <button type="button" id="homeOpenRuleBtn" class="text-slate-400 hover:text-amber-300 font-semibold transition flex items-center gap-1.5 cursor-pointer">
                                 <i class="fa-solid fa-book-open text-amber-400"></i> 윷놀이 규칙 & 점수 산출 안내
                             </button>
-                            <button type="button" id="homeOpenTeacherBtn" class="text-indigo-400 hover:text-indigo-300 font-bold transition flex items-center gap-1 cursor-pointer">
+                            <button type="button" id="homeOpenTeacherBtn" onclick="window.openTeacherMode && window.openTeacherMode()" class="text-indigo-400 hover:text-indigo-300 font-bold transition flex items-center gap-1 cursor-pointer">
                                 <i class="fa-solid fa-lock text-indigo-400"></i> 교사 전용 데이터 관리
                             </button>
                         </div>
@@ -971,7 +971,7 @@
 
             <div class="flex flex-wrap items-center justify-between text-xs pt-1 gap-2">
                 <div class="flex items-center gap-2">
-                    <button id="hofOpenTeacherBtn" class="px-3 py-1.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 font-bold transition flex items-center gap-1.5 border border-indigo-500/40 cursor-pointer">
+                    <button id="hofOpenTeacherBtn" onclick="window.openTeacherMode && window.openTeacherMode()" class="px-3 py-1.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 font-bold transition flex items-center gap-1.5 border border-indigo-500/40 cursor-pointer">
                         <i class="fa-solid fa-lock text-indigo-400"></i> 교사 관리 모드 진입
                     </button>
                     <button id="resetHofModalBtn" class="text-slate-500 hover:text-rose-400 transition flex items-center gap-1 font-semibold text-[11px] cursor-pointer">
@@ -986,7 +986,7 @@
     <!-- ============================================================== -->
     <!-- 모달 7: 교사 비밀번호 인증 모달 -->
     <!-- ============================================================== -->
-    <div id="teacherAuthModal" class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 hidden backdrop-blur-md">
+    <div id="teacherAuthModal" class="fixed inset-0 bg-black/85 z-[99999] flex items-center justify-center p-4 hidden backdrop-blur-md">
         <div class="bg-slate-900 border border-indigo-500/40 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-slate-200 text-center animate-bounceIn">
             <div class="w-12 h-12 rounded-2xl bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 flex items-center justify-center text-xl mx-auto mb-3 shadow">
                 <i class="fa-solid fa-chalkboard-user"></i>
@@ -1016,7 +1016,7 @@
     <!-- ============================================================== -->
     <!-- 모달 8: 교사 전용 데이터 관리자 모달 (성적표 · 문제관리 · 보안) -->
     <!-- ============================================================== -->
-    <div id="teacherAdminModal" class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-3 sm:p-4 hidden backdrop-blur-md">
+    <div id="teacherAdminModal" class="fixed inset-0 bg-black/85 z-[99999] flex items-center justify-center p-3 sm:p-4 hidden backdrop-blur-md">
         <div class="bg-slate-900 border border-indigo-500/50 rounded-3xl max-w-5xl w-full p-4 sm:p-6 shadow-2xl overflow-y-auto max-h-[92vh] text-slate-200">
             <!-- 헤더 바 -->
             <div class="flex flex-wrap items-center justify-between pb-3.5 border-b border-slate-800 mb-4 gap-2">
@@ -1318,7 +1318,7 @@
     <!-- ============================================================== -->
     <!-- 교사 모드 플로팅 바로가기 버튼 (우측 하단) -->
     <!-- ============================================================== -->
-    <button id="floatingTeacherBtn" class="fixed bottom-4 right-4 z-40 px-3.5 py-2 rounded-2xl bg-slate-800/90 hover:bg-slate-700 text-indigo-300 hover:text-white border border-indigo-500/40 shadow-xl backdrop-blur-md text-xs font-black transition flex items-center gap-2 cursor-pointer group" title="교사 전용 데이터 관리 모드">
+    <button id="floatingTeacherBtn" onclick="window.openTeacherMode && window.openTeacherMode()" class="fixed bottom-4 right-4 z-40 px-3.5 py-2 rounded-2xl bg-slate-800/90 hover:bg-slate-700 text-indigo-300 hover:text-white border border-indigo-500/40 shadow-xl backdrop-blur-md text-xs font-black transition flex items-center gap-2 cursor-pointer group" title="교사 전용 데이터 관리 모드">
         <i class="fa-solid fa-chalkboard-user text-indigo-400 group-hover:rotate-12 transition-transform"></i>
         <span>교사 모드</span>
     </button>
@@ -1819,8 +1819,14 @@
 
             // 홈 화면 교사 모드 링크
             const homeOpenTeacherBtn = document.getElementById('homeOpenTeacherBtn');
-            if (homeOpenTeacherBtn && window.YutnoriTeacherAdmin) {
-                homeOpenTeacherBtn.addEventListener('click', () => window.YutnoriTeacherAdmin.openAuthModal());
+            if (homeOpenTeacherBtn) {
+                homeOpenTeacherBtn.addEventListener('click', () => {
+                    if (window.openTeacherMode) {
+                        window.openTeacherMode();
+                    } else if (window.YutnoriTeacherAdmin) {
+                        window.YutnoriTeacherAdmin.openAuthModal();
+                    }
+                });
             }
 
             // 규칙 모달 열기/닫기

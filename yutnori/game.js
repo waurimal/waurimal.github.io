@@ -877,14 +877,21 @@
                 return;
             }
             const modal = document.getElementById('teacherAuthModal');
+            if (!modal) return;
             const input = document.getElementById('teacherPasswordInput');
             const err = document.getElementById('teacherAuthError');
-            if (err) err.classList.add('hidden');
+            if (err) {
+                err.classList.add('hidden');
+                err.style.display = 'none';
+            }
             if (input) {
                 input.value = '';
                 input.classList.remove('border-rose-500');
             }
-            if (modal) modal.classList.remove('hidden');
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+            modal.style.zIndex = '99999';
+
             if (input && typeof input.focus === 'function') {
                 setTimeout(() => {
                     try { input.focus(); } catch(e){}
@@ -894,7 +901,10 @@
 
         closeAuthModal() {
             const modal = document.getElementById('teacherAuthModal');
-            if (modal) modal.classList.add('hidden');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+            }
         }
 
         submitAuth() {
@@ -921,7 +931,10 @@
                 this.closeAuthModal();
                 this.openAdminModal();
             } else {
-                if (err) err.classList.remove('hidden');
+                if (err) {
+                    err.classList.remove('hidden');
+                    err.style.display = 'flex';
+                }
                 if (input) {
                     input.classList.add('border-rose-500');
                     if (typeof input.focus === 'function') input.focus();
@@ -934,12 +947,17 @@
             const modal = document.getElementById('teacherAdminModal');
             if (!modal) return;
             modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+            modal.style.zIndex = '99999';
             this.switchTab(this.currentTab || 'scores');
         }
 
         closeAdminModal() {
             const modal = document.getElementById('teacherAdminModal');
-            if (modal) modal.classList.add('hidden');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+            }
         }
 
         notify(msg) {
@@ -1709,23 +1727,27 @@
                 });
             }
 
-            // 명예의 전당 모달 내 교사 모드 진입 버튼
-            const hofOpenTeacherBtn = document.getElementById('hofOpenTeacherBtn');
-            if (hofOpenTeacherBtn) {
-                hofOpenTeacherBtn.addEventListener('click', () => {
-                    if (this.dom.hofModal) this.dom.hofModal.classList.add('hidden');
-                    TeacherAdmin.openAuthModal();
-                });
-            }
-
-            // 교사 모드 버튼 (헤더 및 플로팅 버튼)
+            // 교사 모드 진입 버튼들 (헤더, 홈 화면 설정 카드 하단, 플로팅 버튼, 명예의 전당 모달 내부)
             const openTeacherModeBtn = document.getElementById('openTeacherModeBtn');
             const floatingTeacherBtn = document.getElementById('floatingTeacherBtn');
-            if (openTeacherModeBtn) {
-                openTeacherModeBtn.addEventListener('click', () => TeacherAdmin.openAuthModal());
-            }
-            if (floatingTeacherBtn) {
-                floatingTeacherBtn.addEventListener('click', () => TeacherAdmin.openAuthModal());
+            const homeOpenTeacherBtn = document.getElementById('homeOpenTeacherBtn');
+            const hofOpenTeacherBtn = document.getElementById('hofOpenTeacherBtn');
+
+            const handleTeacherClick = () => {
+                TeacherAdmin.openAuthModal();
+            };
+
+            if (openTeacherModeBtn) openTeacherModeBtn.addEventListener('click', handleTeacherClick);
+            if (floatingTeacherBtn) floatingTeacherBtn.addEventListener('click', handleTeacherClick);
+            if (homeOpenTeacherBtn) homeOpenTeacherBtn.addEventListener('click', handleTeacherClick);
+            if (hofOpenTeacherBtn) {
+                hofOpenTeacherBtn.addEventListener('click', () => {
+                    if (this.dom.hofModal) {
+                        this.dom.hofModal.classList.add('hidden');
+                        this.dom.hofModal.style.display = 'none';
+                    }
+                    TeacherAdmin.openAuthModal();
+                });
             }
 
             // 교사 인증 모달 이벤트
@@ -3310,6 +3332,12 @@
     window.YutnoriGameInstance = new YutnoriGame();
     window.YutnoriHOF = HallOfFame;
     window.YutnoriTeacherAdmin = TeacherAdmin;
+    window.openTeacherMode = function() {
+        TeacherAdmin.openAuthModal();
+    };
+    window.openTeacherAdmin = function() {
+        TeacherAdmin.openAuthModal();
+    };
     window.YutnoriEngine = {
         BOARD_NODES,
         calculateMovePath,
