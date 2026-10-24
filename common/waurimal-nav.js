@@ -676,6 +676,12 @@
         "bingo": { title: "학교 빙고 게임", icon: "🎯", teacher: "1:1 또는 반 전체 학생이 배운 단어로 빙고판을 채우고 함께 즐길 수 있습니다.", student: "불리는 영어 단어를 찾아 클릭하고 3줄 이상의 빙고를 완성하세요!" },
         "skribble": { title: "Skribble 게임", icon: "🎨", teacher: "친구가 그린 그림을 보고 영어 단어를 맞히는 창의적 상호작용 활동입니다.", student: "제시어를 그림으로 멋지게 표현하고, 친구들의 그림을 보고 단어를 맞혀보세요!" },
         "bluemarble": { title: "부루마불", icon: "🎲", teacher: "세계 도시를 여행하며 영어 퀴즈를 풀고 자산을 관리하는 부루마불 게임입니다.", student: "주사위를 굴려 세계를 누비고 랜드마크를 건설해 최고의 여행가가 되어보세요!" },
+        "yutnori": { 
+            title: "영어 윷놀이", 
+            icon: "🪵", 
+            teacher: "1. 우리 전통 민속놀이 윷놀이에 초등 영어 6종 퀴즈(단어·문장·해석·빈칸·어순배열)를 결합한 팀 대항 보드게임입니다.\n2. 개인전(AI 배틀) 및 실시간 온라인 멀티플레이 대전을 지원하며, 윷 던지기/말 이동 전 퀴즈를 풀어야 말을 움직일 수 있습니다.\n3. 말 잡기, 말 업기, 지름길 경로 등 전통 윷놀이 룰을 완벽 지원하며, 기여도 총점 기반 명예의 전당 및 교사 전용 데이터 관리를 제공합니다.", 
+            student: "1. 윷을 던지고 제시되는 영어 퀴즈를 정확히 맞혀 말을 전진시키세요.\n2. 상대 팀 말을 잡거나 아군 말을 업어서 먼저 4마리의 말을 모두 완주시킨 팀이 승리합니다! 🚀" 
+        },
         "flip": { title: "카드 뒤집기", icon: "🃏", teacher: "단어와 뜻/이미지를 짝 맞추는 기억력 향상 카드 뒤집기 게임입니다.", student: "뒤집힌 카드들의 위치를 잘 기억하여 짝이 맞는 카드를 모두 찾아내세요!" },
         "sudoku": { title: "스도쿠 게임", icon: "🔢", teacher: "가로, 세로, 3x3 박스 내 숫자 중복 없이 논리적으로 빈칸을 채우는 사고력 게임입니다.", student: "주어진 힌트 숫자를 단서로 빈칸의 숫자를 논리적으로 채워보세요!" },
         "earthworm": { title: "지렁이 게임", icon: "🐛", teacher: "순발력을 기르며 정답 단어 글자를 차례대로 먹어 몸을 늘리는 아케이드 게임입니다.", student: "방향키로 지렁이를 조종해 올바른 철자 먹이를 먹고 최고 길이에 도전하세요!" },
@@ -715,13 +721,14 @@
     }
 
     function getFeedbackUrl() {
+        const appParam = (currentAppId && currentAppId !== 'portal' && currentAppId !== 'feedback') ? `?app=${currentAppId}` : '';
         if (window.location.hostname.includes("github.io")) {
-            return "https://waurimal.github.io/feedback.html";
+            return "https://waurimal.github.io/feedback.html" + appParam;
         }
         if (window.location.pathname.includes("/waurimal.github.io/")) {
-            return "./feedback.html";
+            return "./feedback.html" + appParam;
         }
-        return "../waurimal.github.io/feedback.html";
+        return "../waurimal.github.io/feedback.html" + appParam;
     }
 
     // 4. 스타일 주입
