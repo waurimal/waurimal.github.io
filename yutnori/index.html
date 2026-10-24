@@ -42,17 +42,18 @@
             </div>
 
             <div class="flex items-center gap-2">
-                <button id="openOnlineHeaderBtn" class="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-black transition flex items-center gap-1.5 shadow-md animate-pulse">
-                    <i class="fa-solid fa-tower-broadcast"></i> 온라인 방 만들기/참여
+                <!-- 홈으로 바로가기 버튼 (인게임 시 유용) -->
+                <button id="headerHomeBtn" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black transition flex items-center gap-1.5 shadow-md cursor-pointer">
+                    <i class="fa-solid fa-house"></i> 홈으로
                 </button>
-                <button id="openHofHeaderBtn" class="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-black transition flex items-center gap-1.5 border border-amber-500/40 shadow-sm">
+                <button id="openHofHeaderBtn" class="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-black transition flex items-center gap-1.5 border border-amber-500/40 shadow-sm cursor-pointer">
                     <i class="fa-solid fa-trophy text-amber-400"></i> 명예의 전당
                 </button>
-                <button id="openRuleBtn" class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                    <i class="fa-solid fa-circle-question text-amber-400"></i> 규칙 안내
+                <button id="openTeacherModeBtn" class="px-3 py-1.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 hover:text-white text-xs font-black transition flex items-center gap-1.5 border border-indigo-500/40 shadow-sm cursor-pointer">
+                    <i class="fa-solid fa-chalkboard-user text-indigo-400"></i> 교사 모드
                 </button>
-                <button id="openSettingsBtn" class="px-3.5 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shadow-md">
-                    <i class="fa-solid fa-gear text-amber-400"></i> 게임 설정
+                <button id="openRuleBtn" class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                    <i class="fa-solid fa-circle-question text-amber-400"></i> 규칙 안내
                 </button>
             </div>
         </div>
@@ -60,231 +61,519 @@
 
     <!-- 메인 컨텐츠 영역 -->
     <main class="max-w-7xl mx-auto px-4 py-4 w-full flex-1">
-        <!-- 온라인 방 활성화 상태 배너 -->
-        <div id="onlineRoomBanner" class="hidden w-full mb-4 p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/90 via-slate-900 to-slate-900 border-2 border-emerald-500/50 shadow-lg flex flex-wrap items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-                <span class="px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 font-black text-xs border border-emerald-500/40 flex items-center gap-1.5 animate-pulse">
-                    <i class="fa-solid fa-wifi text-emerald-400"></i> 실시간 온라인 멀티
-                </span>
-                <div class="text-xs">
-                    <span class="text-slate-400 font-bold">방 코드:</span>
-                    <span id="activeRoomCodeText" class="font-black text-amber-400 font-mono text-base ml-1">----</span>
-                    <span class="text-slate-500 mx-2">|</span>
-                    <span class="text-slate-400 font-bold">내 참여 정보:</span>
-                    <span id="activeMyRoleText" class="font-black text-blue-400 ml-1">청팀 (민수)</span>
-                </div>
+
+        <!-- ============================================================== -->
+        <!-- 1. 첫 화면: 게임 설정 & 실시간 명예의 전당 (50:50 대칭 분할 레이아웃) -->
+        <!-- ============================================================== -->
+        <div id="screen-home" class="w-full">
+            <!-- 상단 타이틀 소개 배너 -->
+            <div class="text-center py-2 mb-6">
+                <h2 class="text-2xl sm:text-3xl font-black text-amber-400 flex items-center justify-center gap-2">
+                    <span>🎲 와우리말 영어 윷놀이 한마당</span>
+                    <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">Edu-Yutnori</span>
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-400 mt-1.5">
+                    전통 윷놀이의 지혜와 초등 영어 퀴즈가 만났다! 학생 정보를 확인하고 AI 대전 또는 친구와 실시간 온라인 대결을 펼쳐보세요.
+                </p>
             </div>
-            <button id="leaveOnlineRoomBtn" class="px-3.5 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-bold transition flex items-center gap-1.5">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i> 방 나가기
-            </button>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+                <!-- [좌측 7컬럼]: 학생 정보 입력 · 모드 선택 · 게임 설정 카드 -->
+                <div class="lg:col-span-7 flex flex-col gap-4">
+                    <div class="bg-slate-850/95 border border-slate-700 rounded-3xl p-5 sm:p-6 shadow-2xl backdrop-blur-md">
+                        <div class="flex items-center justify-between pb-3.5 border-b border-slate-700/80 mb-5">
+                            <h3 class="font-black text-lg text-amber-400 flex items-center gap-2">
+                                <i class="fa-solid fa-gamepad text-amber-400"></i> 게임 설정 & 시작
+                            </h3>
+                            <span class="text-xs font-bold text-slate-400">설정 완료 후 바로 시작하세요!</span>
+                        </div>
+
+                        <!-- 1. 학생 학적 및 실명 입력 섹션 (WaurimalStudent SSO 연동) -->
+                        <div class="mb-5 p-4 rounded-2xl bg-slate-900/90 border border-slate-700/80 shadow-inner">
+                            <div class="flex items-center justify-between mb-2.5">
+                                <label class="text-xs font-black text-amber-300 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-id-card text-amber-400"></i> 학생 정보 입력 (학년 · 반 · 번호 · 이름)
+                                </label>
+                                <span class="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30">
+                                    성적표 & 명예의 전당 연동
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 mb-2.5">
+                                <div>
+                                    <label for="studentGradeSelect" class="block text-[10px] font-bold text-slate-400 mb-1">학년</label>
+                                    <select id="studentGradeSelect" class="w-full px-2.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs font-bold text-white focus:outline-none focus:border-amber-500">
+                                        <option value="3">3학년</option>
+                                        <option value="4">4학년</option>
+                                        <option value="5">5학년</option>
+                                        <option value="6" selected>6학년</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="studentClassSelect" class="block text-[10px] font-bold text-slate-400 mb-1">반</label>
+                                    <select id="studentClassSelect" class="w-full px-2.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs font-bold text-white focus:outline-none focus:border-amber-500">
+                                        <option value="1" selected>1반</option>
+                                        <option value="2">2반</option>
+                                        <option value="3">3반</option>
+                                        <option value="4">4반</option>
+                                        <option value="5">5반</option>
+                                        <option value="6">6반</option>
+                                        <option value="7">7반</option>
+                                        <option value="8">8반</option>
+                                        <option value="9">9반</option>
+                                        <option value="10">10반</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="studentNumInput" class="block text-[10px] font-bold text-slate-400 mb-1">번호</label>
+                                    <input type="number" id="studentNumInput" min="1" max="40" placeholder="번호 (선택)" class="w-full px-2.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs font-bold text-white focus:outline-none focus:border-amber-500">
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label for="globalStudentNameInput" class="text-[10px] font-bold text-slate-400">학생 실명 (본인 이름)</label>
+                                    <span class="text-[10px] text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">닉네임 불가 / 실명 필수</span>
+                                </div>
+                                <input type="text" id="globalStudentNameInput" placeholder="실명을 입력하세요 (예: 김민수)" maxlength="12" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-500 font-bold">
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1">
+                                <i class="fa-solid fa-circle-info text-amber-400"></i> 점수 기록, 명예의 전당 및 교사 성적표에 <strong>본인 실명과 학적</strong>이 안전하게 보관됩니다.
+                            </p>
+                        </div>
+
+                        <!-- 2. 게임 모드 선택 탭 (컴퓨터 대전 vs 실시간 온라인 멀티) -->
+                        <div class="mb-5">
+                            <label class="block text-xs font-bold text-slate-400 mb-2">게임 모드 선택</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <button type="button" class="mode-tab-btn py-3.5 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-amber-500 bg-amber-500/15 text-amber-300 cursor-pointer relative shadow-lg" data-mode="ai" id="startAiModeBtn">
+                                    <span class="absolute -top-2.5 px-2.5 py-0.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 text-[10px] font-black rounded-full shadow">
+                                        추천 모드 ⚡
+                                    </span>
+                                    <i class="fa-solid fa-robot text-xl text-amber-400 mt-1"></i>
+                                    <span class="text-sm font-black text-white">컴퓨터 대전</span>
+                                    <span class="text-[10px] text-amber-200/90 font-normal">혼자서 AI와 바로 대결</span>
+                                </button>
+                                <button type="button" class="mode-tab-btn py-3.5 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600 cursor-pointer relative" data-mode="online" id="selectOnlineTabBtn">
+                                    <span class="absolute -top-2.5 px-2 py-0.5 bg-emerald-500 text-slate-950 text-[10px] font-black rounded-full shadow">
+                                        실시간 2인~다수
+                                    </span>
+                                    <i class="fa-solid fa-tower-broadcast text-xl text-emerald-400 mt-1"></i>
+                                    <span class="text-sm font-black text-white">실시간 온라인 멀티</span>
+                                    <span class="text-[10px] text-emerald-400/90 font-normal">방 코드 공유 대결</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 3-A. 온라인 멀티플레이 옵션 (방 생성 및 코드 참여) -->
+                        <div id="onlineOptionsSection" class="mb-5 p-4 rounded-2xl bg-emerald-950/40 border-2 border-emerald-500/40 hidden">
+                            <!-- 방 만들기 카드 -->
+                            <div class="p-3.5 rounded-xl bg-slate-900/80 border border-emerald-500/30 mb-3">
+                                <div class="text-xs font-black text-amber-400 mb-1 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-plus-circle"></i> 새 방 만들기 (내가 방장)
+                                </div>
+                                <p class="text-[11px] text-slate-400 mb-3">4자리 코드를 발급받아 친구들에게 공유하여 함께 플레이합니다.</p>
+                                
+                                <div class="grid grid-cols-2 gap-2 mb-3">
+                                    <div>
+                                        <span class="text-[10px] text-slate-400 font-bold block mb-1">대전 유형</span>
+                                        <select id="onlineCreateModeSelect" class="w-full px-2.5 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white">
+                                            <option value="1v1" selected>1:1 대전 (2인)</option>
+                                            <option value="team">팀전 (청팀 vs 백팀 다수)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <span class="text-[10px] text-slate-400 font-bold block mb-1">말의 개수</span>
+                                        <select id="onlineCreatePieceCountSelect" class="w-full px-2.5 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white">
+                                            <option value="3">3개 (스피드)</option>
+                                            <option value="4" selected>4개 (표준)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <button type="button" id="createOnlineRoomBtn" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+                                    <i class="fa-solid fa-tower-broadcast"></i> 실명으로 방 만들기 & 4자리 코드 발급
+                                </button>
+                            </div>
+
+                            <!-- 코드 입력 참여 카드 -->
+                            <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-700">
+                                <div class="text-xs font-black text-blue-400 mb-1 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-right-to-bracket"></i> 친구 방 참여하기 (코드 입력)
+                                </div>
+                                <p class="text-[11px] text-slate-400 mb-2.5">공유받은 4자리 숫자 코드를 입력하고 입장하세요.</p>
+                                <div class="flex gap-2">
+                                    <input type="text" id="joinOnlineRoomCodeInput" maxlength="4" placeholder="4자리 코드" class="w-2/3 px-3 py-2 text-center text-xl font-mono tracking-widest font-black rounded-xl bg-slate-800 border border-slate-700 text-amber-300 focus:outline-none focus:border-blue-500 uppercase">
+                                    <button type="button" id="joinOnlineRoomBtn" class="w-1/3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow transition cursor-pointer">
+                                        입장하기
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3-B. AI 난이도 설정 (AI 모드일 때) -->
+                        <div id="aiOptionsSection" class="mb-5 p-3.5 rounded-2xl bg-slate-900/70 border border-slate-700">
+                            <label class="block text-xs font-bold text-slate-300 mb-2">인공지능 컴퓨터 난이도</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <label class="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer">
+                                    <input type="radio" name="aiDifficulty" value="easy" class="text-amber-500"> 순한맛 (쉬움)
+                                </label>
+                                <label class="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer">
+                                    <input type="radio" name="aiDifficulty" value="normal" checked class="text-amber-500"> 보통맛 (표준)
+                                </label>
+                                <label class="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer">
+                                    <input type="radio" name="aiDifficulty" value="hard" class="text-amber-500"> 매운맛 (도전)
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 4. 공통 옵션: 팀당 말의 수 & 영어 문제 범위 -->
+                        <div id="commonOptionsSection" class="grid grid-cols-2 gap-3 mb-6">
+                            <div>
+                                <label for="pieceCountSelect" class="block text-xs font-bold text-slate-400 mb-1.5">팀당 말의 개수</label>
+                                <select id="pieceCountSelect" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-500 font-bold">
+                                    <option value="3">3개 (빠른 스피드전)</option>
+                                    <option value="4" selected>4개 (정통 윷놀이 표준)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="gradeSelect" class="block text-xs font-bold text-slate-400 mb-1.5">영어 문제 출제 범위</label>
+                                <select id="gradeSelect" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-500 font-bold">
+                                    <option value="all" selected>전체 종합 (초등 3~6 필수)</option>
+                                    <option value="3-4">초등 3~4학년 기초</option>
+                                    <option value="5-6">초등 5~6학년 심화</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 5. 메인 게임 시작 큰 버튼 -->
+                        <button id="startGameBtn" class="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-500 active:scale-98 text-slate-950 font-black text-lg shadow-xl shadow-amber-900/30 transition flex items-center justify-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-play text-xl"></i> 영어 윷놀이 게임 시작하기 🚀
+                        </button>
+
+                        <!-- 6. 하단 바로가기 링크들 -->
+                        <div class="mt-4 pt-3 border-t border-slate-700/80 flex items-center justify-between text-xs">
+                            <button type="button" id="homeOpenRuleBtn" class="text-slate-400 hover:text-amber-300 font-semibold transition flex items-center gap-1.5 cursor-pointer">
+                                <i class="fa-solid fa-book-open text-amber-400"></i> 윷놀이 규칙 & 점수 산출 안내
+                            </button>
+                            <button type="button" id="homeOpenTeacherBtn" class="text-indigo-400 hover:text-indigo-300 font-bold transition flex items-center gap-1 cursor-pointer">
+                                <i class="fa-solid fa-lock text-indigo-400"></i> 교사 전용 데이터 관리
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- [우측 5컬럼]: 실시간 명예의 전당 카드 -->
+                <div class="lg:col-span-5 flex flex-col gap-4">
+                    <div class="bg-slate-850/95 border border-amber-500/40 rounded-3xl p-5 sm:p-6 shadow-2xl backdrop-blur-md">
+                        <!-- 명예의 전당 헤더 -->
+                        <div class="flex items-center justify-between pb-3.5 border-b border-slate-700/80 mb-4">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-9 h-9 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black text-lg shadow shadow-amber-500/30">
+                                    🏆
+                                </div>
+                                <div>
+                                    <h3 class="font-black text-lg text-amber-400 flex items-center gap-1.5">
+                                        명예의 전당
+                                        <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> 실시간 LIVE
+                                        </span>
+                                    </h3>
+                                    <p class="text-[11px] text-slate-400">승수와 기여도를 종합한 영예의 순위표</p>
+                                </div>
+                            </div>
+                            <button id="homeOpenHofModalBtn" class="text-xs font-bold text-amber-300 hover:text-amber-200 transition flex items-center gap-1 cursor-pointer px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30">
+                                전체보기 <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                            </button>
+                        </div>
+
+                        <!-- 기간 탭 & 학년/반 필터 -->
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3.5 bg-slate-900/80 p-2 rounded-2xl border border-slate-700/80">
+                            <!-- 기간 탭 -->
+                            <div class="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs">
+                                <button type="button" id="home-hof-tab-all" class="px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-black shadow-sm cursor-pointer transition">전체</button>
+                                <button type="button" id="home-hof-tab-month" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white font-bold cursor-pointer transition">이번 달</button>
+                                <button type="button" id="home-hof-tab-week" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white font-bold cursor-pointer transition">이번 주</button>
+                            </div>
+
+                            <!-- 학년/반 필터 -->
+                            <div class="flex items-center gap-1.5">
+                                <select id="home-hof-filter-grade" class="px-2 py-1 rounded-xl bg-slate-950 border border-slate-700 text-xs font-bold text-amber-300 focus:outline-none focus:border-amber-500">
+                                    <option value="all" selected>전체 학년</option>
+                                    <option value="3">3학년</option>
+                                    <option value="4">4학년</option>
+                                    <option value="5">5학년</option>
+                                    <option value="6">6학년</option>
+                                </select>
+                                <select id="home-hof-filter-class" class="px-2 py-1 rounded-xl bg-slate-950 border border-slate-700 text-xs font-bold text-amber-300 focus:outline-none focus:border-amber-500">
+                                    <option value="all" selected>전체 반</option>
+                                    <option value="1">1반</option>
+                                    <option value="2">2반</option>
+                                    <option value="3">3반</option>
+                                    <option value="4">4반</option>
+                                    <option value="5">5반</option>
+                                    <option value="6">6반</option>
+                                    <option value="7">7반</option>
+                                    <option value="8">8반</option>
+                                    <option value="9">9반</option>
+                                    <option value="10">10반</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 실시간 순위 리스트 (TOP 10 렌더링) -->
+                        <div id="homeHofList" class="flex flex-col gap-1.5 max-h-[460px] overflow-y-auto pr-1 custom-scrollbar">
+                            <!-- 동적 렌더링 -->
+                        </div>
+
+                        <!-- 하단 기여도 기준 및 전체보기 버튼 -->
+                        <div class="mt-4 pt-3 border-t border-slate-700/80">
+                            <p class="text-[10px] text-slate-400 mb-2 leading-relaxed">
+                                * 1인 1최고점수 기준 · 정답(+50점) · 완주(+150점) · 잡기(+100점) · 업기(+40점)
+                            </p>
+                            <button type="button" id="homeOpenHofModalBigBtn" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-xs border border-amber-500/30 transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fa-solid fa-trophy text-amber-400"></i> 전체 명예의 전당 순위표 및 통계 보기
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
         </div>
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-            <!-- 좌측: 윷놀이 보드 및 대기실 (7컬럼) -->
-            <div class="lg:col-span-7 flex flex-col items-center gap-4">
+        <!-- ============================================================== -->
+        <!-- 2. 실제 게임 화면: 게임에만 100% 집중하는 몰입형 레이아웃 -->
+        <!-- ============================================================== -->
+        <div id="screen-game" class="hidden w-full">
 
-                <!-- 윷판 컨테이너 -->
-                <div id="boardWrapper" class="yut-board-wrapper">
-                    <!-- SVG 연결선 -->
-                    <svg id="boardSvg" class="yut-board-svg" viewBox="0 0 100 100"></svg>
-                    <!-- 29개 노드 레이어 -->
-                    <div id="nodesLayer" class="absolute inset-0 pointer-events-auto"></div>
-                    <!-- 말(Pieces) 레이어 -->
-                    <div id="piecesLayer" class="absolute inset-0 pointer-events-auto"></div>
+            <!-- 상단 인게임 컨트롤 & 상태 바 -->
+            <div class="w-full mb-4 p-3.5 rounded-2xl bg-slate-800/90 border border-slate-700/80 shadow-lg flex flex-wrap items-center justify-between gap-3">
+                <!-- 좌측: 현재 게임 상태 표시 배너 -->
+                <div class="flex items-center gap-3">
+                    <span id="gameModeStatusBadge" class="px-3 py-1 rounded-xl bg-amber-500/20 text-amber-300 font-black text-xs border border-amber-500/40 flex items-center gap-1.5">
+                        <i class="fa-solid fa-gamepad"></i> 컴퓨터 대전 모드
+                    </span>
+                    <span id="gamePlayerInfoText" class="text-xs text-slate-300 font-bold">
+                        참여 학생: <span id="inGameStudentNameBadge" class="text-amber-400 font-black">-</span>
+                    </span>
                 </div>
 
-                <!-- 출발 대기실 (아직 판에 나가지 않은 말들) -->
-                <div class="w-full max-w-[580px] bg-slate-800/80 border border-slate-700/80 rounded-2xl p-3.5 shadow-md">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-black text-amber-400 flex items-center gap-1.5">
-                            <i class="fa-solid fa-flag-checkered"></i> 출발 대기존 (대기 중인 말)
-                        </span>
-                        <span class="text-[11px] text-slate-400">말을 클릭하면 판으로 진입합니다</span>
-                    </div>
-                    <div id="waitingPiecesArea" class="flex flex-col gap-1">
-                        <!-- 동적 생성 -->
-                    </div>
-                </div>
+                <!-- 우측: [홈으로 (게임 나가기)] 버튼 -->
+                <button type="button" id="exitToHomeBtn" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-rose-900/40 text-slate-200 hover:text-rose-300 border border-slate-600 font-black text-xs transition flex items-center gap-1.5 cursor-pointer shadow">
+                    <i class="fa-solid fa-house text-amber-400"></i> 홈으로 (게임 나가기)
+                </button>
             </div>
 
-            <!-- 우측: 게임 컨트롤, 윷 던지기 3D, 현황판, 중계창 (5컬럼) -->
-            <div class="lg:col-span-5 flex flex-col gap-4">
-
-                <!-- 온라인 상대방 진행 관전 안내 배너 -->
-                <div id="remoteTurnNotice" class="hidden p-3 rounded-2xl bg-amber-500/10 border-2 border-amber-500/40 shadow-lg flex items-center justify-between animate-pulse">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-hourglass-half text-amber-400 text-sm"></i>
-                        <span id="remoteTurnNoticeText" class="text-xs font-bold text-amber-200">상대방이 문제를 푸는 중입니다...</span>
-                    </div>
-                    <span class="text-[10px] text-amber-300 font-bold bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/40">실시간 관전 중</span>
-                </div>
-
-                <!-- 1. 턴 배너 카드 -->
-                <div id="turnBanner" class="p-4 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-800/90 border-2 border-amber-500/50 shadow-lg flex items-center justify-between">
-                    <div>
-                        <div class="text-xs font-bold text-slate-400 mb-0.5">현재 차례</div>
-                        <div id="turnTeamName" class="font-black text-xl text-blue-400">청팀</div>
-                    </div>
-                    <div id="turnPlayerName" class="text-sm font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-xl">
-                        차례 대기 중
+            <!-- 온라인 방 활성화 상태 배너 (실시간 멀티 시 표출) -->
+            <div id="onlineRoomBanner" class="hidden w-full mb-4 p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/90 via-slate-900 to-slate-900 border-2 border-emerald-500/50 shadow-lg flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <span class="px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 font-black text-xs border border-emerald-500/40 flex items-center gap-1.5 animate-pulse">
+                        <i class="fa-solid fa-wifi text-emerald-400"></i> 실시간 온라인 멀티
+                    </span>
+                    <div class="text-xs">
+                        <span class="text-slate-400 font-bold">방 코드:</span>
+                        <span id="activeRoomCodeText" class="font-black text-amber-400 font-mono text-base ml-1">----</span>
+                        <span class="text-slate-500 mx-2">|</span>
+                        <span class="text-slate-400 font-bold">내 참여 정보:</span>
+                        <span id="activeMyRoleText" class="font-black text-blue-400 ml-1">청팀 (민수)</span>
                     </div>
                 </div>
+                <button id="leaveOnlineRoomBtn" class="px-3.5 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> 방 나가기
+                </button>
+            </div>
 
-                <!-- 2. 윷 던지기 영역 (3D 윷가락 4개 + 상태 레이블 + 던지기 버튼) -->
-                <div class="p-5 rounded-2xl bg-slate-800/90 border border-slate-700 shadow-xl flex flex-col items-center">
-                    <div class="flex items-center justify-between w-full mb-2">
-                        <span class="text-xs font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-hand-fist text-amber-400"></i> 전통 윷 던지기
-                        </span>
-                        <span class="text-[11px] text-amber-400/90 font-bold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30">
-                            밝은면=앞(배) · 짙은면=뒤(등)
-                        </span>
+            <!-- 메인 게임 영역: 윷놀이 보드(좌 7) + 조작/현황(우 5) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+                <!-- 좌측: 윷놀이 보드 및 대기존 (7컬럼) -->
+                <div class="lg:col-span-7 flex flex-col items-center gap-4">
+
+                    <!-- 윷판 컨테이너 -->
+                    <div id="boardWrapper" class="yut-board-wrapper">
+                        <!-- SVG 연결선 -->
+                        <svg id="boardSvg" class="yut-board-svg" viewBox="0 0 100 100"></svg>
+                        <!-- 29개 노드 레이어 -->
+                        <div id="nodesLayer" class="absolute inset-0 pointer-events-auto"></div>
+                        <!-- 말(Pieces) 레이어 -->
+                        <div id="piecesLayer" class="absolute inset-0 pointer-events-auto"></div>
                     </div>
 
-                    <!-- 윷가락 4개 3D 뷰어 & 개별 상태 레이블 -->
-                    <div class="yut-sticks-container w-full">
-                        <!-- 윷가락 0 (뒷도/빽도 표시 윷) -->
-                        <div class="yut-stick-col">
-                            <div id="yutStick0" class="yut-stick back-do is-front">
-                                <div class="yut-stick-front">
-                                    <span class="yut-face-badge front-badge">앞(배)</span>
-                                    <span class="yut-mark-x special-backdo" title="빽도 표시 윷눈"><i class="fa-solid fa-xmark"></i></span>
-                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
-                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
-                                    <span class="text-[9px] font-black text-rose-600 bg-rose-100 px-1 rounded border border-rose-300">빽도윷</span>
-                                </div>
-                                <div class="yut-stick-back">
-                                    <span class="yut-face-badge back-badge">뒤(등)</span>
-                                    <div class="yut-bark-ridge"></div>
-                                    <div class="yut-bark-ridge"></div>
-                                    <div class="yut-bark-ridge"></div>
-                                    <span class="text-[9px] font-bold text-stone-400">둥근 등</span>
-                                </div>
-                            </div>
-                            <span id="yutLabel0" class="yut-stick-label is-front-label text-[11px] px-2 py-0.5 rounded-full border">앞(배)</span>
+                    <!-- 출발 대기실 (아직 판에 나가지 않은 말들) -->
+                    <div class="w-full max-w-[580px] bg-slate-800/80 border border-slate-700/80 rounded-2xl p-3.5 shadow-md">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-black text-amber-400 flex items-center gap-1.5">
+                                <i class="fa-solid fa-flag-checkered"></i> 출발 대기존 (대기 중인 말)
+                            </span>
+                            <span class="text-[11px] text-slate-400">말을 클릭하면 판으로 진입합니다</span>
                         </div>
-
-                        <!-- 윷가락 1 -->
-                        <div class="yut-stick-col">
-                            <div id="yutStick1" class="yut-stick is-front">
-                                <div class="yut-stick-front">
-                                    <span class="yut-face-badge front-badge">앞(배)</span>
-                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
-                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
-                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
-                                    <span class="text-[9px] font-bold text-amber-800">평평함</span>
-                                </div>
-                                <div class="yut-stick-back">
-                                    <span class="yut-face-badge back-badge">뒤(등)</span>
-                                    <div class="yut-bark-ridge"></div>
-                                    <div class="yut-bark-ridge"></div>
-                                    <div class="yut-bark-ridge"></div>
-                                    <span class="text-[9px] font-bold text-stone-400">둥근 등</span>
-                                </div>
-                            </div>
-                            <span id="yutLabel1" class="yut-stick-label is-front-label text-[11px] px-2 py-0.5 rounded-full border">앞(배)</span>
-                        </div>
-
-                        <!-- 윷가락 2 -->
-                        <div class="yut-stick-col">
-                            <div id="yutStick2" class="yut-stick is-front">
-                                <div class="yut-stick-front">
-                                    <span class="yut-face-badge front-badge">앞(배)</span>
-                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
-                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
-                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
-                                    <span class="text-[9px] font-bold text-amber-800">평평함</span>
-                                </div>
-                                <div class="yut-stick-back">
-                                    <span class="yut-face-badge back-badge">뒤(등)</span>
-                                    <div class="yut-bark-ridge"></div>
-                                    <div class="yut-bark-ridge"></div>
-                                    <div class="yut-bark-ridge"></div>
-                                    <span class="text-[9px] font-bold text-stone-400">둥근 등</span>
-                                </div>
-                            </div>
-                            <span id="yutLabel2" class="yut-stick-label is-front-label text-[11px] px-2 py-0.5 rounded-full border">앞(배)</span>
-                        </div>
-
-                        <!-- 윷가락 3 -->
-                        <div class="yut-stick-col">
-                            <div id="yutStick3" class="yut-stick is-front">
-                                <div class="yut-stick-front">
-                                    <span class="yut-face-badge front-badge">앞(배)</span>
-                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
-                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
-                                    <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
-                                    <span class="text-[9px] font-bold text-amber-800">평평함</span>
-                                </div>
-                                <div class="yut-stick-back">
-                                    <span class="yut-face-badge back-badge">뒤(등)</span>
-                                    <div class="yut-bark-ridge"></div>
-                                    <div class="yut-bark-ridge"></div>
-                                    <div class="yut-bark-ridge"></div>
-                                    <span class="text-[9px] font-bold text-stone-400">둥근 등</span>
-                                </div>
-                            </div>
-                            <span id="yutLabel3" class="yut-stick-label is-front-label text-[11px] px-2 py-0.5 rounded-full border">앞(배)</span>
+                        <div id="waitingPiecesArea" class="flex flex-col gap-1">
+                            <!-- 동적 생성 -->
                         </div>
                     </div>
+                </div>
 
-                    <!-- 던진 결과 뱃지 & 상세 설명 영역 -->
-                    <div id="resultBadge" class="hidden my-3 px-6 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 shadow-xl border-2 border-amber-200 text-center flex flex-col items-center">
+                <!-- 우측: 게임 컨트롤, 윷 던지기 3D, 현황판, 중계창 (5컬럼) -->
+                <!-- ※ 게임 화면에는 명예의 전당이 전혀 노출되지 않아 온전히 플레이에 몰입할 수 있습니다! -->
+                <div class="lg:col-span-5 flex flex-col gap-4">
+
+                    <!-- 온라인 상대방 진행 관전 안내 배너 -->
+                    <div id="remoteTurnNotice" class="hidden p-3 rounded-2xl bg-amber-500/10 border-2 border-amber-500/40 shadow-lg flex items-center justify-between animate-pulse">
                         <div class="flex items-center gap-2">
-                            <span id="resultText" class="font-black text-2xl tracking-wide">도</span>
-                            <span id="resultStepsBadge" class="text-xs font-black bg-slate-950 text-amber-300 px-2 py-0.5 rounded-full">+1칸</span>
+                            <i class="fa-solid fa-hourglass-half text-amber-400 text-sm"></i>
+                            <span id="remoteTurnNoticeText" class="text-xs font-bold text-amber-200">상대방이 문제를 푸는 중입니다...</span>
                         </div>
-                        <span id="resultDetailText" class="text-xs font-bold text-amber-950 mt-0.5">[ 앞면 1개, 뒷면 3개 = 1칸 전진 ]</span>
-                        <span id="extraTurnBadge" class="hidden mt-1 text-[11px] font-black px-2.5 py-0.5 rounded-full bg-red-600 text-white animate-bounce shadow">
-                            🎉 보너스 기회! 윷을 한 번 더 던지세요!
-                        </span>
+                        <span class="text-[10px] text-amber-300 font-bold bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/40">실시간 관전 중</span>
                     </div>
 
-                    <!-- 윷 던지기 버튼 -->
-                    <button id="rollBtn" class="w-full mt-2 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 active:scale-98 text-slate-950 font-black text-lg shadow-lg shadow-amber-900/40 transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-bullseye"></i> 윷 던지기!
-                    </button>
-                </div>
+                    <!-- 1. 턴 배너 카드 -->
+                    <div id="turnBanner" class="p-4 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-800/90 border-2 border-amber-500/50 shadow-lg flex items-center justify-between">
+                        <div>
+                            <div class="text-xs font-bold text-slate-400 mb-0.5">현재 차례</div>
+                            <div id="turnTeamName" class="font-black text-xl text-blue-400">청팀</div>
+                        </div>
+                        <div id="turnPlayerName" class="text-sm font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-xl">
+                            차례 대기 중
+                        </div>
+                    </div>
 
-                <!-- 3. 팀별 진행 현황판 -->
-                <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80 shadow-md">
-                    <div class="text-xs font-black text-slate-300 mb-2 flex items-center justify-between">
-                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-trophy text-amber-400"></i> 팀별 완주 현황</span>
-                        <span class="text-[11px] text-slate-400">먼저 모두 완주하면 승리!</span>
-                    </div>
-                    <div id="teamsStatusContainer" class="flex flex-col gap-2">
-                        <!-- 동적 생성 -->
-                    </div>
-                </div>
+                    <!-- 2. 윷 던지기 영역 (3D 윷가락 4개 + 상태 레이블 + 던지기 버튼) -->
+                    <div class="p-5 rounded-2xl bg-slate-800/90 border border-slate-700 shadow-xl flex flex-col items-center">
+                        <div class="flex items-center justify-between w-full mb-2">
+                            <span class="text-xs font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                                <i class="fa-solid fa-hand-fist text-amber-400"></i> 전통 윷 던지기
+                            </span>
+                            <span class="text-[11px] text-amber-400/90 font-bold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30">
+                                밝은면=앞(배) · 짙은면=뒤(등)
+                            </span>
+                        </div>
 
-                <!-- 4. 실시간 게임 중계창 -->
-                <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80 shadow-md">
-                    <div class="text-xs font-black text-slate-400 mb-2 flex items-center gap-1.5">
-                        <i class="fa-solid fa-scroll text-amber-400"></i> 윷놀이 실황 중계
-                    </div>
-                    <div id="gameLogContainer" class="h-24 overflow-y-auto pr-1 flex flex-col gap-0.5">
-                        <div class="text-xs text-slate-400">게임을 시작해 주세요.</div>
-                    </div>
-                </div>
+                        <!-- 윷가락 4개 3D 뷰어 & 개별 상태 레이블 -->
+                        <div class="yut-sticks-container w-full">
+                            <!-- 윷가락 0 (뒷도/빽도 표시 윷) -->
+                            <div class="yut-stick-col">
+                                <div id="yutStick0" class="yut-stick back-do is-front">
+                                    <div class="yut-stick-front">
+                                        <span class="yut-face-badge front-badge">앞(배)</span>
+                                        <span class="yut-mark-x special-backdo" title="빽도 표시 윷눈"><i class="fa-solid fa-xmark"></i></span>
+                                        <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                        <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                        <span class="text-[9px] font-black text-rose-600 bg-rose-100 px-1 rounded border border-rose-300">빽도윷</span>
+                                    </div>
+                                    <div class="yut-stick-back">
+                                        <span class="yut-face-badge back-badge">뒤(등)</span>
+                                        <div class="yut-bark-ridge"></div>
+                                        <div class="yut-bark-ridge"></div>
+                                        <div class="yut-bark-ridge"></div>
+                                        <span class="text-[9px] font-bold text-stone-400">둥근 등</span>
+                                    </div>
+                                </div>
+                                <span id="yutLabel0" class="yut-stick-label is-front-label text-[11px] px-2 py-0.5 rounded-full border">앞(배)</span>
+                            </div>
 
-                <!-- 5. 명예의 전당 (실시간 TOP 5 기여도 랭킹) -->
-                <div class="p-4 rounded-2xl bg-slate-800/90 border border-amber-500/40 shadow-lg">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-black text-amber-400 flex items-center gap-1.5">
-                            <i class="fa-solid fa-trophy text-amber-400"></i> 명예의 전당 (TOP 5)
-                        </span>
-                        <button id="openHofWidgetBtn" class="text-[11px] font-bold text-amber-300 hover:text-amber-200 transition flex items-center gap-1">
-                            전체보기 <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                            <!-- 윷가락 1 -->
+                            <div class="yut-stick-col">
+                                <div id="yutStick1" class="yut-stick is-front">
+                                    <div class="yut-stick-front">
+                                        <span class="yut-face-badge front-badge">앞(배)</span>
+                                        <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                        <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                        <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                        <span class="text-[9px] font-bold text-amber-800">평평함</span>
+                                    </div>
+                                    <div class="yut-stick-back">
+                                        <span class="yut-face-badge back-badge">뒤(등)</span>
+                                        <div class="yut-bark-ridge"></div>
+                                        <div class="yut-bark-ridge"></div>
+                                        <div class="yut-bark-ridge"></div>
+                                        <span class="text-[9px] font-bold text-stone-400">둥근 등</span>
+                                    </div>
+                                </div>
+                                <span id="yutLabel1" class="yut-stick-label is-front-label text-[11px] px-2 py-0.5 rounded-full border">앞(배)</span>
+                            </div>
+
+                            <!-- 윷가락 2 -->
+                            <div class="yut-stick-col">
+                                <div id="yutStick2" class="yut-stick is-front">
+                                    <div class="yut-stick-front">
+                                        <span class="yut-face-badge front-badge">앞(배)</span>
+                                        <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                        <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                        <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                        <span class="text-[9px] font-bold text-amber-800">평평함</span>
+                                    </div>
+                                    <div class="yut-stick-back">
+                                        <span class="yut-face-badge back-badge">뒤(등)</span>
+                                        <div class="yut-bark-ridge"></div>
+                                        <div class="yut-bark-ridge"></div>
+                                        <div class="yut-bark-ridge"></div>
+                                        <span class="text-[9px] font-bold text-stone-400">둥근 등</span>
+                                    </div>
+                                </div>
+                                <span id="yutLabel2" class="yut-stick-label is-front-label text-[11px] px-2 py-0.5 rounded-full border">앞(배)</span>
+                            </div>
+
+                            <!-- 윷가락 3 -->
+                            <div class="yut-stick-col">
+                                <div id="yutStick3" class="yut-stick is-front">
+                                    <div class="yut-stick-front">
+                                        <span class="yut-face-badge front-badge">앞(배)</span>
+                                        <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                        <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                        <span class="yut-mark-x"><i class="fa-solid fa-xmark"></i></span>
+                                        <span class="text-[9px] font-bold text-amber-800">평평함</span>
+                                    </div>
+                                    <div class="yut-stick-back">
+                                        <span class="yut-face-badge back-badge">뒤(등)</span>
+                                        <div class="yut-bark-ridge"></div>
+                                        <div class="yut-bark-ridge"></div>
+                                        <div class="yut-bark-ridge"></div>
+                                        <span class="text-[9px] font-bold text-stone-400">둥근 등</span>
+                                    </div>
+                                </div>
+                                <span id="yutLabel3" class="yut-stick-label is-front-label text-[11px] px-2 py-0.5 rounded-full border">앞(배)</span>
+                            </div>
+                        </div>
+
+                        <!-- 던진 결과 뱃지 & 상세 설명 영역 -->
+                        <div id="resultBadge" class="hidden my-3 px-6 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 shadow-xl border-2 border-amber-200 text-center flex flex-col items-center">
+                            <div class="flex items-center gap-2">
+                                <span id="resultText" class="font-black text-2xl tracking-wide">도</span>
+                                <span id="resultStepsBadge" class="text-xs font-black bg-slate-950 text-amber-300 px-2 py-0.5 rounded-full">+1칸</span>
+                            </div>
+                            <span id="resultDetailText" class="text-xs font-bold text-amber-950 mt-0.5">[ 앞면 1개, 뒷면 3개 = 1칸 전진 ]</span>
+                            <span id="extraTurnBadge" class="hidden mt-1 text-[11px] font-black px-2.5 py-0.5 rounded-full bg-red-600 text-white animate-bounce shadow">
+                                🎉 보너스 기회! 윷을 한 번 더 던지세요!
+                            </span>
+                        </div>
+
+                        <!-- 윷 던지기 버튼 -->
+                        <button id="rollBtn" class="w-full mt-2 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 active:scale-98 text-slate-950 font-black text-lg shadow-lg shadow-amber-900/40 transition flex items-center justify-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-bullseye"></i> 윷 던지기!
                         </button>
                     </div>
-                    <p class="text-[10px] text-slate-400 mb-2.5">
-                        * 승수 + 기여도(정답 50점·완주 150점·잡기 100점·업기 40점) 중심
-                    </p>
-                    <div id="homeHofList" class="flex flex-col gap-1.5">
-                        <!-- 동적 생성 -->
-                    </div>
-                </div>
 
+                    <!-- 3. 팀별 진행 현황판 -->
+                    <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80 shadow-md">
+                        <div class="text-xs font-black text-slate-300 mb-2 flex items-center justify-between">
+                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-trophy text-amber-400"></i> 팀별 완주 현황</span>
+                            <span class="text-[11px] text-slate-400">먼저 모두 완주하면 승리!</span>
+                        </div>
+                        <div id="teamsStatusContainer" class="flex flex-col gap-2">
+                            <!-- 동적 생성 -->
+                        </div>
+                    </div>
+
+                    <!-- 4. 실시간 게임 중계창 -->
+                    <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80 shadow-md">
+                        <div class="text-xs font-black text-slate-400 mb-2 flex items-center gap-1.5">
+                            <i class="fa-solid fa-scroll text-amber-400"></i> 윷놀이 실황 중계
+                        </div>
+                        <div id="gameLogContainer" class="h-28 overflow-y-auto pr-1 flex flex-col gap-0.5 custom-scrollbar">
+                            <div class="text-xs text-slate-400">게임을 시작해 주세요.</div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     </main>
@@ -293,146 +582,6 @@
     <footer class="bg-slate-950/80 border-t border-slate-800 py-3 px-4 text-center text-xs text-slate-500">
         © 2026 와우리말(Waurimal) 프로젝트 - 에듀테크 영어 윷놀이 보드게임
     </footer>
-
-    <!-- ============================================================== -->
-    <!-- 모달 1: 게임 설정 / 모드 선택 모달 -->
-    <!-- ============================================================== -->
-    <div id="settingsModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-            <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
-                <h3 class="font-black text-xl text-amber-400 flex items-center gap-2">
-                    <i class="fa-solid fa-gamepad"></i> 영어 윷놀이 게임 시작
-                </h3>
-                <button id="closeSettingsBtn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center transition" title="닫기">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <!-- 학생 실명 입력 섹션 (닉네임 대신 실명 사용) -->
-            <div class="mb-5 p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700">
-                <div class="flex items-center justify-between mb-1.5">
-                    <label for="globalStudentNameInput" class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
-                        <i class="fa-solid fa-id-card"></i> 학생 실명 (본인 이름)
-                    </label>
-                    <span class="text-[10px] text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">닉네임 불가 / 실명 필수</span>
-                </div>
-                <input type="text" id="globalStudentNameInput" placeholder="실명을 입력하세요 (예: 김민수)" maxlength="12" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-500 font-bold">
-                <p class="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1">
-                    <i class="fa-solid fa-circle-info text-amber-400"></i> 점수 기록, 명예의 전당 및 온라인 대전에 <strong>본인 실명</strong>이 사용됩니다.
-                </p>
-            </div>
-
-            <!-- 게임 모드 선택 (컴퓨터 대전 vs 실시간 온라인 멀티) -->
-            <div class="mb-5">
-                <label class="block text-xs font-bold text-slate-400 mb-2">게임 모드 선택</label>
-                <div class="grid grid-cols-2 gap-3">
-                    <button type="button" class="mode-tab-btn py-3.5 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-amber-500 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 active:scale-95 cursor-pointer relative shadow-lg" data-mode="ai" id="startAiModeBtn" title="클릭 시 컴퓨터 대전이 바로 시작됩니다">
-                        <span class="absolute -top-2.5 px-2.5 py-0.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 text-[10px] font-black rounded-full shadow animate-pulse">
-                            선택 즉시 게임 시작 ⚡
-                        </span>
-                        <i class="fa-solid fa-robot text-xl text-amber-400 mt-1"></i>
-                        <span class="text-sm font-black text-white">컴퓨터 대전</span>
-                        <span class="text-[10px] text-amber-200/90 font-normal">혼자서 AI와 바로 대결</span>
-                    </button>
-                    <button type="button" class="mode-tab-btn py-3.5 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-emerald-500/60 bg-emerald-500/10 text-emerald-300 hover:border-emerald-500 hover:bg-emerald-500/20 active:scale-95 cursor-pointer relative shadow-md" data-mode="online" id="selectOnlineTabBtn" title="방 코드 공유 온라인 멀티플레이">
-                        <span class="absolute -top-2.5 px-2 py-0.5 bg-emerald-500 text-slate-950 text-[10px] font-black rounded-full shadow">
-                            실시간 2인~다수
-                        </span>
-                        <i class="fa-solid fa-tower-broadcast text-xl text-emerald-400 mt-1"></i>
-                        <span class="text-sm font-black text-white">실시간 온라인 멀티</span>
-                        <span class="text-[10px] text-emerald-400/90 font-normal">방 코드 공유 대결</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- 세부 옵션: 온라인 멀티플레이 (방 생성 및 코드 참여) -->
-            <div id="onlineOptionsSection" class="mb-5 p-4 rounded-2xl bg-emerald-950/40 border-2 border-emerald-500/40 hidden">
-                <!-- 1. 방 만들기 카드 -->
-                <div class="p-3.5 rounded-xl bg-slate-900/80 border border-emerald-500/30 mb-3">
-                    <div class="text-xs font-black text-amber-400 mb-1 flex items-center gap-1.5">
-                        <i class="fa-solid fa-plus-circle"></i> 새 방 만들기 (내가 방장)
-                    </div>
-                    <p class="text-[11px] text-slate-400 mb-3">4자리 코드를 발급받아 친구들에게 공유하여 함께 플레이합니다.</p>
-                    
-                    <div class="grid grid-cols-2 gap-2 mb-3">
-                        <div>
-                            <span class="text-[10px] text-slate-400 font-bold block mb-1">대전 유형</span>
-                            <select id="onlineCreateModeSelect" class="w-full px-2.5 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white">
-                                <option value="1v1" selected>1:1 대전 (2인)</option>
-                                <option value="team">팀전 (청팀 vs 백팀 다수)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-slate-400 font-bold block mb-1">말의 개수</span>
-                            <select id="onlineCreatePieceCountSelect" class="w-full px-2.5 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white">
-                                <option value="3">3개 (스피드)</option>
-                                <option value="4" selected>4개 (표준)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <button type="button" id="createOnlineRoomBtn" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs shadow-md transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-tower-broadcast"></i> 실명으로 방 만들기 & 4자리 코드 발급
-                    </button>
-                </div>
-
-                <!-- 2. 코드 입력 참여 카드 -->
-                <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-700">
-                    <div class="text-xs font-black text-blue-400 mb-1 flex items-center gap-1.5">
-                        <i class="fa-solid fa-right-to-bracket"></i> 친구 방 참여하기 (코드 입력)
-                    </div>
-                    <p class="text-[11px] text-slate-400 mb-2.5">공유받은 4자리 숫자 코드를 입력하고 입장하세요.</p>
-                    <div class="flex gap-2">
-                        <input type="text" id="joinOnlineRoomCodeInput" maxlength="4" placeholder="4자리 코드" class="w-2/3 px-3 py-2 text-center text-xl font-mono tracking-widest font-black rounded-xl bg-slate-800 border border-slate-700 text-amber-300 focus:outline-none focus:border-blue-500 uppercase">
-                        <button type="button" id="joinOnlineRoomBtn" class="w-1/3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow transition">
-                            입장하기
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 세부 옵션: AI 난이도 (AI 모드일 때만) -->
-            <div id="aiOptionsSection" class="mb-5 p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700">
-                <label class="block text-xs font-bold text-slate-300 mb-2">인공지능 컴퓨터 난이도</label>
-                <div class="grid grid-cols-3 gap-2">
-                    <label class="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer">
-                        <input type="radio" name="aiDifficulty" value="easy" class="text-amber-500"> 순한맛 (쉬움)
-                    </label>
-                    <label class="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer">
-                        <input type="radio" name="aiDifficulty" value="normal" checked class="text-amber-500"> 보통맛 (표준)
-                    </label>
-                    <label class="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer">
-                        <input type="radio" name="aiDifficulty" value="hard" class="text-amber-500"> 매운맛 (도전)
-                    </label>
-                </div>
-            </div>
-
-            <!-- 공통 옵션: 팀당 말의 수 & 문제 난이도 -->
-            <div id="commonOptionsSection" class="grid grid-cols-2 gap-3 mb-6">
-                <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-1.5">팀당 말의 개수</label>
-                    <select id="pieceCountSelect" class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-500">
-                        <option value="3">3개 (빠른 스피드전)</option>
-                        <option value="4" selected>4개 (정통 윷놀이 표준)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-1.5">영어 문제 범위</label>
-                    <select id="gradeSelect" class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-500">
-                        <option value="all" selected>전체 종합 (초등 3~6 필수)</option>
-                        <option value="3-4">초등 3~4학년 기초</option>
-                        <option value="5-6">초등 5~6학년 심화</option>
-                    </select>
-                </div>
-            </div>
-
-            <button id="startGameBtn" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 active:scale-98 text-slate-950 font-black text-base shadow-lg transition flex items-center justify-center gap-2">
-                <i class="fa-solid fa-play"></i> 컴퓨터 대전 시작하기
-            </button>
-        </div>
-    </div>
-        </div>
-    </div>
 
     <!-- ============================================================== -->
     <!-- 모달 1-B: 실시간 온라인 대기실 모달 (방 코드 공유 & 팀 배정) -->
@@ -449,7 +598,7 @@
                         <p class="text-[11px] text-slate-400">참가자들이 모두 들어오면 시작하세요</p>
                     </div>
                 </div>
-                <button id="closeLobbyTopBtn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center">
+                <button id="closeLobbyTopBtn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center cursor-pointer">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -459,7 +608,7 @@
                 <span class="text-xs font-bold text-slate-400 mb-1">친구들에게 공유할 4자리 방 코드</span>
                 <div class="flex items-center gap-3">
                     <span id="lobbyRoomCodeDisplay" class="text-4xl sm:text-5xl font-mono font-black text-amber-400 tracking-widest selection:bg-amber-500">----</span>
-                    <button type="button" id="copyLobbyCodeBtn" class="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-xl text-xs font-bold border border-amber-500/40 flex items-center gap-1.5 transition">
+                    <button type="button" id="copyLobbyCodeBtn" class="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-xl text-xs font-bold border border-amber-500/40 flex items-center gap-1.5 transition cursor-pointer">
                         <i class="fa-solid fa-copy"></i> 복사
                     </button>
                 </div>
@@ -472,7 +621,7 @@
             <div class="mb-4">
                 <div class="flex items-center justify-between mb-2">
                     <span class="text-xs font-black text-slate-300">참가자 명단 (<span id="lobbyPlayerCount">0</span>명)</span>
-                    <button type="button" id="lobbySwitchTeamBtn" class="text-[11px] font-bold text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1 rounded-lg border border-amber-500/30 transition flex items-center gap-1">
+                    <button type="button" id="lobbySwitchTeamBtn" class="text-[11px] font-bold text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1 rounded-lg border border-amber-500/30 transition flex items-center gap-1 cursor-pointer">
                         <i class="fa-solid fa-arrows-rotate"></i> 청 ↔ 백 팀 변경
                     </button>
                 </div>
@@ -509,7 +658,7 @@
             <!-- 하단 액션 버튼 -->
             <div class="flex flex-col gap-2 pt-2">
                 <!-- 방장 전용: 게임 시작 버튼 -->
-                <button type="button" id="lobbyStartGameBtn" class="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-base shadow-lg transition flex items-center justify-center gap-2">
+                <button type="button" id="lobbyStartGameBtn" class="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-base shadow-lg transition flex items-center justify-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-play"></i> 온라인 게임 시작하기 🎮
                 </button>
 
@@ -519,7 +668,7 @@
                 </div>
 
                 <!-- 대기실 나가기 버튼 -->
-                <button type="button" id="lobbyLeaveBtn" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs font-bold transition">
+                <button type="button" id="lobbyLeaveBtn" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs font-bold transition cursor-pointer">
                     대기실 나가기
                 </button>
             </div>
@@ -540,7 +689,7 @@
                     <span class="text-xs text-slate-500 font-bold">문제를 맞혀야 전진합니다!</span>
                 </div>
                 <!-- TTS 음성 재생 버튼 -->
-                <button id="quizTtsBtn" class="w-9 h-9 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 flex items-center justify-center transition shadow-sm" title="원어민 발음 듣기">
+                <button id="quizTtsBtn" class="w-9 h-9 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 flex items-center justify-center transition shadow-sm cursor-pointer" title="원어민 발음 듣기">
                     <i class="fa-solid fa-volume-high text-base"></i>
                 </button>
             </div>
@@ -575,10 +724,10 @@
 
                 <!-- 조립 확인 및 리셋 버튼 -->
                 <div class="flex gap-2 mt-2">
-                    <button id="quizScrambleResetBtn" class="flex-1 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs">
+                    <button id="quizScrambleResetBtn" class="flex-1 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs cursor-pointer">
                         다시 배열하기
                     </button>
-                    <button id="quizScrambleSubmitBtn" class="flex-2 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm shadow">
+                    <button id="quizScrambleSubmitBtn" class="flex-2 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm shadow cursor-pointer">
                         제출하기
                     </button>
                 </div>
@@ -601,7 +750,7 @@
             <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 mb-5 text-left font-medium" id="feedbackExplanation">
                 해설 내용
             </div>
-            <button id="feedbackOkBtn" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm shadow transition flex items-center justify-center gap-2">
+            <button id="feedbackOkBtn" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm shadow transition flex items-center justify-center gap-2 cursor-pointer">
                 <span id="feedbackOkBtnText">확인</span>
             </button>
         </div>
@@ -655,9 +804,14 @@
                 </div>
             </div>
 
-            <button id="restartBtn" class="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-base shadow-lg transition flex items-center justify-center gap-2">
-                <i class="fa-solid fa-rotate-right"></i> 새 게임 시작하기
-            </button>
+            <div class="grid grid-cols-2 gap-2.5">
+                <button id="victoryHomeBtn" class="py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-house text-amber-400"></i> 홈 화면으로
+                </button>
+                <button id="restartBtn" class="py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm shadow-lg transition flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-rotate-right"></i> 다시 플레이
+                </button>
+            </div>
         </div>
     </div>
 
@@ -670,7 +824,7 @@
                 <h3 class="font-black text-lg text-amber-400 flex items-center gap-2">
                     <i class="fa-solid fa-book-open"></i> 영어 윷놀이 규칙 안내
                 </h3>
-                <button id="closeRuleBtn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center">
+                <button id="closeRuleBtn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center cursor-pointer">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -712,67 +866,101 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- 모달 6: 명예의 전당 전체 랭킹 모달 -->
+    <!-- 모달 6: 명예의 전당 전체 랭킹 모달 (1224 순위제 · 1인 1기록) -->
     <!-- ============================================================== -->
     <div id="hofModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden backdrop-blur-md">
-        <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 shadow-2xl overflow-y-auto max-h-[88vh] text-slate-200">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-3xl w-full p-6 shadow-2xl overflow-y-auto max-h-[90vh] text-slate-200">
             <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black text-xl shadow">
+                    <div class="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black text-xl shadow shadow-amber-500/30">
                         🏆
                     </div>
                     <div>
-                        <h3 class="font-black text-xl text-amber-400">
+                        <h3 class="font-black text-xl text-amber-400 flex items-center gap-2">
                             와우리말 윷놀이 명예의 전당
+                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">Hall of Fame</span>
                         </h3>
-                        <p class="text-xs text-slate-400">승수와 기여도를 중심으로 산출한 영예의 랭킹입니다.</p>
+                        <p class="text-xs text-slate-400">승수와 기여도를 종합한 영예의 순위표입니다. (표준 1224 순위제 · 1인 1최고점수)</p>
                     </div>
                 </div>
-                <button id="closeHofModalBtn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center">
+                <button id="closeHofModalBtn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
             <!-- 기여도 산출 기준 안내 카드 -->
-            <div class="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/80 mb-4 grid grid-cols-2 sm:grid-cols-3 gap-2 text-center text-xs">
+            <div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700/80 mb-4 grid grid-cols-2 sm:grid-cols-6 gap-2 text-center text-xs">
                 <div class="p-2 rounded-xl bg-slate-900/60">
                     <div class="text-[10px] text-slate-400 font-bold">승리 보너스</div>
-                    <div class="font-black text-amber-300 text-sm">+500점 <span class="text-[10px] text-slate-400 font-normal">/승</span></div>
+                    <div class="font-black text-amber-300 text-xs">+500점</div>
                 </div>
                 <div class="p-2 rounded-xl bg-slate-900/60">
                     <div class="text-[10px] text-slate-400 font-bold">문제 정답</div>
-                    <div class="font-black text-emerald-400 text-sm">+50점 <span class="text-[10px] text-slate-400 font-normal">/문제</span></div>
+                    <div class="font-black text-emerald-400 text-xs">+50점</div>
                 </div>
                 <div class="p-2 rounded-xl bg-slate-900/60">
                     <div class="text-[10px] text-slate-400 font-bold">말 완주(골인)</div>
-                    <div class="font-black text-blue-400 text-sm">+150점 <span class="text-[10px] text-slate-400 font-normal">/마리</span></div>
+                    <div class="font-black text-blue-400 text-xs">+150점</div>
                 </div>
                 <div class="p-2 rounded-xl bg-slate-900/60">
                     <div class="text-[10px] text-slate-400 font-bold">상대 말 잡기</div>
-                    <div class="font-black text-rose-400 text-sm">+100점 <span class="text-[10px] text-slate-400 font-normal">/회</span></div>
+                    <div class="font-black text-rose-400 text-xs">+100점</div>
                 </div>
                 <div class="p-2 rounded-xl bg-slate-900/60">
                     <div class="text-[10px] text-slate-400 font-bold">아군 말 업기</div>
-                    <div class="font-black text-purple-400 text-sm">+40점 <span class="text-[10px] text-slate-400 font-normal">/회</span></div>
+                    <div class="font-black text-purple-400 text-xs">+40점</div>
                 </div>
                 <div class="p-2 rounded-xl bg-slate-900/60">
                     <div class="text-[10px] text-slate-400 font-bold">윷 / 모 성공</div>
-                    <div class="font-black text-cyan-400 text-sm">+30점 <span class="text-[10px] text-slate-400 font-normal">/회</span></div>
+                    <div class="font-black text-cyan-400 text-xs">+30점</div>
+                </div>
+            </div>
+
+            <!-- 명예의 전당 기간 및 학년/반 필터 -->
+            <div class="flex flex-wrap items-center justify-between gap-2.5 mb-3.5 bg-slate-800/40 p-2.5 rounded-2xl border border-slate-800">
+                <div class="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-700/80 text-xs">
+                    <button type="button" id="hof-tab-all" class="px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-black shadow-sm cursor-pointer transition">전체</button>
+                    <button type="button" id="hof-tab-month" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white font-bold cursor-pointer transition">이번 달</button>
+                    <button type="button" id="hof-tab-week" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white font-bold cursor-pointer transition">이번 주</button>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <select id="hof-filter-grade" class="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-amber-300 focus:outline-none focus:border-amber-500">
+                        <option value="all" selected>전체 학년</option>
+                        <option value="3">3학년</option>
+                        <option value="4">4학년</option>
+                        <option value="5">5학년</option>
+                        <option value="6">6학년</option>
+                    </select>
+                    <select id="hof-filter-class" class="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-amber-300 focus:outline-none focus:border-amber-500">
+                        <option value="all" selected>전체 반</option>
+                        <option value="1">1반</option>
+                        <option value="2">2반</option>
+                        <option value="3">3반</option>
+                        <option value="4">4반</option>
+                        <option value="5">5반</option>
+                        <option value="6">6반</option>
+                        <option value="7">7반</option>
+                        <option value="8">8반</option>
+                        <option value="9">9반</option>
+                        <option value="10">10반</option>
+                    </select>
                 </div>
             </div>
 
             <!-- 전체 순위 테이블 -->
-            <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/60 mb-4">
+            <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/70 mb-4 custom-scrollbar">
                 <table class="w-full text-xs">
                     <thead>
-                        <tr class="text-slate-400 border-b border-slate-800 text-center font-bold text-[11px] bg-slate-900/80">
-                            <th class="py-2.5">순위</th>
+                        <tr class="text-slate-400 border-b border-slate-800 text-center font-bold text-[11px] bg-slate-900/90">
+                            <th class="py-2.5 px-2">순위</th>
+                            <th class="py-2.5 px-2">학적</th>
                             <th class="py-2.5 text-left pl-3">선수 이름</th>
-                            <th class="py-2.5">승수 (승률)</th>
+                            <th class="py-2.5 px-2">승수 (승률)</th>
                             <th class="py-2.5 text-right pr-4">기여도 총점</th>
-                            <th class="py-2.5">정답 수</th>
-                            <th class="py-2.5">완주 수</th>
-                            <th class="py-2.5">최근 기록</th>
+                            <th class="py-2.5 px-2">정답 수</th>
+                            <th class="py-2.5 px-2">완주 수</th>
+                            <th class="py-2.5 px-2">최근 기록</th>
                         </tr>
                     </thead>
                     <tbody id="modalHofList">
@@ -781,33 +969,403 @@
                 </table>
             </div>
 
-            <div class="flex items-center justify-between text-xs pt-2">
-                <button id="resetHofModalBtn" class="text-slate-500 hover:text-rose-400 transition flex items-center gap-1 font-semibold text-[11px]">
-                    <i class="fa-solid fa-trash-can"></i> 명예의 전당 초기화
-                </button>
-                <span class="text-[11px] text-slate-400">* 학생 이름은 개인정보 보호를 위해 마스킹 처리됩니다.</span>
+            <div class="flex flex-wrap items-center justify-between text-xs pt-1 gap-2">
+                <div class="flex items-center gap-2">
+                    <button id="hofOpenTeacherBtn" class="px-3 py-1.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 font-bold transition flex items-center gap-1.5 border border-indigo-500/40 cursor-pointer">
+                        <i class="fa-solid fa-lock text-indigo-400"></i> 교사 관리 모드 진입
+                    </button>
+                    <button id="resetHofModalBtn" class="text-slate-500 hover:text-rose-400 transition flex items-center gap-1 font-semibold text-[11px] cursor-pointer">
+                        <i class="fa-solid fa-trash-can"></i> 기본값 복원
+                    </button>
+                </div>
+                <span class="text-[11px] text-slate-400">* 학생 이름은 개인정보 보호를 위해 마스킹 처리됩니다 (교사 모드에서는 실명 확인 가능).</span>
             </div>
         </div>
     </div>
+
+    <!-- ============================================================== -->
+    <!-- 모달 7: 교사 비밀번호 인증 모달 -->
+    <!-- ============================================================== -->
+    <div id="teacherAuthModal" class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 hidden backdrop-blur-md">
+        <div class="bg-slate-900 border border-indigo-500/40 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-slate-200 text-center animate-bounceIn">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 flex items-center justify-center text-xl mx-auto mb-3 shadow">
+                <i class="fa-solid fa-chalkboard-user"></i>
+            </div>
+            <h3 class="font-black text-lg text-white mb-1">교사 모드 인증</h3>
+            <p class="text-xs text-slate-400 mb-4">학생 성적표 및 데이터 관리를 위해 교사 비밀번호를 입력하세요.</p>
+
+            <div class="mb-3">
+                <input type="password" id="teacherPasswordInput" placeholder="교사 비밀번호 입력" maxlength="20"
+                    class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-center text-base tracking-widest text-amber-300 focus:outline-none focus:border-indigo-500 font-bold font-mono">
+                <p id="teacherAuthError" class="text-[11px] text-rose-400 font-bold mt-1.5 hidden flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-circle-exclamation"></i> 비밀번호가 일치하지 않습니다.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <button type="button" id="closeTeacherAuthBtn" class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition cursor-pointer">
+                    취소
+                </button>
+                <button type="button" id="teacherAuthSubmitBtn" class="py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition shadow-md cursor-pointer flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-lock-open"></i> 인증 확인
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 모달 8: 교사 전용 데이터 관리자 모달 (성적표 · 문제관리 · 보안) -->
+    <!-- ============================================================== -->
+    <div id="teacherAdminModal" class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-3 sm:p-4 hidden backdrop-blur-md">
+        <div class="bg-slate-900 border border-indigo-500/50 rounded-3xl max-w-5xl w-full p-4 sm:p-6 shadow-2xl overflow-y-auto max-h-[92vh] text-slate-200">
+            <!-- 헤더 바 -->
+            <div class="flex flex-wrap items-center justify-between pb-3.5 border-b border-slate-800 mb-4 gap-2">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-lg shadow-indigo-600/30">
+                        <i class="fa-solid fa-chalkboard-user"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-black text-lg sm:text-xl text-white">영어 윷놀이 교사 모드</h3>
+                            <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">TEACHER ADMIN</span>
+                        </div>
+                        <p class="text-xs text-slate-400">학생 실명 성적표 확인, CSV 다운로드, 데이터 정합성 관리 및 맞춤 문제를 관리합니다.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="teacherLogoutBtn" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                        <i class="fa-solid fa-right-from-bracket text-slate-400"></i> 로그아웃
+                    </button>
+                    <button type="button" id="closeTeacherAdminBtn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 탭 내비게이션 -->
+            <div class="flex border-b border-slate-800 mb-4 gap-1">
+                <button type="button" id="t-tab-btn-scores" class="px-4 py-2.5 rounded-t-xl font-black text-xs text-indigo-400 border-b-2 border-indigo-500 bg-indigo-500/10 transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-chart-column"></i> 1. 학생 성적표 & 명예의 전당 관리
+                </button>
+                <button type="button" id="t-tab-btn-questions" class="px-4 py-2.5 rounded-t-xl font-bold text-xs text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-book-open"></i> 2. 윷놀이 영어 단원 & 문제 관리
+                </button>
+                <button type="button" id="t-tab-btn-security" class="px-4 py-2.5 rounded-t-xl font-bold text-xs text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-key"></i> 3. 교사 비밀번호 변경 & 보안
+                </button>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- 탭 1: 학생 성적표 및 명예의 전당 데이터 관리 -->
+            <!-- ============================================== -->
+            <div id="t-tab-scores" class="space-y-4">
+                <!-- KPI 통계 요약 카드 4종 -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700/70">
+                        <div class="text-[10px] font-bold text-slate-400 flex items-center gap-1">
+                            <i class="fa-solid fa-users text-indigo-400"></i> 등록 학생 수
+                        </div>
+                        <div class="text-xl font-black text-white mt-1" id="t-stat-students">0명</div>
+                    </div>
+                    <div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700/70">
+                        <div class="text-[10px] font-bold text-slate-400 flex items-center gap-1">
+                            <i class="fa-solid fa-dice text-amber-400"></i> 총 누적 경기 수
+                        </div>
+                        <div class="text-xl font-black text-amber-300 mt-1" id="t-stat-games">0회</div>
+                    </div>
+                    <div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700/70">
+                        <div class="text-[10px] font-bold text-slate-400 flex items-center gap-1">
+                            <i class="fa-solid fa-bullseye text-emerald-400"></i> 학생 평균 정답률
+                        </div>
+                        <div class="text-xl font-black text-emerald-400 mt-1" id="t-stat-accuracy">0%</div>
+                    </div>
+                    <div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700/70">
+                        <div class="text-[10px] font-bold text-slate-400 flex items-center gap-1">
+                            <i class="fa-solid fa-crown text-amber-400"></i> 최다 승리 챔피언
+                        </div>
+                        <div class="text-base font-black text-white mt-1 truncate" id="t-stat-mvp">-</div>
+                    </div>
+                </div>
+
+                <!-- 필터 및 액션 툴바 -->
+                <div class="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-2 text-xs">
+                        <!-- 학년 필터 -->
+                        <select id="t-filter-grade" class="px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <option value="all" selected>전체 학년</option>
+                            <option value="3">3학년</option>
+                            <option value="4">4학년</option>
+                            <option value="5">5학년</option>
+                            <option value="6">6학년</option>
+                        </select>
+                        <!-- 반 필터 -->
+                        <select id="t-filter-class" class="px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <option value="all" selected>전체 반</option>
+                            <option value="1">1반</option>
+                            <option value="2">2반</option>
+                            <option value="3">3반</option>
+                            <option value="4">4반</option>
+                            <option value="5">5반</option>
+                            <option value="6">6반</option>
+                            <option value="7">7반</option>
+                            <option value="8">8반</option>
+                            <option value="9">9반</option>
+                            <option value="10">10반</option>
+                        </select>
+                        <!-- 기간 필터 -->
+                        <select id="t-filter-period" class="px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <option value="all" selected>전체 기간</option>
+                            <option value="month">이번 달</option>
+                            <option value="week">이번 주</option>
+                        </select>
+                        <!-- 학생 실명 검색 -->
+                        <div class="relative">
+                            <input type="text" id="t-search-name" placeholder="학생 실명 검색..." class="pl-7 pr-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-medium text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 w-32 sm:w-40">
+                            <i class="fa-solid fa-magnifying-glass text-slate-500 absolute left-2.5 top-2.5 text-[10px]"></i>
+                        </div>
+                        <!-- 1인 1최고점수 옵션 -->
+                        <label class="flex items-center gap-1.5 text-xs text-slate-300 font-semibold cursor-pointer ml-1">
+                            <input type="checkbox" id="t-check-unique" checked class="rounded accent-indigo-500">
+                            <span>1인 1최고기록만 표시</span>
+                        </label>
+                    </div>
+
+                    <!-- 우측 내보내기 및 삭제 버튼들 -->
+                    <div class="flex items-center gap-2 text-xs">
+                        <button type="button" id="t-btn-download-csv" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black transition flex items-center gap-1.5 shadow cursor-pointer">
+                            <i class="fa-solid fa-file-excel"></i> 엑셀/CSV 다운로드
+                        </button>
+                        <button type="button" id="t-btn-delete-selected" class="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold transition flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-trash-can"></i> 선택 삭제
+                        </button>
+                        <button type="button" id="t-btn-reset-all" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-900/40 text-slate-400 hover:text-rose-300 font-bold transition flex items-center gap-1 cursor-pointer">
+                            <i class="fa-solid fa-rotate-left"></i> 전체 초기화
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 실명 성적표 데이터 테이블 -->
+                <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/70 custom-scrollbar">
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="text-slate-400 border-b border-slate-800 text-center font-bold text-[11px] bg-slate-900/90 whitespace-nowrap">
+                                <th class="py-2.5 px-3">
+                                    <input type="checkbox" id="t-check-all" class="rounded accent-indigo-500 cursor-pointer">
+                                </th>
+                                <th class="py-2.5 px-2">순위</th>
+                                <th class="py-2.5 px-2">학적</th>
+                                <th class="py-2.5 text-left pl-3">학생 실명 (지도용)</th>
+                                <th class="py-2.5 px-2">승수 / 판수 (승률)</th>
+                                <th class="py-2.5 text-right pr-3">기여도 총점</th>
+                                <th class="py-2.5 text-right pr-3">최고 점수</th>
+                                <th class="py-2.5 px-2">정답 / 오답 (정답률)</th>
+                                <th class="py-2.5 px-2">완주(골인)</th>
+                                <th class="py-2.5 px-2">말 잡기</th>
+                                <th class="py-2.5 px-2">말 업기</th>
+                                <th class="py-2.5 px-2">윷/모</th>
+                                <th class="py-2.5 px-2">최근 일시</th>
+                                <th class="py-2.5 px-2">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="t-scores-table-body">
+                            <!-- 동적 렌더링 -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex items-center justify-between text-[11px] text-slate-500 px-1">
+                    <span>* 교사 모드에서는 학생 실명이 마스킹 없이 온전히 표출됩니다. Excel 다운로드 시 UTF-8 BOM 인코딩으로 한글 깨짐이 발생하지 않습니다.</span>
+                    <span id="t-table-count-label">조회: 0건</span>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- 탭 2: 윷놀이 영어 단원 & 문제 관리 -->
+            <!-- ============================================== -->
+            <div id="t-tab-questions" class="space-y-4 hidden">
+                <!-- 문제 풀 현황 요약 -->
+                <div class="p-4 rounded-2xl bg-slate-800/70 border border-slate-700">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-black text-amber-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-graduation-cap"></i> 현재 윷놀이 문제 풀 구성 현황
+                        </span>
+                        <span class="text-[11px] text-slate-400">초등 3~6학년 교육과정 기반</span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs text-slate-300">
+                        <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
+                            <div class="font-bold text-slate-400 text-[10px]">1) 단어 ➔ 뜻 퀴즈</div>
+                            <div class="font-bold text-white text-xs mt-0.5">객관식 4선 (우리말 뜻 맞추기)</div>
+                        </div>
+                        <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
+                            <div class="font-bold text-slate-400 text-[10px]">2) 뜻 ➔ 영단어 퀴즈</div>
+                            <div class="font-bold text-white text-xs mt-0.5">객관식 4선 (영단어 고르기)</div>
+                        </div>
+                        <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
+                            <div class="font-bold text-slate-400 text-[10px]">3) 스펠링 빈칸 퀴즈</div>
+                            <div class="font-bold text-white text-xs mt-0.5">단어 철자 빈칸 채우기</div>
+                        </div>
+                        <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
+                            <div class="font-bold text-slate-400 text-[10px]">4) 문장 해석 퀴즈</div>
+                            <div class="font-bold text-white text-xs mt-0.5">온전한 영어 문장 해석 고르기</div>
+                        </div>
+                        <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
+                            <div class="font-bold text-slate-400 text-[10px]">5) 문장 빈칸 퀴즈</div>
+                            <div class="font-bold text-white text-xs mt-0.5">문맥 속 핵심 단어 채우기</div>
+                        </div>
+                        <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
+                            <div class="font-bold text-slate-400 text-[10px]">6) 어순 배열 (Scramble)</div>
+                            <div class="font-bold text-white text-xs mt-0.5">단어 블록을 순서대로 조합</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 신규 맞춤 단어/문장 등록 폼 -->
+                <div class="p-4 rounded-2xl bg-indigo-950/30 border border-indigo-500/30">
+                    <h4 class="text-xs font-black text-indigo-300 mb-2.5 flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus-circle text-indigo-400"></i> 선생님 맞춤 단어 / 문장 추가
+                    </h4>
+                    <p class="text-[11px] text-slate-400 mb-3">등록하신 단어나 문장은 이번 윷놀이 게임 및 전체 와우리말 교육과정에 즉시 반영되어 문제로 출제됩니다.</p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 mb-2.5">
+                        <div class="sm:col-span-3">
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">유형 및 학년</label>
+                            <div class="flex gap-1.5">
+                                <select id="t-custom-type" class="w-1/2 px-2 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-white">
+                                    <option value="word" selected>단어</option>
+                                    <option value="sentence">문장</option>
+                                </select>
+                                <select id="t-custom-grade" class="w-1/2 px-2 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-white">
+                                    <option value="3">3학년</option>
+                                    <option value="4">4학년</option>
+                                    <option value="5">5학년</option>
+                                    <option value="6" selected>6학년</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="sm:col-span-4">
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">영어 표현 (단어 또는 문장)</label>
+                            <input type="text" id="t-custom-en" placeholder="예: practice / I like spring." class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div class="sm:col-span-3">
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">우리말 뜻 / 해석</label>
+                            <input type="text" id="t-custom-kr" placeholder="예: 연습하다 / 나는 봄을 좋아해." class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div class="sm:col-span-2 flex items-end">
+                            <button type="button" id="t-btn-add-custom-question" class="w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition shadow cursor-pointer flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-check"></i> 추가하기
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 등록된 맞춤 문제 목록 -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-300">선생님이 추가한 맞춤 단어/문장 목록</span>
+                        <span id="t-custom-count-badge" class="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/30">0개 등록됨</span>
+                    </div>
+                    <div id="t-custom-questions-list" class="space-y-1.5 max-h-60 overflow-y-auto custom-scrollbar p-1">
+                        <!-- 동적 렌더링 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- 탭 3: 교사 비밀번호 변경 및 보안 -->
+            <!-- ============================================== -->
+            <div id="t-tab-security" class="space-y-4 max-w-lg mx-auto py-4 hidden">
+                <div class="p-5 rounded-2xl bg-slate-800/70 border border-slate-700 space-y-4">
+                    <div class="flex items-center gap-3 pb-3 border-b border-slate-700">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg border border-amber-500/30">
+                            <i class="fa-solid fa-key"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-black text-white text-sm">교사 모드 비밀번호 변경</h4>
+                            <p class="text-[11px] text-slate-400">새 비밀번호를 설정하여 학생들의 임의 접근을 차단합니다.</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div>
+                            <label for="t-input-cur-pw" class="block text-xs font-bold text-slate-400 mb-1">현재 비밀번호</label>
+                            <input type="password" id="t-input-cur-pw" placeholder="현재 비밀번호 입력" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label for="t-input-new-pw" class="block text-xs font-bold text-slate-400 mb-1">새 비밀번호 (4자리 이상)</label>
+                            <input type="password" id="t-input-new-pw" placeholder="새 비밀번호 입력 (4자리 이상)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label for="t-input-confirm-pw" class="block text-xs font-bold text-slate-400 mb-1">새 비밀번호 확인</label>
+                            <input type="password" id="t-input-confirm-pw" placeholder="새 비밀번호 다시 한 번 입력" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                        </div>
+                    </div>
+
+                    <p id="t-pw-change-msg" class="text-xs font-bold hidden"></p>
+
+                    <button type="button" id="t-btn-save-pw" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition shadow-md cursor-pointer flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-shield-halved"></i> 비밀번호 변경 및 즉시 저장
+                    </button>
+
+                    <div class="p-3 rounded-xl bg-slate-900/70 border border-slate-800 text-[11px] text-slate-400 leading-relaxed">
+                        <i class="fa-solid fa-circle-info text-amber-400 mr-1"></i> <strong>와우리말 통합 비밀번호 연동:</strong><br>
+                        여기서 변경된 비밀번호는 골든벨, 스파클, 영어읽기, 단어타자 등 와우리말 21종 에듀테크 게임 전체의 교사 모드 비밀번호로 즉시 자동 동기화됩니다.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 교사 모드 플로팅 바로가기 버튼 (우측 하단) -->
+    <!-- ============================================================== -->
+    <button id="floatingTeacherBtn" class="fixed bottom-4 right-4 z-40 px-3.5 py-2 rounded-2xl bg-slate-800/90 hover:bg-slate-700 text-indigo-300 hover:text-white border border-indigo-500/40 shadow-xl backdrop-blur-md text-xs font-black transition flex items-center gap-2 cursor-pointer group" title="교사 전용 데이터 관리 모드">
+        <i class="fa-solid fa-chalkboard-user text-indigo-400 group-hover:rotate-12 transition-transform"></i>
+        <span>교사 모드</span>
+    </button>
 
     <!-- 스크립트 연결 -->
     <script src="questions.js"></script>
     <script src="game.js"></script>
     <script type="module" src="multiplayer.js"></script>
 
-    <!-- UI 및 온라인 멀티 제어 스크립트 -->
+    <!-- UI 화면 전환 및 온라인 멀티 제어 스크립트 -->
     <script type="module">
         import { multiplayerManager } from './multiplayer.js';
 
+        // 전역 화면 전환 함수 (home: 첫화면 설정/명예의전당, game: 몰입형 게임화면)
+        window.showScreen = function(screenId) {
+            const screenHome = document.getElementById('screen-home');
+            const screenGame = document.getElementById('screen-game');
+            const headerHomeBtn = document.getElementById('headerHomeBtn');
+
+            if (screenId === 'home') {
+                if (screenHome) screenHome.classList.remove('hidden');
+                if (screenGame) screenGame.classList.add('hidden');
+                if (headerHomeBtn) headerHomeBtn.classList.add('hidden');
+                if (window.YutnoriHOF) window.YutnoriHOF.renderAllViews();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else if (screenId === 'game') {
+                if (screenHome) screenHome.classList.add('hidden');
+                if (screenGame) screenGame.classList.remove('hidden');
+                if (headerHomeBtn) headerHomeBtn.classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
-            const settingsModal = document.getElementById('settingsModal');
-            const openSettingsBtn = document.getElementById('openSettingsBtn');
-            const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+            const screenHome = document.getElementById('screen-home');
+            const screenGame = document.getElementById('screen-game');
+            const headerHomeBtn = document.getElementById('headerHomeBtn');
+            const exitToHomeBtn = document.getElementById('exitToHomeBtn');
+            const victoryHomeBtn = document.getElementById('victoryHomeBtn');
+
             const startGameBtn = document.getElementById('startGameBtn');
-            const openOnlineHeaderBtn = document.getElementById('openOnlineHeaderBtn');
+            const startAiModeBtn = document.getElementById('startAiModeBtn');
+            const selectOnlineTabBtn = document.getElementById('selectOnlineTabBtn');
 
             const ruleModal = document.getElementById('ruleModal');
             const openRuleBtn = document.getElementById('openRuleBtn');
+            const homeOpenRuleBtn = document.getElementById('homeOpenRuleBtn');
             const closeRuleBtn = document.getElementById('closeRuleBtn');
 
             // 대기실 모달 요소
@@ -826,33 +1384,67 @@
             const lobbyLeaveBtn = document.getElementById('lobbyLeaveBtn');
             const closeLobbyTopBtn = document.getElementById('closeLobbyTopBtn');
 
-            // 학생 실명 입력 요소
+            // 학생 학적 및 실명 입력 요소
+            const studentGradeSelect = document.getElementById('studentGradeSelect');
+            const studentClassSelect = document.getElementById('studentClassSelect');
+            const studentNumInput = document.getElementById('studentNumInput');
             const globalStudentNameInput = document.getElementById('globalStudentNameInput');
+            const inGameStudentNameBadge = document.getElementById('inGameStudentNameBadge');
+            const gameModeStatusBadge = document.getElementById('gameModeStatusBadge');
 
-            // 학생 실명 로드 및 저장 헬퍼
-            function getInitialRealName() {
+            // 학생 프로필 로드 및 저장 헬퍼 (WaurimalStudent SSO 연동)
+            function getInitialStudentProfile() {
+                let prof = { grade: '6', classNum: '1', studentNum: '', name: '' };
                 if (window.WaurimalStudent && typeof window.WaurimalStudent.get === 'function') {
                     const p = window.WaurimalStudent.get();
-                    if (p && p.name && p.name.trim()) return p.name.trim();
+                    if (p) {
+                        if (p.grade) prof.grade = String(p.grade);
+                        if (p.classNum) prof.classNum = String(p.classNum);
+                        if (p.studentNum) prof.studentNum = String(p.studentNum);
+                        if (p.name) prof.name = String(p.name).trim();
+                    }
                 }
-                return localStorage.getItem('yutnori_real_name') || '';
+                const savedName = localStorage.getItem('yutnori_real_name');
+                if (savedName && !prof.name) prof.name = savedName;
+                const savedGrade = localStorage.getItem('yutnori_grade');
+                if (savedGrade) prof.grade = savedGrade;
+                const savedClass = localStorage.getItem('yutnori_class');
+                if (savedClass) prof.classNum = savedClass;
+                const savedNum = localStorage.getItem('yutnori_num');
+                if (savedNum) prof.studentNum = savedNum;
+                return prof;
             }
 
-            function saveRealName(name) {
-                const clean = (name || '').trim();
-                if (!clean) return;
-                localStorage.setItem('yutnori_real_name', clean);
+            function saveStudentProfile(prof) {
+                if (!prof) return;
+                const cleanName = (prof.name || '').trim();
+                const cleanGrade = String(prof.grade || '6');
+                const cleanClass = String(prof.classNum || '1');
+                const cleanNum = String(prof.studentNum || '');
+
+                if (cleanName) localStorage.setItem('yutnori_real_name', cleanName);
+                localStorage.setItem('yutnori_grade', cleanGrade);
+                localStorage.setItem('yutnori_class', cleanClass);
+                if (cleanNum) localStorage.setItem('yutnori_num', cleanNum);
+
                 if (window.WaurimalStudent && typeof window.WaurimalStudent.save === 'function') {
                     const current = window.WaurimalStudent.get() || {};
-                    window.WaurimalStudent.save({ ...current, name: clean });
+                    window.WaurimalStudent.save({
+                        ...current,
+                        name: cleanName,
+                        grade: cleanGrade,
+                        classNum: cleanClass,
+                        studentNum: cleanNum
+                    });
                 }
             }
 
-            // 초기 학생 실명 자동 반영
-            const initialRealName = getInitialRealName();
-            if (globalStudentNameInput && initialRealName) {
-                globalStudentNameInput.value = initialRealName;
-            }
+            // 초기 학생 정보 자동 반영
+            const initProf = getInitialStudentProfile();
+            if (studentGradeSelect && initProf.grade) studentGradeSelect.value = initProf.grade;
+            if (studentClassSelect && initProf.classNum) studentClassSelect.value = initProf.classNum;
+            if (studentNumInput && initProf.studentNum) studentNumInput.value = initProf.studentNum;
+            if (globalStudentNameInput && initProf.name) globalStudentNameInput.value = initProf.name;
 
             // 온라인 방 생성 & 참여 폼
             const createOnlineRoomBtn = document.getElementById('createOnlineRoomBtn');
@@ -878,35 +1470,55 @@
                     }
                 });
 
-                aiOptions.classList.toggle('hidden', selectedMode !== 'ai');
-                onlineOptions.classList.toggle('hidden', selectedMode !== 'online');
+                if (aiOptions) aiOptions.classList.toggle('hidden', selectedMode !== 'ai');
+                if (onlineOptions) onlineOptions.classList.toggle('hidden', selectedMode !== 'online');
 
-                // 온라인 모드일 때는 하단 '컴퓨터 대전 시작하기' 버튼 숨김 (온라인 전용 버튼 사용)
+                // 온라인 모드일 때는 메인 시작 버튼을 온라인 안내 또는 숨김
                 if (startGameBtn) {
-                    startGameBtn.classList.toggle('hidden', selectedMode === 'online');
+                    if (selectedMode === 'online') {
+                        startGameBtn.classList.add('hidden');
+                    } else {
+                        startGameBtn.classList.remove('hidden');
+                    }
                 }
             }
 
-            // 컴퓨터 대전 즉시 시작 함수 (실명 저장 & 모달 닫기 & 게임 엔진 즉시 구동)
+            modeTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const mode = tab.dataset.mode;
+                    switchModeTab(mode);
+                });
+            });
+
+            // 컴퓨터 대전 시작 함수
             function startAiMatch() {
-                let realName = (globalStudentNameInput.value || '').trim();
+                let realName = (globalStudentNameInput ? globalStudentNameInput.value : '').trim();
+                let gradeVal = studentGradeSelect ? studentGradeSelect.value : '6';
+                let classVal = studentClassSelect ? studentClassSelect.value : '1';
+                let numVal = studentNumInput ? studentNumInput.value.trim() : '';
+
                 if (!realName) {
-                    realName = getInitialRealName();
+                    const initP = getInitialStudentProfile();
+                    realName = initP.name;
                 }
                 if (!realName) {
                     const prompted = prompt("학생 본인의 실명(이름)을 입력해주세요 (예: 김민수):", "");
                     if (prompted && prompted.trim()) {
                         realName = prompted.trim();
-                        globalStudentNameInput.value = realName;
-                        saveRealName(realName);
+                        if (globalStudentNameInput) globalStudentNameInput.value = realName;
                     } else {
-                        alert("실명을 입력하셔야 점수와 기여도가 기록됩니다. 이름을 입력해주세요.");
-                        globalStudentNameInput.focus();
+                        alert("실명을 입력하셔야 점수와 기여도가 명예의 전당 및 교사 성적표에 기록됩니다.");
+                        if (globalStudentNameInput) globalStudentNameInput.focus();
                         return;
                     }
-                } else {
-                    saveRealName(realName);
                 }
+
+                saveStudentProfile({
+                    name: realName,
+                    grade: gradeVal,
+                    classNum: classVal,
+                    studentNum: numVal
+                });
 
                 const pieceCount = parseInt(document.getElementById('pieceCountSelect').value, 10) || 4;
                 const gradeFilter = document.getElementById('gradeSelect').value || 'all';
@@ -916,45 +1528,66 @@
                 const config = {
                     mode: 'ai',
                     playerName: realName,
+                    gradeNum: Number(gradeVal) || 6,
+                    classNum: Number(classVal) || 1,
+                    studentNum: Number(numVal) || 1,
                     difficulty: difficulty,
                     pieceCount: pieceCount,
                     grade: gradeFilter
                 };
 
-                settingsModal.classList.add('hidden');
+                // 게임 화면 전환 및 게임 엔진 구동
+                window.showScreen('game');
+                if (inGameStudentNameBadge) inGameStudentNameBadge.textContent = `${realName} (${gradeVal}-${classVal})`;
+                if (gameModeStatusBadge) gameModeStatusBadge.innerHTML = '<i class="fa-solid fa-robot"></i> 컴퓨터 AI 대전';
+
                 window.YutnoriGameInstance.startNewGame(config);
             }
 
-            modeTabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const mode = tab.dataset.mode;
-                    if (mode === 'ai') {
-                        // 초기화면 또는 모달에서 '컴퓨터 대전' 선택 시 바로 게임으로 즉시 진입!
+            if (startGameBtn) startGameBtn.addEventListener('click', startAiMatch);
+            if (globalStudentNameInput) {
+                globalStudentNameInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
                         startAiMatch();
-                    } else if (mode === 'online') {
-                        switchModeTab('online');
                     }
-                });
-            });
-
-            // 헤더 [온라인 방 만들기/참여] 클릭 시 바로 온라인 탭 선택하여 모달 열기
-            if (openOnlineHeaderBtn) {
-                openOnlineHeaderBtn.addEventListener('click', () => {
-                    settingsModal.classList.remove('hidden');
-                    switchModeTab('online');
                 });
             }
 
-            // 1. 온라인 방 만들기 클릭 (실명 필수)
+            // 홈으로 이동 (게임 나가기) 확인
+            function confirmExitToHome() {
+                if (confirm("홈 화면으로 이동하시겠습니까? 현재 진행 중인 게임은 종료됩니다.")) {
+                    if (window.YutnoriGameInstance && window.YutnoriGameInstance.isOnline) {
+                        multiplayerManager.leaveRoom();
+                    }
+                    window.showScreen('home');
+                }
+            }
+
+            if (headerHomeBtn) headerHomeBtn.addEventListener('click', confirmExitToHome);
+            if (exitToHomeBtn) exitToHomeBtn.addEventListener('click', confirmExitToHome);
+            if (victoryHomeBtn) {
+                victoryHomeBtn.addEventListener('click', () => {
+                    const victoryModal = document.getElementById('victoryModal');
+                    if (victoryModal) victoryModal.classList.add('hidden');
+                    window.showScreen('home');
+                });
+            }
+
+            // 1. 온라인 방 만들기 클릭 (실명 및 학적 필수)
             if (createOnlineRoomBtn) {
                 createOnlineRoomBtn.addEventListener('click', async () => {
-                    const hostRealName = (globalStudentNameInput.value || '').trim();
+                    const hostRealName = (globalStudentNameInput ? globalStudentNameInput.value : '').trim();
+                    const sGrade = studentGradeSelect ? studentGradeSelect.value : '6';
+                    const sClass = studentClassSelect ? studentClassSelect.value : '1';
+                    const sNum = studentNumInput ? studentNumInput.value.trim() : '';
+
                     if (!hostRealName) {
                         alert("닉네임 대신 학생 본인의 실명(이름)을 입력해주세요. (예: 김민수)");
-                        globalStudentNameInput.focus();
+                        if (globalStudentNameInput) globalStudentNameInput.focus();
                         return;
                     }
-                    saveRealName(hostRealName);
+                    saveStudentProfile({ name: hostRealName, grade: sGrade, classNum: sClass, studentNum: sNum });
 
                     const mode = onlineCreateModeSelect.value;
                     const pieceCount = parseInt(onlineCreatePieceCountSelect.value, 10);
@@ -965,11 +1598,13 @@
                         createOnlineRoomBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 방 생성 중...';
                         const code = await multiplayerManager.createRoom({
                             hostName: hostRealName,
+                            grade: sGrade,
+                            classNum: sClass,
+                            studentNum: sNum,
                             mode,
                             pieceCount,
-                            grade
+                            gradeFilter: grade
                         });
-                        settingsModal.classList.add('hidden');
                         onlineLobbyModal.classList.remove('hidden');
                         lobbyRoomCodeDisplay.textContent = code;
                     } catch (err) {
@@ -981,16 +1616,20 @@
                 });
             }
 
-            // 2. 온라인 코드 입력 참여 클릭 (실명 필수)
+            // 2. 온라인 코드 입력 참여 클릭 (실명 및 학적 필수)
             if (joinOnlineRoomBtn) {
                 joinOnlineRoomBtn.addEventListener('click', async () => {
-                    const playerRealName = (globalStudentNameInput.value || '').trim();
+                    const playerRealName = (globalStudentNameInput ? globalStudentNameInput.value : '').trim();
+                    const sGrade = studentGradeSelect ? studentGradeSelect.value : '6';
+                    const sClass = studentClassSelect ? studentClassSelect.value : '1';
+                    const sNum = studentNumInput ? studentNumInput.value.trim() : '';
+
                     if (!playerRealName) {
                         alert("닉네임 대신 학생 본인의 실명(이름)을 입력해주세요. (예: 김민수)");
-                        globalStudentNameInput.focus();
+                        if (globalStudentNameInput) globalStudentNameInput.focus();
                         return;
                     }
-                    saveRealName(playerRealName);
+                    saveStudentProfile({ name: playerRealName, grade: sGrade, classNum: sClass, studentNum: sNum });
 
                     const code = (joinOnlineRoomCodeInput.value || '').trim();
                     if (code.length !== 4) {
@@ -1001,8 +1640,12 @@
                     try {
                         joinOnlineRoomBtn.disabled = true;
                         joinOnlineRoomBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 입장 중...';
-                        await multiplayerManager.joinRoom(code, playerRealName);
-                        settingsModal.classList.add('hidden');
+                        await multiplayerManager.joinRoom(code, {
+                            name: playerRealName,
+                            grade: sGrade,
+                            classNum: sClass,
+                            studentNum: sNum
+                        });
                         onlineLobbyModal.classList.remove('hidden');
                         lobbyRoomCodeDisplay.textContent = code;
                     } catch (err) {
@@ -1062,7 +1705,7 @@
                     onlineLobbyModal.classList.add('hidden');
                     const onlineBanner = document.getElementById('onlineRoomBanner');
                     if (onlineBanner) onlineBanner.classList.add('hidden');
-                    window.YutnoriGameInstance.startNewGame({ mode: 'ai', difficulty: 'normal', pieceCount: 4 });
+                    window.showScreen('home');
                 }
             };
             if (lobbyLeaveBtn) lobbyLeaveBtn.addEventListener('click', exitLobby);
@@ -1142,10 +1785,10 @@
                     }
                 }
 
-                // 2) 게임 진행(playing) 상태
+                // 2) 게임 진행(playing) 상태 ➔ 게임 화면 활성화
                 else if (data.status === 'playing') {
                     onlineLobbyModal.classList.add('hidden');
-                    settingsModal.classList.add('hidden');
+                    window.showScreen('game');
 
                     if (!window.YutnoriGameInstance.isOnline) {
                         window.YutnoriGameInstance.startOnlineGame(data);
@@ -1158,50 +1801,35 @@
             // 명예의 전당 모달 열기/닫기
             const hofModal = document.getElementById('hofModal');
             const openHofHeaderBtn = document.getElementById('openHofHeaderBtn');
-            const openHofWidgetBtn = document.getElementById('openHofWidgetBtn');
+            const homeOpenHofModalBtn = document.getElementById('homeOpenHofModalBtn');
+            const homeOpenHofModalBigBtn = document.getElementById('homeOpenHofModalBigBtn');
             const closeHofModalBtn = document.getElementById('closeHofModalBtn');
 
-            if (openHofHeaderBtn) openHofHeaderBtn.addEventListener('click', () => {
+            const openFullHof = () => {
                 if (window.YutnoriHOF) window.YutnoriHOF.renderAllViews();
                 if (hofModal) hofModal.classList.remove('hidden');
-            });
-            if (openHofWidgetBtn) openHofWidgetBtn.addEventListener('click', () => {
-                if (window.YutnoriHOF) window.YutnoriHOF.renderAllViews();
-                if (hofModal) hofModal.classList.remove('hidden');
-            });
+            };
+
+            if (openHofHeaderBtn) openHofHeaderBtn.addEventListener('click', openFullHof);
+            if (homeOpenHofModalBtn) homeOpenHofModalBtn.addEventListener('click', openFullHof);
+            if (homeOpenHofModalBigBtn) homeOpenHofModalBigBtn.addEventListener('click', openFullHof);
             if (closeHofModalBtn) closeHofModalBtn.addEventListener('click', () => {
                 if (hofModal) hofModal.classList.add('hidden');
             });
 
-            // 설정 모달 열기/닫기
-            openSettingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
-            closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
+            // 홈 화면 교사 모드 링크
+            const homeOpenTeacherBtn = document.getElementById('homeOpenTeacherBtn');
+            if (homeOpenTeacherBtn && window.YutnoriTeacherAdmin) {
+                homeOpenTeacherBtn.addEventListener('click', () => window.YutnoriTeacherAdmin.openAuthModal());
+            }
 
             // 규칙 모달 열기/닫기
-            openRuleBtn.addEventListener('click', () => ruleModal.classList.remove('hidden'));
-            closeRuleBtn.addEventListener('click', () => ruleModal.classList.add('hidden'));
+            if (openRuleBtn) openRuleBtn.addEventListener('click', () => ruleModal.classList.remove('hidden'));
+            if (homeOpenRuleBtn) homeOpenRuleBtn.addEventListener('click', () => ruleModal.classList.remove('hidden'));
+            if (closeRuleBtn) closeRuleBtn.addEventListener('click', () => ruleModal.classList.add('hidden'));
 
-            // 컴퓨터 대전 게임 시작하기 (하단 버튼 및 실명 입력창 엔터)
-            if (startGameBtn) {
-                startGameBtn.addEventListener('click', startAiMatch);
-            }
-            if (globalStudentNameInput) {
-                globalStudentNameInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        startAiMatch();
-                    }
-                });
-            }
-
-            // 처음 시작 시 자동 시작 (기본 AI 연습 모드)
-            const autoRealName = getInitialRealName() || '나(플레이어)';
-            window.YutnoriGameInstance.startNewGame({ 
-                mode: 'ai', 
-                playerName: autoRealName,
-                difficulty: 'normal', 
-                pieceCount: 4 
-            });
+            // ★ 첫 화면 기본 표시 (다른 에듀테크 게임들과 동일하게 첫 화면에서 게임 설정과 명예의 전당 먼저 표시)
+            window.showScreen('home');
         });
     </script>
 </body>

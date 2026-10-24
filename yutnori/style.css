@@ -13,6 +13,14 @@
 }
 
 /* 폰트 및 기본 세팅 */
+.hidden {
+    display: none !important;
+}
+
+.bg-slate-850 {
+    background-color: #172033;
+}
+
 body {
     font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
@@ -435,4 +443,32 @@ body {
         width: 24px;
         height: 90px;
     }
+}
+
+/* 교사 모드 및 명예의 전당 보조 스타일링 */
+.animate-bounceIn {
+    animation: bounceIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.6);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.35);
+    border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.6);
+}
+
+#floatingTeacherBtn {
+    box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+}
+#floatingTeacherBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px -5px rgba(99, 102, 241, 0.45), 0 10px 12px -6px rgba(0, 0, 0, 0.4);
 }

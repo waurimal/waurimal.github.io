@@ -80,7 +80,7 @@ class YutnoriMultiplayerManager {
     // ==========================================
     // 1. 방 만들기 (Host)
     // ==========================================
-    async createRoom({ hostName, mode = '1v1', pieceCount = 4, grade = 'all' }) {
+    async createRoom({ hostName, grade = 6, classNum = 1, studentNum = 1, mode = '1v1', pieceCount = 4, gradeFilter = 'all' }) {
         const cleanName = (hostName || '').trim();
         if (!cleanName) {
             throw new Error("닉네임 대신 학생 본인의 실명을 입력해주세요.");
@@ -93,12 +93,15 @@ class YutnoriMultiplayerManager {
             status: 'lobby', // 'lobby' | 'playing' | 'finished'
             mode: mode, // '1v1' | 'team'
             pieceCount: pieceCount,
-            grade: grade,
+            grade: gradeFilter,
             hostId: this.mySessionId,
             players: {
                 [this.mySessionId]: {
                     id: this.mySessionId,
                     name: cleanName,
+                    grade: Number(grade) || 6,
+                    classNum: Number(classNum) || 1,
+                    studentNum: Number(studentNum) || 1,
                     team: 'blue', // 청팀 기본 배정
                     isHost: true,
                     joinedAt: Date.now()
@@ -136,8 +139,21 @@ class YutnoriMultiplayerManager {
     // ==========================================
     // 2. 방 참여하기 (Join)
     // ==========================================
-    async joinRoom(code, playerName) {
-        const cleanName = (playerName || '').trim();
+    async joinRoom(code, playerInput) {
+        let cleanName = '';
+        let sGrade = 6;
+        let sClass = 1;
+        let sNum = 1;
+
+        if (typeof playerInput === 'string') {
+            cleanName = (playerInput || '').trim();
+        } else if (playerInput && typeof playerInput === 'object') {
+            cleanName = (playerInput.name || '').trim();
+            sGrade = Number(playerInput.grade) || 6;
+            sClass = Number(playerInput.classNum) || 1;
+            sNum = Number(playerInput.studentNum) || 1;
+        }
+
         if (!cleanName) {
             throw new Error("닉네임 대신 학생 본인의 실명을 입력해주세요.");
         }
@@ -183,6 +199,9 @@ class YutnoriMultiplayerManager {
             updatedPlayers[this.mySessionId] = {
                 id: this.mySessionId,
                 name: cleanName,
+                grade: sGrade,
+                classNum: sClass,
+                studentNum: sNum,
                 team: assignedTeam,
                 isHost: false,
                 joinedAt: Date.now()
@@ -191,8 +210,11 @@ class YutnoriMultiplayerManager {
                 updatedTurnOrder.push(this.mySessionId);
             }
         } else {
-            // 이미 등록되어 있던 유저가 재접속한 경우 이름 갱신
+            // 이미 등록되어 있던 유저가 재접속한 경우 정보 갱신
             updatedPlayers[this.mySessionId].name = cleanName;
+            updatedPlayers[this.mySessionId].grade = sGrade;
+            updatedPlayers[this.mySessionId].classNum = sClass;
+            updatedPlayers[this.mySessionId].studentNum = sNum;
         }
 
         await updateDoc(roomRef, {
