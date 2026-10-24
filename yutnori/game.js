@@ -485,9 +485,9 @@
         getRecords() {
             try {
                 const raw = localStorage.getItem(this.storageKey);
-                if (raw) {
+                if (raw !== null) {
                     const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
+                    if (Array.isArray(parsed)) {
                         return this.normalizeRecords(parsed);
                     }
                 }
@@ -1189,12 +1189,21 @@
         }
 
         resetAll() {
-            const answer = prompt("모든 학생 기록을 초기화하시려면 '초기화'를 입력하세요.\n(이 작업은 되돌릴 수 없습니다.)");
+            const answer = prompt("모든 명예의 전당 및 학생 성적 데이터를 영구 삭제하시려면 '초기화'를 입력하세요.\n(이 작업은 되돌릴 수 없으며, 모든 기록이 0건으로 완전히 삭제됩니다.)");
             if (answer === '초기화') {
                 this.hof.clearAll();
                 this.selectedIds.clear();
                 this.renderScoresTable();
-                this.notify("명예의 전당 및 학생 성적 데이터가 모두 초기화되었습니다.");
+                this.notify("모든 학생 성적 및 명예의 전당 기록이 삭제되었습니다. (0건)");
+            }
+        }
+
+        restoreDefaultRecords() {
+            if (this.askConfirm("테스트용 예시 학생 데이터(세종대왕, 이순신 등 7명)를 복원하시겠습니까?")) {
+                this.hof.resetToDefault();
+                this.selectedIds.clear();
+                this.renderScoresTable();
+                this.notify("테스트용 예시 데이터가 복원되었습니다.");
             }
         }
 
@@ -1808,9 +1817,11 @@
             const tBtnDownloadCsv = document.getElementById('t-btn-download-csv');
             const tBtnDeleteSelected = document.getElementById('t-btn-delete-selected');
             const tBtnResetAll = document.getElementById('t-btn-reset-all');
+            const tBtnRestoreSamples = document.getElementById('t-btn-restore-samples');
             if (tBtnDownloadCsv) tBtnDownloadCsv.addEventListener('click', () => TeacherAdmin.downloadCSV());
             if (tBtnDeleteSelected) tBtnDeleteSelected.addEventListener('click', () => TeacherAdmin.deleteSelected());
             if (tBtnResetAll) tBtnResetAll.addEventListener('click', () => TeacherAdmin.resetAll());
+            if (tBtnRestoreSamples) tBtnRestoreSamples.addEventListener('click', () => TeacherAdmin.restoreDefaultRecords());
 
             // 커스텀 문제 추가 버튼
             const tBtnAddCustom = document.getElementById('t-btn-add-custom-question');
