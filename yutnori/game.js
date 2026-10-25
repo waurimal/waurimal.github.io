@@ -295,29 +295,58 @@
                 };
             }
 
-            // B. 판 위에 있는 말: 직전 위치로 1칸 후퇴
+            // B. 판 위에 있는 말: 직전 위치로 정확히 1칸 후퇴
             let prevNode = null;
             let prevRoute = piece.route;
 
-            // 히스토리가 있으면 히스토리의 직전 노드 사용
-            if (piece.history && piece.history.length > 0) {
-                prevNode = piece.history[piece.history.length - 1];
-            } else {
-                // 기하학적 역추적
-                if (piece.pos === 0) prevNode = 19;
-                else if (piece.pos === 1) prevNode = 0;
-                else if (piece.pos >= 2 && piece.pos <= 19) prevNode = piece.pos - 1;
-                else if (piece.pos === 20) { prevNode = 5; prevRoute = 'OUTER'; }
-                else if (piece.pos === 21) prevNode = 20;
-                else if (piece.pos === 22) {
-                    prevNode = (piece.route === 'CORNER2') ? 26 : 21;
+            // 기하학적 역추적: 단독 말이든 2개 이상 업혀있는 말이든 무조건 현재 위치에서 뒤로 딱 1칸(-1보)만 이동!
+            if (piece.pos === 0) {
+                if (piece.route === 'CENTER_OUT') {
+                    prevNode = 28;
+                } else {
+                    prevNode = 19;
+                    prevRoute = 'OUTER';
                 }
-                else if (piece.pos === 23) prevNode = 22;
-                else if (piece.pos === 24) prevNode = 23;
-                else if (piece.pos === 25) { prevNode = 10; prevRoute = 'OUTER'; }
-                else if (piece.pos === 26) prevNode = 25;
-                else if (piece.pos === 27) prevNode = 22;
-                else if (piece.pos === 28) prevNode = 27;
+            } else if (piece.pos === 1) {
+                prevNode = 0;
+                prevRoute = 'OUTER';
+            } else if (piece.pos >= 2 && piece.pos <= 19) {
+                prevNode = piece.pos - 1;
+                prevRoute = 'OUTER';
+            } else if (piece.pos === 20) {
+                prevNode = 5;
+                prevRoute = 'OUTER';
+            } else if (piece.pos === 21) {
+                prevNode = 20;
+                prevRoute = 'CORNER1';
+            } else if (piece.pos === 22) {
+                if (piece.route === 'CORNER2') {
+                    prevNode = 26;
+                    prevRoute = 'CORNER2';
+                } else {
+                    prevNode = 21;
+                    prevRoute = 'CORNER1';
+                }
+            } else if (piece.pos === 23) {
+                prevNode = 22;
+                prevRoute = 'CENTER_CROSS';
+            } else if (piece.pos === 24) {
+                prevNode = 23;
+                prevRoute = 'CENTER_CROSS';
+            } else if (piece.pos === 25) {
+                prevNode = 10;
+                prevRoute = 'OUTER';
+            } else if (piece.pos === 26) {
+                prevNode = 25;
+                prevRoute = 'CORNER2';
+            } else if (piece.pos === 27) {
+                prevNode = 22;
+                prevRoute = 'CENTER_OUT';
+            } else if (piece.pos === 28) {
+                prevNode = 27;
+                prevRoute = 'CENTER_OUT';
+            } else {
+                prevNode = Math.max(0, piece.pos - 1);
             }
 
             return {
