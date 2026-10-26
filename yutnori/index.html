@@ -143,23 +143,23 @@
 
                         <!-- 2. 게임 모드 선택 탭 (컴퓨터 대전 vs 실시간 온라인 멀티) -->
                         <div class="mb-5">
-                            <label class="block text-xs font-bold text-slate-400 mb-2">게임 모드 선택</label>
+                            <label class="block text-xs font-bold text-slate-300 mb-2">게임 모드 선택</label>
                             <div class="grid grid-cols-2 gap-3">
-                                <button type="button" class="mode-tab-btn py-3.5 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-amber-500 bg-amber-500/15 text-amber-300 cursor-pointer relative shadow-lg" data-mode="ai" id="startAiModeBtn">
-                                    <span class="absolute -top-2.5 px-2.5 py-0.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 text-[10px] font-black rounded-full shadow">
+                                <button type="button" class="mode-tab-btn py-3.5 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 border-amber-200 text-slate-950 shadow-xl shadow-amber-500/25 ring-4 ring-amber-400/40 scale-[1.02] cursor-pointer relative" data-mode="ai" id="startAiModeBtn">
+                                    <span class="mode-badge absolute -top-2.5 px-2.5 py-0.5 bg-slate-950 text-amber-300 text-[10px] font-black rounded-full border border-amber-400/60 shadow">
                                         추천 모드 ⚡
                                     </span>
-                                    <i class="fa-solid fa-robot text-xl text-amber-400 mt-1"></i>
-                                    <span class="text-sm font-black text-white">컴퓨터 대전</span>
-                                    <span class="text-[10px] text-amber-200/90 font-normal">혼자서 AI와 바로 대결</span>
+                                    <i class="mode-icon fa-solid fa-robot text-2xl text-slate-950 mt-1"></i>
+                                    <span class="mode-title text-base font-black text-slate-950 tracking-tight">컴퓨터 대전</span>
+                                    <span class="mode-desc text-[11px] text-slate-900 font-bold">혼자서 AI와 바로 대결</span>
                                 </button>
-                                <button type="button" class="mode-tab-btn py-3.5 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600 cursor-pointer relative" data-mode="online" id="selectOnlineTabBtn">
-                                    <span class="absolute -top-2.5 px-2 py-0.5 bg-emerald-500 text-slate-950 text-[10px] font-black rounded-full shadow">
+                                <button type="button" class="mode-tab-btn py-3.5 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-slate-700 bg-slate-900/80 text-slate-400 hover:border-slate-500 hover:bg-slate-800/80 cursor-pointer relative" data-mode="online" id="selectOnlineTabBtn">
+                                    <span class="mode-badge absolute -top-2.5 px-2 py-0.5 bg-slate-800 text-slate-400 text-[10px] font-bold rounded-full border border-slate-700 shadow">
                                         실시간 2인~다수
                                     </span>
-                                    <i class="fa-solid fa-tower-broadcast text-xl text-emerald-400 mt-1"></i>
-                                    <span class="text-sm font-black text-white">실시간 온라인 멀티</span>
-                                    <span class="text-[10px] text-emerald-400/90 font-normal">방 코드 공유 대결</span>
+                                    <i class="mode-icon fa-solid fa-tower-broadcast text-xl text-slate-400 mt-1"></i>
+                                    <span class="mode-title text-sm font-bold text-slate-300">실시간 온라인 멀티</span>
+                                    <span class="mode-desc text-[10px] text-slate-400 font-normal">방 코드 공유 대결</span>
                                 </button>
                             </div>
                         </div>
@@ -804,12 +804,20 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-2.5">
+            <!-- 1인 AI 대전 시 버튼 -->
+            <div id="victorySinglePlayerBtns" class="grid grid-cols-2 gap-2.5">
                 <button id="victoryHomeBtn" class="py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-house text-amber-400"></i> 홈 화면으로
                 </button>
                 <button id="restartBtn" class="py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm shadow-lg transition flex items-center justify-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-rotate-right"></i> 다시 플레이
+                </button>
+            </div>
+
+            <!-- 실시간 온라인 멀티 플레이 시 버튼 (승자/패자 모두 확실하게 방 나가기 지원) -->
+            <div id="victoryOnlineBtns" class="hidden flex flex-col gap-2">
+                <button id="victoryLeaveRoomBtn" class="w-full py-4 rounded-2xl bg-gradient-to-r from-rose-600 via-rose-500 to-rose-600 hover:from-rose-500 hover:to-rose-600 active:scale-98 text-white font-black text-sm shadow-xl shadow-rose-900/40 transition flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-arrow-right-from-bracket text-base"></i> 온라인 방 나가기 (홈 화면으로 이동)
                 </button>
             </div>
         </div>
@@ -1462,13 +1470,60 @@
 
             function switchModeTab(mode) {
                 selectedMode = mode;
-                modeTabs.forEach(t => {
-                    if (t.dataset.mode === mode) {
-                        t.className = 'mode-tab-btn py-3.5 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-amber-500 bg-amber-500/15 text-amber-300 cursor-pointer relative shadow-lg';
-                    } else {
-                        t.className = 'mode-tab-btn py-3.5 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600 cursor-pointer relative';
+                const aiBtn = document.getElementById('startAiModeBtn');
+                const onlineBtn = document.getElementById('selectOnlineTabBtn');
+
+                if (mode === 'ai') {
+                    // AI 버튼 활성화: 밝고 선명한 앰버/골드 배경 + 짙은 블랙 글씨 (WCAG AAA 최상위 가독성)
+                    if (aiBtn) {
+                        aiBtn.className = 'mode-tab-btn py-3.5 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 border-amber-200 text-slate-950 shadow-xl shadow-amber-500/25 ring-4 ring-amber-400/40 scale-[1.02] cursor-pointer relative';
+                        const badge = aiBtn.querySelector('.mode-badge');
+                        if (badge) badge.className = 'mode-badge absolute -top-2.5 px-2.5 py-0.5 bg-slate-950 text-amber-300 text-[10px] font-black rounded-full border border-amber-400/60 shadow';
+                        const icon = aiBtn.querySelector('.mode-icon');
+                        if (icon) icon.className = 'mode-icon fa-solid fa-robot text-2xl text-slate-950 mt-1';
+                        const title = aiBtn.querySelector('.mode-title');
+                        if (title) title.className = 'mode-title text-base font-black text-slate-950 tracking-tight';
+                        const desc = aiBtn.querySelector('.mode-desc');
+                        if (desc) desc.className = 'mode-desc text-[11px] text-slate-900 font-bold';
                     }
-                });
+                    // 온라인 버튼 비활성화: 다크 슬레이트 배경 + 연회색 글씨
+                    if (onlineBtn) {
+                        onlineBtn.className = 'mode-tab-btn py-3.5 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-slate-700 bg-slate-900/80 text-slate-400 hover:border-slate-500 hover:bg-slate-800/80 cursor-pointer relative';
+                        const badge = onlineBtn.querySelector('.mode-badge');
+                        if (badge) badge.className = 'mode-badge absolute -top-2.5 px-2.5 py-0.5 bg-slate-800 text-slate-400 text-[10px] font-bold rounded-full border border-slate-700 shadow';
+                        const icon = onlineBtn.querySelector('.mode-icon');
+                        if (icon) icon.className = 'mode-icon fa-solid fa-tower-broadcast text-xl text-slate-400 mt-1';
+                        const title = onlineBtn.querySelector('.mode-title');
+                        if (title) title.className = 'mode-title text-sm font-bold text-slate-300';
+                        const desc = onlineBtn.querySelector('.mode-desc');
+                        if (desc) desc.className = 'mode-desc text-[10px] text-slate-400 font-normal';
+                    }
+                } else {
+                    // 온라인 버튼 활성화: 밝고 선명한 에메랄드 배경 + 짙은 블랙 글씨 (WCAG AAA 최상위 가독성)
+                    if (onlineBtn) {
+                        onlineBtn.className = 'mode-tab-btn py-3.5 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all bg-gradient-to-br from-emerald-300 via-emerald-400 to-emerald-500 border-emerald-200 text-slate-950 shadow-xl shadow-emerald-500/25 ring-4 ring-emerald-400/40 scale-[1.02] cursor-pointer relative';
+                        const badge = onlineBtn.querySelector('.mode-badge');
+                        if (badge) badge.className = 'mode-badge absolute -top-2.5 px-2.5 py-0.5 bg-slate-950 text-emerald-300 text-[10px] font-black rounded-full border border-emerald-400/60 shadow';
+                        const icon = onlineBtn.querySelector('.mode-icon');
+                        if (icon) icon.className = 'mode-icon fa-solid fa-tower-broadcast text-2xl text-slate-950 mt-1';
+                        const title = onlineBtn.querySelector('.mode-title');
+                        if (title) title.className = 'mode-title text-base font-black text-slate-950 tracking-tight';
+                        const desc = onlineBtn.querySelector('.mode-desc');
+                        if (desc) desc.className = 'mode-desc text-[11px] text-slate-900 font-bold';
+                    }
+                    // AI 버튼 비활성화: 다크 슬레이트 배경 + 연회색 글씨
+                    if (aiBtn) {
+                        aiBtn.className = 'mode-tab-btn py-3.5 px-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center gap-1.5 transition-all border-slate-700 bg-slate-900/80 text-slate-400 hover:border-slate-500 hover:bg-slate-800/80 cursor-pointer relative';
+                        const badge = aiBtn.querySelector('.mode-badge');
+                        if (badge) badge.className = 'mode-badge absolute -top-2.5 px-2.5 py-0.5 bg-slate-800 text-slate-400 text-[10px] font-bold rounded-full border border-slate-700 shadow';
+                        const icon = aiBtn.querySelector('.mode-icon');
+                        if (icon) icon.className = 'mode-icon fa-solid fa-robot text-xl text-slate-400 mt-1';
+                        const title = aiBtn.querySelector('.mode-title');
+                        if (title) title.className = 'mode-title text-sm font-bold text-slate-300';
+                        const desc = aiBtn.querySelector('.mode-desc');
+                        if (desc) desc.className = 'mode-desc text-[10px] text-slate-400 font-normal';
+                    }
+                }
 
                 if (aiOptions) aiOptions.classList.toggle('hidden', selectedMode !== 'ai');
                 if (onlineOptions) onlineOptions.classList.toggle('hidden', selectedMode !== 'online');
@@ -1564,21 +1619,24 @@
                 }
             }
 
+            // 승리/종료 모달에서 나가기 처리 (승자/패자 모두 깨끗하게 퇴장)
+            const exitFromVictoryModal = async () => {
+                const victoryModal = document.getElementById('victoryModal');
+                if (victoryModal) victoryModal.classList.add('hidden');
+                if (window.YutnoriGameInstance && window.YutnoriGameInstance.isOnline) {
+                    window.YutnoriGameInstance.isOnline = false;
+                    const onlineBanner = document.getElementById('onlineRoomBanner');
+                    if (onlineBanner) onlineBanner.classList.add('hidden');
+                    await multiplayerManager.leaveRoom(true);
+                }
+                window.showScreen('home');
+            };
+
             if (headerHomeBtn) headerHomeBtn.addEventListener('click', confirmExitToHome);
             if (exitToHomeBtn) exitToHomeBtn.addEventListener('click', confirmExitToHome);
-            if (victoryHomeBtn) {
-                victoryHomeBtn.addEventListener('click', () => {
-                    const victoryModal = document.getElementById('victoryModal');
-                    if (victoryModal) victoryModal.classList.add('hidden');
-                    if (window.YutnoriGameInstance && window.YutnoriGameInstance.isOnline) {
-                        multiplayerManager.leaveRoom(false);
-                        window.YutnoriGameInstance.isOnline = false;
-                        const onlineBanner = document.getElementById('onlineRoomBanner');
-                        if (onlineBanner) onlineBanner.classList.add('hidden');
-                    }
-                    window.showScreen('home');
-                });
-            }
+            if (victoryHomeBtn) victoryHomeBtn.addEventListener('click', exitFromVictoryModal);
+            const victoryLeaveRoomBtn = document.getElementById('victoryLeaveRoomBtn');
+            if (victoryLeaveRoomBtn) victoryLeaveRoomBtn.addEventListener('click', exitFromVictoryModal);
 
             // 1. 온라인 방 만들기 클릭 (실명 및 학적 필수)
             if (createOnlineRoomBtn) {
@@ -1704,13 +1762,19 @@
                 });
             }
 
-            // 6. 대기실 나가기 버튼
+            // 6. 대기실/인게임 나가기 버튼
             const exitLobby = async () => {
-                if (confirm("정말 대기실에서 나가시겠습니까?")) {
-                    await multiplayerManager.leaveRoom();
+                const isGameOver = (window.YutnoriGameInstance && window.YutnoriGameInstance.gameState === 'GAME_OVER');
+                if (isGameOver || confirm("정말 방에서 나가시겠습니까?")) {
+                    const victoryModal = document.getElementById('victoryModal');
+                    if (victoryModal) victoryModal.classList.add('hidden');
+                    if (window.YutnoriGameInstance) {
+                        window.YutnoriGameInstance.isOnline = false;
+                    }
                     onlineLobbyModal.classList.add('hidden');
                     const onlineBanner = document.getElementById('onlineRoomBanner');
                     if (onlineBanner) onlineBanner.classList.add('hidden');
+                    await multiplayerManager.leaveRoom(true);
                     window.showScreen('home');
                 }
             };
@@ -1722,13 +1786,19 @@
             multiplayerManager.onStateChange((data) => {
                 if (!data) {
                     onlineLobbyModal.classList.add('hidden');
+                    const victoryModal = document.getElementById('victoryModal');
+                    if (victoryModal) victoryModal.classList.add('hidden');
+
                     if (window.YutnoriGameInstance && window.YutnoriGameInstance.isOnline) {
+                        const wasGameOver = (window.YutnoriGameInstance.gameState === 'GAME_OVER');
                         window.YutnoriGameInstance.isOnline = false;
                         const onlineBanner = document.getElementById('onlineRoomBanner');
                         if (onlineBanner) onlineBanner.classList.add('hidden');
-                        alert("방이 종료되었거나 방장/상대방이 퇴장하여 대기실이 닫혔습니다.");
-                        window.showScreen('home');
+                        if (!wasGameOver) {
+                            alert("방이 종료되었거나 방장/상대방이 퇴장하여 대기실이 닫혔습니다.");
+                        }
                     }
+                    window.showScreen('home');
                     return;
                 }
 
@@ -1798,8 +1868,8 @@
                     }
                 }
 
-                // 2) 게임 진행(playing) 상태 ➔ 게임 화면 활성화
-                else if (data.status === 'playing') {
+                // 2) 게임 진행(playing) 또는 경기 종료(finished) 상태 ➔ 게임 화면 및 승리 모달 동기화
+                else if (data.status === 'playing' || data.status === 'finished') {
                     onlineLobbyModal.classList.add('hidden');
                     window.showScreen('game');
 

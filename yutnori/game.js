@@ -2162,6 +2162,15 @@
             this.updateTurnUI();
             this.updateRollButtonState();
 
+            // 게임 종료(finished/GAME_OVER) 상태 감지
+            if (roomData.status === 'finished' || roomData.gameState === 'GAME_OVER') {
+                const winnerName = roomData.winner || (roomData.lastAction && roomData.lastAction.winnerTeam);
+                const winnerTeamObj = this.teams.find(t => t.name === winnerName) || this.teams[0];
+                if (this.gameState !== 'GAME_OVER') {
+                    this.triggerVictory(winnerTeamObj);
+                }
+            }
+
             // 액션 리스너 처리
             if (roomData.lastAction && roomData.lastAction.timestamp > this._lastHandledActionTimestamp) {
                 this.handleRemoteAction(roomData.lastAction, roomData);
@@ -3482,8 +3491,49 @@
 
             // 3. 승리 모달 UI 렌더링
             if (this.dom.victoryModal) {
-                this.dom.victoryTeamName.textContent = winningTeam.name;
-                this.dom.victoryDetail.textContent = `축하합니다! 영어 퀴즈를 맞히며 지혜롭게 말을 완주하여 ${winningTeam.name}이(가) 승리를 거머쥐었습니다!`;
+                const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
+                const isOnline = Boolean(this.isOnline && mySessionId);
+                let isMyTeamWinner = false;
+
+                if (isOnline && this.currentRoomData && this.currentRoomData.players) {
+                    const myPlayer = this.currentRoomData.players[mySessionId];
+                    if (myPlayer) {
+                        isMyTeamWinner = (myPlayer.team === winningTeam.key || 
+                                          (myPlayer.team === 'blue' && winningTeam.id === 0) || 
+                                          (myPlayer.team === 'white' && winningTeam.id === 1));
+                    }
+                } else if (!winningTeam.isAI) {
+                    isMyTeamWinner = true;
+                }
+
+                if (isOnline) {
+                    if (isMyTeamWinner) {
+                        this.dom.victoryTeamName.textContent = `🎉 우리 팀(${winningTeam.name}) 최종 승리!`;
+                        this.dom.victoryDetail.textContent = `축하합니다! 친구들과 함께 모든 말을 완주시켜 값진 승리를 거두었습니다! 🏆`;
+                    } else {
+                        this.dom.victoryTeamName.textContent = `👏 [${winningTeam.name}] 승리! (경기 종료)`;
+                        this.dom.victoryDetail.textContent = `아쉽게 패배했습니다. 끝까지 멋진 승부를 펼쳤습니다! 방 나가기를 눌러 홈 화면으로 이동할 수 있습니다. 💪`;
+                    }
+                } else {
+                    if (winningTeam.isAI) {
+                        this.dom.victoryTeamName.textContent = `🤖 컴퓨터 승리! (패배)`;
+                        this.dom.victoryDetail.textContent = `아쉽습니다! 컴퓨터가 먼저 모든 말을 완주했습니다. 다시 도전해 보세요!`;
+                    } else {
+                        this.dom.victoryTeamName.textContent = `${winningTeam.name} 승리!`;
+                        this.dom.victoryDetail.textContent = `축하합니다! 영어 퀴즈를 맞히며 지혜롭게 말을 완주하여 ${winningTeam.name}이(가) 승리를 거머쥐었습니다!`;
+                    }
+                }
+
+                // 온라인 모드 vs 싱글플레이 버튼 전환
+                const singlePlayerBtns = document.getElementById('victorySinglePlayerBtns');
+                const onlineBtns = document.getElementById('victoryOnlineBtns');
+                if (isOnline) {
+                    if (singlePlayerBtns) singlePlayerBtns.classList.add('hidden');
+                    if (onlineBtns) onlineBtns.classList.remove('hidden');
+                } else {
+                    if (singlePlayerBtns) singlePlayerBtns.classList.remove('hidden');
+                    if (onlineBtns) onlineBtns.classList.add('hidden');
+                }
 
                 // 이번 경기 MVP 카드
                 const mvpContainer = document.getElementById('victoryMvpCard');
