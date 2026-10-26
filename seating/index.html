@@ -176,11 +176,41 @@
                     <span>반별 명단 관리</span>
                 </button>
 
-                <!-- 두구두구 순차 발표 (주황/골드) -->
-                <button id="startDramaticBtn" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs shadow-md shadow-amber-500/25 transition active:scale-95 flex items-center gap-1.5 cursor-pointer">
-                    <i class="fa-solid fa-drum text-slate-950 text-sm"></i>
-                    <span>두구두구 순차 발표 ⚡</span>
-                </button>
+                <!-- 두구두구 순차 발표 (주황/골드) & 시간·속도 조절 드롭다운 -->
+                <div class="relative inline-flex items-center rounded-xl shadow-md shadow-amber-500/25">
+                    <button id="startDramaticBtn" class="px-3.5 py-2 rounded-l-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs transition active:scale-95 flex items-center gap-1.5 cursor-pointer border-r border-amber-600/30" title="두구두구 순차 발표 시작">
+                        <i class="fa-solid fa-drum text-slate-950 text-sm"></i>
+                        <span>두구두구 순차 발표 ⚡</span>
+                    </button>
+                    <button type="button" id="dramaticSpeedBtn" class="px-2.5 py-2 rounded-r-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition flex items-center gap-1 cursor-pointer" title="발표 시간 및 진행 속도 설정">
+                        <i class="fa-solid fa-stopwatch text-slate-900 text-[11px]"></i>
+                        <span id="dramaticSpeedLabel">느리게</span>
+                        <i class="fa-solid fa-chevron-down text-[9px] text-slate-900"></i>
+                    </button>
+                    <!-- 속도 선택 팝오버 드롭다운 메뉴 -->
+                    <div id="dramaticSpeedMenu" class="hidden absolute top-full right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-200 p-2 z-50 space-y-1 text-xs">
+                        <div class="px-2 py-1 font-black text-slate-700 text-[11px] border-b border-slate-100 flex items-center justify-between">
+                            <span>⏱️ 발표 속도 설정</span>
+                            <span class="text-[10px] text-amber-600 font-bold">시간 조정</span>
+                        </div>
+                        <button type="button" data-speed="slowest" class="dramatic-speed-opt w-full text-left px-2.5 py-2 rounded-xl hover:bg-amber-50 font-bold transition flex items-center justify-between cursor-pointer">
+                            <span>🎭 아주 느리게 (초긴장)</span>
+                            <span class="text-[10px] text-slate-400 font-normal">~1.2초</span>
+                        </button>
+                        <button type="button" data-speed="slow" class="dramatic-speed-opt w-full text-left px-2.5 py-2 rounded-xl hover:bg-amber-50 font-bold transition flex items-center justify-between cursor-pointer bg-amber-100/70 text-amber-900 font-black">
+                            <span>🐢 느리게 (여유있게·추천)</span>
+                            <span class="text-[10px] text-amber-700 font-bold">~0.7초</span>
+                        </button>
+                        <button type="button" data-speed="normal" class="dramatic-speed-opt w-full text-left px-2.5 py-2 rounded-xl hover:bg-amber-50 font-bold transition flex items-center justify-between cursor-pointer">
+                            <span>⏱️ 보통 (적당한 템포)</span>
+                            <span class="text-[10px] text-slate-400 font-normal">~0.4초</span>
+                        </button>
+                        <button type="button" data-speed="fast" class="dramatic-speed-opt w-full text-left px-2.5 py-2 rounded-xl hover:bg-amber-50 font-bold transition flex items-center justify-between cursor-pointer">
+                            <span>⚡ 빠르게 (스피드)</span>
+                            <span class="text-[10px] text-slate-400 font-normal">~0.2초</span>
+                        </button>
+                    </div>
+                </div>
 
                 <!-- 즉시 자리 배정 (파랑) -->
                 <button id="startInstantBtn" class="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs shadow-md shadow-blue-500/25 transition active:scale-95 flex items-center gap-1.5 cursor-pointer">
@@ -704,6 +734,33 @@
                     </div>
                 </div>
 
+                <!-- 4-2. 두구두구 순차 발표 시간 및 속도 설정 -->
+                <div class="bg-amber-50/70 p-3.5 rounded-2xl border border-amber-200 text-xs space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-stopwatch text-amber-600 text-base"></i>
+                            <div>
+                                <div class="font-black text-amber-950">두구두구 순차 발표 시간 및 속도 설정</div>
+                                <div class="text-[11px] text-amber-800">학생 이름이 롤링되며 공개되는 시간 간격을 조절합니다 (현재: <strong id="settingsSpeedSummary" class="text-amber-900">🐢 느리게 (여유있게·추천)</strong>)</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1">
+                        <button type="button" data-speed="slowest" class="modal-speed-btn py-2 px-2 rounded-xl border border-slate-200 bg-white font-bold text-slate-700 hover:border-amber-400 transition text-center cursor-pointer">
+                            🎭 아주 느리게<br><span class="text-[10px] text-slate-400 font-normal">좌석당 ~1.2초</span>
+                        </button>
+                        <button type="button" data-speed="slow" class="modal-speed-btn py-2 px-2 rounded-xl border-2 border-amber-500 bg-amber-100/70 font-black text-amber-900 shadow-sm transition text-center cursor-pointer">
+                            🐢 느리게 (추천)<br><span class="text-[10px] text-amber-700 font-bold">좌석당 ~0.7초</span>
+                        </button>
+                        <button type="button" data-speed="normal" class="modal-speed-btn py-2 px-2 rounded-xl border border-slate-200 bg-white font-bold text-slate-700 hover:border-amber-400 transition text-center cursor-pointer">
+                            ⏱️ 보통<br><span class="text-[10px] text-slate-400 font-normal">좌석당 ~0.4초</span>
+                        </button>
+                        <button type="button" data-speed="fast" class="modal-speed-btn py-2 px-2 rounded-xl border border-slate-200 bg-white font-bold text-slate-700 hover:border-amber-400 transition text-center cursor-pointer">
+                            ⚡ 빠르게<br><span class="text-[10px] text-slate-400 font-normal">좌석당 ~0.2초</span>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- 5. 명단 데이터 백업 & 복원 (JSON) -->
                 <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
                     <div class="flex items-center gap-2">
@@ -898,6 +955,26 @@
         </div>
     </div>
 
+    <!-- 순차 발표 진행 중 플로팅 컨트롤러 (일시정지 / 건너뛰기) -->
+    <div id="dramaticControlBar" class="no-print fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700/80 flex items-center gap-3.5 hidden backdrop-blur-md transition-all">
+        <div class="flex items-center gap-2">
+            <span class="relative flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+            </span>
+            <span id="dramaticProgressText" class="font-black text-xs text-amber-300 whitespace-nowrap">0 / 25명 발표 중...</span>
+        </div>
+        <div class="h-4 w-px bg-slate-700"></div>
+        <button type="button" id="dramaticPauseBtn" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border border-slate-600">
+            <i id="dramaticPauseIcon" class="fa-solid fa-pause text-amber-400"></i>
+            <span id="dramaticPauseText">일시정지</span>
+        </button>
+        <button type="button" id="dramaticSkipBtn" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black transition flex items-center gap-1.5 cursor-pointer shadow-md">
+            <i class="fa-solid fa-forward-fast text-slate-950"></i>
+            <span>즉시 전체 공개</span>
+        </button>
+    </div>
+
     <!-- 알림 토스트 컴포넌트 -->
     <div id="toastNotification" class="no-print fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-slate-900 text-white text-xs font-bold shadow-xl transition-all opacity-0 pointer-events-none flex items-center gap-2">
         <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
@@ -1032,7 +1109,48 @@
         const STORAGE_KEY = 'waurimal_seating_data_v2';
         const PIN_STORAGE_KEY = 'waurimal_seating_teacher_pin';
         const SYNC_KEY_STORAGE = 'waurimal_seating_sync_key';
+        const DRAMATIC_SPEED_STORAGE = 'waurimal_seating_dramatic_speed';
         const CLIENT_ID = 'device_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
+
+        // 두구두구 순차 발표 속도 및 시간 설정 프로필
+        const DRAMATIC_SPEEDS = {
+            slowest: {
+                id: 'slowest',
+                label: '🎭 아주 느리게 (초긴장)',
+                shortLabel: '아주 느리게',
+                rollFrames: 12,
+                rollInterval: 90,     // 12 * 90ms = 1,080ms (~1.1초 롤링)
+                revealDelay: 900,      // 이름 공개 후 0.9초 대기
+                groupDelay: 1000       // 모둠 완료 후 1.0초 대기
+            },
+            slow: {
+                id: 'slow',
+                label: '🐢 느리게 (여유있게·추천)',
+                shortLabel: '느리게',
+                rollFrames: 8,
+                rollInterval: 80,      // 8 * 80ms = 640ms (~0.64초 롤링)
+                revealDelay: 650,       // 이름 공개 후 0.65초 대기
+                groupDelay: 750        // 모둠 완료 후 0.75초 대기
+            },
+            normal: {
+                id: 'normal',
+                label: '⏱️ 보통 (적당한 템포)',
+                shortLabel: '보통',
+                rollFrames: 6,
+                rollInterval: 65,      // 6 * 65ms = 390ms (~0.4초 롤링)
+                revealDelay: 350,       // 이름 공개 후 0.35초 대기
+                groupDelay: 450        // 모둠 완료 후 0.45초 대기
+            },
+            fast: {
+                id: 'fast',
+                label: '⚡ 빠르게 (스피드)',
+                shortLabel: '빠르게',
+                rollFrames: 4,
+                rollInterval: 50,      // 4 * 50ms = 200ms
+                revealDelay: 150,       // 이름 공개 후 0.15초 대기
+                groupDelay: 200        // 모둠 완료 후 0.2초 대기
+            }
+        };
 
         // ==========================================
         // 3. 애플리케이션 상태 (State)
@@ -1050,6 +1168,11 @@
             selectedSeat: null,     // 맞교환용 선택 좌석
             isRevealing: false,     // 순차 발표 진행 중 플래그
             isRevealed: false,      // 배정 좌석 공개 여부 (false: 빈 좌석 상태, true: 학생 이름 공개)
+            dramaticSpeed: localStorage.getItem(DRAMATIC_SPEED_STORAGE) || 'slow', // 두구두구 발표 속도
+            revealCtrl: {
+                isPaused: false,
+                skipRequested: false
+            },
             frontStudents: [],      // 앞자리 우선 학생 이름
             separationPairs: [],    // 분리 배정 쌍
             isTeacherMode: false,   // 교사 모드 인증 여부 (기본: false - 학생 보호 잠금)
@@ -1370,6 +1493,13 @@
                     updateHistoryCount();
                 }
 
+                // 6. 발표 속도 설정 동기화
+                if (data.dramaticSpeed && DRAMATIC_SPEEDS[data.dramaticSpeed]) {
+                    State.dramaticSpeed = data.dramaticSpeed;
+                    localStorage.setItem(DRAMATIC_SPEED_STORAGE, data.dramaticSpeed);
+                    updateDramaticSpeedUI();
+                }
+
                 // 로컬 스토리지에 동기화 반영 (클라우드 재전송 루프 방지)
                 persistLocalOnly();
 
@@ -1431,6 +1561,7 @@
                         classes: JSON.parse(JSON.stringify(State.classes)),
                         history: history,
                         teacherPin: teacherPin,
+                        dramaticSpeed: State.dramaticSpeed,
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
                         updatedAtClient: Date.now(),
                         updatedBy: CLIENT_ID
@@ -2170,12 +2301,56 @@
         }
 
         // ==========================================
-        // 13. 두구두구 순차 발표 (Dramatic Reveal) 연출
+        // 13. 두구두구 순차 발표 (Dramatic Reveal) 연출 및 시간 속도 조절
         // ==========================================
+        function setDramaticSpeed(speedId) {
+            if (!DRAMATIC_SPEEDS[speedId]) speedId = 'slow';
+            State.dramaticSpeed = speedId;
+            localStorage.setItem(DRAMATIC_SPEED_STORAGE, speedId);
+            updateDramaticSpeedUI();
+            showToast(`⏱️ 발표 속도가 [${DRAMATIC_SPEEDS[speedId].shortLabel}]로 설정되었습니다.`, "⏱️");
+            if (typeof Cloud !== 'undefined') {
+                Cloud.schedulePush();
+            }
+        }
+
+        function updateDramaticSpeedUI() {
+            const cfg = DRAMATIC_SPEEDS[State.dramaticSpeed] || DRAMATIC_SPEEDS.slow;
+            const label = document.getElementById('dramaticSpeedLabel');
+            if (label) label.textContent = cfg.shortLabel;
+
+            const summary = document.getElementById('settingsSpeedSummary');
+            if (summary) summary.textContent = cfg.label;
+
+            // 헤더 드롭다운 옵션 하이라이트
+            document.querySelectorAll('.dramatic-speed-opt').forEach(btn => {
+                const isCurrent = btn.dataset.speed === State.dramaticSpeed;
+                if (isCurrent) {
+                    btn.className = 'dramatic-speed-opt w-full text-left px-2.5 py-2 rounded-xl bg-amber-100/80 text-amber-900 font-black transition flex items-center justify-between cursor-pointer';
+                } else {
+                    btn.className = 'dramatic-speed-opt w-full text-left px-2.5 py-2 rounded-xl hover:bg-amber-50 font-bold text-slate-700 transition flex items-center justify-between cursor-pointer';
+                }
+            });
+
+            // 설정 모달 버튼 하이라이트
+            document.querySelectorAll('.modal-speed-btn').forEach(btn => {
+                const isCurrent = btn.dataset.speed === State.dramaticSpeed;
+                if (isCurrent) {
+                    btn.className = "modal-speed-btn py-2 px-2 rounded-xl border-2 border-amber-500 bg-amber-100/70 font-black text-amber-900 shadow-sm transition text-center cursor-pointer";
+                } else {
+                    btn.className = "modal-speed-btn py-2 px-2 rounded-xl border border-slate-200 bg-white font-bold text-slate-700 hover:border-amber-400 transition text-center cursor-pointer";
+                }
+            });
+        }
+
         async function runDramaticReveal() {
             if (State.isRevealing) return;
             State.isRevealing = true;
             State.selectedSeat = null;
+            State.revealCtrl = {
+                isPaused: false,
+                skipRequested: false
+            };
 
             const target = getCurrentClass();
             if (!target.monthlySeats) target.monthlySeats = {};
@@ -2201,10 +2376,44 @@
             State.groups.forEach(g => g.members = []);
             renderClassroomBoard();
 
-            const grid = document.getElementById('groupsGrid');
-            const groupCards = grid.querySelectorAll('.group-box');
+            // 순차 발표 플로팅 컨트롤 바 노출
+            const ctrlBar = document.getElementById('dramaticControlBar');
+            const progressText = document.getElementById('dramaticProgressText');
+            const pauseBtn = document.getElementById('dramaticPauseBtn');
+            const pauseText = document.getElementById('dramaticPauseText');
+            const pauseIcon = document.getElementById('dramaticPauseIcon');
 
+            if (ctrlBar) ctrlBar.classList.remove('hidden');
+            if (pauseText) pauseText.textContent = '일시정지';
+            if (pauseIcon) pauseIcon.className = 'fa-solid fa-pause text-amber-400';
+
+            const speedCfg = DRAMATIC_SPEEDS[State.dramaticSpeed] || DRAMATIC_SPEEDS.slow;
+            const grid = document.getElementById('groupsGrid');
+            const groupCards = grid ? grid.querySelectorAll('.group-box') : [];
+
+            let revealedCount = 0;
+            const totalStudents = State.studentCount;
+
+            const waitOrPause = async (ms) => {
+                if (State.revealCtrl.skipRequested) return;
+                let remaining = ms;
+                const step = 40;
+                while (remaining > 0) {
+                    if (State.revealCtrl.skipRequested) return;
+                    while (State.revealCtrl.isPaused) {
+                        if (State.revealCtrl.skipRequested) return;
+                        await new Promise(r => setTimeout(r, 80));
+                    }
+                    const waitSlice = Math.min(step, remaining);
+                    await new Promise(r => setTimeout(r, waitSlice));
+                    remaining -= waitSlice;
+                }
+            };
+
+            revealLoop:
             for (let gIdx = 0; gIdx < finalGroups.length; gIdx++) {
+                if (State.revealCtrl.skipRequested) break revealLoop;
+
                 const group = finalGroups[gIdx];
                 const cardEl = groupCards[gIdx];
                 if (cardEl) {
@@ -2212,22 +2421,34 @@
                 }
 
                 for (let sIdx = 0; sIdx < group.capacity; sIdx++) {
+                    if (State.revealCtrl.skipRequested) break revealLoop;
+
                     const finalStudent = group.members[sIdx];
                     if (!finalStudent) continue;
+
+                    revealedCount++;
+                    if (progressText) {
+                        progressText.textContent = `${revealedCount} / ${totalStudents}명 발표 중 (${Math.round((revealedCount / totalStudents) * 100)}%)`;
+                    }
 
                     const deskEls = cardEl ? cardEl.querySelectorAll('.desk-card') : [];
                     const currentDeskEl = deskEls[sIdx];
 
                     if (currentDeskEl) {
                         currentDeskEl.classList.add('bg-amber-100', 'border-amber-400');
-                        for (let frame = 0; frame < 6; frame++) {
-                            const randomStudent = State.students[Math.floor(Math.random() * State.students.length)];
+                        for (let frame = 0; frame < speedCfg.rollFrames; frame++) {
+                            if (State.revealCtrl.skipRequested) break;
+                            while (State.revealCtrl.isPaused) {
+                                if (State.revealCtrl.skipRequested) break;
+                                await new Promise(r => setTimeout(r, 80));
+                            }
+                            const randomStudent = State.students[Math.floor(Math.random() * State.students.length)] || finalStudent;
                             currentDeskEl.innerHTML = `
                                 <div class="text-[10px] font-bold text-slate-400">배정 중...</div>
                                 <div class="font-black text-sm text-amber-600 rolling-text">${randomStudent.name}</div>
                             `;
                             Sound.playDrumroll();
-                            await new Promise(r => setTimeout(r, 60));
+                            await waitOrPause(speedCfg.rollInterval);
                         }
                     }
 
@@ -2243,14 +2464,18 @@
                             <div class="font-black text-sm text-slate-900 animate-bounce">${finalStudent.name}</div>
                         `;
                     }
-                    await new Promise(r => setTimeout(r, 120));
+
+                    await waitOrPause(speedCfg.revealDelay);
                 }
 
                 if (cardEl) {
                     cardEl.classList.remove('ring-4', 'ring-amber-400', 'scale-[1.02]');
                 }
-                await new Promise(r => setTimeout(r, 150));
+                await waitOrPause(speedCfg.groupDelay);
             }
+
+            // 컨트롤 바 숨김
+            if (ctrlBar) ctrlBar.classList.add('hidden');
 
             State.isRevealing = false;
             State.isRevealed = true;
@@ -2861,14 +3086,76 @@
                 });
             }
 
-            // 두구두구 순차 발표 버튼
+            // 두구두구 순차 발표 버튼 및 속도 조절 이벤트
             const dramaticBtn = document.getElementById('startDramaticBtn');
+            const dramaticSpeedBtn = document.getElementById('dramaticSpeedBtn');
+            const dramaticSpeedMenu = document.getElementById('dramaticSpeedMenu');
+
             if (dramaticBtn) {
                 dramaticBtn.addEventListener('click', () => {
                     if (State.currentView === 'welcome') {
                         showBoardView();
                     }
                     runDramaticReveal();
+                });
+            }
+
+            if (dramaticSpeedBtn && dramaticSpeedMenu) {
+                dramaticSpeedBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dramaticSpeedMenu.classList.toggle('hidden');
+                });
+            }
+
+            document.querySelectorAll('.dramatic-speed-opt').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const sp = btn.dataset.speed;
+                    setDramaticSpeed(sp);
+                    if (dramaticSpeedMenu) dramaticSpeedMenu.classList.add('hidden');
+                });
+            });
+
+            document.querySelectorAll('.modal-speed-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const sp = btn.dataset.speed;
+                    setDramaticSpeed(sp);
+                });
+            });
+
+            document.addEventListener('click', (e) => {
+                if (dramaticSpeedMenu && !dramaticSpeedMenu.classList.contains('hidden')) {
+                    if (!dramaticSpeedMenu.contains(e.target) && !dramaticSpeedBtn?.contains(e.target)) {
+                        dramaticSpeedMenu.classList.add('hidden');
+                    }
+                }
+            });
+
+            // 순차 발표 플로팅 컨트롤러 이벤트 (일시정지 / 건너뛰기)
+            const dramaticPauseBtn = document.getElementById('dramaticPauseBtn');
+            const dramaticPauseIcon = document.getElementById('dramaticPauseIcon');
+            const dramaticPauseText = document.getElementById('dramaticPauseText');
+            const dramaticSkipBtn = document.getElementById('dramaticSkipBtn');
+
+            if (dramaticPauseBtn) {
+                dramaticPauseBtn.addEventListener('click', () => {
+                    State.revealCtrl.isPaused = !State.revealCtrl.isPaused;
+                    if (State.revealCtrl.isPaused) {
+                        if (dramaticPauseText) dramaticPauseText.textContent = '계속 진행';
+                        if (dramaticPauseIcon) dramaticPauseIcon.className = 'fa-solid fa-play text-emerald-400';
+                        showToast("⏸️ 순차 발표가 일시정지되었습니다.", "⏸️");
+                    } else {
+                        if (dramaticPauseText) dramaticPauseText.textContent = '일시정지';
+                        if (dramaticPauseIcon) dramaticPauseIcon.className = 'fa-solid fa-pause text-amber-400';
+                        showToast("▶️ 순차 발표를 계속 진행합니다.", "▶️");
+                    }
+                });
+            }
+
+            if (dramaticSkipBtn) {
+                dramaticSkipBtn.addEventListener('click', () => {
+                    State.revealCtrl.skipRequested = true;
+                    showToast("⏭️ 전체 자리를 즉시 공개합니다!", "⚡");
                 });
             }
 
@@ -3497,6 +3784,10 @@
             try {
                 updateTeacherModeUI();
             } catch(e) { console.error('updateTeacherModeUI error:', e); }
+
+            try {
+                updateDramaticSpeedUI();
+            } catch(e) { console.error('updateDramaticSpeedUI error:', e); }
 
             try {
                 Cloud.init();
