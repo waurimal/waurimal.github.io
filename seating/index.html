@@ -442,6 +442,7 @@
                     <div class="flex items-center justify-between mb-2">
                         <label class="text-xs font-black text-slate-700 flex items-center gap-1.5">
                             <i class="fa-solid fa-calculator text-blue-600"></i> 학급 전체 학생 수
+                            <span class="text-[11px] text-blue-600 font-semibold">(명단 입력 시 자동 일치)</span>
                         </label>
                         <div class="flex items-center gap-2">
                             <input type="number" id="settingStudentCountInput" min="6" max="36" value="25" class="w-20 px-2.5 py-1 text-center font-black text-base rounded-xl border-2 border-blue-500 bg-white text-slate-900 focus:outline-none">
@@ -449,7 +450,7 @@
                         </div>
                     </div>
                     <!-- 인원 슬라이더 -->
-                    <input type="range" id="settingStudentCountSlider" min="18" max="30" value="25" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                    <input type="range" id="settingStudentCountSlider" min="6" max="36" value="25" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
                     <!-- 모둠 분배 계산 결과 안내 -->
                     <div id="modalCapSummary" class="mt-2.5 text-xs font-bold text-blue-700 bg-blue-50/80 p-2.5 rounded-xl border border-blue-200">
                         💡 25명 기준: 1~5모둠 4명, <strong>6모둠 5명 (+1)</strong>으로 완벽 분배됩니다.
@@ -960,7 +961,12 @@
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (parsed && Array.isArray(parsed.classes) && parsed.classes.length > 0) {
-                        State.classes = parsed.classes;
+                        State.classes = parsed.classes.map(cls => {
+                            if (cls.names && cls.names.length > 0) {
+                                cls.studentCount = cls.names.length;
+                            }
+                            return cls;
+                        });
                         State.currentClassId = parsed.currentClassId || State.classes[0].id;
                         return;
                     }
@@ -998,7 +1004,13 @@
             if (!target) return;
 
             State.currentClassId = target.id;
-            State.studentCount = target.studentCount || (target.names ? target.names.length : 25);
+            // 등록된 명단이 있으면 명단 인원수(names.length)를 최우선으로 일치
+            if (target.names && target.names.length > 0) {
+                State.studentCount = target.names.length;
+                target.studentCount = target.names.length;
+            } else {
+                State.studentCount = target.studentCount || 25;
+            }
             State.frontStudents = target.frontStudents || [];
             State.separationPairs = target.separationPairs || [];
 
@@ -1533,26 +1545,29 @@
         };
 
         // ==========================================
-        // 18. 나이스(NEIS) / 엑셀 명단 텍스트 자동 정제 도구
+        // 18. 나이스(NEIS) / 엑셀 명단 텍스트 자동 정제 및 파서
         // ==========================================
-        function cleanStudentRosterText(rawText) {
-            if (!rawText) return [];
-            return rawText
-                .split('\n')
-                .map(line => {
-                    if (!line.trim()) return '';
+        function parseRosterLines(rawText) {
+            if (!rawText || !rawText.trim()) return [];
+            let lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
+            if (lines.length === 1 && lines[0].includes(',')) {
+                lines = lines[0].split(',').map(s => s.trim()).filter(Boolean);
+            }
+            return lines.map(line => {
+                if (line.includes('\t')) {
                     const parts = line.split('\t').map(p => p.trim()).filter(Boolean);
-                    let name = parts[0] || '';
-                    if (parts.length > 1) {
-                        const nonNum = parts.find(p => !/^\d+$/.test(p) && !/^(남|여|M|F)$/i.test(p));
-                        if (nonNum) name = nonNum;
-                    }
-                    name = name.replace(/^(\d+[\.\s번\)\-\_]+)/, '');
-                    name = name.replace(/\s*\([^\)]*\)/g, '');
-                    name = name.replace(/[,;]/g, '').trim();
-                    return name;
-                })
-                .filter(n => n.length > 0);
+                    const nonNum = parts.find(p => !/^\d+$/.test(p) && !/^(남|여|M|F)$/i.test(p));
+                    if (nonNum) line = nonNum;
+                }
+                let name = line.replace(/^(\d+[\.\s번\)\-\_]+)/, '');
+                name = name.replace(/\s*\([^\)]*\)/g, '');
+                name = name.replace(/[,;]/g, '').trim();
+                return name;
+            }).filter(n => n.length > 0);
+        }
+
+        function cleanStudentRosterText(rawText) {
+            return parseRosterLines(rawText);
         }
 
         // ==========================================
@@ -1620,6 +1635,12 @@
 
             State.modalEditingClassId = target.id;
 
+            // 등록된 명단이 있으면 명단 인원수를 100% 최우선 적용
+            const actualCount = (target.names && target.names.length > 0) 
+                ? target.names.length 
+                : (target.studentCount || 0);
+            target.studentCount = actualCount;
+
             const nameInput = document.getElementById('settingClassNameInput');
             const countInput = document.getElementById('settingStudentCountInput');
             const countSlider = document.getElementById('settingStudentCountSlider');
@@ -1629,15 +1650,19 @@
             const namesBadge = document.getElementById('namesCountBadge');
 
             if (nameInput) nameInput.value = target.name;
-            if (countInput) countInput.value = target.studentCount;
-            if (countSlider) countSlider.value = target.studentCount;
+            if (countInput) countInput.value = actualCount;
+            if (countSlider) {
+                countSlider.max = Math.max(36, actualCount || 25);
+                countSlider.min = Math.min(6, actualCount || 6);
+                countSlider.value = actualCount || 25;
+            }
             if (namesTextarea) namesTextarea.value = (target.names || []).join('\n');
             if (frontInput) frontInput.value = (target.frontStudents || []).join(', ');
             if (sepInput) sepInput.value = (target.separationPairs || []).map(p => p.join('-')).join(', ');
 
-            if (namesBadge) namesBadge.textContent = `총 ${(target.names || []).length}명`;
+            if (namesBadge) namesBadge.textContent = `총 ${actualCount}명`;
 
-            syncModalSummary(target.studentCount);
+            syncModalSummary(actualCount || 25);
         }
 
         const syncModalSummary = (cnt) => {
@@ -1650,7 +1675,7 @@
             } else if (cnt === 26) {
                 modalCapSummary.innerHTML = `💡 <strong>26명</strong> 기준: 1~4모둠 각 4명, <strong>5·6모둠 각 5명 (+1)</strong>으로 완벽 분배됩니다.`;
             } else {
-                modalCapSummary.innerHTML = `💡 <strong>${cnt}명</strong> 기준: 1~4모둠 ${caps[0]}명, 5모둠 ${caps[4]}명, 6모둠 ${caps[5]}명 분배`;
+                modalCapSummary.innerHTML = `💡 <strong>${cnt}명</strong> 기준: 모둠별 [${caps.map((c, i) => `${i+1}모둠: ${c}명`).join(', ')}] 자동 분배`;
             }
         };
 
@@ -1667,11 +1692,19 @@
             const namesTextarea = document.getElementById('studentNamesTextarea');
 
             const newName = nameInput ? nameInput.value.trim() || '우리반' : target.name;
-            const newCount = countInput ? Math.max(6, Math.min(36, parseInt(countInput.value, 10) || 25)) : target.studentCount;
-            const rawNames = namesTextarea ? namesTextarea.value.split('\n').map(s => s.trim()).filter(Boolean) : [...target.names];
+            const rawNames = namesTextarea ? parseRosterLines(namesTextarea.value) : [...(target.names || [])];
 
-            while (rawNames.length < newCount) {
-                rawNames.push(DEFAULT_STUDENT_NAMES[rawNames.length] || `${rawNames.length + 1}번`);
+            let newCount;
+            if (rawNames.length > 0) {
+                // 추가/수정한 명단 인원수와 100% 동일하게 저장 (없는 명단 임의 생성 X, 초과 인원 자르기 X)
+                newCount = rawNames.length;
+            } else if (countInput) {
+                newCount = Math.max(6, Math.min(36, parseInt(countInput.value, 10) || 25));
+                for (let i = 1; i <= newCount; i++) {
+                    rawNames.push(DEFAULT_STUDENT_NAMES[i - 1] || `${i}번`);
+                }
+            } else {
+                newCount = 25;
             }
 
             const frontRaw = document.getElementById('frontSeatInput') ? document.getElementById('frontSeatInput').value : '';
@@ -1685,20 +1718,32 @@
 
             target.name = newName;
             target.studentCount = newCount;
-            target.names = rawNames.slice(0, newCount);
+            target.names = rawNames;
             target.frontStudents = frontArr;
             target.separationPairs = sepArr;
-            target.lastGroups = null;
+            target.lastGroups = null; // 인원 변경 시 이전 배정 리셋
+
+            // UI 입력 필드 동기화
+            if (countInput) countInput.value = newCount;
+            const countSlider = document.getElementById('settingStudentCountSlider');
+            if (countSlider) {
+                countSlider.max = Math.max(36, newCount);
+                countSlider.min = Math.min(6, newCount);
+                countSlider.value = newCount;
+            }
+            const namesBadge = document.getElementById('namesCountBadge');
+            if (namesBadge) namesBadge.textContent = `총 ${newCount}명`;
+            syncModalSummary(newCount);
 
             persistClasses();
             renderClassTabs();
             Sound.playPlop();
 
             if (shouldCloseModal) {
-                switchClass(target.id);
+                switchClass(target.id, false);
                 const modal = document.getElementById('settingsModal');
                 if (modal) modal.classList.add('hidden');
-                showToast(`'${target.name}' 명단이 저장되고 새 자리가 배정되었습니다!`, "✅");
+                showToast(`'${target.name}' (${newCount}명) 명단이 저장되고 새 자리가 배정되었습니다!`, "✅");
             } else {
                 showToast(`'${target.name}' (${newCount}명) 명단이 등록 저장되었습니다! 계속 다른 반을 추가하거나 수정하세요.`, "💾");
             }
@@ -1886,7 +1931,7 @@
                 const newClass = {
                     id: newId,
                     name: newName,
-                    studentCount: 25,
+                    studentCount: 0,
                     names: [],
                     frontStudents: [],
                     separationPairs: [],
@@ -1970,8 +2015,8 @@
 
             if (countInput && countSlider) {
                 countInput.addEventListener('input', () => {
-                    const val = Math.max(6, Math.min(36, parseInt(countInput.value, 10) || 25));
-                    countSlider.value = val;
+                    const val = Math.max(1, Math.min(60, parseInt(countInput.value, 10) || 0));
+                    countSlider.value = Math.max(6, Math.min(36, val));
                     syncModalSummary(val);
                 });
                 countSlider.addEventListener('input', () => {
@@ -1980,11 +2025,27 @@
                 });
             }
 
+            // 명단 입력 시 실시간 인원 수 및 모둠 분배 자동 연동 함수
+            const syncFromNamesTextarea = () => {
+                if (!namesTextarea) return;
+                const names = parseRosterLines(namesTextarea.value);
+                const count = names.length;
+                if (namesBadge) namesBadge.textContent = `총 ${count}명`;
+                if (count > 0) {
+                    if (countInput) countInput.value = count;
+                    if (countSlider) {
+                        countSlider.max = Math.max(36, count);
+                        countSlider.min = Math.min(6, count);
+                        countSlider.value = count;
+                    }
+                    syncModalSummary(count);
+                }
+            };
+
             if (namesTextarea) {
-                namesTextarea.addEventListener('input', () => {
-                    const lines = namesTextarea.value.split('\n').map(s => s.trim()).filter(Boolean);
-                    if (namesBadge) namesBadge.textContent = `총 ${lines.length}명`;
-                });
+                namesTextarea.addEventListener('input', syncFromNamesTextarea);
+                namesTextarea.addEventListener('paste', () => setTimeout(syncFromNamesTextarea, 20));
+                namesTextarea.addEventListener('change', syncFromNamesTextarea);
             }
 
             // 엑셀·나이스 명단 자동 정리 버튼
@@ -1997,12 +2058,15 @@
                         return;
                     }
                     namesTextarea.value = cleaned.join('\n');
-                    countInput.value = cleaned.length;
-                    countSlider.value = cleaned.length;
-                    syncModalSummary(cleaned.length);
-                    if (namesBadge) namesBadge.textContent = `총 ${cleaned.length}명`;
+                    const cnt = cleaned.length;
+                    countInput.value = cnt;
+                    countSlider.max = Math.max(36, cnt);
+                    countSlider.min = Math.min(6, cnt);
+                    countSlider.value = cnt;
+                    syncModalSummary(cnt);
+                    if (namesBadge) namesBadge.textContent = `총 ${cnt}명`;
                     Sound.playPlop();
-                    showToast(`엑셀·나이스 명단에서 ${cleaned.length}명의 학생 이름이 자동 정리되었습니다!`, "✨");
+                    showToast(`엑셀·나이스 명단에서 ${cnt}명의 학생 이름이 자동 정리되었습니다!`, "✨");
                 });
             }
 
