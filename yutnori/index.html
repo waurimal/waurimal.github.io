@@ -1570,6 +1570,12 @@
                 victoryHomeBtn.addEventListener('click', () => {
                     const victoryModal = document.getElementById('victoryModal');
                     if (victoryModal) victoryModal.classList.add('hidden');
+                    if (window.YutnoriGameInstance && window.YutnoriGameInstance.isOnline) {
+                        multiplayerManager.leaveRoom(false);
+                        window.YutnoriGameInstance.isOnline = false;
+                        const onlineBanner = document.getElementById('onlineRoomBanner');
+                        if (onlineBanner) onlineBanner.classList.add('hidden');
+                    }
                     window.showScreen('home');
                 });
             }
@@ -1716,6 +1722,13 @@
             multiplayerManager.onStateChange((data) => {
                 if (!data) {
                     onlineLobbyModal.classList.add('hidden');
+                    if (window.YutnoriGameInstance && window.YutnoriGameInstance.isOnline) {
+                        window.YutnoriGameInstance.isOnline = false;
+                        const onlineBanner = document.getElementById('onlineRoomBanner');
+                        if (onlineBanner) onlineBanner.classList.add('hidden');
+                        alert("방이 종료되었거나 방장/상대방이 퇴장하여 대기실이 닫혔습니다.");
+                        window.showScreen('home');
+                    }
                     return;
                 }
 

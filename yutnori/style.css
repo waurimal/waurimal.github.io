@@ -154,17 +154,17 @@ body {
 }
 
 /* 팀별 말 컬러 */
-.yut-piece.team-0 { /* 청팀 */
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+.yut-piece.team-0, .team-0 { /* 청팀 */
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
 }
-.yut-piece.team-1 { /* 백팀 (로즈레드) */
-    background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);
+.yut-piece.team-1, .team-1 { /* 백팀 (로즈레드) */
+    background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%) !important;
 }
-.yut-piece.team-2 { /* 홍/녹팀 */
-    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+.yut-piece.team-2, .team-2 { /* 홍/녹팀 */
+    background: linear-gradient(135deg, #10b981 0%, #047857 100%) !important;
 }
-.yut-piece.team-3 { /* 황팀 */
-    background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+.yut-piece.team-3, .team-3 { /* 황팀 */
+    background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%) !important;
 }
 
 /* 선택 가능한 말 바운스 애니메이션 */
@@ -175,12 +175,27 @@ body {
     z-index: 40;
 }
 
-@keyframes pieceBounce {
+button.selectable {
+    animation: btnSelectablePulse 0.8s infinite alternate ease-in-out;
+    filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.9));
+    cursor: pointer !important;
+}
+
+@keyframes btnSelectablePulse {
     0% {
-        transform: translateY(0) scale(1);
+        transform: scale(1);
     }
     100% {
-        transform: translateY(-8px) scale(1.15);
+        transform: scale(1.15);
+    }
+}
+
+@keyframes pieceBounce {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        transform: translate(-50%, calc(-50% - 8px)) scale(1.15);
     }
 }
 

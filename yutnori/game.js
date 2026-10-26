@@ -1913,8 +1913,8 @@
             };
 
             this.teams = [
-                { id: 0, name: `${realName}(청팀)`, isAI: false, colorClass: 'team-0', players: [realName], currentPlayerIdx: 0, pieces: [] },
-                { id: 1, name: '컴퓨터(백팀)', isAI: true, colorClass: 'team-1', players: ['인공지능 봇'], currentPlayerIdx: 0, pieces: [] }
+                { id: 0, key: 'blue', name: `${realName}(청팀)`, isAI: false, colorClass: 'team-0', players: [realName], currentPlayerIdx: 0, pieces: [] },
+                { id: 1, key: 'white', name: '컴퓨터(백팀)', isAI: true, colorClass: 'team-1', players: ['인공지능 봇'], currentPlayerIdx: 0, pieces: [] }
             ];
 
             // 각 팀 말(Piece) 초기화
@@ -1924,6 +1924,7 @@
                     team.pieces.push({
                         id: i,
                         teamId: team.id,
+                        team: team.key,
                         pos: -1, // -1: 대기실(START)
                         route: 'OUTER', // 현재 진행 경로
                         isHome: true, // 아직 판에 안 나옴
@@ -2037,6 +2038,7 @@
                     team.pieces.push({
                         id: i,
                         teamId: team.id,
+                        team: team.key,
                         pos: -1,
                         route: 'OUTER',
                         isHome: true,
@@ -2120,16 +2122,41 @@
 
             const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
             const isMyTurn = (roomData.currentTurnId === mySessionId);
+            const isRemoteAction = Boolean(roomData.lastAction && roomData.lastAction.actorId !== mySessionId);
 
-            // 상대방이 진행한 말 위치 상태 동기화 (내가 움직인 턴이 아닐 때)
-            if (roomData.teamsState && (!isMyTurn || isInitial)) {
-                if (roomData.teamsState[0] && roomData.teamsState[0].pieces) {
+            // 말 위치 상태 동기화:
+            // 1) 초기화 시(isInitial)
+            // 2) 내 턴이 아닐 때(!isMyTurn)
+            // 3) 상대방이 액션을 수행했을 때(isRemoteAction)
+            // 4) 로컬에서 애니메이션/퀴즈/던지기/말선택 중이 아닐 때
+            const isLocalBusy = (this.gameState === 'MOVING' || this.gameState === 'WAIT_QUIZ' || this.gameState === 'ROLLING' || this.gameState === 'WAIT_PIECE_SELECT');
+            const shouldSyncTeams = roomData.teamsState && (!isMyTurn || isInitial || isRemoteAction || !isLocalBusy);
+
+            if (shouldSyncTeams) {
+                if (roomData.teamsState[0] && Array.isArray(roomData.teamsState[0].pieces)) {
                     this.teams[0].pieces = JSON.parse(JSON.stringify(roomData.teamsState[0].pieces));
+                    this.teams[0].pieces.forEach(p => {
+                        p.teamId = 0;
+                        p.team = 'blue';
+                        if (p.stackedPieces === undefined) p.stackedPieces = [];
+                        if (p.history === undefined) p.history = [];
+                    });
                 }
-                if (roomData.teamsState[1] && roomData.teamsState[1].pieces) {
+                if (roomData.teamsState[1] && Array.isArray(roomData.teamsState[1].pieces)) {
                     this.teams[1].pieces = JSON.parse(JSON.stringify(roomData.teamsState[1].pieces));
+                    this.teams[1].pieces.forEach(p => {
+                        p.teamId = 1;
+                        p.team = 'white';
+                        if (p.stackedPieces === undefined) p.stackedPieces = [];
+                        if (p.history === undefined) p.history = [];
+                    });
                 }
                 this.renderAllPieces();
+            }
+
+            // 내 차례인데 로컬 상태가 이동/퀴즈/회전 중이 아니면 WAIT_ROLL 보장
+            if (isMyTurn && roomData.status === 'playing' && !isLocalBusy && this.gameState !== 'WAIT_PIECE_SELECT') {
+                this.setGameState('WAIT_ROLL');
             }
 
             this.updateTurnUI();
@@ -2154,6 +2181,9 @@
             if (action.type === 'ROLL_AND_QUIZ') {
                 if (action.rollResult) {
                     this.playRemoteRollAnimation(action.rollResult);
+                    if (action.rollResult.extraTurn) {
+                        this.recordStat(actorName, 'yutMoCount', 1);
+                    }
                 }
                 if (this.dom.remoteTurnNotice) {
                     this.dom.remoteTurnNotice.classList.remove('hidden');
@@ -2163,21 +2193,28 @@
                 }
             } else if (action.type === 'QUIZ_CORRECT') {
                 Sound.playCorrect();
+                this.recordStat(actorName, 'correctCount', 1);
                 this.logMessage(`👏 [${actorName}]님이 영어 문제를 맞혔습니다! 말이 전진합니다.`);
                 if (this.dom.remoteTurnNoticeText) {
-                    this.dom.remoteTurnNoticeText.textContent = `${actorName}님이 정답을 맞혀 이동할 말을 고르고 있습니다! 🎯`;
+                    this.dom.remoteTurnNoticeText.textContent = `${actorName}님이 정답을 맞혀 말을 전진시키고 있습니다! 🐎`;
                 }
             } else if (action.type === 'QUIZ_WRONG') {
                 Sound.playWrong();
+                this.recordStat(actorName, 'wrongCount', 1);
                 this.logMessage(`❌ [${actorName}]님이 아쉽게 문제를 틀렸습니다. 전진하지 못합니다.`);
                 if (this.dom.remoteTurnNoticeText) {
                     this.dom.remoteTurnNoticeText.textContent = `${actorName}님이 문제를 틀려 턴이 넘어옵니다.`;
                 }
+            } else if (action.type === 'CAUGHT_PIECE') {
+                Sound.playCatch();
+                this.recordStat(actorName, 'catchCount', action.caughtCount || 1);
+                const countText = (action.caughtCount > 1) ? `${action.caughtCount}마리의 말이` : '말이';
+                this.logMessage(`💥 [${actorName}]님이 내 말을 잡아 대기실로 돌아갔습니다! (${countText} 잡힘, 상대방 한 번 더 던지기)`);
             } else if (action.type === 'END_TURN') {
                 this.logMessage(`🔄 ${actorName}님의 턴이 끝나고 차례가 넘어왔습니다.`);
                 Sound.playStep();
             } else if (action.type === 'EXTRA_TURN') {
-                this.logMessage(`🎉 ${actorName}님이 윷/모 또는 말 잡기로 한 번 더 윷을 던집니다!`);
+                this.logMessage(`🎉 ${actorName}님이 윷/모로 한 번 더 윷을 던집니다!`);
                 Sound.playStep();
             } else if (action.type === 'GAME_OVER') {
                 const winnerTeamObj = this.teams.find(t => t.name === action.winnerTeam) || this.teams[0];
@@ -2188,6 +2225,10 @@
         playRemoteRollAnimation(rollResult) {
             this.currentRoll = rollResult;
             Sound.playToss();
+
+            if (this.dom.resultBadge) {
+                this.dom.resultBadge.classList.add('hidden');
+            }
 
             const sticks = [this.dom.stick0, this.dom.stick1, this.dom.stick2, this.dom.stick3];
             const labels = [this.dom.yutLabel0, this.dom.yutLabel1, this.dom.yutLabel2, this.dom.yutLabel3];
@@ -2233,6 +2274,10 @@
         }
 
         getCurrentPlayerName() {
+            if (this.isOnline && this.currentRoomData && this.currentRoomData.players) {
+                const p = this.currentRoomData.players[this.currentRoomData.currentTurnId];
+                if (p && p.name) return p.name;
+            }
             const team = this.getCurrentTeam();
             return team.players[team.currentPlayerIdx] || team.name;
         }
@@ -2399,6 +2444,10 @@
             this.setGameState('ROLLING');
             Sound.playToss();
 
+            if (this.dom.resultBadge) {
+                this.dom.resultBadge.classList.add('hidden');
+            }
+
             // 윷가락 애니메이션 트리거
             const sticks = [this.dom.stick0, this.dom.stick1, this.dom.stick2, this.dom.stick3];
             const labels = [this.dom.yutLabel0, this.dom.yutLabel1, this.dom.yutLabel2, this.dom.yutLabel3];
@@ -2528,6 +2577,7 @@
                 return;
             }
 
+            this.movablePieces = movablePieces;
             this.setGameState('WAIT_PIECE_SELECT');
             this.renderAllPieces(movablePieces);
 
@@ -2542,17 +2592,30 @@
         /**
          * 말 렌더링 및 하이라이트
          */
-        renderAllPieces(selectablePieces = []) {
+        renderAllPieces(selectablePieces = null) {
             if (!this.dom.piecesLayer) return;
             this.dom.piecesLayer.innerHTML = '';
 
-            const selectableSet = new Set((selectablePieces || []).map(p => `${p.teamId}_${p.id}`));
+            // 말 선택 단계일 때 selectablePieces가 생략되면 캐시된 movablePieces 복구
+            if ((!selectablePieces || selectablePieces.length === 0) && this.gameState === 'WAIT_PIECE_SELECT' && this.movablePieces && this.movablePieces.length > 0) {
+                selectablePieces = this.movablePieces;
+            } else if (selectablePieces && selectablePieces.length > 0) {
+                this.movablePieces = selectablePieces;
+            }
+
+            const currentTeam = this.getCurrentTeam();
+            const selectableSet = new Set((selectablePieces || []).map(p => {
+                const tId = (p.teamId !== undefined) ? p.teamId : (p.team === 'white' ? 1 : 0);
+                return `${tId}_${p.id}`;
+            }));
 
             // 노드별로 말들을 그룹핑 (말 업기 시 겹쳐서 표시)
             const nodeMap = new Map();
 
             this.teams.forEach(team => {
                 team.pieces.forEach(piece => {
+                    piece.teamId = team.id;
+                    piece.team = team.key || (team.id === 0 ? 'blue' : 'white');
                     if (piece.isGoal) return; // 완주한 말은 판에 표시하지 않음
                     const key = piece.isHome ? `home_${team.id}` : `node_${piece.pos}`;
                     if (!nodeMap.has(key)) nodeMap.set(key, []);
@@ -2573,11 +2636,20 @@
 
                 // 대표 말 (업힌 말의 경우 가장 상위 말)
                 const topPiece = piecesAtLocation[0];
-                const isSelectable = piecesAtLocation.some(p => selectableSet.has(`${p.teamId}_${p.id}`));
-                const isSelected = (this.selectedPiece && this.selectedPiece.teamId === topPiece.teamId && piecesAtLocation.some(p => p.id === this.selectedPiece.id));
+                const topTeamId = (topPiece.teamId !== undefined) ? topPiece.teamId : (topPiece.team === 'white' ? 1 : 0);
+                const topTeam = this.teams[topTeamId] || this.teams[0];
+
+                const isSelectable = piecesAtLocation.some(p => {
+                    const tId = (p.teamId !== undefined) ? p.teamId : (p.team === 'white' ? 1 : 0);
+                    return selectableSet.has(`${tId}_${p.id}`);
+                });
+
+                const isSelected = (this.selectedPiece && 
+                    ((this.selectedPiece.teamId !== undefined ? this.selectedPiece.teamId : (this.selectedPiece.team === 'white' ? 1 : 0)) === topTeamId) && 
+                    piecesAtLocation.some(p => p.id === this.selectedPiece.id));
 
                 const pieceEl = document.createElement('div');
-                pieceEl.className = `yut-piece team-${topPiece.teamId} ${isSelectable ? 'selectable' : ''} ${isSelected ? 'selected' : ''}`;
+                pieceEl.className = `yut-piece team-${topTeamId} ${isSelectable ? 'selectable' : ''} ${isSelected ? 'selected' : ''}`;
                 pieceEl.style.left = `${nodeInfo.x}%`;
                 pieceEl.style.top = `${nodeInfo.y}%`;
                 pieceEl.style.transform = 'translate(-50%, -50%)';
@@ -2590,17 +2662,16 @@
                     badge.className = 'stacked-badge';
                     badge.textContent = `x${totalStacked}`;
                     pieceEl.appendChild(badge);
-                    pieceEl.title = `[${this.teams[topPiece.teamId].name}] 업힌 말 (${piecesAtLocation.map(p => '#' + (p.id + 1)).join(', ')}) x${totalStacked}`;
+                    pieceEl.title = `[${topTeam.name}] 업힌 말 (${piecesAtLocation.map(p => '#' + (p.id + 1)).join(', ')}) x${totalStacked}`;
                 } else {
-                    pieceEl.title = `[${this.teams[topPiece.teamId].name}] 말 #${topPiece.id + 1}`;
+                    pieceEl.title = `[${topTeam.name}] 말 #${topPiece.id + 1}`;
                 }
 
-                if (isSelectable) {
-                    pieceEl.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        this.onPieceSelected(topPiece);
-                    });
-                }
+                // 항상 클릭 이벤트 리스너를 바인딩하여 무응답 현상 원천 차단
+                pieceEl.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.onPieceSelected(topPiece);
+                });
 
                 this.dom.piecesLayer.appendChild(pieceEl);
             });
@@ -2614,12 +2685,18 @@
             if (!waitingArea) return;
 
             waitingArea.innerHTML = '';
+            const currentTeam = this.getCurrentTeam();
+
             this.teams.forEach(team => {
                 const homePieces = team.pieces.filter(p => p.isHome && !p.isGoal);
                 if (homePieces.length === 0) return;
 
                 // 대기실의 말들은 절대로 업힌 상태가 아니므로 stackedPieces = [] 보장
-                homePieces.forEach(p => { p.stackedPieces = []; });
+                homePieces.forEach(p => { 
+                    p.teamId = team.id;
+                    p.team = team.key || (team.id === 0 ? 'blue' : 'white');
+                    p.stackedPieces = []; 
+                });
 
                 const teamBox = document.createElement('div');
                 teamBox.className = 'flex items-center gap-2 mb-2 p-2 rounded-xl bg-slate-800/60 border border-slate-700';
@@ -2633,17 +2710,24 @@
                 piecesWrapper.className = 'flex gap-2';
 
                 homePieces.forEach(p => {
-                    const isSelectable = selectableSet.has(`${p.teamId}_${p.id}`);
-                    const isSelected = (this.selectedPiece && this.selectedPiece.teamId === p.teamId && this.selectedPiece.id === p.id);
+                    const isSelectable = selectableSet.has(`${team.id}_${p.id}`);
+                    const isSelected = (this.selectedPiece && 
+                        ((this.selectedPiece.teamId !== undefined ? this.selectedPiece.teamId : (this.selectedPiece.team === 'white' ? 1 : 0)) === team.id) && 
+                        this.selectedPiece.id === p.id);
+
+                    const isCurrentTeamWaiting = (currentTeam && currentTeam.id === team.id);
+                    const canClickHover = isSelectable || (this.gameState === 'WAIT_PIECE_SELECT' && isCurrentTeamWaiting);
 
                     const pBtn = document.createElement('button');
-                    pBtn.className = `w-8 h-8 rounded-full border-2 border-white flex items-center justify-center font-black text-xs text-white shadow-md transition-all team-${p.teamId} ${isSelectable ? 'selectable hover:scale-110' : 'opacity-60 cursor-not-allowed'} ${isSelected ? 'ring-4 ring-yellow-400 scale-110' : ''}`;
+                    pBtn.className = `w-8 h-8 rounded-full border-2 border-white flex items-center justify-center font-black text-xs text-white shadow-md transition-all team-${team.id} ${isSelectable ? 'selectable hover:scale-110 cursor-pointer' : (canClickHover ? 'hover:scale-105 cursor-pointer opacity-90' : 'opacity-60 cursor-not-allowed')} ${isSelected ? 'ring-4 ring-yellow-400 scale-110' : ''}`;
                     pBtn.textContent = p.id + 1;
                     pBtn.title = `${team.name} 대기 말 #${p.id + 1} (개별 출발 대기)`;
 
-                    if (isSelectable) {
-                        pBtn.addEventListener('click', () => this.onPieceSelected(p));
-                    }
+                    // 항상 클릭 이벤트 리스너를 연결하여 언제든 안전하게 반응하도록 보장
+                    pBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.onPieceSelected(p);
+                    });
                     piecesWrapper.appendChild(pBtn);
                 });
 
@@ -2653,27 +2737,76 @@
         }
 
         onPieceSelected(piece) {
-            if (this.gameState !== 'WAIT_PIECE_SELECT') return;
+            console.log("[Yutnori] onPieceSelected called:", piece, "gameState:", this.gameState);
+            if (this.gameState !== 'WAIT_PIECE_SELECT') {
+                console.warn("[Yutnori] Cannot select piece: gameState is", this.gameState);
+                return;
+            }
 
             if (this.isOnline) {
                 const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
-                if (!this.currentRoomData || this.currentRoomData.currentTurnId !== mySessionId) return;
+                if (!this.currentRoomData || this.currentRoomData.currentTurnId !== mySessionId) {
+                    this.logMessage(`⏳ 지금은 내 턴이 아닙니다.`);
+                    return;
+                }
             }
 
             const currentTeam = this.getCurrentTeam();
-            if (piece.teamId !== currentTeam.id) return;
+            const pieceTeamId = (piece.teamId !== undefined) ? piece.teamId : (piece.team === 'white' ? 1 : 0);
+            const isCurrentTeamPiece = (pieceTeamId === currentTeam.id) || 
+                                       (piece.team === currentTeam.key) ||
+                                       (currentTeam.pieces && currentTeam.pieces.some(p => p.id === piece.id));
+
+            if (!isCurrentTeamPiece) {
+                this.logMessage(`⚠️ 자신의 팀(${currentTeam.name}) 말만 선택할 수 있습니다.`);
+                return;
+            }
+
+            if (!this.currentRoll) {
+                console.warn("[Yutnori] Cannot select piece: currentRoll is null");
+                return;
+            }
+
+            // 이동 유효성 계산 및 검증
+            const movePath = calculateMovePath(piece, this.currentRoll.result);
+            if (!movePath || !movePath.valid) {
+                this.logMessage(`⚠️ 이 말은 현재 '${this.currentRoll.name}'(으)로 이동할 수 없습니다. 다른 말을 선택해주세요.`);
+                return;
+            }
+
+            // 말 상태 메타데이터 정규화
+            piece.teamId = currentTeam.id;
+            piece.team = currentTeam.key || (currentTeam.id === 0 ? 'blue' : 'white');
 
             this.selectedPiece = piece;
             Sound.playStep();
 
             // 이동 경로 및 목적지 노드 계산
-            const movePath = calculateMovePath(piece, this.currentRoll.result);
-            this.highlightTargetNode(movePath);
+            const movePathResult = movePath;
+            this.highlightTargetNode(movePathResult);
+
+            // 선택된 말 비주얼 갱신
+            this.renderAllPieces();
 
             // 영어 퀴즈 팝업 출제!
             setTimeout(() => {
-                this.presentQuiz(piece, movePath);
+                this.presentQuiz(piece, movePathResult);
             }, 300);
+        }
+
+        onNodeClicked(nodeId) {
+            if (this.gameState !== 'WAIT_PIECE_SELECT') return;
+            const currentTeam = this.getCurrentTeam();
+            if (!currentTeam) return;
+
+            // 해당 노드에 위치한 현재 팀의 말 탐색
+            const pieceAtNode = currentTeam.pieces.find(p => !p.isHome && !p.isGoal && p.pos === nodeId);
+            if (pieceAtNode && this.currentRoll) {
+                const pathInfo = calculateMovePath(pieceAtNode, this.currentRoll.result);
+                if (pathInfo && pathInfo.valid) {
+                    this.onPieceSelected(pieceAtNode);
+                }
+            }
         }
 
         highlightTargetNode(movePath) {
@@ -2857,6 +2990,7 @@
                 });
             } else {
                 Sound.playWrong();
+                this.pendingExtraTurn = false; // 오답 시 윷/모 추가 기회 즉시 무효화
                 this.recordStat(playerName, 'wrongCount', 1);
                 this.logMessage(`❌ [${currentTeam.name}] ${playerName}님이 아쉽게 문제를 틀렸습니다. (정답: ${q.answer || q.answerSentence}) 전진하지 못합니다.`);
 
@@ -2946,7 +3080,8 @@
             if (piece.isHome || piece.isGoal) {
                 return [piece];
             }
-            const currentTeam = this.teams.find(t => t.id === piece.teamId);
+            const pieceTeamId = (piece.teamId !== undefined) ? piece.teamId : (piece.team === 'white' ? 1 : 0);
+            const currentTeam = this.teams.find(t => t.id === pieceTeamId) || this.getCurrentTeam();
             if (!currentTeam) return [piece];
 
             const group = currentTeam.pieces.filter(p => !p.isHome && !p.isGoal && p.pos === piece.pos);
@@ -3067,6 +3202,7 @@
             if (caughtEnemy) {
                 Sound.playCatch();
                 this.pendingExtraTurn = true; // 말 잡으면 한 번 더 던지기!
+                this.lastCatchInfo = { caught: true, count: totalCaught };
                 const currentPlayerName = this.getCurrentPlayerName();
                 this.recordStat(currentPlayerName, 'catchCount', totalCaught);
 
@@ -3075,6 +3211,8 @@
                 } else {
                     this.logMessage(`💥 [${currentTeam.name}]이(가) [상대 팀]의 말을 잡았습니다! (윷을 한 번 더 던집니다!)`);
                 }
+            } else {
+                this.lastCatchInfo = null;
             }
 
             // B. 아군 말 업기 (포개기)
@@ -3113,6 +3251,7 @@
         // ==========================================
         endTurn() {
             this.selectedPiece = null;
+            this.movablePieces = null;
             this.clearHighlights();
 
             // 실시간 온라인 모드일 때 Firestore 동기화
@@ -3120,15 +3259,29 @@
                 const mySessionId = window.YutnoriMultiplayer.mySessionId;
                 if (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId) {
                     const teamsState = this.teams.map(t => ({
+                        id: t.id,
                         key: t.key || (t.id === 0 ? 'blue' : 'white'),
                         name: t.name,
-                        pieces: t.pieces
+                        pieces: t.pieces.map(p => ({
+                            id: p.id,
+                            teamId: t.id,
+                            team: t.key || (t.id === 0 ? 'blue' : 'white'),
+                            pos: p.pos,
+                            route: p.route || 'OUTER',
+                            isGoal: Boolean(p.isGoal),
+                            isHome: Boolean(p.isHome),
+                            stackedPieces: Array.isArray(p.stackedPieces) ? [...p.stackedPieces] : [],
+                            history: Array.isArray(p.history) ? [...p.history] : []
+                        }))
                     }));
                     window.YutnoriMultiplayer.sendPieceMovement({
                         teamsState,
                         hasExtraTurn: this.pendingExtraTurn,
-                        winnerTeam: null
+                        winnerTeam: null,
+                        caughtEnemy: Boolean(this.lastCatchInfo && this.lastCatchInfo.caught),
+                        caughtCount: this.lastCatchInfo ? this.lastCatchInfo.count : 0
                     });
+                    this.lastCatchInfo = null;
                 }
             }
 
@@ -3264,9 +3417,20 @@
                 const mySessionId = window.YutnoriMultiplayer.mySessionId;
                 if (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId) {
                     const teamsState = this.teams.map(t => ({
+                        id: t.id,
                         key: t.key || (t.id === 0 ? 'blue' : 'white'),
                         name: t.name,
-                        pieces: t.pieces
+                        pieces: t.pieces.map(p => ({
+                            id: p.id,
+                            teamId: t.id,
+                            team: t.key || (t.id === 0 ? 'blue' : 'white'),
+                            pos: p.pos,
+                            route: p.route || 'OUTER',
+                            isGoal: Boolean(p.isGoal),
+                            isHome: Boolean(p.isHome),
+                            stackedPieces: Array.isArray(p.stackedPieces) ? [...p.stackedPieces] : [],
+                            history: Array.isArray(p.history) ? [...p.history] : []
+                        }))
                     }));
                     window.YutnoriMultiplayer.sendPieceMovement({
                         teamsState,

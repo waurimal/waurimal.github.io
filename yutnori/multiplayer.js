@@ -276,10 +276,12 @@ class YutnoriMultiplayerManager {
         // 윷놀이 팀 및 말 상태 초기화
         const initialTeamsState = [
             {
+                id: 0,
                 key: 'blue',
                 name: '청팀',
                 pieces: Array.from({ length: pieceCount }, (_, i) => ({
                     id: i,
+                    teamId: 0,
                     team: 'blue',
                     pos: -1,
                     route: 'OUTER',
@@ -291,10 +293,12 @@ class YutnoriMultiplayerManager {
                 }))
             },
             {
+                id: 1,
                 key: 'white',
                 name: '백팀',
                 pieces: Array.from({ length: pieceCount }, (_, i) => ({
                     id: i,
+                    teamId: 1,
                     team: 'white',
                     pos: -1,
                     route: 'OUTER',
@@ -371,20 +375,24 @@ class YutnoriMultiplayerManager {
         if (!this.currentRoomId || !this.isMyTurn()) return;
         const roomRef = doc(db, ROOMS_COLLECTION, this.currentRoomId);
 
-        await updateDoc(roomRef, {
-            gameState: 'WAIT_QUIZ',
-            currentRoll: rollResult,
-            sticks: sticks,
-            activeQuiz: quizData,
-            quizResult: null,
-            lastAction: {
-                type: 'ROLL_AND_QUIZ',
-                actorId: this.mySessionId,
-                rollResult: rollResult,
-                timestamp: Date.now()
-            },
-            updatedAt: Date.now()
-        });
+        try {
+            await updateDoc(roomRef, {
+                gameState: 'WAIT_PIECE_SELECT',
+                currentRoll: rollResult,
+                sticks: sticks,
+                activeQuiz: quizData || null,
+                quizResult: null,
+                lastAction: {
+                    type: 'ROLL_AND_QUIZ',
+                    actorId: this.mySessionId,
+                    rollResult: rollResult,
+                    timestamp: Date.now()
+                },
+                updatedAt: Date.now()
+            });
+        } catch (e) {
+            console.error("[Multiplayer] sendRoll Error:", e);
+        }
     }
 
     /**
@@ -394,100 +402,107 @@ class YutnoriMultiplayerManager {
         if (!this.currentRoomId || !this.isMyTurn()) return;
         const roomRef = doc(db, ROOMS_COLLECTION, this.currentRoomId);
 
-        if (isCorrect) {
-            // 정답: 말 선택 대기(WAIT_MOVE)로 전환
-            await updateDoc(roomRef, {
-                gameState: 'WAIT_MOVE',
-                quizResult: {
-                    isCorrect: true,
-                    explanation: explanation || '',
-                    answer: answer || ''
-                },
-                lastAction: {
-                    type: 'QUIZ_CORRECT',
-                    actorId: this.mySessionId,
-                    timestamp: Date.now()
-                },
-                updatedAt: Date.now()
-            });
-        } else {
-            // 오답: 피드백 표시 후 턴 넘김 준비
-            const nextTurnInfo = this.calculateNextTurn(false);
-            await updateDoc(roomRef, {
-                gameState: 'FEEDBACK',
-                quizResult: {
-                    isCorrect: false,
-                    explanation: explanation || '',
-                    answer: answer || ''
-                },
-                ...nextTurnInfo,
-                lastAction: {
-                    type: 'QUIZ_WRONG',
-                    actorId: this.mySessionId,
-                    timestamp: Date.now()
-                },
-                updatedAt: Date.now()
-            });
+        try {
+            if (isCorrect) {
+                // 정답: 말 이동 진행 대기
+                await updateDoc(roomRef, {
+                    gameState: 'WAIT_MOVE',
+                    quizResult: {
+                        isCorrect: true,
+                        explanation: explanation || '',
+                        answer: answer || ''
+                    },
+                    lastAction: {
+                        type: 'QUIZ_CORRECT',
+                        actorId: this.mySessionId,
+                        timestamp: Date.now()
+                    },
+                    updatedAt: Date.now()
+                });
+            } else {
+                // 오답: 피드백 표시 후 턴 종료 대기 (턴 넘김은 feedback 닫힘 및 endTurn 시 일괄 동기화)
+                await updateDoc(roomRef, {
+                    gameState: 'WAIT_QUIZ_FEEDBACK',
+                    quizResult: {
+                        isCorrect: false,
+                        explanation: explanation || '',
+                        answer: answer || ''
+                    },
+                    lastAction: {
+                        type: 'QUIZ_WRONG',
+                        actorId: this.mySessionId,
+                        timestamp: Date.now()
+                    },
+                    updatedAt: Date.now()
+                });
+            }
+        } catch (e) {
+            console.error("[Multiplayer] sendQuizResult Error:", e);
         }
     }
 
     /**
      * 말 이동 및 턴 종료 / 추가 턴 동기화
      */
-    async sendPieceMovement({ teamsState, hasExtraTurn, winnerTeam, pieceId, movePath }) {
+    async sendPieceMovement({ teamsState, hasExtraTurn, winnerTeam, pieceId, movePath, caughtEnemy, caughtCount }) {
         if (!this.currentRoomId || !this.isMyTurn()) return;
         const roomRef = doc(db, ROOMS_COLLECTION, this.currentRoomId);
 
-        if (winnerTeam) {
-            // 경기 종료
-            await updateDoc(roomRef, {
-                status: 'finished',
-                gameState: 'GAME_OVER',
-                teamsState: teamsState,
-                winner: winnerTeam,
-                lastAction: {
-                    type: 'GAME_OVER',
-                    actorId: this.mySessionId,
-                    winnerTeam: winnerTeam,
-                    timestamp: Date.now()
-                },
-                updatedAt: Date.now()
-            });
-            return;
-        }
+        try {
+            if (winnerTeam) {
+                // 경기 종료
+                await updateDoc(roomRef, {
+                    status: 'finished',
+                    gameState: 'GAME_OVER',
+                    teamsState: teamsState,
+                    winner: winnerTeam,
+                    lastAction: {
+                        type: 'GAME_OVER',
+                        actorId: this.mySessionId,
+                        winnerTeam: winnerTeam,
+                        timestamp: Date.now()
+                    },
+                    updatedAt: Date.now()
+                });
+                return;
+            }
 
-        if (hasExtraTurn) {
-            // 윷, 모 또는 말 잡기로 인한 추가 턴 유지!
-            await updateDoc(roomRef, {
-                gameState: 'WAIT_ROLL',
-                teamsState: teamsState,
-                currentRoll: null,
-                activeQuiz: null,
-                quizResult: null,
-                lastAction: {
-                    type: 'EXTRA_TURN',
-                    actorId: this.mySessionId,
-                    timestamp: Date.now()
-                },
-                updatedAt: Date.now()
-            });
-        } else {
-            // 일반 이동 완료 -> 다음 차례로 턴 넘김
-            const nextTurnInfo = this.calculateNextTurn(true);
-            await updateDoc(roomRef, {
-                gameState: 'WAIT_ROLL',
-                teamsState: teamsState,
-                currentRoll: null,
-                activeQuiz: null,
-                quizResult: null,
-                ...nextTurnInfo,
-                lastAction: {
-                    type: 'END_TURN',
-                    actorId: this.mySessionId,
-                    timestamp: Date.now()
-                },
-                updatedAt: Date.now()
-            });
+            if (hasExtraTurn) {
+                // 윷, 모 또는 말 잡기로 인한 추가 턴 유지!
+                await updateDoc(roomRef, {
+                    gameState: 'WAIT_ROLL',
+                    teamsState: teamsState,
+                    currentRoll: null,
+                    activeQuiz: null,
+                    quizResult: null,
+                    lastAction: {
+                        type: caughtEnemy ? 'CAUGHT_PIECE' : 'EXTRA_TURN',
+                        actorId: this.mySessionId,
+                        caughtCount: caughtCount || 1,
+                        timestamp: Date.now()
+                    },
+                    updatedAt: Date.now()
+                });
+            } else {
+                // 일반 이동 또는 오답 종료 -> 다음 차례로 턴 넘김
+                const nextTurnInfo = this.calculateNextTurn(true);
+                await updateDoc(roomRef, {
+                    gameState: 'WAIT_ROLL',
+                    teamsState: teamsState,
+                    currentRoll: null,
+                    activeQuiz: null,
+                    quizResult: null,
+                    ...nextTurnInfo,
+                    lastAction: {
+                        type: 'END_TURN',
+                        actorId: this.mySessionId,
+                        timestamp: Date.now()
+                    },
+                    updatedAt: Date.now()
+                });
+            }
+        } catch (e) {
+            console.error("[Multiplayer] sendPieceMovement Error:", e);
         }
     }
 
