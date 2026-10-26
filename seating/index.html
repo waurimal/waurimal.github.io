@@ -288,7 +288,7 @@
 
         <!-- ========================================================== -->
         <!-- 하단 보조 도구 바 (인쇄, 이미지 저장, 명단 복사, 히스토리) -->
-        <!-- ========================================================== -->
+        <!-- ============================================================== -->
         <div class="no-print mt-5 flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
             <div class="flex items-center gap-2 flex-wrap">
                 <!-- A4 가로 인쇄 -->
@@ -663,7 +663,7 @@
                     this.ctx = new AudioCtx();
                 }
                 if (this.ctx && this.ctx.state === 'suspended') {
-                    this.ctx.resume();
+                    this.ctx.resume().catch(() => {});
                 }
             },
 
@@ -785,7 +785,44 @@
         };
 
         // ==========================================
-        // 4. 교사 모드 보안 및 인증 로직
+        // 4. 알림 토스트 (Toast Notification) 함수
+        // ==========================================
+        function showToast(msg, icon = 'ℹ️') {
+            const toast = document.getElementById('toastNotification');
+            const msgEl = document.getElementById('toastMsg');
+            const iconEl = document.getElementById('toastIcon');
+            if (!toast || !msgEl) return;
+
+            msgEl.textContent = msg;
+
+            if (iconEl) {
+                if (icon === '✅' || icon === '🎉' || icon === '✨' || icon === '🏆') {
+                    iconEl.className = 'fa-solid fa-circle-check text-emerald-400';
+                } else if (icon === '⚠️' || icon === '🚨') {
+                    iconEl.className = 'fa-solid fa-triangle-exclamation text-amber-400';
+                } else if (icon === '🔄' || icon === '⚡') {
+                    iconEl.className = 'fa-solid fa-arrows-rotate text-blue-400';
+                } else if (icon === '🔒' || icon === '🛡️') {
+                    iconEl.className = 'fa-solid fa-shield-halved text-amber-400';
+                } else if (icon === '💾') {
+                    iconEl.className = 'fa-solid fa-floppy-disk text-amber-300';
+                } else {
+                    iconEl.className = 'fa-solid fa-circle-info text-blue-400';
+                }
+            }
+
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+
+            if (toast._timer) clearTimeout(toast._timer);
+            toast._timer = setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2600);
+        }
+
+        // ==========================================
+        // 5. 교사 모드 보안 및 인증 로직
         // ==========================================
         function getTeacherPin() {
             return localStorage.getItem(PIN_STORAGE_KEY) || '0000';
@@ -873,7 +910,7 @@
         }
 
         // ==========================================
-        // 5. 모둠별 인원 수 계산 규칙
+        // 6. 모둠별 인원 수 계산 규칙
         // 총 6개 모둠, 기본 4명, 25명 -> 6모둠부터 채움(+1), 26명 -> 6·5모둠(+1)
         // ==========================================
         function calculateGroupCapacities(total) {
@@ -915,7 +952,7 @@
         }
 
         // ==========================================
-        // 6. 로컬스토리지 학급 데이터 로드 및 저장
+        // 7. 로컬스토리지 학급 데이터 로드 및 저장
         // ==========================================
         function loadStoredClasses() {
             try {
@@ -954,21 +991,21 @@
         }
 
         // ==========================================
-        // 7. 학급 전환 (Switch Class)
+        // 8. 학급 전환 (Switch Class)
         // ==========================================
-        function switchClass(classId) {
+        function switchClass(classId, showNotification = true) {
             const target = State.classes.find(c => c.id === classId);
             if (!target) return;
 
             State.currentClassId = target.id;
-            State.studentCount = target.studentCount || target.names.length;
+            State.studentCount = target.studentCount || (target.names ? target.names.length : 25);
             State.frontStudents = target.frontStudents || [];
             State.separationPairs = target.separationPairs || [];
 
             State.students = [];
             for (let i = 0; i < State.studentCount; i++) {
                 const num = i + 1;
-                const name = target.names[i] || (DEFAULT_STUDENT_NAMES[i] || `${num}번`);
+                const name = (target.names && target.names[i]) ? target.names[i] : (DEFAULT_STUDENT_NAMES[i] || `${num}번`);
                 State.students.push({
                     id: num,
                     numStr: num < 10 ? `0${num}` : `${num}`,
@@ -986,12 +1023,15 @@
             persistClasses();
             renderClassTabs();
             renderClassroomBoard();
-            Sound.playPlop();
-            showToast(`${target.name} (${State.studentCount}명) 명단으로 전환되었습니다.`, "🏫");
+
+            if (showNotification) {
+                Sound.playPlop();
+                showToast(`${target.name} (${State.studentCount}명) 명단으로 전환되었습니다.`, "🏫");
+            }
         }
 
         // ==========================================
-        // 8. 학급 탭 렌더링 (메인 바 & 모달 내부)
+        // 9. 학급 탭 렌더링 (메인 바 & 모달 내부)
         // ==========================================
         function renderClassTabs() {
             const mainContainer = document.getElementById('classTabsList');
@@ -1035,7 +1075,7 @@
         }
 
         window.switchClass = function(classId) {
-            switchClass(classId);
+            switchClass(classId, true);
         };
 
         window.selectModalEditingClass = function(classId) {
@@ -1045,7 +1085,7 @@
         };
 
         // ==========================================
-        // 9. 셔플 및 자리 배정 알고리즘
+        // 10. 셔플 및 자리 배정 알고리즘
         // ==========================================
         function assignSeatsAlgorithm() {
             const caps = calculateGroupCapacities(State.studentCount);
@@ -1107,7 +1147,7 @@
         }
 
         // ==========================================
-        // 10. 교실 모둠 배치도 렌더링
+        // 11. 교실 모둠 배치도 렌더링
         // ==========================================
         function renderClassroomBoard() {
             const grid = document.getElementById('groupsGrid');
@@ -1213,7 +1253,7 @@
         }
 
         // ==========================================
-        // 11. 좌석 클릭 및 스왑 핸들러
+        // 12. 좌석 클릭 및 스왑 핸들러
         // ==========================================
         function handleSeatClick(groupIdx, seatIdx) {
             if (State.isRevealing) return;
@@ -1255,7 +1295,7 @@
         }
 
         // ==========================================
-        // 12. 두구두구 순차 발표 (Dramatic Reveal) 연출
+        // 13. 두구두구 순차 발표 (Dramatic Reveal) 연출
         // ==========================================
         async function runDramaticReveal() {
             if (State.isRevealing) return;
@@ -1335,7 +1375,7 @@
         }
 
         // ==========================================
-        // 13. 즉시 배정
+        // 14. 즉시 배정
         // ==========================================
         function runInstantAssignment() {
             if (State.isRevealing) return;
@@ -1348,7 +1388,7 @@
         }
 
         // ==========================================
-        // 14. 상태 배너 프리뷰 갱신
+        // 15. 상태 배너 프리뷰 갱신
         // ==========================================
         function updateBannerPreview() {
             const countBadge = document.getElementById('bannerStudentCount');
@@ -1378,7 +1418,7 @@
         }
 
         // ==========================================
-        // 15. 명단 텍스트 내보내기 및 인쇄 / 이미지 저장
+        // 16. 명단 텍스트 내보내기 및 인쇄 / 이미지 저장
         // ==========================================
         function copyRosterText() {
             if (!State.groups || State.groups.length === 0) return;
@@ -1416,7 +1456,7 @@
         }
 
         // ==========================================
-        // 16. 로컬 스토리지 히스토리 저장
+        // 17. 로컬 스토리지 히스토리 저장
         // ==========================================
         function saveHistoryToStorage() {
             try {
@@ -1493,7 +1533,7 @@
         };
 
         // ==========================================
-        // 17. 나이스(NEIS) / 엑셀 명단 텍스트 자동 정제 도구
+        // 18. 나이스(NEIS) / 엑셀 명단 텍스트 자동 정제 도구
         // ==========================================
         function cleanStudentRosterText(rawText) {
             if (!rawText) return [];
@@ -1516,7 +1556,7 @@
         }
 
         // ==========================================
-        // 18. 여러 반 명단 일괄 파서 (Bulk Multi-Class Parser)
+        // 19. 여러 반 명단 일괄 파서 (Bulk Multi-Class Parser)
         // ==========================================
         function parseBulkClasses(text) {
             if (!text) return {};
@@ -1572,7 +1612,7 @@
         }
 
         // ==========================================
-        // 19. 모달 학급 데이터 바인딩
+        // 20. 모달 학급 데이터 바인딩
         // ==========================================
         function loadModalClassData(classId) {
             let target = State.classes.find(c => c.id === classId);
@@ -1615,7 +1655,7 @@
         };
 
         // ==========================================
-        // 20. 명단 저장 핵심 함수 (모달 유지 vs 닫기 지원)
+        // 21. 명단 저장 핵심 함수 (모달 유지 vs 닫기 지원)
         // ==========================================
         function saveCurrentClassRoster(shouldCloseModal = false) {
             const editingId = State.modalEditingClassId;
@@ -1648,7 +1688,7 @@
             target.names = rawNames.slice(0, newCount);
             target.frontStudents = frontArr;
             target.separationPairs = sepArr;
-            target.lastGroups = null; // 새 명단에 맞춰 재배정 준비
+            target.lastGroups = null;
 
             persistClasses();
             renderClassTabs();
@@ -1665,7 +1705,7 @@
         }
 
         // ==========================================
-        // 21. 빠른 인원 프리셋 적용 (현재 학급에 적용)
+        // 22. 빠른 인원 프리셋 적용 (현재 학급에 적용)
         // ==========================================
         window.applyStudentCountPreset = function(count) {
             const current = getCurrentClass();
@@ -1698,7 +1738,7 @@
         };
 
         // ==========================================
-        // 22. 이벤트 바인딩
+        // 23. 이벤트 바인딩
         // ==========================================
         function bindEvents() {
             // 사운드 토글
@@ -1822,17 +1862,17 @@
             const bulkPanel = document.getElementById('bulkModePanel');
 
             const switchToSingleMode = () => {
-                singlePanel.classList.remove('hidden');
-                bulkPanel.classList.add('hidden');
-                tabSingleBtn.className = "flex-1 py-2 rounded-xl font-black text-xs transition cursor-pointer bg-white text-indigo-700 shadow-sm flex items-center justify-center gap-1.5";
-                tabBulkBtn.className = "flex-1 py-2 rounded-xl font-bold text-xs transition cursor-pointer text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5";
+                if (singlePanel) singlePanel.classList.remove('hidden');
+                if (bulkPanel) bulkPanel.classList.add('hidden');
+                if (tabSingleBtn) tabSingleBtn.className = "flex-1 py-2 rounded-xl font-black text-xs transition cursor-pointer bg-white text-indigo-700 shadow-sm flex items-center justify-center gap-1.5";
+                if (tabBulkBtn) tabBulkBtn.className = "flex-1 py-2 rounded-xl font-bold text-xs transition cursor-pointer text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5";
             };
 
             const switchToBulkMode = () => {
-                singlePanel.classList.add('hidden');
-                bulkPanel.classList.remove('hidden');
-                tabBulkBtn.className = "flex-1 py-2 rounded-xl font-black text-xs transition cursor-pointer bg-white text-indigo-700 shadow-sm flex items-center justify-center gap-1.5";
-                tabSingleBtn.className = "flex-1 py-2 rounded-xl font-bold text-xs transition cursor-pointer text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5";
+                if (singlePanel) singlePanel.classList.add('hidden');
+                if (bulkPanel) bulkPanel.classList.remove('hidden');
+                if (tabBulkBtn) tabBulkBtn.className = "flex-1 py-2 rounded-xl font-black text-xs transition cursor-pointer bg-white text-indigo-700 shadow-sm flex items-center justify-center gap-1.5";
+                if (tabSingleBtn) tabSingleBtn.className = "flex-1 py-2 rounded-xl font-bold text-xs transition cursor-pointer text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5";
             };
 
             if (tabSingleBtn) tabSingleBtn.addEventListener('click', switchToSingleMode);
@@ -1860,7 +1900,6 @@
                 settingsModal.classList.remove('hidden');
                 switchToSingleMode();
 
-                // 텍스트 영역 비우고 포커스
                 setTimeout(() => {
                     const ta = document.getElementById('studentNamesTextarea');
                     if (ta) {
@@ -1917,7 +1956,7 @@
                     State.currentClassId = State.classes[0].id;
                     State.modalEditingClassId = State.classes[0].id;
                     persistClasses();
-                    switchClass(State.currentClassId);
+                    switchClass(State.currentClassId, true);
                     loadModalClassData(State.currentClassId);
                     showToast("학급이 삭제되었습니다.", "🗑️");
                 });
@@ -1950,7 +1989,7 @@
 
             // 엑셀·나이스 명단 자동 정리 버튼
             const cleanNeisBtn = document.getElementById('cleanNeisBtn');
-            if (cleanNeisBtn && namesTextarea) {
+            if (cleanNeisBtn && namesTextarea && countInput && countSlider) {
                 cleanNeisBtn.addEventListener('click', () => {
                     const cleaned = cleanStudentRosterText(namesTextarea.value);
                     if (cleaned.length === 0) {
@@ -2173,7 +2212,7 @@
                                 State.classes = parsed;
                                 State.currentClassId = parsed[0].id;
                                 persistClasses();
-                                switchClass(State.currentClassId);
+                                switchClass(State.currentClassId, true);
                                 closeModal();
                                 showToast("백업 명단을 성공적으로 복원했습니다!", "🎉");
                             } else {
@@ -2215,14 +2254,28 @@
         }
 
         // ==========================================
-        // 23. 초기 실행
+        // 24. 초기 실행 (안전한 방어적 부팅)
         // ==========================================
         document.addEventListener('DOMContentLoaded', () => {
-            loadStoredClasses();
-            switchClass(State.currentClassId);
-            bindEvents();
-            updateHistoryCount();
-            updateTeacherModeUI();
+            try {
+                loadStoredClasses();
+            } catch(e) { console.error('loadStoredClasses error:', e); }
+
+            try {
+                bindEvents();
+            } catch(e) { console.error('bindEvents error:', e); }
+
+            try {
+                switchClass(State.currentClassId, false);
+            } catch(e) { console.error('switchClass error:', e); }
+
+            try {
+                updateHistoryCount();
+            } catch(e) { console.error('updateHistoryCount error:', e); }
+
+            try {
+                updateTeacherModeUI();
+            } catch(e) { console.error('updateTeacherModeUI error:', e); }
         });
 
     })();
