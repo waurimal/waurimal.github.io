@@ -14,6 +14,10 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <!-- html2canvas (이미지 다운로드) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Firebase SDK (v10 compat) - 클라우드 DB 실시간 동기화 -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
     <style>
         * {
@@ -154,6 +158,12 @@
                     <span id="viewText">선생님 시선 (칠판 위)</span>
                 </button>
 
+                <!-- 클라우드 DB 실시간 동기화 상태 버튼 (어떤 컴퓨터에서도 동일하게 사용) -->
+                <button type="button" id="cloudSyncStatusBtn" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm border border-slate-200/90" title="클라우드 DB 실시간 동기화 상태 (클릭하여 다른 컴퓨터 연동 설정)">
+                    <i id="cloudSyncStatusIcon" class="fa-solid fa-cloud text-emerald-500"></i>
+                    <span id="cloudSyncStatusText">클라우드 연동됨</span>
+                </button>
+
                 <!-- 교사 모드 토글/인증 버튼 (학생 비공개 보안 제어) -->
                 <button id="teacherModeToggleBtn" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm" title="학생 화면 보호: 교사 모드 전환/잠금">
                     <i id="teacherModeIcon" class="fa-solid fa-lock text-amber-400"></i>
@@ -201,6 +211,12 @@
                 <p class="text-xs sm:text-sm text-slate-500 max-w-lg mx-auto">
                     원하는 학급과 월을 선택한 후 <strong>[반 배정 시작]</strong>을 누르세요. 월별로 자리 배치가 안전하게 자동 저장됩니다.
                 </p>
+                <div class="pt-1 flex items-center justify-center gap-2">
+                    <span id="welcomeCloudSyncBanner" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold shadow-xs">
+                        <i class="fa-solid fa-cloud text-emerald-600"></i>
+                        <span>클라우드 DB 실시간 동기화 중 (어떤 컴퓨터에서도 동일하게 사용 가능)</span>
+                    </span>
+                </div>
             </div>
 
             <!-- 1단계: 배정할 학급(반) 선택 -->
@@ -666,6 +682,28 @@
                     </div>
                 </div>
 
+                <!-- 4-1. 클라우드 DB 실시간 동기화 설정 섹션 -->
+                <div class="bg-indigo-50/70 p-3.5 rounded-2xl border border-indigo-200 text-xs flex items-center justify-between gap-3 flex-wrap">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-cloud text-indigo-600 text-base"></i>
+                        <div>
+                            <div class="font-black text-indigo-950 flex items-center gap-1.5">
+                                <span>클라우드 DB 실시간 동기화</span>
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">어떤 컴퓨터든 동일하게 연동</span>
+                            </div>
+                            <div class="text-[11px] text-indigo-800" id="settingsCloudSyncDesc">어떤 컴퓨터에서도 동일한 명단과 자리 배치를 불러옵니다 (동기화 코드: default)</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" id="settingsOpenCloudModalBtn" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition cursor-pointer shadow-sm flex items-center gap-1">
+                            <i class="fa-solid fa-gear text-[11px]"></i> 동기화 설정
+                        </button>
+                        <button type="button" id="settingsForcePushBtn" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition cursor-pointer shadow-sm flex items-center gap-1" title="현재 편집한 명단과 설정을 클라우드에 즉시 저장합니다">
+                            <i class="fa-solid fa-cloud-arrow-up text-[11px]"></i> 클라우드 저장
+                        </button>
+                    </div>
+                </div>
+
                 <!-- 5. 명단 데이터 백업 & 복원 (JSON) -->
                 <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
                     <div class="flex items-center gap-2">
@@ -767,6 +805,93 @@
                     전체 기록 삭제
                 </button>
                 <button type="button" id="closeHistoryBottomBtn" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition cursor-pointer">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 모달: 클라우드 DB 실시간 동기화 설정 모달 (모든 컴퓨터 공유) -->
+    <!-- ============================================================== -->
+    <div id="cloudSyncModal" class="no-print fixed inset-0 bg-slate-950/70 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl overflow-y-auto max-h-[90vh] border border-slate-200 flex flex-col gap-4">
+            <!-- 모달 헤더 -->
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-base font-black shadow-sm">
+                        <i class="fa-solid fa-cloud"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-black text-lg text-slate-800">클라우드 DB 실시간 동기화</h2>
+                        <p class="text-xs text-slate-400">어떤 컴퓨터나 기기에서도 동일하게 사용할 수 있습니다</p>
+                    </div>
+                </div>
+                <button type="button" id="closeCloudSyncModalBtn" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center cursor-pointer transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- 현재 연결 상태 카드 -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2.5 text-xs">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-500">클라우드 연결 상태:</span>
+                    <span id="modalCloudStatusBadge" class="font-black px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                        <span>실시간 연동됨 (모든 PC 공유)</span>
+                    </span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-500">마지막 동기화 일시:</span>
+                    <span id="modalCloudLastSyncTime" class="font-mono font-bold text-slate-800">-</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-500">현재 기기 식별자:</span>
+                    <span id="modalCloudClientId" class="font-mono text-[11px] text-slate-500 truncate max-w-[200px]">-</span>
+                </div>
+            </div>
+
+            <!-- 동기화 코드(학급 키) 관리 섹션 -->
+            <div class="bg-indigo-50/60 p-4 rounded-2xl border border-indigo-100 space-y-2 text-xs">
+                <div class="flex items-center justify-between">
+                    <label class="font-black text-indigo-950 flex items-center gap-1.5">
+                        <i class="fa-solid fa-key text-indigo-600"></i> 동기화 코드 (공유 키)
+                    </label>
+                    <span class="text-[10px] font-bold text-indigo-600 bg-white px-2 py-0.5 rounded border border-indigo-200">
+                        기본값: default
+                    </span>
+                </div>
+                <p class="text-[11px] text-indigo-800 leading-relaxed">
+                    교실 컴퓨터, 교무실 컴퓨터, 노트북 등 <strong>동일한 동기화 코드가 입력된 모든 기기</strong>끼리 학급 명단과 자리 배치가 100% 실시간 공유됩니다.
+                </p>
+                <div class="flex items-center gap-2 pt-1">
+                    <input type="text" id="modalSyncKeyInput" value="default" placeholder="예: default 또는 6학년1반" class="flex-1 px-3 py-2 rounded-xl border border-indigo-200 bg-white font-mono font-bold text-xs text-indigo-900 focus:outline-none focus:border-indigo-500">
+                    <button type="button" id="modalApplySyncKeyBtn" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition cursor-pointer shadow-sm whitespace-nowrap">
+                        코드 적용
+                    </button>
+                </div>
+            </div>
+
+            <!-- 수동 강제 업로드 & 다운로드 도구 -->
+            <div class="space-y-2 text-xs">
+                <div class="font-bold text-slate-700">수동 클라우드 동기화 도구:</div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" id="modalForcePushBtn" class="p-3 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 font-bold transition flex flex-col items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-cloud-arrow-up text-amber-600 text-base"></i>
+                        <span class="font-black">지금 클라우드에 저장</span>
+                        <span class="text-[10px] text-amber-700 font-normal">현재 PC 데이터 ➔ 클라우드</span>
+                    </button>
+                    <button type="button" id="modalForcePullBtn" class="p-3 rounded-2xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-900 font-bold transition flex flex-col items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-cloud-arrow-down text-blue-600 text-base"></i>
+                        <span class="font-black">클라우드에서 불러오기</span>
+                        <span class="text-[10px] text-blue-700 font-normal">클라우드 ➔ 현재 PC로 덮어쓰기</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 닫기 버튼 -->
+            <div class="pt-2 border-t border-slate-100 flex justify-end">
+                <button type="button" id="closeCloudSyncModalBottomBtn" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer">
                     닫기
                 </button>
             </div>
@@ -906,6 +1031,8 @@
 
         const STORAGE_KEY = 'waurimal_seating_data_v2';
         const PIN_STORAGE_KEY = 'waurimal_seating_teacher_pin';
+        const SYNC_KEY_STORAGE = 'waurimal_seating_sync_key';
+        const CLIENT_ID = 'device_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
 
         // ==========================================
         // 3. 애플리케이션 상태 (State)
@@ -975,6 +1102,9 @@
 
         function setTeacherPin(newPin) {
             localStorage.setItem(PIN_STORAGE_KEY, newPin);
+            if (typeof Cloud !== 'undefined') {
+                Cloud.schedulePush();
+            }
         }
 
         function requireTeacherMode(onSuccess) {
@@ -1097,7 +1227,340 @@
         }
 
         // ==========================================
-        // 7. 로컬스토리지 학급 데이터 로드 및 저장
+        // 6-2. Firebase Firestore 클라우드 실시간 동기화 모듈 (Cloud Sync Manager)
+        // ==========================================
+        const Cloud = {
+            db: null,
+            auth: null,
+            isInitialized: false,
+            isConnected: false,
+            isSyncing: false,
+            syncKey: localStorage.getItem(SYNC_KEY_STORAGE) || 'default',
+            unsubscribe: null,
+            debounceTimer: null,
+            lastSyncTime: null,
+            lastError: null,
+
+            getDocRef() {
+                if (!this.db) return null;
+                const safeKey = encodeURIComponent(this.syncKey || 'default').replace(/\./g, '_');
+                return this.db.doc(`artifacts/seating/public/data/workspaces/${safeKey}`);
+            },
+
+            async init() {
+                try {
+                    this.updateStatusUI('connecting');
+                    if (!window.firebase) {
+                        console.warn('[Cloud Sync] Firebase SDK 미로드 -> 로컬 모드로 동작합니다.');
+                        this.updateStatusUI('offline', 'Firebase SDK 미로드');
+                        return;
+                    }
+
+                    const fbConfig = (window.WaurimalFirebase && window.WaurimalFirebase.getConfig) 
+                        ? window.WaurimalFirebase.getConfig() 
+                        : {
+                            apiKey: "AIzaSyDHCnRrVE2dVuJpf77P-1oftGpczR5WDd4",
+                            authDomain: "eng-activity.firebaseapp.com",
+                            projectId: "eng-activity",
+                            storageBucket: "eng-activity.firebasestorage.app",
+                            messagingSenderId: "528859753713",
+                            appId: "1:528859753713:web:a1ed4a054380d181c10d50"
+                        };
+
+                    if (!firebase.apps || !firebase.apps.length) {
+                        firebase.initializeApp(fbConfig);
+                    }
+
+                    this.auth = firebase.auth();
+                    this.db = firebase.firestore();
+                    this.isInitialized = true;
+
+                    // 익명 로그인
+                    try {
+                        await this.auth.signInAnonymously();
+                    } catch(authErr) {
+                        console.warn('[Cloud Sync] 익명 로그인 예외 (오프라인/규칙):', authErr);
+                    }
+
+                    this.isConnected = true;
+                    this.setupListener();
+                } catch(e) {
+                    console.error('[Cloud Sync] 초기화 오류:', e);
+                    this.lastError = e.message;
+                    this.updateStatusUI('error', e.message);
+                }
+            },
+
+            setupListener() {
+                if (this.unsubscribe) {
+                    try { this.unsubscribe(); } catch(e) {}
+                    this.unsubscribe = null;
+                }
+
+                const docRef = this.getDocRef();
+                if (!docRef) return;
+
+                this.updateStatusUI('connecting');
+
+                this.unsubscribe = docRef.onSnapshot((snap) => {
+                    this.isConnected = true;
+
+                    if (!snap.exists) {
+                        console.log('[Cloud Sync] 클라우드 문서 미존재 -> 로컬 데이터로 클라우드 초기화 생성');
+                        this.pushToCloud(false);
+                        return;
+                    }
+
+                    const data = snap.data();
+                    if (!data) return;
+
+                    // 이 기기에서 보낸 변경이면 lastSyncTime만 갱신하고 스킵
+                    if (data.updatedBy === CLIENT_ID) {
+                        this.lastSyncTime = new Date();
+                        this.updateStatusUI('synced');
+                        return;
+                    }
+
+                    // 다른 컴퓨터에서 저장된 최신 데이터 반영
+                    console.log('[Cloud Sync] 클라우드 데이터 수신 (기기:', data.updatedBy, ')');
+                    this.applyCloudData(data, true);
+                }, (err) => {
+                    console.warn('[Cloud Sync] 리스너 오류:', err);
+                    this.lastError = err.message;
+                    this.updateStatusUI('error', err.message);
+                });
+            },
+
+            applyCloudData(data, isFromExternalDevice = false) {
+                if (!data) return;
+
+                // 1. 학급 명단 및 월별 자리 배치 갱신
+                if (Array.isArray(data.classes) && data.classes.length > 0) {
+                    State.classes = data.classes.map(cls => {
+                        if (cls.names && cls.names.length > 0) {
+                            cls.studentCount = cls.names.length;
+                        }
+                        if (!cls.monthlySeats || typeof cls.monthlySeats !== 'object') {
+                            cls.monthlySeats = {};
+                        }
+                        return cls;
+                    });
+                }
+
+                // 2. 현재 선택 학급 ID
+                if (data.currentClassId && State.classes.some(c => c.id === data.currentClassId)) {
+                    State.currentClassId = data.currentClassId;
+                } else if (State.classes.length > 0) {
+                    State.currentClassId = State.classes[0].id;
+                }
+
+                // 3. 현재 배정 월
+                if (data.selectedMonth && ALL_MONTHS.includes(data.selectedMonth)) {
+                    State.selectedMonth = data.selectedMonth;
+                }
+
+                // 4. 교사 비밀번호
+                if (data.teacherPin && typeof data.teacherPin === 'string') {
+                    localStorage.setItem(PIN_STORAGE_KEY, data.teacherPin);
+                }
+
+                // 5. 히스토리 기록
+                if (Array.isArray(data.history)) {
+                    localStorage.setItem('yutnori_seating_history', JSON.stringify(data.history));
+                    updateHistoryCount();
+                }
+
+                // 로컬 스토리지에 동기화 반영 (클라우드 재전송 루프 방지)
+                persistLocalOnly();
+
+                // UI 재렌더링
+                if (State.currentView === 'welcome') {
+                    renderWelcomeDashboard();
+                } else {
+                    switchClass(State.currentClassId, true);
+                }
+
+                // 모달이 열려 있는 경우 모달 내용도 새로고침
+                const settingsModal = document.getElementById('settingsModal');
+                if (settingsModal && !settingsModal.classList.contains('hidden')) {
+                    loadModalClassData(State.modalEditingClassId || State.currentClassId);
+                    renderModalClassTabs();
+                }
+
+                this.lastSyncTime = new Date();
+                this.updateStatusUI('synced');
+
+                if (isFromExternalDevice) {
+                    showToast("☁️ 다른 기기에서 변경된 자리 배치가 실시간으로 동기화되었습니다!", "🔄");
+                }
+            },
+
+            schedulePush() {
+                if (!this.isInitialized || !this.db) {
+                    this.updateStatusUI('offline');
+                    return;
+                }
+
+                this.updateStatusUI('syncing');
+                if (this.debounceTimer) clearTimeout(this.debounceTimer);
+                this.debounceTimer = setTimeout(() => {
+                    this.pushToCloud(false);
+                }, 400);
+            },
+
+            async pushToCloud(isManual = false) {
+                const docRef = this.getDocRef();
+                if (!docRef) {
+                    this.updateStatusUI('offline');
+                    if (isManual) showToast("클라우드 연결 상태를 확인해주세요.", "⚠️");
+                    return;
+                }
+
+                try {
+                    this.isSyncing = true;
+                    this.updateStatusUI('syncing');
+
+                    const history = JSON.parse(localStorage.getItem('yutnori_seating_history') || '[]');
+                    const teacherPin = getTeacherPin();
+
+                    const payload = {
+                        version: 2,
+                        syncKey: this.syncKey,
+                        currentClassId: State.currentClassId,
+                        selectedMonth: State.selectedMonth,
+                        classes: JSON.parse(JSON.stringify(State.classes)),
+                        history: history,
+                        teacherPin: teacherPin,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedAtClient: Date.now(),
+                        updatedBy: CLIENT_ID
+                    };
+
+                    await docRef.set(payload, { merge: true });
+
+                    this.isSyncing = false;
+                    this.lastSyncTime = new Date();
+                    this.lastError = null;
+                    this.updateStatusUI('synced');
+
+                    if (isManual) {
+                        showToast("✅ 클라우드 DB 저장 완료! 다른 컴퓨터에서도 동일하게 사용 가능합니다.", "☁️");
+                    }
+                } catch(err) {
+                    this.isSyncing = false;
+                    this.lastError = err.message;
+                    console.error('[Cloud Sync] 저장 오류:', err);
+                    this.updateStatusUI('error', err.message);
+                    if (isManual) {
+                        showToast("⚠️ 클라우드 저장 실패 (로컬 브라우저에는 안전하게 저장됨): " + err.message, "🚨");
+                    }
+                }
+            },
+
+            async pullFromCloud() {
+                const docRef = this.getDocRef();
+                if (!docRef) {
+                    showToast("클라우드에 연결되어 있지 않습니다.", "⚠️");
+                    return;
+                }
+
+                try {
+                    this.updateStatusUI('syncing');
+                    const snap = await docRef.get();
+                    if (!snap.exists) {
+                        showToast("클라우드에 저장된 데이터가 없습니다. 먼저 저장하세요.", "ℹ️");
+                        this.updateStatusUI('synced');
+                        return;
+                    }
+
+                    const data = snap.data();
+                    this.applyCloudData(data, false);
+                    showToast("✅ 클라우드에서 최신 자리 배치를 성공적으로 불러왔습니다!", "☁️");
+                } catch(err) {
+                    console.error('[Cloud Sync] 불러오기 오류:', err);
+                    showToast("⚠️ 클라우드에서 불러오는 중 오류 발생: " + err.message, "🚨");
+                    this.updateStatusUI('error', err.message);
+                }
+            },
+
+            changeSyncKey(newKey) {
+                const cleanKey = (newKey || '').trim().replace(/[\/\\#?]/g, '_');
+                if (!cleanKey) return;
+                if (cleanKey === this.syncKey) {
+                    showToast("현재 이미 적용 중인 동기화 코드입니다.", "ℹ️");
+                    return;
+                }
+
+                this.syncKey = cleanKey;
+                localStorage.setItem(SYNC_KEY_STORAGE, cleanKey);
+                this.setupListener();
+                showToast(`🔑 동기화 코드가 [${cleanKey}]로 변경되었습니다.`, "✨");
+            },
+
+            updateStatusUI(status = 'synced', detail = '') {
+                const btn = document.getElementById('cloudSyncStatusBtn');
+                const icon = document.getElementById('cloudSyncStatusIcon');
+                const text = document.getElementById('cloudSyncStatusText');
+                const modalBadge = document.getElementById('modalCloudStatusBadge');
+                const modalTime = document.getElementById('modalCloudLastSyncTime');
+                const modalClient = document.getElementById('modalCloudClientId');
+                const modalInput = document.getElementById('modalSyncKeyInput');
+                const settingsDesc = document.getElementById('settingsCloudSyncDesc');
+
+                const timeStr = this.lastSyncTime 
+                    ? this.lastSyncTime.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) 
+                    : '동기화 이력 없음';
+
+                if (modalTime) modalTime.textContent = timeStr;
+                if (modalClient) modalClient.textContent = CLIENT_ID;
+                if (modalInput && !document.activeElement?.isSameNode(modalInput)) {
+                    modalInput.value = this.syncKey || 'default';
+                }
+                if (settingsDesc) {
+                    settingsDesc.textContent = `어떤 컴퓨터에서도 동일한 명단과 자리 배치를 불러옵니다 (동기화 코드: ${this.syncKey || 'default'})`;
+                }
+
+                if (status === 'connecting') {
+                    if (icon) icon.className = 'fa-solid fa-spinner fa-spin text-blue-500';
+                    if (text) text.textContent = '클라우드 연결 중...';
+                    if (modalBadge) {
+                        modalBadge.className = 'font-black px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 border border-blue-200 flex items-center gap-1.5';
+                        modalBadge.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-blue-600"></i><span>연결 중...</span>';
+                    }
+                } else if (status === 'syncing') {
+                    if (icon) icon.className = 'fa-solid fa-cloud-arrow-up text-amber-500 animate-pulse';
+                    if (text) text.textContent = '클라우드 저장 중...';
+                    if (modalBadge) {
+                        modalBadge.className = 'font-black px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1.5';
+                        modalBadge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up text-amber-600"></i><span>클라우드 동기화 중...</span>';
+                    }
+                } else if (status === 'synced' || (status === 'connected' && this.isConnected)) {
+                    if (icon) icon.className = 'fa-solid fa-cloud text-emerald-500';
+                    if (text) text.textContent = '클라우드 연동됨';
+                    if (modalBadge) {
+                        modalBadge.className = 'font-black px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1.5';
+                        modalBadge.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600"></i><span>실시간 연동됨 (모든 PC 공유)</span>';
+                    }
+                } else if (status === 'offline') {
+                    if (icon) icon.className = 'fa-solid fa-cloud-slash text-slate-400';
+                    if (text) text.textContent = '로컬 모드 (오프라인)';
+                    if (modalBadge) {
+                        modalBadge.className = 'font-black px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-300 flex items-center gap-1.5';
+                        modalBadge.innerHTML = '<i class="fa-solid fa-cloud-slash text-slate-500"></i><span>로컬 보존 (오프라인)</span>';
+                    }
+                } else if (status === 'error') {
+                    if (icon) icon.className = 'fa-solid fa-triangle-exclamation text-rose-500';
+                    if (text) text.textContent = '클라우드 오류 (로컬 보존)';
+                    if (modalBadge) {
+                        modalBadge.className = 'font-black px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1.5';
+                        modalBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-600"></i><span>오류 발생 (${detail || '네트워크 확인'})</span>`;
+                    }
+                }
+            }
+        };
+
+        // ==========================================
+        // 7. 로컬스토리지 & 클라우드 학급 데이터 로드 및 저장
         // ==========================================
         function loadStoredClasses() {
             try {
@@ -1130,10 +1593,25 @@
             } catch(e) {}
             State.classes = JSON.parse(JSON.stringify(DEFAULT_CLASSES));
             State.currentClassId = 'class_1';
-            persistClasses();
+            persistClasses(false);
         }
 
-        function persistClasses() {
+        function persistClasses(syncToCloud = true) {
+            try {
+                const payload = {
+                    currentClassId: State.currentClassId,
+                    selectedMonth: State.selectedMonth,
+                    classes: State.classes
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+            } catch(e) {}
+
+            if (syncToCloud && typeof Cloud !== 'undefined') {
+                Cloud.schedulePush();
+            }
+        }
+
+        function persistLocalOnly() {
             try {
                 const payload = {
                     currentClassId: State.currentClassId,
@@ -1300,7 +1778,7 @@
                 State.groups = monthSeat;
             } else {
                 const caps = calculateGroupCapacities(State.studentCount);
-                State.groups = DEFAULT_GROUPS_META.map((meta, i) => ({
+                State.groups = GROUP_THEMES.map((meta, i) => ({
                     ...meta,
                     capacity: caps[i] || 4,
                     members: []
@@ -1338,7 +1816,7 @@
                 hasSaved = true;
             } else {
                 const caps = calculateGroupCapacities(State.studentCount);
-                State.groups = DEFAULT_GROUPS_META.map((meta, i) => ({
+                State.groups = GROUP_THEMES.map((meta, i) => ({
                     ...meta,
                     capacity: caps[i] || 4,
                     members: []
@@ -2007,9 +2485,12 @@
                 };
                 let history = JSON.parse(localStorage.getItem('yutnori_seating_history') || '[]');
                 history.unshift(record);
-                if (history.length > 15) history = history.slice(0, 15);
+                if (history.length > 20) history = history.slice(0, 20);
                 localStorage.setItem('yutnori_seating_history', JSON.stringify(history));
                 updateHistoryCount();
+                if (typeof Cloud !== 'undefined') {
+                    Cloud.schedulePush();
+                }
             } catch(e) {}
         }
 
@@ -2060,6 +2541,13 @@
                     members: g.members
                 };
             });
+
+            const current = getCurrentClass();
+            if (current) {
+                current.monthlySeats[State.selectedMonth] = State.groups;
+                current.lastGroups = State.groups;
+                persistClasses();
+            }
 
             renderClassroomBoard();
             document.getElementById('historyModal').classList.add('hidden');
@@ -2918,8 +3406,67 @@
                         localStorage.removeItem('yutnori_seating_history');
                         renderHistoryList();
                         updateHistoryCount();
+                        if (typeof Cloud !== 'undefined') {
+                            Cloud.schedulePush();
+                        }
                     }
                 });
+            }
+
+            // 클라우드 실시간 동기화 모달 이벤트
+            const cloudSyncModal = document.getElementById('cloudSyncModal');
+            const cloudSyncBtn = document.getElementById('cloudSyncStatusBtn');
+            const closeCloudModalBtn = document.getElementById('closeCloudSyncModalBtn');
+            const closeCloudModalBottomBtn = document.getElementById('closeCloudSyncModalBottomBtn');
+            const modalApplySyncKeyBtn = document.getElementById('modalApplySyncKeyBtn');
+            const modalSyncKeyInput = document.getElementById('modalSyncKeyInput');
+            const modalForcePushBtn = document.getElementById('modalForcePushBtn');
+            const modalForcePullBtn = document.getElementById('modalForcePullBtn');
+            const settingsOpenCloudModalBtn = document.getElementById('settingsOpenCloudModalBtn');
+            const settingsForcePushBtn = document.getElementById('settingsForcePushBtn');
+
+            const openCloudModal = () => {
+                if (modalSyncKeyInput) modalSyncKeyInput.value = Cloud.syncKey || 'default';
+                Cloud.updateStatusUI();
+                if (cloudSyncModal) cloudSyncModal.classList.remove('hidden');
+            };
+            const closeCloudModal = () => {
+                if (cloudSyncModal) cloudSyncModal.classList.add('hidden');
+            };
+
+            if (cloudSyncBtn) cloudSyncBtn.addEventListener('click', openCloudModal);
+            if (closeCloudModalBtn) closeCloudModalBtn.addEventListener('click', closeCloudModal);
+            if (closeCloudModalBottomBtn) closeCloudModalBottomBtn.addEventListener('click', closeCloudModal);
+            if (settingsOpenCloudModalBtn) settingsOpenCloudModalBtn.addEventListener('click', openCloudModal);
+
+            if (cloudSyncModal) {
+                cloudSyncModal.addEventListener('click', (e) => {
+                    if (e.target === cloudSyncModal) closeCloudModal();
+                });
+            }
+
+            if (modalApplySyncKeyBtn && modalSyncKeyInput) {
+                const applyKey = () => {
+                    const newKey = modalSyncKeyInput.value.trim();
+                    if (newKey) Cloud.changeSyncKey(newKey);
+                };
+                modalApplySyncKeyBtn.addEventListener('click', applyKey);
+                modalSyncKeyInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        applyKey();
+                    }
+                });
+            }
+
+            if (modalForcePushBtn) {
+                modalForcePushBtn.addEventListener('click', () => Cloud.pushToCloud(true));
+            }
+            if (modalForcePullBtn) {
+                modalForcePullBtn.addEventListener('click', () => Cloud.pullFromCloud());
+            }
+            if (settingsForcePushBtn) {
+                settingsForcePushBtn.addEventListener('click', () => Cloud.pushToCloud(true));
             }
         }
 
@@ -2950,6 +3497,14 @@
             try {
                 updateTeacherModeUI();
             } catch(e) { console.error('updateTeacherModeUI error:', e); }
+
+            try {
+                Cloud.init();
+            } catch(e) { console.error('Cloud.init error:', e); }
+
+            // 전역 디버깅 및 연동 지원
+            window.State = State;
+            window.Cloud = Cloud;
         });
 
     })();
