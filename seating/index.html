@@ -142,9 +142,15 @@
                     <span id="viewText">선생님 시선 (칠판 위)</span>
                 </button>
 
-                <!-- 반별 명단 관리 모달 열기 -->
-                <button id="openClassManagerBtn" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-sm transition flex items-center gap-1.5 cursor-pointer">
-                    <i class="fa-solid fa-address-book text-amber-300"></i>
+                <!-- 교사 모드 토글/인증 버튼 (학생 비공개 보안 제어) -->
+                <button id="teacherModeToggleBtn" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm" title="학생 화면 보호: 교사 모드 전환/잠금">
+                    <i id="teacherModeIcon" class="fa-solid fa-lock text-amber-400"></i>
+                    <span id="teacherModeText">교사 모드</span>
+                </button>
+
+                <!-- 반별 명단 관리 모달 열기 (교사 인증 필요) -->
+                <button id="openClassManagerBtn" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-sm transition flex items-center gap-1.5 cursor-pointer" title="교사 전용: 반별 명단 등록 및 관리">
+                    <i id="classManagerLockIcon" class="fa-solid fa-lock text-amber-300 text-xs"></i>
                     <span>반별 명단 관리</span>
                 </button>
 
@@ -183,14 +189,15 @@
                 <div id="classTabsList" class="flex items-center gap-1.5 flex-wrap">
                     <!-- 동적 생성 탭 -->
                 </div>
-                <button type="button" id="quickAddClassBtn" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 text-xs font-black border border-dashed border-slate-300 transition flex items-center gap-1 cursor-pointer" title="새 학급 추가">
+                <button type="button" id="quickAddClassBtn" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 text-xs font-black border border-dashed border-slate-300 transition flex items-center gap-1 cursor-pointer" title="새 학급 추가 (교사 전용)">
+                    <i class="fa-solid fa-lock text-amber-500 text-[10px]"></i>
                     <i class="fa-solid fa-plus text-[10px]"></i> 새 반 추가
                 </button>
             </div>
 
             <div class="flex items-center gap-2">
-                <button type="button" id="openSettingsBtn" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
-                    <i class="fa-solid fa-sliders text-amber-500"></i>
+                <button type="button" id="openSettingsBtn" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer" title="교사 전용: 명단 및 배정 옵션 설정">
+                    <i id="settingsLockIcon" class="fa-solid fa-lock text-amber-500 text-xs"></i>
                     <span>명단 & 조건 설정</span>
                 </button>
             </div>
@@ -323,18 +330,61 @@
     </footer>
 
     <!-- ============================================================== -->
-    <!-- 모달: 반별 명단 등록 및 배정 옵션 관리 모달 -->
+    <!-- 모달: 교사 인증(PIN) 모달 (학생 비공개 보안 잠금) -->
+    <!-- ============================================================== -->
+    <div id="teacherAuthModal" class="no-print fixed inset-0 bg-slate-950/75 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 flex flex-col gap-4 text-center">
+            <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl font-black mx-auto shadow-inner">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <div>
+                <h3 class="font-black text-base text-slate-800">교사 인증 (보안 모드)</h3>
+                <p class="text-xs text-slate-500 mt-1">
+                    학생들의 개인정보 및 스마트 배려 조건 보호를 위해 교사 비밀번호를 입력해주세요.
+                </p>
+            </div>
+            
+            <form id="teacherAuthForm" onsubmit="return false;" class="space-y-3">
+                <div class="relative">
+                    <input type="password" id="teacherPinInput" maxlength="15" placeholder="교사 비밀번호 입력" autocomplete="off" class="w-full text-center tracking-widest text-lg font-black px-4 py-2.5 rounded-2xl border-2 border-slate-300 focus:border-indigo-600 focus:outline-none transition">
+                </div>
+                <div id="authErrorMsg" class="text-xs text-rose-500 font-bold hidden flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span>비밀번호가 일치하지 않습니다.</span>
+                </div>
+                <div class="text-[11px] text-slate-400 font-medium">
+                    (초기 기본 비밀번호: <strong class="text-indigo-600">0000</strong>)
+                </div>
+                <div class="flex items-center gap-2 pt-2">
+                    <button type="button" id="cancelAuthBtn" class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
+                        취소
+                    </button>
+                    <button type="submit" id="submitAuthBtn" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-md transition cursor-pointer">
+                        인증 확인
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 모달: [교사 전용] 반별 명단 등록 및 배정 옵션 관리 모달 -->
     <!-- ============================================================== -->
     <div id="settingsModal" class="no-print fixed inset-0 bg-slate-950/70 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
         <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl overflow-y-auto max-h-[92vh] border border-slate-200 flex flex-col gap-4">
-            <!-- 모달 헤더 -->
+            <!-- 모달 헤더 (교사 전용 표시) -->
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-base font-black shadow-sm">
-                        <i class="fa-solid fa-address-book"></i>
+                    <div class="w-9 h-9 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center text-base font-black shadow-sm">
+                        <i class="fa-solid fa-user-shield"></i>
                     </div>
                     <div>
-                        <h2 class="font-black text-lg text-slate-800">반별 명단 등록 및 배정 설정</h2>
+                        <div class="flex items-center gap-2">
+                            <h2 class="font-black text-lg text-slate-800">학급 명단 및 배정 옵션</h2>
+                            <span class="text-[11px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                                🔒 교사 모드 전용 (학생 비공개)
+                            </span>
+                        </div>
                         <p class="text-xs text-slate-400">학급을 선택해 명단을 등록하고 특수 배려 조건을 지정합니다</p>
                     </div>
                 </div>
@@ -419,9 +469,14 @@
 
             <!-- 3. 특별 배정 조건 (앞자리 / 분리) -->
             <div class="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200/80 text-xs">
-                <h3 class="font-black text-slate-800 text-xs mb-1 flex items-center gap-1.5">
-                    <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> 스마트 배려 조건 (이 반 전용)
-                </h3>
+                <div class="flex items-center justify-between">
+                    <h3 class="font-black text-slate-800 text-xs flex items-center gap-1.5">
+                        <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> 스마트 배려 조건 (이 반 전용)
+                    </h3>
+                    <span class="text-[10px] text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                        * 학생 화면에는 절대 표시되지 않습니다
+                    </span>
+                </div>
 
                 <!-- 시력 보호 / 앞자리 우선 (1~3모둠) -->
                 <div>
@@ -440,7 +495,24 @@
                 </div>
             </div>
 
-            <!-- 4. 명단 데이터 백업 & 복원 (JSON) -->
+            <!-- 4. 교사 모드 비밀번호 변경 섹션 -->
+            <div class="bg-amber-50/70 p-3.5 rounded-2xl border border-amber-200 text-xs flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-key text-amber-600 text-base"></i>
+                    <div>
+                        <div class="font-black text-amber-950">교사 비밀번호 변경</div>
+                        <div class="text-[11px] text-amber-800">학생 화면에서 교사 모드로 전환할 때 사용하는 비밀번호 (현재 기본값: 0000)</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <input type="password" id="newTeacherPinInput" placeholder="새 비밀번호 입력" class="w-32 px-2.5 py-1 text-center font-black rounded-xl border border-amber-300 bg-white text-slate-900 focus:outline-none">
+                    <button type="button" id="savePinBtn" class="px-3 py-1 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs transition cursor-pointer shadow-sm">
+                        변경
+                    </button>
+                </div>
+            </div>
+
+            <!-- 5. 명단 데이터 백업 & 복원 (JSON) -->
             <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
                 <div class="flex items-center gap-2">
                     <button type="button" id="backupJsonBtn" class="text-slate-500 hover:text-slate-800 font-bold transition flex items-center gap-1 cursor-pointer">
@@ -623,6 +695,7 @@
         ];
 
         const STORAGE_KEY = 'waurimal_seating_data_v2';
+        const PIN_STORAGE_KEY = 'waurimal_seating_teacher_pin';
 
         // ==========================================
         // 3. 애플리케이션 상태 (State)
@@ -638,11 +711,106 @@
             selectedSeat: null,     // 맞교환용 선택 좌석
             isRevealing: false,     // 순차 발표 진행 중 플래그
             frontStudents: [],      // 앞자리 우선 학생 이름
-            separationPairs: []     // 분리 배정 쌍
+            separationPairs: [],    // 분리 배정 쌍
+            isTeacherMode: false,   // 교사 모드 인증 여부 (기본: false - 학생 보호 잠금)
+            pendingAuthAction: null // 교사 인증 후 실행할 콜백
         };
 
         // ==========================================
-        // 4. 모둠별 인원 수 계산 규칙 (사용자 요구사항 100% 충족)
+        // 4. 교사 모드 보안 및 인증 로직
+        // ==========================================
+        function getTeacherPin() {
+            return localStorage.getItem(PIN_STORAGE_KEY) || '0000';
+        }
+
+        function setTeacherPin(newPin) {
+            localStorage.setItem(PIN_STORAGE_KEY, newPin);
+        }
+
+        // 교사 인증이 필요한 액션 가드 함수
+        function requireTeacherMode(onSuccess) {
+            if (State.isTeacherMode) {
+                if (typeof onSuccess === 'function') onSuccess();
+                return;
+            }
+
+            State.pendingAuthAction = onSuccess;
+            const authModal = document.getElementById('teacherAuthModal');
+            const pinInput = document.getElementById('teacherPinInput');
+            const errEl = document.getElementById('authErrorMsg');
+
+            if (errEl) errEl.classList.add('hidden');
+            if (pinInput) pinInput.value = '';
+            if (authModal) authModal.classList.remove('hidden');
+            setTimeout(() => pinInput && pinInput.focus(), 150);
+        }
+
+        function verifyTeacherPin(enteredPin) {
+            const correctPin = getTeacherPin();
+            if (enteredPin === correctPin) {
+                State.isTeacherMode = true;
+                updateTeacherModeUI();
+                const authModal = document.getElementById('teacherAuthModal');
+                if (authModal) authModal.classList.add('hidden');
+                Sound.playBeep(659, 'sine', 0.1);
+                showToast("🔓 교사 모드로 전환되었습니다.", "✨");
+
+                if (typeof State.pendingAuthAction === 'function') {
+                    const act = State.pendingAuthAction;
+                    State.pendingAuthAction = null;
+                    act();
+                }
+                renderClassroomBoard(); // 교사 모드일 때 앞자리 아이콘 등 표시
+            } else {
+                const errEl = document.getElementById('authErrorMsg');
+                if (errEl) errEl.classList.remove('hidden');
+                Sound.playBeep(220, 'sawtooth', 0.15);
+                const pinInput = document.getElementById('teacherPinInput');
+                if (pinInput) {
+                    pinInput.select();
+                    pinInput.focus();
+                }
+            }
+        }
+
+        function lockTeacherMode() {
+            State.isTeacherMode = false;
+            updateTeacherModeUI();
+            const settingsModal = document.getElementById('settingsModal');
+            if (settingsModal) settingsModal.classList.add('hidden');
+            renderClassroomBoard(); // 앞자리 아이콘 등 학생 화면에서 숨김
+            Sound.playBeep(440, 'triangle', 0.08);
+            showToast("🔒 교사 모드가 잠금되었습니다 (학생 공개 화면)", "🛡️");
+        }
+
+        function updateTeacherModeUI() {
+            const btn = document.getElementById('teacherModeToggleBtn');
+            const icon = document.getElementById('teacherModeIcon');
+            const text = document.getElementById('teacherModeText');
+            const classLockIcon = document.getElementById('classManagerLockIcon');
+            const settingsLockIcon = document.getElementById('settingsLockIcon');
+
+            if (State.isTeacherMode) {
+                if (btn) {
+                    btn.className = "px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition flex items-center gap-1.5 cursor-pointer shadow-md";
+                }
+                if (icon) icon.className = "fa-solid fa-lock-open text-amber-300";
+                if (text) text.textContent = "교사 모드 ON (잠그기)";
+                if (classLockIcon) classLockIcon.className = "fa-solid fa-lock-open text-emerald-300 text-xs";
+                if (settingsLockIcon) settingsLockIcon.className = "fa-solid fa-lock-open text-emerald-500 text-xs";
+            } else {
+                if (btn) {
+                    btn.className = "px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm";
+                }
+                if (icon) icon.className = "fa-solid fa-lock text-amber-400";
+                if (text) text.textContent = "교사 모드";
+                if (classLockIcon) classLockIcon.className = "fa-solid fa-lock text-amber-300 text-xs";
+                if (settingsLockIcon) settingsLockIcon.className = "fa-solid fa-lock text-amber-500 text-xs";
+            }
+        }
+
+        // ==========================================
+        // 5. 모둠별 인원 수 계산 규칙
         // 총 6개 모둠, 기본 4명, 25명 -> 6모둠부터 채움(+1), 26명 -> 6·5모둠(+1)
         // ==========================================
         function calculateGroupCapacities(total) {
@@ -650,14 +818,14 @@
             
             // 25명일 때: 6모둠부터 채움 (6모둠에 1명 추가 -> [4, 4, 4, 4, 4, 5])
             if (total === 25) {
-                caps[5] = 5; // 6모둠 (index 5)
+                caps[5] = 5;
                 return caps;
             }
 
             // 26명일 때: 6모둠과 5모둠에 각각 1명씩 더 배정 -> [4, 4, 4, 4, 5, 5]
             if (total === 26) {
-                caps[5] = 5; // 6모둠 (index 5)
-                caps[4] = 5; // 5모둠 (index 4)
+                caps[5] = 5;
+                caps[4] = 5;
                 return caps;
             }
 
@@ -687,7 +855,7 @@
         }
 
         // ==========================================
-        // 5. 로컬스토리지 학급 데이터 로드 및 저장
+        // 6. 로컬스토리지 학급 데이터 로드 및 저장
         // ==========================================
         function loadStoredClasses() {
             try {
@@ -701,7 +869,6 @@
                     }
                 }
             } catch(e) {}
-            // 로컬 스토리지에 데이터가 없으면 기본 학급 탑재
             State.classes = JSON.parse(JSON.stringify(DEFAULT_CLASSES));
             State.currentClassId = 'class_1';
             persistClasses();
@@ -727,9 +894,9 @@
         }
 
         // ==========================================
-        // 6. 학급 전환 (Switch Class)
+        // 7. 학급 전환 (Switch Class)
         // ==========================================
-        function switchClass(classId, preserveState = true) {
+        function switchClass(classId) {
             const target = State.classes.find(c => c.id === classId);
             if (!target) return;
 
@@ -738,7 +905,6 @@
             State.frontStudents = target.frontStudents || [];
             State.separationPairs = target.separationPairs || [];
 
-            // 학생 객체 배열 생성
             State.students = [];
             for (let i = 0; i < State.studentCount; i++) {
                 const num = i + 1;
@@ -750,7 +916,6 @@
                 });
             }
 
-            // 이전 자리 기록이 남아있고 인원수가 일치하면 복원, 아니면 새로 배정
             if (target.lastGroups && target.lastGroups.length === 6) {
                 State.groups = target.lastGroups;
             } else {
@@ -766,7 +931,7 @@
         }
 
         // ==========================================
-        // 7. 학급 탭 렌더링 (메인 바 & 모달 내부)
+        // 8. 학급 탭 렌더링 (메인 바 & 모달 내부)
         // ==========================================
         function renderClassTabs() {
             const mainContainer = document.getElementById('classTabsList');
@@ -774,7 +939,6 @@
 
             const current = getCurrentClass();
 
-            // 1. 메인 화면 탭 바
             if (mainContainer) {
                 mainContainer.innerHTML = State.classes.map(cls => {
                     const isActive = cls.id === State.currentClassId;
@@ -788,7 +952,6 @@
                 }).join('');
             }
 
-            // 2. 모달 내부 탭 바
             if (modalContainer) {
                 modalContainer.innerHTML = State.classes.map(cls => {
                     const isModalActive = cls.id === State.modalEditingClassId;
@@ -801,7 +964,6 @@
                 }).join('');
             }
 
-            // 배너 및 인쇄 헤더 학급 이름 갱신
             const bannerClass = document.getElementById('bannerClassName');
             if (bannerClass) {
                 bannerClass.innerHTML = `<i class="fa-solid fa-school text-indigo-600"></i> ${current.name}`;
@@ -823,32 +985,27 @@
         };
 
         // ==========================================
-        // 8. 셔플 및 자리 배정 알고리즘
+        // 9. 셔플 및 자리 배정 알고리즘
         // ==========================================
         function assignSeatsAlgorithm() {
             const caps = calculateGroupCapacities(State.studentCount);
             
-            // 배정할 학생 복사
             let pool = [...State.students];
             
-            // Fisher-Yates 셔플
             for (let i = pool.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [pool[i], pool[j]] = [pool[j], pool[i]];
             }
 
-            // 앞자리(시력보호) 우선 학생 분리 (1~3모둠 우선 배정)
             const frontStudents = pool.filter(s => State.frontStudents.includes(s.name));
             const normalStudents = pool.filter(s => !State.frontStudents.includes(s.name));
 
-            // 6개 모둠 빈 배열 준비
             const groups = caps.map((capacity, idx) => ({
                 ...GROUP_THEMES[idx],
                 capacity: capacity,
                 members: []
             }));
 
-            // 앞자리 학생을 1~3모둠(앞쪽)에 먼저 분배
             frontStudents.forEach(s => {
                 const frontGroupCandidates = [0, 1, 2].filter(gIdx => groups[gIdx].members.length < groups[gIdx].capacity);
                 if (frontGroupCandidates.length > 0) {
@@ -859,7 +1016,6 @@
                 }
             });
 
-            // 나머지 학생들 순차 배정
             normalStudents.forEach(s => {
                 const availableGroups = groups.filter(g => g.members.length < g.capacity);
                 if (availableGroups.length > 0) {
@@ -885,20 +1041,18 @@
 
             State.groups = groups;
 
-            // 현재 학급의 lastGroups 갱신
             const current = getCurrentClass();
             current.lastGroups = State.groups;
             persistClasses();
         }
 
         // ==========================================
-        // 9. 교실 모둠 배치도 렌더링
+        // 10. 교실 모둠 배치도 렌더링
         // ==========================================
         function renderClassroomBoard() {
             const grid = document.getElementById('groupsGrid');
             if (!grid) return;
 
-            // 칠판 위치 토글 반영
             const topBoard = document.getElementById('chalkboardTop');
             const bottomBoard = document.getElementById('chalkboardBottom');
             if (State.isTeacherView) {
@@ -909,7 +1063,6 @@
                 if (bottomBoard) bottomBoard.classList.remove('hidden');
             }
 
-            // 학생 시선일 경우 6개 모둠의 순서 시각화 반전 처리 (4,5,6모둠이 위, 1,2,3모둠이 아래)
             const displayGroups = State.isTeacherView 
                 ? State.groups 
                 : [State.groups[3], State.groups[4], State.groups[5], State.groups[0], State.groups[1], State.groups[2]];
@@ -924,7 +1077,6 @@
                 const card = document.createElement('div');
                 card.className = `group-box ${group.bg} rounded-3xl border-2 ${group.border} p-4 shadow-sm flex flex-col justify-between transition-all relative overflow-hidden`;
 
-                // 모둠 헤더
                 const headerHtml = `
                     <div class="flex items-center justify-between pb-3 mb-3 border-b ${group.border}">
                         <div class="flex items-center gap-2">
@@ -939,7 +1091,6 @@
                     </div>
                 `;
 
-                // 책상 레이아웃 구성 (4인: 2x2 마주보기, 5인: 2x2 + 헤드 데스크)
                 const desksWrapper = document.createElement('div');
                 desksWrapper.className = 'grid grid-cols-2 gap-2.5 my-auto';
 
@@ -958,11 +1109,14 @@
                     deskDiv.setAttribute('draggable', 'true');
 
                     if (student) {
+                        // 학생 공개 모드일 때는 안경(시력보호) 아이콘을 완벽하게 숨김
                         const isFront = State.frontStudents.includes(student.name);
+                        const showFrontIcon = State.isTeacherMode && isFront;
+
                         deskDiv.innerHTML = `
                             <div class="flex items-center justify-between w-full mb-1">
                                 <span class="text-[10px] font-black px-1.5 py-0.2 rounded bg-slate-200/80 text-slate-700">#${student.numStr}</span>
-                                ${isFront ? '<span class="text-[10px] text-amber-600" title="앞자리 우선 학생"><i class="fa-solid fa-glasses"></i></span>' : ''}
+                                ${showFrontIcon ? '<span class="text-[10px] text-amber-600" title="앞자리 우선 학생 (교사 전용)"><i class="fa-solid fa-glasses"></i></span>' : ''}
                             </div>
                             <div class="font-black text-sm text-slate-800 truncate w-full tracking-tight">${student.name}</div>
                         `;
@@ -972,10 +1126,8 @@
                         `;
                     }
 
-                    // 클릭 시 맞교환(Swap)
                     deskDiv.addEventListener('click', () => handleSeatClick(gIdx, sIdx));
 
-                    // 드래그 앤 드롭
                     deskDiv.addEventListener('dragstart', (e) => {
                         e.dataTransfer.setData('text/plain', JSON.stringify({ groupIdx: gIdx, seatIdx: sIdx }));
                         deskDiv.classList.add('opacity-50');
@@ -1002,7 +1154,7 @@
         }
 
         // ==========================================
-        // 10. 좌석 클릭 및 스왑 핸들러
+        // 11. 좌석 클릭 및 스왑 핸들러
         // ==========================================
         function handleSeatClick(groupIdx, seatIdx) {
             if (State.isRevealing) return;
@@ -1044,7 +1196,7 @@
         }
 
         // ==========================================
-        // 11. 두구두구 순차 발표 (Dramatic Reveal) 연출
+        // 12. 두구두구 순차 발표 (Dramatic Reveal) 연출
         // ==========================================
         async function runDramaticReveal() {
             if (State.isRevealing) return;
@@ -1124,7 +1276,7 @@
         }
 
         // ==========================================
-        // 12. 즉시 배정
+        // 13. 즉시 배정
         // ==========================================
         function runInstantAssignment() {
             if (State.isRevealing) return;
@@ -1137,7 +1289,7 @@
         }
 
         // ==========================================
-        // 13. 상태 배너 프리뷰 갱신
+        // 14. 상태 배너 프리뷰 갱신
         // ==========================================
         function updateBannerPreview() {
             const countBadge = document.getElementById('bannerStudentCount');
@@ -1167,7 +1319,7 @@
         }
 
         // ==========================================
-        // 14. 명단 텍스트 내보내기 및 인쇄 / 이미지 저장
+        // 15. 명단 텍스트 내보내기 및 인쇄 / 이미지 저장
         // ==========================================
         function copyRosterText() {
             if (!State.groups || State.groups.length === 0) return;
@@ -1205,7 +1357,7 @@
         }
 
         // ==========================================
-        // 15. 로컬 스토리지 히스토리 저장
+        // 16. 로컬 스토리지 히스토리 저장
         // ==========================================
         function saveHistoryToStorage() {
             try {
@@ -1282,7 +1434,7 @@
         };
 
         // ==========================================
-        // 16. 토스트 알림 메시지 함수
+        // 17. 토스트 알림 메시지 함수
         // ==========================================
         function showToast(msg, icon = 'ℹ️') {
             const toast = document.getElementById('toastNotification');
@@ -1300,7 +1452,7 @@
         }
 
         // ==========================================
-        // 17. 나이스(NEIS) / 엑셀 명단 텍스트 자동 정제 도구
+        // 18. 나이스(NEIS) / 엑셀 명단 텍스트 자동 정제 도구
         // ==========================================
         function cleanStudentRosterText(rawText) {
             if (!rawText) return [];
@@ -1308,18 +1460,14 @@
                 .split('\n')
                 .map(line => {
                     if (!line.trim()) return '';
-                    // 탭 구분 추출
                     const parts = line.split('\t').map(p => p.trim()).filter(Boolean);
                     let name = parts[0] || '';
                     if (parts.length > 1) {
                         const nonNum = parts.find(p => !/^\d+$/.test(p) && !/^(남|여|M|F)$/i.test(p));
                         if (nonNum) name = nonNum;
                     }
-                    // 선행 번호 제거 (예: "1. 김철수", "01 김철수", "1번 김철수")
                     name = name.replace(/^(\d+[\.\s번\)\-\_]+)/, '');
-                    // 괄호 내용 제거 (예: "김철수(남)")
                     name = name.replace(/\s*\([^\)]*\)/g, '');
-                    // 쉼표 및 특수기호 제거
                     name = name.replace(/[,;]/g, '').trim();
                     return name;
                 })
@@ -1327,7 +1475,7 @@
         }
 
         // ==========================================
-        // 18. 모달 학급 데이터 바인딩
+        // 19. 모달 학급 데이터 바인딩
         // ==========================================
         function loadModalClassData(classId) {
             let target = State.classes.find(c => c.id === classId);
@@ -1371,13 +1519,12 @@
         };
 
         // ==========================================
-        // 19. 빠른 인원 프리셋 적용 (현재 학급에 적용)
+        // 20. 빠른 인원 프리셋 적용 (현재 학급에 적용)
         // ==========================================
         window.applyStudentCountPreset = function(count) {
             const current = getCurrentClass();
             current.studentCount = count;
             
-            // 기존 명단 유지하면서 부족 시 샘플 이름 보충
             if (!current.names || current.names.length < count) {
                 const names = current.names ? [...current.names] : [];
                 while (names.length < count) {
@@ -1405,7 +1552,7 @@
         };
 
         // ==========================================
-        // 20. 이벤트 바인딩
+        // 21. 이벤트 바인딩
         // ==========================================
         function bindEvents() {
             // 사운드 토글
@@ -1435,6 +1582,38 @@
                     viewText.textContent = State.isTeacherView ? '선생님 시선 (칠판 위)' : '학생 시선 (칠판 아래)';
                     renderClassroomBoard();
                     Sound.playBeep(600, 'sine', 0.08);
+                });
+            }
+
+            // 교사 모드 토글 버튼
+            const teacherModeBtn = document.getElementById('teacherModeToggleBtn');
+            if (teacherModeBtn) {
+                teacherModeBtn.addEventListener('click', () => {
+                    if (State.isTeacherMode) {
+                        lockTeacherMode();
+                    } else {
+                        requireTeacherMode(() => {});
+                    }
+                });
+            }
+
+            // 교사 인증 모달 이벤트
+            const teacherAuthModal = document.getElementById('teacherAuthModal');
+            const cancelAuthBtn = document.getElementById('cancelAuthBtn');
+            const teacherAuthForm = document.getElementById('teacherAuthForm');
+            const pinInput = document.getElementById('teacherPinInput');
+
+            if (cancelAuthBtn && teacherAuthModal) {
+                cancelAuthBtn.addEventListener('click', () => {
+                    teacherAuthModal.classList.add('hidden');
+                    State.pendingAuthAction = null;
+                });
+            }
+
+            if (teacherAuthForm && pinInput) {
+                teacherAuthForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    verifyTeacherPin(pinInput.value.trim());
                 });
             }
 
@@ -1470,7 +1649,7 @@
                 });
             }
 
-            // 모달 열기 버튼 (반별 명단 관리 & 명단 설정)
+            // 모달 열기 버튼 (반별 명단 관리 & 명단 설정 -> 교사 모드 필수)
             const settingsModal = document.getElementById('settingsModal');
             const openSettingsBtn = document.getElementById('openSettingsBtn');
             const openClassManagerBtn = document.getElementById('openClassManagerBtn');
@@ -1478,20 +1657,28 @@
             const cancelSettingsBtn = document.getElementById('cancelSettingsBtn');
             const saveSettingsBtn = document.getElementById('saveSettingsBtn');
 
-            const openModal = () => {
+            const openModalAction = () => {
                 loadModalClassData(State.currentClassId);
                 renderClassTabs();
                 settingsModal.classList.remove('hidden');
             };
 
-            if (openSettingsBtn) openSettingsBtn.addEventListener('click', openModal);
-            if (openClassManagerBtn) openClassManagerBtn.addEventListener('click', openModal);
+            if (openSettingsBtn) {
+                openSettingsBtn.addEventListener('click', () => {
+                    requireTeacherMode(openModalAction);
+                });
+            }
+            if (openClassManagerBtn) {
+                openClassManagerBtn.addEventListener('click', () => {
+                    requireTeacherMode(openModalAction);
+                });
+            }
 
             const closeModal = () => settingsModal && settingsModal.classList.add('hidden');
             if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', closeModal);
             if (cancelSettingsBtn) cancelSettingsBtn.addEventListener('click', closeModal);
 
-            // 새 반 추가 버튼 (메인 바 & 모달 내부)
+            // 새 반 추가 버튼 (메인 바 & 모달 내부 -> 교사 인증 필수)
             const addClassHandler = () => {
                 const nextNum = State.classes.length + 1;
                 const newId = `class_${Date.now()}`;
@@ -1515,7 +1702,11 @@
             };
 
             const quickAddBtn = document.getElementById('quickAddClassBtn');
-            if (quickAddBtn) quickAddBtn.addEventListener('click', addClassHandler);
+            if (quickAddBtn) {
+                quickAddBtn.addEventListener('click', () => {
+                    requireTeacherMode(addClassHandler);
+                });
+            }
             const modalAddBtn = document.getElementById('modalAddClassBtn');
             if (modalAddBtn) modalAddBtn.addEventListener('click', addClassHandler);
 
@@ -1617,7 +1808,6 @@
                     const newCount = Math.max(6, Math.min(36, parseInt(countInput.value, 10) || 25));
                     const rawNames = namesTextarea.value.split('\n').map(s => s.trim()).filter(Boolean);
 
-                    // 부족하면 기본 이름 또는 번호로 채움
                     while (rawNames.length < newCount) {
                         rawNames.push(DEFAULT_STUDENT_NAMES[rawNames.length] || `${rawNames.length + 1}번`);
                     }
@@ -1631,19 +1821,35 @@
                         return parts.length === 2 ? parts : null;
                     }).filter(Boolean);
 
-                    // 타겟 학급 정보 업데이트
                     target.name = newName;
                     target.studentCount = newCount;
                     target.names = rawNames.slice(0, newCount);
                     target.frontStudents = frontArr;
                     target.separationPairs = sepArr;
-                    target.lastGroups = null; // 새 명단에 맞춰 재배정
+                    target.lastGroups = null;
 
                     persistClasses();
                     switchClass(target.id);
                     closeModal();
                     Sound.playPlop();
                     showToast(`'${target.name}' 명단이 저장되고 새 자리가 배정되었습니다!`, "✅");
+                });
+            }
+
+            // 교사 비밀번호 변경 버튼
+            const savePinBtn = document.getElementById('savePinBtn');
+            const newPinInput = document.getElementById('newTeacherPinInput');
+            if (savePinBtn && newPinInput) {
+                savePinBtn.addEventListener('click', () => {
+                    const pinVal = newPinInput.value.trim();
+                    if (!pinVal || pinVal.length < 4) {
+                        alert("교사 비밀번호는 최소 4자리 이상이어야 합니다.");
+                        return;
+                    }
+                    setTeacherPin(pinVal);
+                    newPinInput.value = '';
+                    Sound.playPlop();
+                    showToast("교사 비밀번호가 성공적으로 변경되었습니다!", "🔐");
                 });
             }
 
@@ -1718,13 +1924,14 @@
         }
 
         // ==========================================
-        // 21. 초기 실행
+        // 22. 초기 실행
         // ==========================================
         document.addEventListener('DOMContentLoaded', () => {
             loadStoredClasses();
             switchClass(State.currentClassId);
             bindEvents();
             updateHistoryCount();
+            updateTeacherModeUI();
         });
 
     })();
