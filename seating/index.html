@@ -293,6 +293,10 @@
                     </div>
 
                     <div class="flex items-center gap-2">
+                        <button type="button" id="toggleRevealSeatsBtn" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer" title="자리 공개 및 숨기기 전환">
+                            <i id="toggleRevealIcon" class="fa-solid fa-eye-slash text-slate-500 text-xs"></i>
+                            <span id="toggleRevealText">자리 다시 숨기기</span>
+                        </button>
                         <button type="button" id="openSettingsBtn" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer" title="교사 전용: 명단 및 배정 옵션 설정">
                             <i id="settingsLockIcon" class="fa-solid fa-lock text-amber-500 text-xs"></i>
                             <span>명단 & 조건 설정</span>
@@ -325,6 +329,9 @@
                     </span>
                     <span id="bannerMonthBadge" class="font-black text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200 text-xs flex items-center gap-1">
                         <i class="fa-solid fa-calendar-check text-blue-600"></i> 10월
+                    </span>
+                    <span id="bannerRevealBadge" class="font-black text-xs px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-300 flex items-center gap-1">
+                        <i class="fa-solid fa-lock text-amber-600"></i> 자리 비공개
                     </span>
                     <span class="text-slate-300">|</span>
                     <span class="font-bold text-slate-500 flex items-center gap-1">
@@ -366,9 +373,14 @@
                         <span class="text-xs font-black tracking-widest text-emerald-300 uppercase flex items-center gap-1.5">
                             <i class="fa-solid fa-chalkboard-user"></i> CHALKBOARD
                         </span>
-                        <span class="font-black text-sm tracking-wider text-amber-200">
-                            🏫 칠판 (교탁) 앞 · <span id="chalkboardClassMonthText">1반 10월</span>
-                        </span>
+                        <div class="text-center">
+                            <span class="font-black text-sm tracking-wider text-amber-200">
+                                🏫 칠판 (교탁) 앞 · <span id="chalkboardClassMonthText">1반 10월</span>
+                            </span>
+                            <div id="chalkboardSubNotice" class="text-[11px] text-emerald-200 font-bold mt-0.5">
+                                <!-- 상태에 따라 동적 변경 -->
+                            </div>
+                        </div>
                         <span class="text-[11px] text-emerald-200/80 font-bold">
                             앞쪽
                         </span>
@@ -386,9 +398,14 @@
                         <span class="text-xs font-black tracking-widest text-emerald-300 uppercase flex items-center gap-1.5">
                             <i class="fa-solid fa-chalkboard-user"></i> CHALKBOARD
                         </span>
-                        <span class="font-black text-sm tracking-wider text-amber-200">
-                            🏫 칠판 (교탁) 앞 · <span id="chalkboardClassMonthTextBottom">1반 10월</span>
-                        </span>
+                        <div class="text-center">
+                            <span class="font-black text-sm tracking-wider text-amber-200">
+                                🏫 칠판 (교탁) 앞 · <span id="chalkboardClassMonthTextBottom">1반 10월</span>
+                            </span>
+                            <div id="chalkboardSubNoticeBottom" class="text-[11px] text-emerald-200 font-bold mt-0.5">
+                                <!-- 상태에 따라 동적 변경 -->
+                            </div>
+                        </div>
                         <span class="text-[11px] text-emerald-200/80 font-bold">
                             앞쪽
                         </span>
@@ -396,7 +413,7 @@
                 </div>
 
                 <!-- 하단 자리 교환 안내문 -->
-                <div class="no-print text-center text-xs text-slate-500 font-semibold flex items-center justify-center gap-2">
+                <div id="boardBottomGuideText" class="no-print text-center text-xs text-slate-500 font-semibold flex items-center justify-center gap-2">
                     <i class="fa-solid fa-hand-pointer text-blue-500"></i>
                     <span>학생 좌석을 클릭하거나 드래그하여 두 학생의 자리를 언제든지 맞바꿀 수 있으며, 현재 월에 자동 저장됩니다.</span>
                 </div>
@@ -905,6 +922,7 @@
             isTeacherView: true,    // true: 칠판 위, false: 칠판 아래
             selectedSeat: null,     // 맞교환용 선택 좌석
             isRevealing: false,     // 순차 발표 진행 중 플래그
+            isRevealed: false,      // 배정 좌석 공개 여부 (false: 빈 좌석 상태, true: 학생 이름 공개)
             frontStudents: [],      // 앞자리 우선 학생 이름
             separationPairs: [],    // 분리 배정 쌍
             isTeacherMode: false,   // 교사 모드 인증 여부 (기본: false - 학생 보호 잠금)
@@ -1252,6 +1270,8 @@
             if (!target) return;
 
             State.currentClassId = target.id;
+            State.isRevealed = false; // 반 전환 시 기본적으로 빈 좌석 상태
+
             // 등록된 명단이 있으면 명단 인원수(names.length)를 최우선으로 일치
             if (target.names && target.names.length > 0) {
                 State.studentCount = target.names.length;
@@ -1279,9 +1299,12 @@
             if (monthSeat && monthSeat.length === 6) {
                 State.groups = monthSeat;
             } else {
-                assignSeatsAlgorithm();
-                target.monthlySeats[State.selectedMonth] = State.groups;
-                target.lastGroups = State.groups;
+                const caps = calculateGroupCapacities(State.studentCount);
+                State.groups = DEFAULT_GROUPS_META.map((meta, i) => ({
+                    ...meta,
+                    capacity: caps[i] || 4,
+                    members: []
+                }));
             }
 
             persistClasses();
@@ -1302,20 +1325,24 @@
         // ==========================================
         function switchMonth(month, showNotification = true) {
             State.selectedMonth = month;
+            State.isRevealed = false; // 월 전환 시에도 빈 좌석 상태로 대기
             const target = getCurrentClass();
             if (!target) return;
 
             if (!target.monthlySeats) target.monthlySeats = {};
             const monthSeat = target.monthlySeats[month];
 
-            let isNew = false;
+            let hasSaved = false;
             if (monthSeat && monthSeat.length === 6) {
                 State.groups = monthSeat;
+                hasSaved = true;
             } else {
-                assignSeatsAlgorithm();
-                target.monthlySeats[month] = State.groups;
-                target.lastGroups = State.groups;
-                isNew = true;
+                const caps = calculateGroupCapacities(State.studentCount);
+                State.groups = DEFAULT_GROUPS_META.map((meta, i) => ({
+                    ...meta,
+                    capacity: caps[i] || 4,
+                    members: []
+                }));
             }
 
             persistClasses();
@@ -1325,10 +1352,10 @@
             updateBannerPreview();
 
             if (showNotification) {
-                if (isNew) {
-                    showToast(`${target.name} ${month} 새로운 자리가 배정되었습니다!`, "✨");
+                if (hasSaved) {
+                    showToast(`${target.name} ${month} 저장된 자리가 준비되었습니다. 발표 버튼을 누르면 공개됩니다.`, "🔒");
                 } else {
-                    showToast(`${target.name} ${month} 저장된 자리 배치를 불러왔습니다.`, "📅");
+                    showToast(`${target.name} ${month} 빈 자리 배정판이 준비되었습니다.`, "📅");
                 }
             }
         }
@@ -1543,12 +1570,13 @@
                     const isHeadDesk = (group.capacity === 5 && sIdx === 4);
                     const colSpanClass = isHeadDesk ? 'col-span-2 mx-auto w-3/4' : 'w-full';
 
-                    deskDiv.className = `desk-card ${colSpanClass} p-3 rounded-2xl border-2 border-slate-200/90 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[76px] ${isSelected ? 'selected-for-swap bg-amber-50 border-amber-400' : 'hover:border-slate-400'}`;
                     deskDiv.setAttribute('data-group', gIdx);
                     deskDiv.setAttribute('data-seat', sIdx);
-                    deskDiv.setAttribute('draggable', 'true');
 
-                    if (student) {
+                    if (State.isRevealed && student) {
+                        deskDiv.className = `desk-card ${colSpanClass} p-3 rounded-2xl border-2 border-slate-200/90 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[76px] ${isSelected ? 'selected-for-swap bg-amber-50 border-amber-400 shadow-md' : 'hover:border-slate-400 bg-white shadow-sm'}`;
+                        deskDiv.setAttribute('draggable', 'true');
+
                         const isFront = State.frontStudents.includes(student.name);
                         const showFrontIcon = State.isTeacherMode && isFront;
 
@@ -1559,15 +1587,36 @@
                             </div>
                             <div class="font-black text-sm text-slate-800 truncate w-full tracking-tight">${student.name}</div>
                         `;
-                    } else {
+                    } else if (State.isRevealed && !student) {
+                        deskDiv.className = `desk-card ${colSpanClass} p-3 rounded-2xl border-2 border-dashed border-slate-200 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[76px] bg-slate-50/50`;
+                        deskDiv.setAttribute('draggable', 'false');
                         deskDiv.innerHTML = `
                             <span class="text-xs text-slate-300 font-bold">빈 좌석</span>
+                        `;
+                    } else {
+                        // 자리가 아직 발표/공개되지 않은 빈 상태 (Unrevealed / Empty desk)
+                        deskDiv.className = `desk-card ${colSpanClass} p-3 rounded-2xl border-2 border-dashed border-slate-300/90 bg-white/70 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[76px] hover:border-amber-400 hover:bg-amber-50/40 group shadow-2xs`;
+                        deskDiv.setAttribute('draggable', 'false');
+
+                        deskDiv.innerHTML = `
+                            <div class="flex items-center justify-between w-full mb-1">
+                                <span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-400 group-hover:text-amber-700 group-hover:bg-amber-100/70 transition">#${sIdx + 1}</span>
+                                <i class="fa-regular fa-user text-slate-300 text-[11px] group-hover:text-amber-500 transition"></i>
+                            </div>
+                            <div class="text-xs font-bold text-slate-400 group-hover:text-amber-600 transition flex items-center gap-1">
+                                <i class="fa-solid fa-clock-rotate-left text-[10px] opacity-60"></i>
+                                <span>배정 대기</span>
+                            </div>
                         `;
                     }
 
                     deskDiv.addEventListener('click', () => handleSeatClick(gIdx, sIdx));
 
                     deskDiv.addEventListener('dragstart', (e) => {
+                        if (!State.isRevealed) {
+                            e.preventDefault();
+                            return;
+                        }
                         e.dataTransfer.setData('text/plain', JSON.stringify({ groupIdx: gIdx, seatIdx: sIdx }));
                         deskDiv.classList.add('opacity-50');
                     });
@@ -1575,6 +1624,7 @@
                     deskDiv.addEventListener('dragover', (e) => e.preventDefault());
                     deskDiv.addEventListener('drop', (e) => {
                         e.preventDefault();
+                        if (!State.isRevealed) return;
                         try {
                             const from = JSON.parse(e.dataTransfer.getData('text/plain'));
                             swapSeats(from, { groupIdx: gIdx, seatIdx: sIdx });
@@ -1597,6 +1647,11 @@
         // ==========================================
         function handleSeatClick(groupIdx, seatIdx) {
             if (State.isRevealing) return;
+            if (!State.isRevealed) {
+                showToast("🥁 상단의 [두구두구 순차 발표] 또는 [즉시 배정] 버튼을 눌러 자리를 공개해주세요!", "💡");
+                Sound.playBeep(400, 'sine', 0.05);
+                return;
+            }
 
             if (!State.selectedSeat) {
                 State.selectedSeat = { groupIdx, seatIdx };
@@ -1644,9 +1699,27 @@
             State.isRevealing = true;
             State.selectedSeat = null;
 
-            assignSeatsAlgorithm();
-            const finalGroups = JSON.parse(JSON.stringify(State.groups));
+            const target = getCurrentClass();
+            if (!target.monthlySeats) target.monthlySeats = {};
 
+            const hasSaved = !!(target.monthlySeats[State.selectedMonth] && target.monthlySeats[State.selectedMonth].length === 6);
+
+            let finalGroups;
+            if (hasSaved && !State.isRevealed) {
+                // 이미 저장된 자리가 있는 경우 그 자리를 순차 공개
+                finalGroups = JSON.parse(JSON.stringify(target.monthlySeats[State.selectedMonth]));
+            } else {
+                // 새로 배정 생성
+                assignSeatsAlgorithm();
+                target.monthlySeats[State.selectedMonth] = State.groups;
+                target.lastGroups = State.groups;
+                persistClasses();
+                finalGroups = JSON.parse(JSON.stringify(State.groups));
+            }
+
+            // 발표를 위해 빈 좌석 상태로 보드 초기화 후 순차 발표 진행
+            State.isRevealed = true;
+            State.groups = JSON.parse(JSON.stringify(finalGroups));
             State.groups.forEach(g => g.members = []);
             renderClassroomBoard();
 
@@ -1702,6 +1775,13 @@
             }
 
             State.isRevealing = false;
+            State.isRevealed = true;
+            State.groups = finalGroups;
+            target.monthlySeats[State.selectedMonth] = finalGroups;
+            target.lastGroups = finalGroups;
+            persistClasses();
+            renderClassTabs();
+            renderBoardMonthTabs();
             renderClassroomBoard();
             Sound.playFanfare();
 
@@ -1712,7 +1792,7 @@
                     origin: { y: 0.6 }
                 });
             }
-            showToast(`🎉 ${getCurrentClass().name} 자리 배정이 완료되었습니다!`, "🏆");
+            showToast(`🎉 ${target.name} ${State.selectedMonth} 전체 자리 배정 발표 완료!`, "🏆");
             saveHistoryToStorage();
         }
 
@@ -1722,11 +1802,39 @@
         function runInstantAssignment() {
             if (State.isRevealing) return;
             State.selectedSeat = null;
-            assignSeatsAlgorithm();
+
+            const target = getCurrentClass();
+            if (!target.monthlySeats) target.monthlySeats = {};
+
+            const hasSaved = !!(target.monthlySeats[State.selectedMonth] && target.monthlySeats[State.selectedMonth].length === 6);
+
+            let isExisting = false;
+            if (hasSaved && !State.isRevealed) {
+                State.groups = target.monthlySeats[State.selectedMonth];
+                isExisting = true;
+            } else {
+                assignSeatsAlgorithm();
+                target.monthlySeats[State.selectedMonth] = State.groups;
+                target.lastGroups = State.groups;
+                persistClasses();
+            }
+
+            State.isRevealed = true;
+            renderClassTabs();
+            renderBoardMonthTabs();
             renderClassroomBoard();
             Sound.playFanfare();
-            showToast(`🎲 ${getCurrentClass().name} 자리가 즉시 배정되었습니다!`, "✨");
-            saveHistoryToStorage();
+
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 70, spread: 70, origin: { y: 0.6 } });
+            }
+
+            if (isExisting) {
+                showToast(`✨ ${target.name} ${State.selectedMonth} 저장된 자리가 공개되었습니다!`, "🎉");
+            } else {
+                showToast(`🎲 ${target.name} ${State.selectedMonth} 자리가 즉시 배정되었습니다!`, "✨");
+                saveHistoryToStorage();
+            }
         }
 
         // ==========================================
@@ -1741,6 +1849,14 @@
             const bannerMonth = document.getElementById('bannerMonthBadge');
             const chalkClassMonth = document.getElementById('chalkboardClassMonthText');
             const chalkClassMonthBottom = document.getElementById('chalkboardClassMonthTextBottom');
+            const revealBadge = document.getElementById('bannerRevealBadge');
+            const toggleRevealBtn = document.getElementById('toggleRevealSeatsBtn');
+            const toggleRevealIcon = document.getElementById('toggleRevealIcon');
+            const toggleRevealText = document.getElementById('toggleRevealText');
+            const chalkSub = document.getElementById('chalkboardSubNotice');
+            const chalkSubBottom = document.getElementById('chalkboardSubNoticeBottom');
+            const bottomGuide = document.getElementById('boardBottomGuideText');
+            const dramaticBtn = document.getElementById('startDramaticBtn');
             const current = getCurrentClass();
 
             if (bannerClass) {
@@ -1770,6 +1886,51 @@
                 }).join('');
             }
 
+            // 공개 여부에 따른 뱃지, 토글 버튼, 칠판 및 가이드 문구 갱신
+            if (revealBadge) {
+                if (!State.isRevealed) {
+                    revealBadge.className = 'font-black text-xs px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-300 flex items-center gap-1 animate-pulse';
+                    revealBadge.innerHTML = '<i class="fa-solid fa-lock text-amber-600"></i> 자리 비공개 (발표 대기)';
+                } else {
+                    revealBadge.className = 'font-black text-xs px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center gap-1';
+                    revealBadge.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600"></i> 자리 공개 완료';
+                }
+            }
+
+            if (toggleRevealBtn && toggleRevealIcon && toggleRevealText) {
+                if (!State.isRevealed) {
+                    toggleRevealBtn.className = 'px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 text-xs font-black transition flex items-center gap-1.5 cursor-pointer shadow-sm animate-pulse';
+                    toggleRevealIcon.className = 'fa-solid fa-eye text-amber-600 text-xs';
+                    toggleRevealText.textContent = '자리 바로 보기';
+                } else {
+                    toggleRevealBtn.className = 'px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer';
+                    toggleRevealIcon.className = 'fa-solid fa-eye-slash text-slate-500 text-xs';
+                    toggleRevealText.textContent = '자리 다시 숨기기';
+                }
+            }
+
+            if (!State.isRevealed) {
+                const noticeHtml = `<span class="text-amber-300 font-extrabold flex items-center justify-center gap-1"><i class="fa-solid fa-drum"></i> 상단 [두구두구 순차 발표] 또는 [즉시 배정]을 눌러 자리를 발표하세요!</span>`;
+                if (chalkSub) chalkSub.innerHTML = noticeHtml;
+                if (chalkSubBottom) chalkSubBottom.innerHTML = noticeHtml;
+                if (bottomGuide) {
+                    bottomGuide.innerHTML = `<i class="fa-solid fa-drum text-amber-500 text-sm"></i><span class="text-amber-800 font-bold">자리가 아직 모두 비어 있습니다. 상단의 [두구두구 순차 발표 ⚡] 또는 [즉시 배정] 버튼을 누르면 배정된 자리가 공개됩니다!</span>`;
+                }
+                if (dramaticBtn) {
+                    dramaticBtn.classList.add('animate-pulse', 'ring-2', 'ring-amber-300');
+                }
+            } else {
+                const noticeHtml = `<span class="text-emerald-200/90 font-medium">✨ 자리 배정 완료 (좌석 클릭 또는 드래그로 맞교환 가능)</span>`;
+                if (chalkSub) chalkSub.innerHTML = noticeHtml;
+                if (chalkSubBottom) chalkSubBottom.innerHTML = noticeHtml;
+                if (bottomGuide) {
+                    bottomGuide.innerHTML = `<i class="fa-solid fa-hand-pointer text-blue-500"></i><span>학생 좌석을 클릭하거나 드래그하여 두 학생의 자리를 언제든지 맞바꿀 수 있으며, 현재 월에 자동 저장됩니다.</span>`;
+                }
+                if (dramaticBtn) {
+                    dramaticBtn.classList.remove('animate-pulse', 'ring-2', 'ring-amber-300');
+                }
+            }
+
             if (printMain) {
                 printMain.textContent = `우리 반 (${current.name}) ${State.selectedMonth} 모둠 자리 배치표 (총 6개 모둠)`;
             }
@@ -1785,6 +1946,10 @@
         // 16. 명단 텍스트 내보내기 및 인쇄 / 이미지 저장
         // ==========================================
         function copyRosterText() {
+            if (!State.isRevealed) {
+                showToast("자리가 아직 발표되지 않았습니다. 상단의 발표 버튼을 먼저 눌러주세요.", "⚠️");
+                return;
+            }
             if (!State.groups || State.groups.length === 0) return;
             const current = getCurrentClass();
             let text = `[🏫 우리 반 (${current.name}) ${State.selectedMonth} 모둠 자리 배정 결과 (총 ${State.studentCount}명)]\n\n`;
@@ -1806,6 +1971,11 @@
             if (!container || typeof html2canvas === 'undefined') {
                 showToast("이미지 저장 기능을 불러오는 중입니다.", "⚠️");
                 return;
+            }
+
+            if (!State.isRevealed) {
+                const proceed = confirm("자리가 아직 공개되지 않은 빈 좌석 상태입니다.\n빈 자리 배치표 그대로 이미지로 저장하시겠습니까?");
+                if (!proceed) return;
             }
 
             const current = getCurrentClass();
@@ -2362,12 +2532,28 @@
             const startFromWelcomeBtn = document.getElementById('startSeatingFromWelcomeBtn');
             if (startFromWelcomeBtn) {
                 startFromWelcomeBtn.addEventListener('click', () => {
+                    State.isRevealed = false; // 반과 월 선택 후 시작하기를 누르면 일단 자리가 모두 빈 상태!
                     switchClass(State.currentClassId, false);
                     switchMonth(State.selectedMonth, false);
+                    State.isRevealed = false; // 빈 상태 유지
                     showBoardView();
-                    Sound.playFanfare();
+                    Sound.playPlop();
                     const cur = getCurrentClass();
-                    showToast(`${cur.name} ${State.selectedMonth} 자리 배정 화면으로 이동했습니다!`, "🚀");
+                    showToast(`${cur.name} ${State.selectedMonth} 빈 자리 배정판이 열렸습니다. [두구두구 순차 발표] 또는 [즉시 배정]을 눌러주세요!`, "🥁");
+                });
+            }
+
+            const toggleRevealBtn = document.getElementById('toggleRevealSeatsBtn');
+            if (toggleRevealBtn) {
+                toggleRevealBtn.addEventListener('click', () => {
+                    if (State.isRevealed) {
+                        State.isRevealed = false;
+                        renderClassroomBoard();
+                        Sound.playPlop();
+                        showToast("자리를 비공개(빈 자리) 상태로 숨겼습니다.", "🔒");
+                    } else {
+                        runInstantAssignment();
+                    }
                 });
             }
 
