@@ -304,7 +304,7 @@
                 </button>
                 <p class="text-[11px] text-slate-500 font-medium text-center flex items-center justify-center gap-1.5">
                     <i class="fa-solid fa-key text-amber-500"></i>
-                    <span>자리 배정은 <strong>교사 전용</strong> 기능입니다. 클릭 시 <strong>교사 비밀번호(기본: 0000)</strong>를 입력하여 입장합니다.</span>
+                    <span>자리 배정은 <strong>교사 전용</strong> 기능입니다. 클릭 시 <strong>교사 비밀번호</strong>를 입력하여 입장합니다.</span>
                 </p>
             </div>
         </div>
@@ -537,9 +537,6 @@
                     <i class="fa-solid fa-circle-exclamation"></i>
                     <span>비밀번호가 일치하지 않습니다.</span>
                 </div>
-                <div id="teacherAuthDefaultHint" class="text-[11px] text-slate-400 font-medium">
-                    (초기 기본 비밀번호: <strong class="text-indigo-600">0000</strong>)
-                </div>
                 <div class="flex items-center gap-2 pt-2">
                     <button type="button" id="cancelAuthBtn" class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
                         취소
@@ -705,7 +702,7 @@
                         <i class="fa-solid fa-key text-amber-600 text-base"></i>
                         <div>
                             <div class="font-black text-amber-950">교사 비밀번호 변경</div>
-                            <div class="text-[11px] text-amber-800">학생 화면에서 교사 모드로 전환할 때 사용하는 비밀번호 (현재 기본값: 0000)</div>
+                            <div class="text-[11px] text-amber-800">학생 화면에서 교사 모드로 전환할 때 사용하는 교사 비밀번호</div>
                         </div>
                     </div>
                     <div class="flex items-center gap-1.5">
@@ -1224,11 +1221,20 @@
         // 5. 교사 모드 보안 및 인증 로직
         // ==========================================
         function getTeacherPin() {
-            return localStorage.getItem(PIN_STORAGE_KEY) || '0000';
+            const stored = localStorage.getItem(PIN_STORAGE_KEY);
+            if (stored && stored !== '0000') {
+                return stored;
+            }
+            const adminPw = localStorage.getItem('waurimal_admin_pw');
+            if (adminPw && adminPw !== '0000') {
+                return adminPw;
+            }
+            return '4657';
         }
 
         function setTeacherPin(newPin) {
             localStorage.setItem(PIN_STORAGE_KEY, newPin);
+            localStorage.setItem('waurimal_admin_pw', newPin);
             if (typeof Cloud !== 'undefined') {
                 Cloud.schedulePush();
             }
@@ -1247,21 +1253,12 @@
             const errEl = document.getElementById('authErrorMsg');
             const titleEl = document.getElementById('teacherAuthTitle');
             const descEl = document.getElementById('teacherAuthDesc');
-            const hintEl = document.getElementById('teacherAuthDefaultHint');
 
             if (titleEl) {
                 titleEl.textContent = options.title || "교사 인증 (보안 모드)";
             }
             if (descEl) {
                 descEl.textContent = options.desc || "학생들의 개인정보 및 스마트 배려 조건 보호를 위해 교사 비밀번호를 입력해주세요.";
-            }
-            if (hintEl) {
-                const currentPin = getTeacherPin();
-                if (currentPin === '0000') {
-                    hintEl.innerHTML = '(초기 기본 비밀번호: <strong class="text-indigo-600">0000</strong>)';
-                } else {
-                    hintEl.innerHTML = '(설정된 교사용 비밀번호를 입력해주세요)';
-                }
             }
 
             if (errEl) errEl.classList.add('hidden');
@@ -1507,7 +1504,7 @@
                 }
 
                 // 4. 교사 비밀번호
-                if (data.teacherPin && typeof data.teacherPin === 'string') {
+                if (data.teacherPin && typeof data.teacherPin === 'string' && data.teacherPin !== '0000') {
                     localStorage.setItem(PIN_STORAGE_KEY, data.teacherPin);
                 }
 
