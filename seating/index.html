@@ -947,8 +947,12 @@
                 </div>
             </div>
 
-            <!-- 닫기 버튼 -->
-            <div class="pt-2 border-t border-slate-100 flex justify-end">
+            <!-- 닫기 및 백업 복원 버튼 -->
+            <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                <button type="button" id="modalRestoreLocalBackupBtn" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1 cursor-pointer" title="동기화로 덮어쓰이기 전의 이전 로컬 명단 및 배치를 복원합니다">
+                    <i class="fa-solid fa-rotate-left text-indigo-600"></i>
+                    <span>동기화 이전 로컬 데이터 복원</span>
+                </button>
                 <button type="button" id="closeCloudSyncModalBottomBtn" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer">
                     닫기
                 </button>
@@ -1475,8 +1479,36 @@
                 });
             },
 
+            isCustomRoster(classes) {
+                if (!Array.isArray(classes) || classes.length === 0) return false;
+                for (const c of classes) {
+                    if (!c.names || c.names.length === 0) continue;
+                    const isAllDefault = c.names.every((n, i) => n === DEFAULT_STUDENT_NAMES[i]);
+                    if (!isAllDefault) return true;
+                }
+                return false;
+            },
+
             applyCloudData(data, isFromExternalDevice = false) {
                 if (!data) return;
+
+                // 항상 기존 로컬 데이터를 백업해둠
+                try {
+                    const localRaw = localStorage.getItem(STORAGE_KEY);
+                    if (localRaw) {
+                        localStorage.setItem('waurimal_seating_backup_before_cloud', localRaw);
+                    }
+                } catch(e) {}
+
+                // 로컬에 등록된 실제 학급 명단이 있는데 클라우드에는 기본 샘플 명단만 온 경우:
+                // 로컬의 실제 명단을 보호하고 로컬 명단을 클라우드로 업로드하여 클라우드를 최신화
+                const localIsCustom = this.isCustomRoster(State.classes);
+                const cloudIsCustom = this.isCustomRoster(data.classes);
+                if (localIsCustom && !cloudIsCustom && isFromExternalDevice) {
+                    console.log('[Cloud Sync] 로컬의 사용자 정의 실제 명단 보호 -> 클라우드로 업로드 동기화');
+                    this.pushToCloud(true);
+                    return;
+                }
 
                 // 1. 학급 명단 및 월별 자리 배치 갱신
                 if (Array.isArray(data.classes) && data.classes.length > 0) {
@@ -1903,7 +1935,6 @@
             if (!target) return;
 
             State.currentClassId = target.id;
-            State.isRevealed = false; // 반 전환 시 기본적으로 빈 좌석 상태
 
             // 등록된 명단이 있으면 명단 인원수(names.length)를 최우선으로 일치
             if (target.names && target.names.length > 0) {
@@ -1929,8 +1960,10 @@
             if (!target.monthlySeats) target.monthlySeats = {};
             const monthSeat = target.monthlySeats[State.selectedMonth];
 
-            if (monthSeat && monthSeat.length === 6) {
+            // 저장된 자리가 있으면 즉시 보여주고, 없으면 발표 대기(빈 좌석)
+            if (monthSeat && monthSeat.length === 6 && monthSeat.some(g => g.members && g.members.length > 0)) {
                 State.groups = monthSeat;
+                State.isRevealed = true;
             } else {
                 const caps = calculateGroupCapacities(State.studentCount);
                 State.groups = GROUP_THEMES.map((meta, i) => ({
@@ -1938,6 +1971,7 @@
                     capacity: caps[i] || 4,
                     members: []
                 }));
+                State.isRevealed = false;
             }
 
             persistClasses();
@@ -1958,7 +1992,6 @@
         // ==========================================
         function switchMonth(month, showNotification = true) {
             State.selectedMonth = month;
-            State.isRevealed = false; // 월 전환 시에도 빈 좌석 상태로 대기
             const target = getCurrentClass();
             if (!target) return;
 
@@ -1966,9 +1999,11 @@
             const monthSeat = target.monthlySeats[month];
 
             let hasSaved = false;
-            if (monthSeat && monthSeat.length === 6) {
+            // 저장된 자리가 있으면 즉시 보여주고, 없으면 발표 대기(빈 좌석)
+            if (monthSeat && monthSeat.length === 6 && monthSeat.some(g => g.members && g.members.length > 0)) {
                 State.groups = monthSeat;
                 hasSaved = true;
+                State.isRevealed = true;
             } else {
                 const caps = calculateGroupCapacities(State.studentCount);
                 State.groups = GROUP_THEMES.map((meta, i) => ({
@@ -1976,6 +2011,7 @@
                     capacity: caps[i] || 4,
                     members: []
                 }));
+                State.isRevealed = false;
             }
 
             persistClasses();
@@ -2798,9 +2834,11 @@
                 persistClasses();
             }
 
+            State.isRevealed = true; // 복원 시 즉시 자리 공개
             renderClassroomBoard();
+            updateBannerPreview();
             document.getElementById('historyModal').classList.add('hidden');
-            showToast(`${record.date} 배정 기록을 불러왔습니다!`, "📂");
+            showToast(`${record.date} 배정 기록을 복원하여 공개했습니다!`, "📂");
         };
 
         // ==========================================
@@ -3348,14 +3386,24 @@
             if (startFromWelcomeBtn) {
                 startFromWelcomeBtn.addEventListener('click', () => {
                     requireTeacherMode(() => {
-                        State.isRevealed = false; // 반과 월 선택 후 시작하기를 누르면 일단 자리가 모두 빈 상태!
                         switchClass(State.currentClassId, false);
                         switchMonth(State.selectedMonth, false);
-                        State.isRevealed = false; // 빈 상태 유지
                         showBoardView();
                         Sound.playPlop();
                         const cur = getCurrentClass();
-                        showToast(`🔓 교사 인증 완료! ${cur.name} ${State.selectedMonth} 빈 자리 배정판이 열렸습니다. [두구두구 순차 발표] 또는 [즉시 배정]을 눌러주세요!`, "🥁");
+                        const monthSeat = cur && cur.monthlySeats && cur.monthlySeats[State.selectedMonth];
+                        const hasSaved = !!(monthSeat && monthSeat.length === 6 && monthSeat.some(g => g.members && g.members.length > 0));
+                        if (hasSaved) {
+                            State.isRevealed = true;
+                            renderClassroomBoard();
+                            updateBannerPreview();
+                            showToast(`🔓 ${cur.name} ${State.selectedMonth} 저장된 자리 배치가 열렸습니다.`, "✨");
+                        } else {
+                            State.isRevealed = false;
+                            renderClassroomBoard();
+                            updateBannerPreview();
+                            showToast(`🔓 ${cur.name} ${State.selectedMonth} 빈 자리 배정판이 열렸습니다. [두구두구 순차 발표] 또는 [즉시 배정]을 눌러주세요!`, "🥁");
+                        }
                     }, {
                         force: true,
                         title: "교사 인증 (자리 배정 시작)",
@@ -3800,6 +3848,36 @@
             }
             if (settingsForcePushBtn) {
                 settingsForcePushBtn.addEventListener('click', () => Cloud.pushToCloud(true));
+            }
+
+            const modalRestoreLocalBackupBtn = document.getElementById('modalRestoreLocalBackupBtn');
+            if (modalRestoreLocalBackupBtn) {
+                modalRestoreLocalBackupBtn.addEventListener('click', () => {
+                    const bkp = localStorage.getItem('waurimal_seating_backup_before_cloud');
+                    if (!bkp) {
+                        alert("동기화 이전 로컬 백업 파일이 없습니다.\n상단 [배정 기록] 메뉴를 누르시면 이전에 배정했던 모든 히스토리를 확인하고 원하는 배치로 즉시 복원하실 수 있습니다.");
+                        return;
+                    }
+                    if (confirm("클라우드 동기화 직전의 로컬 학급 명단 및 배정 데이터를 복원하시겠습니까?")) {
+                        try {
+                            const parsed = JSON.parse(bkp);
+                            if (parsed && Array.isArray(parsed.classes)) {
+                                State.classes = parsed.classes;
+                                if (parsed.currentClassId) State.currentClassId = parsed.currentClassId;
+                                if (parsed.selectedMonth) State.selectedMonth = parsed.selectedMonth;
+                                persistClasses(true);
+                                renderWelcomeDashboard();
+                                renderClassTabs();
+                                renderBoardMonthTabs();
+                                renderClassroomBoard();
+                                closeCloudModal();
+                                showToast("동기화 이전 로컬 데이터가 성공적으로 복원되었습니다!", "✅");
+                            }
+                        } catch(e) {
+                            alert("복원 중 오류: " + e.message);
+                        }
+                    }
+                });
             }
         }
 
