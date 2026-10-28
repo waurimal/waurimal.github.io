@@ -2074,7 +2074,12 @@
             this.selectedPiece = null;
             this.gameLogs = [];
 
-            this.logMessage(`🌐 실시간 온라인 방 [${roomData.roomId}] 게임이 시작되었습니다!`);
+            // 기존 경기 통계 복원 (재접속 시 점수 유지)
+            if (roomData.matchStats) {
+                this.matchStats = { ...this.matchStats, ...roomData.matchStats };
+            }
+
+            this.logMessage(`🌐 실시간 온라인 방 [${roomData.roomId}] 게임에 연결되었습니다!`);
 
             // 상단 온라인 배너 활성화
             if (this.dom.onlineRoomBanner) {
@@ -2124,6 +2129,36 @@
             const isMyTurn = (roomData.currentTurnId === mySessionId);
             const isRemoteAction = Boolean(roomData.lastAction && roomData.lastAction.actorId !== mySessionId);
 
+            // 플레이어 명단 및 UID 실시간 동기화 (재접속/세션 마이그레이션 반영)
+            if (roomData.players) {
+                const players = Object.values(roomData.players);
+                const bluePlayers = players.filter(p => p.team === 'blue');
+                const whitePlayers = players.filter(p => p.team === 'white');
+                if (this.teams[0]) {
+                    this.teams[0].players = bluePlayers.map(p => p.name || '청팀 플레이어');
+                    this.teams[0].playerUids = bluePlayers.map(p => p.id);
+                }
+                if (this.teams[1]) {
+                    this.teams[1].players = whitePlayers.map(p => p.name || '백팀 플레이어');
+                    this.teams[1].playerUids = whitePlayers.map(p => p.id);
+                }
+            }
+
+            // 상단 온라인 배너 본인 역할 업데이트
+            if (this.dom.activeMyRoleText && window.YutnoriMultiplayer) {
+                const myInfo = window.YutnoriMultiplayer.getMyPlayerInfo();
+                if (myInfo) {
+                    const teamName = myInfo.team === 'blue' ? '청팀' : '백팀';
+                    this.dom.activeMyRoleText.textContent = `${teamName} (${myInfo.name})`;
+                    this.dom.activeMyRoleText.className = `font-black ml-1 ${myInfo.team === 'blue' ? 'text-blue-400' : 'text-rose-400'}`;
+                }
+            }
+
+            // 기여도 통계 복원 (존재 시)
+            if (roomData.matchStats) {
+                this.matchStats = { ...this.matchStats, ...roomData.matchStats };
+            }
+
             // 말 위치 상태 동기화:
             // 1) 초기화 시(isInitial)
             // 2) 내 턴이 아닐 때(!isMyTurn)
@@ -2154,9 +2189,20 @@
                 this.renderAllPieces();
             }
 
-            // 내 차례인데 로컬 상태가 이동/퀴즈/회전 중이 아니면 WAIT_ROLL 보장
-            if (isMyTurn && roomData.status === 'playing' && !isLocalBusy && this.gameState !== 'WAIT_PIECE_SELECT') {
-                this.setGameState('WAIT_ROLL');
+            // 재접속 또는 초기 동기화 시 윷 상태 및 턴 상태 복원
+            if (isMyTurn && roomData.status === 'playing') {
+                if (roomData.gameState === 'WAIT_PIECE_SELECT' && roomData.currentRoll) {
+                    this.currentRoll = roomData.currentRoll;
+                    this.displayRollResult(roomData.currentRoll);
+                    this.updateStickVisuals(roomData.sticks || roomData.currentRoll.sticks);
+                    if (!isLocalBusy || isInitial) {
+                        this.preparePieceSelection();
+                    }
+                } else if (!isLocalBusy && this.gameState !== 'WAIT_PIECE_SELECT') {
+                    this.setGameState('WAIT_ROLL');
+                }
+            } else if (!isMyTurn && roomData.currentRoll) {
+                this.updateStickVisuals(roomData.sticks || roomData.currentRoll.sticks);
             }
 
             this.updateTurnUI();
@@ -2185,9 +2231,18 @@
             if (isMe) return; // 내가 전송한 액션은 이미 로컬에서 재생 완료
 
             const actorPlayer = roomData.players ? roomData.players[action.actorId] : null;
-            const actorName = actorPlayer ? actorPlayer.name : '상대방';
+            const actorName = actorPlayer ? actorPlayer.name : (action.playerName || '상대방');
 
-            if (action.type === 'ROLL_AND_QUIZ') {
+            if (action.type === 'PLAYER_REJOIN') {
+                Sound.playStep();
+                this.logMessage(`🔌 [${actorName}]님이 다시 연결되어 게임에 복귀하였습니다!`);
+                if (this.dom.remoteTurnNoticeText) {
+                    this.dom.remoteTurnNoticeText.textContent = `${actorName}님이 재접속하여 게임에 복귀했습니다.`;
+                }
+                if (window.showToast) {
+                    window.showToast("플레이어 복귀", `[${actorName}]님이 게임에 다시 연결되었습니다.`, "🔌");
+                }
+            } else if (action.type === 'ROLL_AND_QUIZ') {
                 if (action.rollResult) {
                     this.playRemoteRollAnimation(action.rollResult);
                     if (action.rollResult.extraTurn) {
@@ -2566,6 +2621,28 @@
             this.dom.resultBadge.classList.remove('yut-result-badge');
             void this.dom.resultBadge.offsetWidth;
             this.dom.resultBadge.classList.add('yut-result-badge');
+        }
+
+        /**
+         * 윷가락 비주얼(앞/뒤 및 텍스트 뱃지) 실시간 갱신 (재접속/스냅샷 동기화용)
+         */
+        updateStickVisuals(sticksState) {
+            const sticks = [this.dom.stick0, this.dom.stick1, this.dom.stick2, this.dom.stick3];
+            const labels = [this.dom.yutLabel0, this.dom.yutLabel1, this.dom.yutLabel2, this.dom.yutLabel3];
+            if (!Array.isArray(sticksState)) return;
+
+            sticks.forEach((st, idx) => {
+                if (st) {
+                    st.classList.remove('tossing', 'is-front', 'is-back');
+                    const isFlat = (sticksState[idx] === 1 || sticksState[idx] === true);
+                    st.classList.add(isFlat ? 'is-front' : 'is-back');
+                }
+                if (labels[idx]) {
+                    const isFlat = (sticksState[idx] === 1 || sticksState[idx] === true);
+                    labels[idx].textContent = isFlat ? ((idx === 0) ? '앞 (빽도)' : '앞 (배)') : '뒤 (등)';
+                    labels[idx].className = `yut-stick-label ${isFlat ? 'is-front-label' : 'is-back-label'} text-[11px] px-2 py-0.5 rounded-full border`;
+                }
+            });
         }
 
         // ==========================================

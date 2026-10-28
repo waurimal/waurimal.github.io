@@ -28,12 +28,19 @@ const db = getFirestore(app);
 // 익명 로그인 보장
 signInAnonymously(auth).catch(err => console.warn("[Multiplayer] Anonymous Auth Warning:", err));
 
-// 2. 세션 식별자 생성 및 유지 (새로고침 시 재접속 지원)
-let mySessionId = sessionStorage.getItem('yutnori_session_id');
+// 2. 세션 식별자 생성 및 영구 유지 (새로고침/재접속 지원)
+let mySessionId = '';
+try {
+    mySessionId = localStorage.getItem('yutnori_session_id') || sessionStorage.getItem('yutnori_session_id');
+} catch (e) {}
+
 if (!mySessionId) {
     mySessionId = 'user_' + Math.random().toString(36).substring(2, 9);
-    sessionStorage.setItem('yutnori_session_id', mySessionId);
 }
+try {
+    localStorage.setItem('yutnori_session_id', mySessionId);
+    sessionStorage.setItem('yutnori_session_id', mySessionId);
+} catch (e) {}
 
 const ROOMS_COLLECTION = 'yutnori_rooms';
 
@@ -46,6 +53,60 @@ class YutnoriMultiplayerManager {
         this.isHost = false;
         this.onStateChangeCallbacks = [];
         this.gameEngine = null;
+    }
+
+    saveActiveSession(info) {
+        if (!info || !info.roomId) return;
+        try {
+            const payload = {
+                roomId: String(info.roomId).trim(),
+                name: (info.name || '').trim(),
+                grade: Number(info.grade) || 6,
+                classNum: Number(info.classNum) || 1,
+                studentNum: Number(info.studentNum) || 1,
+                savedAt: Date.now()
+            };
+            localStorage.setItem('yutnori_active_multi_session', JSON.stringify(payload));
+        } catch (e) {
+            console.warn("[Multiplayer] saveActiveSession error:", e);
+        }
+    }
+
+    clearActiveSession() {
+        try {
+            localStorage.removeItem('yutnori_active_multi_session');
+        } catch (e) {}
+    }
+
+    getActiveSession() {
+        try {
+            const raw = localStorage.getItem('yutnori_active_multi_session');
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (!parsed || !parsed.roomId) return null;
+            // 2시간 이내 세션만 유효
+            if (Date.now() - parsed.savedAt > 2 * 60 * 60 * 1000) {
+                this.clearActiveSession();
+                return null;
+            }
+            return parsed;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async checkRoomActive(code) {
+        const cleanCode = (code || '').trim();
+        if (!cleanCode || cleanCode.length !== 4) return null;
+        try {
+            const roomRef = doc(db, ROOMS_COLLECTION, cleanCode);
+            const snap = await getDoc(roomRef);
+            if (!snap.exists()) return null;
+            return snap.data();
+        } catch (e) {
+            console.warn("[Multiplayer] checkRoomActive warning:", e);
+            return null;
+        }
     }
 
     setGameEngine(engine) {
@@ -133,11 +194,18 @@ class YutnoriMultiplayerManager {
         this.currentRoomId = code;
         this.isHost = true;
         this.listenToRoom(code);
+        this.saveActiveSession({
+            roomId: code,
+            name: cleanName,
+            grade: Number(grade) || 6,
+            classNum: Number(classNum) || 1,
+            studentNum: Number(studentNum) || 1
+        });
         return code;
     }
 
     // ==========================================
-    // 2. 방 참여하기 (Join)
+    // 2. 방 참여하기 (Join) - 튕김 발생 시 정보 일치 재접속 지원
     // ==========================================
     async joinRoom(code, playerInput) {
         let cleanName = '';
@@ -167,35 +235,187 @@ class YutnoriMultiplayerManager {
         const snap = await getDoc(roomRef);
 
         if (!snap.exists()) {
-            throw new Error("존재하지 않는 방 코드입니다. 코드를 다시 확인해주세요.");
+            this.clearActiveSession();
+            throw new Error("존재하지 않는 방 코드이거나 이미 종료된 방입니다.");
         }
 
         const data = snap.data();
-        if (data.status !== 'lobby') {
-            throw new Error("이미 게임이 진행 중이거나 종료된 방입니다.");
-        }
-
         const existingPlayers = Object.values(data.players || {});
-        if (data.mode === '1v1' && existingPlayers.length >= 2 && !data.players[this.mySessionId]) {
-            throw new Error("1:1 대전 방 정원(2명)이 이미 찼습니다.");
-        }
-        if (data.mode === 'team' && existingPlayers.length >= 8 && !data.players[this.mySessionId]) {
-            throw new Error("팀전 방 정원(최대 8명)이 찼습니다.");
+
+        // 1. 정보 일치 플레이어 탐색 (세션 ID 또는 실명 + 학적)
+        // 1-1) 세션 ID 일치 확인 (새로고침 등 동일 브라우저 탭 세션)
+        let matchedPlayer = data.players ? data.players[this.mySessionId] : null;
+
+        // 1-2) 세션 ID가 다르더라도 학생 본인의 정보가 일치하는지 확인 (튕긴 후 브라우저 재시작 등)
+        if (!matchedPlayer && cleanName) {
+            // (1) 실명 + 학년 + 반 일치 (번호는 둘 다 있을 때만 비교)
+            matchedPlayer = existingPlayers.find(p => {
+                if (!p || !p.name) return false;
+                const isNameMatch = p.name.trim().toLowerCase() === cleanName.toLowerCase();
+                if (!isNameMatch) return false;
+
+                const isGradeMatch = (!p.grade || !sGrade || Number(p.grade) === Number(sGrade));
+                const isClassMatch = (!p.classNum || !sClass || Number(p.classNum) === Number(sClass));
+                const isNumMatch = (!p.studentNum || !sNum || Number(p.studentNum) === Number(sNum));
+
+                return isGradeMatch && isClassMatch && isNumMatch;
+            });
+
+            // (2) 학적 정보가 일부 다르더라도, 해당 방에 동일한 실명을 가진 플레이어가 단 1명뿐인 경우 매칭
+            if (!matchedPlayer) {
+                const sameNameList = existingPlayers.filter(p => p && p.name && p.name.trim().toLowerCase() === cleanName.toLowerCase());
+                if (sameNameList.length === 1) {
+                    matchedPlayer = sameNameList[0];
+                }
+            }
         }
 
-        // 팀 균형 배정: 청팀 수와 백팀 수 비교하여 적은 쪽에 자동 배정
-        let blueCount = 0;
-        let whiteCount = 0;
-        existingPlayers.forEach(p => {
-            if (p.team === 'blue') blueCount++;
-            else whiteCount++;
-        });
-        const assignedTeam = (blueCount <= whiteCount) ? 'blue' : 'white';
+        // ==========================================
+        // 2-A. 게임이 이미 진행 중(playing)인 경우 - 튕긴 참가자 재입장
+        // ==========================================
+        if (data.status === 'playing') {
+            if (!matchedPlayer) {
+                throw new Error("현재 게임이 진행 중인 방입니다. 기존 참가자의 정보(실명 및 학적)와 일치해야 재입장할 수 있습니다.");
+            }
 
+            // 기존 튕긴 참가자 재입장(Rejoin) 처리
+            const oldPlayerId = matchedPlayer.id;
+            const isIdChanged = (oldPlayerId !== this.mySessionId);
+
+            const updatedPlayers = { ...data.players };
+            let updatedTurnOrder = Array.isArray(data.turnOrder) ? [...data.turnOrder] : [];
+            let updatedHostId = data.hostId;
+            let updatedTurnId = data.currentTurnId;
+
+            if (isIdChanged) {
+                delete updatedPlayers[oldPlayerId];
+                updatedPlayers[this.mySessionId] = {
+                    ...matchedPlayer,
+                    id: this.mySessionId,
+                    name: cleanName || matchedPlayer.name,
+                    grade: sGrade || matchedPlayer.grade,
+                    classNum: sClass || matchedPlayer.classNum,
+                    studentNum: sNum || matchedPlayer.studentNum,
+                    lastSeen: Date.now(),
+                    reconnectedAt: Date.now()
+                };
+
+                updatedTurnOrder = updatedTurnOrder.map(uid => uid === oldPlayerId ? this.mySessionId : uid);
+
+                if (data.hostId === oldPlayerId) {
+                    updatedHostId = this.mySessionId;
+                }
+                if (data.currentTurnId === oldPlayerId) {
+                    updatedTurnId = this.mySessionId;
+                }
+            } else {
+                updatedPlayers[this.mySessionId] = {
+                    ...matchedPlayer,
+                    name: cleanName || matchedPlayer.name,
+                    grade: sGrade || matchedPlayer.grade,
+                    classNum: sClass || matchedPlayer.classNum,
+                    studentNum: sNum || matchedPlayer.studentNum,
+                    lastSeen: Date.now(),
+                    reconnectedAt: Date.now()
+                };
+            }
+
+            await updateDoc(roomRef, {
+                players: updatedPlayers,
+                turnOrder: updatedTurnOrder,
+                hostId: updatedHostId,
+                currentTurnId: updatedTurnId,
+                lastAction: {
+                    type: 'PLAYER_REJOIN',
+                    actorId: this.mySessionId,
+                    playerName: matchedPlayer.name,
+                    team: matchedPlayer.team,
+                    timestamp: Date.now()
+                },
+                updatedAt: Date.now()
+            });
+
+            this.currentRoomId = cleanCode;
+            this.isHost = (updatedHostId === this.mySessionId);
+            this.listenToRoom(cleanCode);
+
+            this.saveActiveSession({
+                roomId: cleanCode,
+                name: cleanName,
+                grade: sGrade,
+                classNum: sClass,
+                studentNum: sNum
+            });
+
+            return cleanCode;
+        }
+
+        // ==========================================
+        // 2-B. 게임이 이미 종료(finished)된 경우
+        // ==========================================
+        if (data.status === 'finished') {
+            if (!matchedPlayer) {
+                throw new Error("이미 종료된 방입니다.");
+            }
+            this.currentRoomId = cleanCode;
+            this.isHost = (data.hostId === this.mySessionId);
+            this.listenToRoom(cleanCode);
+            return cleanCode;
+        }
+
+        // ==========================================
+        // 2-C. 대기실(lobby) 상태인 경우
+        // ==========================================
         const updatedPlayers = { ...data.players };
-        const updatedTurnOrder = Array.isArray(data.turnOrder) ? [...data.turnOrder] : [];
+        let updatedTurnOrder = Array.isArray(data.turnOrder) ? [...data.turnOrder] : [];
+        let updatedHostId = data.hostId;
 
-        if (!updatedPlayers[this.mySessionId]) {
+        if (matchedPlayer) {
+            // 이미 등록되어 있던 참가자의 세션 재접속 / 정보 갱신
+            const oldPlayerId = matchedPlayer.id;
+            if (oldPlayerId !== this.mySessionId) {
+                delete updatedPlayers[oldPlayerId];
+                updatedPlayers[this.mySessionId] = {
+                    ...matchedPlayer,
+                    id: this.mySessionId,
+                    name: cleanName,
+                    grade: sGrade,
+                    classNum: sClass,
+                    studentNum: sNum,
+                    lastSeen: Date.now()
+                };
+                updatedTurnOrder = updatedTurnOrder.map(uid => uid === oldPlayerId ? this.mySessionId : uid);
+                if (data.hostId === oldPlayerId) {
+                    updatedHostId = this.mySessionId;
+                }
+            } else {
+                updatedPlayers[this.mySessionId] = {
+                    ...matchedPlayer,
+                    name: cleanName,
+                    grade: sGrade,
+                    classNum: sClass,
+                    studentNum: sNum,
+                    lastSeen: Date.now()
+                };
+            }
+        } else {
+            // 신규 참가자 입장
+            if (data.mode === '1v1' && existingPlayers.length >= 2) {
+                throw new Error("1:1 대전 방 정원(2명)이 이미 찼습니다.");
+            }
+            if (data.mode === 'team' && existingPlayers.length >= 8) {
+                throw new Error("팀전 방 정원(최대 8명)이 찼습니다.");
+            }
+
+            // 팀 균형 배정: 청팀 수와 백팀 수 비교하여 적은 쪽에 자동 배정
+            let blueCount = 0;
+            let whiteCount = 0;
+            existingPlayers.forEach(p => {
+                if (p.team === 'blue') blueCount++;
+                else whiteCount++;
+            });
+            const assignedTeam = (blueCount <= whiteCount) ? 'blue' : 'white';
+
             updatedPlayers[this.mySessionId] = {
                 id: this.mySessionId,
                 name: cleanName,
@@ -204,28 +424,33 @@ class YutnoriMultiplayerManager {
                 studentNum: sNum,
                 team: assignedTeam,
                 isHost: false,
-                joinedAt: Date.now()
+                joinedAt: Date.now(),
+                lastSeen: Date.now()
             };
             if (!updatedTurnOrder.includes(this.mySessionId)) {
                 updatedTurnOrder.push(this.mySessionId);
             }
-        } else {
-            // 이미 등록되어 있던 유저가 재접속한 경우 정보 갱신
-            updatedPlayers[this.mySessionId].name = cleanName;
-            updatedPlayers[this.mySessionId].grade = sGrade;
-            updatedPlayers[this.mySessionId].classNum = sClass;
-            updatedPlayers[this.mySessionId].studentNum = sNum;
         }
 
         await updateDoc(roomRef, {
             players: updatedPlayers,
             turnOrder: updatedTurnOrder,
+            hostId: updatedHostId,
             updatedAt: Date.now()
         });
 
         this.currentRoomId = cleanCode;
-        this.isHost = (data.hostId === this.mySessionId);
+        this.isHost = (updatedHostId === this.mySessionId);
         this.listenToRoom(cleanCode);
+
+        this.saveActiveSession({
+            roomId: cleanCode,
+            name: cleanName,
+            grade: sGrade,
+            classNum: sClass,
+            studentNum: sNum
+        });
+
         return cleanCode;
     }
 
@@ -447,6 +672,7 @@ class YutnoriMultiplayerManager {
     async sendPieceMovement({ teamsState, hasExtraTurn, winnerTeam, pieceId, movePath, caughtEnemy, caughtCount }) {
         if (!this.currentRoomId || !this.isMyTurn()) return;
         const roomRef = doc(db, ROOMS_COLLECTION, this.currentRoomId);
+        const currentStats = (this.gameEngine && this.gameEngine.matchStats) ? this.gameEngine.matchStats : null;
 
         try {
             if (winnerTeam) {
@@ -455,6 +681,7 @@ class YutnoriMultiplayerManager {
                     status: 'finished',
                     gameState: 'GAME_OVER',
                     teamsState: teamsState,
+                    matchStats: currentStats,
                     winner: winnerTeam,
                     lastAction: {
                         type: 'GAME_OVER',
@@ -472,6 +699,7 @@ class YutnoriMultiplayerManager {
                 await updateDoc(roomRef, {
                     gameState: 'WAIT_ROLL',
                     teamsState: teamsState,
+                    matchStats: currentStats,
                     currentRoll: null,
                     activeQuiz: null,
                     quizResult: null,
@@ -489,6 +717,7 @@ class YutnoriMultiplayerManager {
                 await updateDoc(roomRef, {
                     gameState: 'WAIT_ROLL',
                     teamsState: teamsState,
+                    matchStats: currentStats,
                     currentRoll: null,
                     activeQuiz: null,
                     quizResult: null,
@@ -531,6 +760,8 @@ class YutnoriMultiplayerManager {
     // 7. 방 나가기
     // ==========================================
     async leaveRoom(shouldDeleteIfHost = true) {
+        this.clearActiveSession();
+
         if (this.roomUnsubscribe) {
             this.roomUnsubscribe();
             this.roomUnsubscribe = null;

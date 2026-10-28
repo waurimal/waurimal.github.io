@@ -81,6 +81,35 @@
 
                 <!-- [좌측 7컬럼]: 학생 정보 입력 · 모드 선택 · 게임 설정 카드 -->
                 <div class="lg:col-span-7 flex flex-col gap-4">
+
+                    <!-- 멀티플레이 게임 도중 튕긴 경우 빠른 재접속 안내 배너 -->
+                    <div id="reconnectBanner" class="hidden p-4 rounded-3xl bg-gradient-to-r from-amber-950/80 via-slate-900/95 to-emerald-950/85 border-2 border-emerald-400/60 shadow-2xl backdrop-blur-md transition-all">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 text-xl shadow-lg shadow-emerald-950/50 flex-shrink-0 animate-pulse">
+                                    <i class="fa-solid fa-plug-circle-bolt"></i>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-black text-emerald-300">진행 중인 멀티 게임 발견!</span>
+                                        <span id="reconnectRoomCodeBadge" class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-black">방 코드 0000</span>
+                                    </div>
+                                    <p id="reconnectDescText" class="text-xs text-slate-300 mt-0.5">
+                                        연결이 끊어졌던 방으로 다시 입장하여 게임을 이어할 수 있습니다.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 w-full sm:w-auto">
+                                <button type="button" id="reconnectNowBtn" class="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 active:scale-98 text-slate-950 font-black text-xs shadow-lg shadow-emerald-900/40 transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-rotate-right"></i> 다시 들어가기 (재접속)
+                                </button>
+                                <button type="button" id="dismissReconnectBtn" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white text-xs transition cursor-pointer" title="닫기">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="bg-slate-850/95 border border-slate-700 rounded-3xl p-5 sm:p-6 shadow-2xl backdrop-blur-md">
                         <div class="flex items-center justify-between pb-3.5 border-b border-slate-700/80 mb-5">
                             <h3 class="font-black text-lg text-amber-400 flex items-center gap-2">
@@ -198,9 +227,9 @@
                             <!-- 코드 입력 참여 카드 -->
                             <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-700">
                                 <div class="text-xs font-black text-blue-400 mb-1 flex items-center gap-1.5">
-                                    <i class="fa-solid fa-right-to-bracket"></i> 친구 방 참여하기 (코드 입력)
+                                    <i class="fa-solid fa-right-to-bracket"></i> 친구 방 참여하기 / 재입장 (코드 입력)
                                 </div>
-                                <p class="text-[11px] text-slate-400 mb-2.5">공유받은 4자리 숫자 코드를 입력하고 입장하세요.</p>
+                                <p class="text-[11px] text-slate-400 mb-2.5">공유받은 4자리 숫자 코드를 입력하고 입장하세요. (튕긴 경우 학생 정보가 같으면 진행 중인 게임으로 즉시 복귀)</p>
                                 <div class="flex gap-2">
                                     <input type="text" id="joinOnlineRoomCodeInput" maxlength="4" placeholder="4자리 코드" class="w-2/3 px-3 py-2 text-center text-xl font-mono tracking-widest font-black rounded-xl bg-slate-800 border border-slate-700 text-amber-300 focus:outline-none focus:border-blue-500 uppercase">
                                     <button type="button" id="joinOnlineRoomBtn" class="w-1/3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow transition cursor-pointer">
@@ -1609,9 +1638,125 @@
                 });
             }
 
+            // 공통 플로팅 토스트 알림 함수
+            window.showToast = function(title, msg, icon = 'ℹ️') {
+                let toast = document.getElementById('globalFloatingToast');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'globalFloatingToast';
+                    toast.className = 'fixed top-5 right-5 z-[99999] max-w-sm p-4 rounded-2xl bg-slate-900/95 border-2 border-emerald-400/80 text-white shadow-2xl backdrop-blur-md flex items-center gap-3 transition-all duration-300 transform translate-y-[-20px] opacity-0 pointer-events-none';
+                    document.body.appendChild(toast);
+                }
+                toast.innerHTML = `
+                    <div class="text-2xl">${icon}</div>
+                    <div class="flex-1">
+                        <div class="font-black text-xs text-amber-300">${title}</div>
+                        <div class="font-bold text-[11px] text-slate-200 mt-0.5">${msg}</div>
+                    </div>
+                `;
+                toast.classList.remove('translate-y-[-20px]', 'opacity-0', 'pointer-events-none');
+                toast.classList.add('translate-y-0', 'opacity-100');
+                if (window._toastTimeout) clearTimeout(window._toastTimeout);
+                window._toastTimeout = setTimeout(() => {
+                    toast.classList.remove('translate-y-0', 'opacity-100');
+                    toast.classList.add('translate-y-[-20px]', 'opacity-0', 'pointer-events-none');
+                }, 3500);
+            };
+
+            // 재접속 배너 DOM 참조
+            const reconnectBanner = document.getElementById('reconnectBanner');
+            const reconnectRoomCodeBadge = document.getElementById('reconnectRoomCodeBadge');
+            const reconnectDescText = document.getElementById('reconnectDescText');
+            const reconnectNowBtn = document.getElementById('reconnectNowBtn');
+            const dismissReconnectBtn = document.getElementById('dismissReconnectBtn');
+
+            // 튕김 감지 및 재접속 배너 표시
+            async function checkAndShowReconnectBanner() {
+                if (!reconnectBanner) return;
+                const activeSession = multiplayerManager.getActiveSession();
+                if (!activeSession || !activeSession.roomId) {
+                    reconnectBanner.classList.add('hidden');
+                    return;
+                }
+
+                try {
+                    const roomInfo = await multiplayerManager.checkRoomActive(activeSession.roomId);
+                    if (roomInfo && (roomInfo.status === 'playing' || roomInfo.status === 'lobby')) {
+                        reconnectBanner.classList.remove('hidden');
+                        if (reconnectRoomCodeBadge) {
+                            reconnectRoomCodeBadge.textContent = `방 코드: ${activeSession.roomId}`;
+                        }
+                        if (reconnectDescText) {
+                            const pName = activeSession.name || '학생';
+                            reconnectDescText.innerHTML = `<strong>${pName}</strong>님이 참여 중이던 <strong>[${activeSession.roomId}]</strong>번 게임으로 즉시 복귀할 수 있습니다.`;
+                        }
+                        if (joinOnlineRoomCodeInput && !joinOnlineRoomCodeInput.value) {
+                            joinOnlineRoomCodeInput.value = activeSession.roomId;
+                        }
+                    } else {
+                        multiplayerManager.clearActiveSession();
+                        reconnectBanner.classList.add('hidden');
+                    }
+                } catch (e) {
+                    console.warn(e);
+                }
+            }
+
+            if (reconnectNowBtn) {
+                reconnectNowBtn.addEventListener('click', async () => {
+                    const activeSession = multiplayerManager.getActiveSession();
+                    if (!activeSession || !activeSession.roomId) {
+                        reconnectBanner.classList.add('hidden');
+                        return;
+                    }
+
+                    const playerRealName = (globalStudentNameInput ? globalStudentNameInput.value : '').trim() || activeSession.name;
+                    const sGrade = (studentGradeSelect ? studentGradeSelect.value : '') || activeSession.grade || '6';
+                    const sClass = (studentClassSelect ? studentClassSelect.value : '') || activeSession.classNum || '1';
+                    const sNum = (studentNumInput ? studentNumInput.value.trim() : '') || activeSession.studentNum || '';
+
+                    if (!playerRealName) {
+                        alert("학생 본인의 실명(이름)을 입력해주세요.");
+                        if (globalStudentNameInput) globalStudentNameInput.focus();
+                        return;
+                    }
+
+                    try {
+                        reconnectNowBtn.disabled = true;
+                        reconnectNowBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 재접속 중...';
+                        await multiplayerManager.joinRoom(activeSession.roomId, {
+                            name: playerRealName,
+                            grade: sGrade,
+                            classNum: sClass,
+                            studentNum: sNum
+                        });
+                        reconnectBanner.classList.add('hidden');
+                    } catch (err) {
+                        alert("재입장 실패: " + err.message);
+                        multiplayerManager.clearActiveSession();
+                        reconnectBanner.classList.add('hidden');
+                    } finally {
+                        reconnectNowBtn.disabled = false;
+                        reconnectNowBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> 다시 들어가기 (재접속)';
+                    }
+                });
+            }
+
+            if (dismissReconnectBtn) {
+                dismissReconnectBtn.addEventListener('click', () => {
+                    multiplayerManager.clearActiveSession();
+                    if (reconnectBanner) reconnectBanner.classList.add('hidden');
+                });
+            }
+
+            // 페이지 로드 시 재접속 배너 검사
+            checkAndShowReconnectBanner();
+
             // 홈으로 이동 (게임 나가기) 확인
             function confirmExitToHome() {
                 if (confirm("홈 화면으로 이동하시겠습니까? 현재 진행 중인 게임은 종료됩니다.")) {
+                    multiplayerManager.clearActiveSession();
+                    if (reconnectBanner) reconnectBanner.classList.add('hidden');
                     if (window.YutnoriGameInstance && window.YutnoriGameInstance.isOnline) {
                         multiplayerManager.leaveRoom();
                     }
@@ -1621,6 +1766,8 @@
 
             // 승리/종료 모달에서 나가기 처리 (승자/패자 모두 깨끗하게 퇴장)
             const exitFromVictoryModal = async () => {
+                multiplayerManager.clearActiveSession();
+                if (reconnectBanner) reconnectBanner.classList.add('hidden');
                 const victoryModal = document.getElementById('victoryModal');
                 if (victoryModal) victoryModal.classList.add('hidden');
                 if (window.YutnoriGameInstance && window.YutnoriGameInstance.isOnline) {
@@ -1669,6 +1816,7 @@
                             pieceCount,
                             gradeFilter: grade
                         });
+                        if (reconnectBanner) reconnectBanner.classList.add('hidden');
                         onlineLobbyModal.classList.remove('hidden');
                         lobbyRoomCodeDisplay.textContent = code;
                     } catch (err) {
@@ -1710,13 +1858,25 @@
                             classNum: sClass,
                             studentNum: sNum
                         });
-                        onlineLobbyModal.classList.remove('hidden');
-                        lobbyRoomCodeDisplay.textContent = code;
+                        if (reconnectBanner) reconnectBanner.classList.add('hidden');
+                        if (multiplayerManager.roomData && multiplayerManager.roomData.status === 'lobby') {
+                            onlineLobbyModal.classList.remove('hidden');
+                            lobbyRoomCodeDisplay.textContent = code;
+                        }
                     } catch (err) {
                         alert("방 입장 실패: " + err.message);
                     } finally {
                         joinOnlineRoomBtn.disabled = false;
                         joinOnlineRoomBtn.innerHTML = '입장하기';
+                    }
+                });
+            }
+
+            if (joinOnlineRoomCodeInput) {
+                joinOnlineRoomCodeInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (joinOnlineRoomBtn) joinOnlineRoomBtn.click();
                     }
                 });
             }
@@ -1766,6 +1926,8 @@
             const exitLobby = async () => {
                 const isGameOver = (window.YutnoriGameInstance && window.YutnoriGameInstance.gameState === 'GAME_OVER');
                 if (isGameOver || confirm("정말 방에서 나가시겠습니까?")) {
+                    multiplayerManager.clearActiveSession();
+                    if (reconnectBanner) reconnectBanner.classList.add('hidden');
                     const victoryModal = document.getElementById('victoryModal');
                     if (victoryModal) victoryModal.classList.add('hidden');
                     if (window.YutnoriGameInstance) {
