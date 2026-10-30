@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>나만의 손글씨 웹 폰트 (MyHandwriting) - 한글 전체 11,172자 완성형</title>
+  <title>나만의 손글씨 마스터 폰트 (MyHandwriting) - 한글 11,172자 + 영문/기호 94자</title>
   <style>
     @font-face {
       font-family: 'MyHandwriting';
@@ -22,7 +22,6 @@
       --text-main: #1E293B;
       --text-sub: #64748B;
       --border: #E2E8F0;
-      --success: #10B981;
     }
 
     * {
@@ -106,7 +105,7 @@
 
     .font-sample-area {
       font-family: 'MyHandwriting', cursive;
-      font-size: 34px;
+      font-size: 32px;
       line-height: 1.8;
       outline: none;
       border: 1px dashed var(--border);
@@ -150,7 +149,7 @@
 
     .highlight-char {
       font-family: 'MyHandwriting', cursive;
-      font-size: 48px;
+      font-size: 46px;
       color: #0F172A;
       margin-bottom: 4px;
       line-height: 1.2;
@@ -190,7 +189,7 @@
     .preset-text {
       font-family: 'MyHandwriting', cursive;
       color: #1E293B;
-      font-size: 28px;
+      font-size: 26px;
       line-height: 1.6;
     }
 
@@ -269,16 +268,16 @@
 <body>
   <div class="container">
     <header>
-      <span class="badge">한글 유니코드 전체 11,172자 완성형 지원</span>
-      <h1>나만의 손글씨 웹 폰트 (MyHandwriting)</h1>
-      <p class="subtitle">사용자님의 손글씨를 바탕으로 11,172자 전체 음절과 숫자/기호가 결함 없이 정밀 교정되었습니다.</p>
+      <span class="badge">한글 전체 11,172자 + 영문 52자 + 숫자/기호 42자 완성</span>
+      <h1>나만의 손글씨 마스터 폰트 (MyHandwriting)</h1>
+      <p class="subtitle">사용자님의 손글씨를 바탕으로 한글 11,172자 음절과 영문 대소문자, 숫자, 키보드 특수기호가 전수 통합되었습니다.</p>
     </header>
 
     <!-- 핵심 교정 글자 집중 프리뷰 -->
     <div class="card">
       <div class="section-title">
-        <span>✨ 정밀 교정 핵심 글자 쇼케이스</span>
-        <span style="font-size: 13px; font-weight: 500; color: #059669;">오류 자모 분해 & 재조판 완료</span>
+        <span>✨ 한글 핵심 교정 쇼케이스</span>
+        <span style="font-size: 13px; font-weight: 500; color: #059669;">자모 분해 & 정밀 조판 완료</span>
       </div>
       <div class="highlight-grid">
         <div class="highlight-card">
@@ -287,11 +286,11 @@
         </div>
         <div class="highlight-card">
           <div class="highlight-char">웹</div>
-          <span class="highlight-tag">모음 'ㅞ' + 'ㅂ' 받침</span>
+          <span class="highlight-tag">'ㅞ' + 'ㅂ' 3단 조판</span>
         </div>
         <div class="highlight-card">
           <div class="highlight-char">에</div>
-          <span class="highlight-tag">자모 분리 및 결합</span>
+          <span class="highlight-tag">순수 'ㅔ' 결합</span>
         </div>
         <div class="highlight-card">
           <div class="highlight-char">쳇</div>
@@ -310,12 +309,12 @@
 
     <!-- 인터랙티브 타이핑 영역 -->
     <div class="card">
-      <div class="section-title">✏️ 자유 타이핑 테스트 (직접 입력해 보세요!)</div>
+      <div class="section-title">✏️ 자유 타이핑 테스트 (한글/영문/숫자/기호 직접 입력)</div>
       
       <div class="controls">
         <div class="control-item">
-          <label for="sizeSlider">글자 크기: <span id="sizeValue">34px</span></label>
-          <input type="range" id="sizeSlider" min="16" max="72" value="34">
+          <label for="sizeSlider">글자 크기: <span id="sizeValue">32px</span></label>
+          <input type="range" id="sizeSlider" min="16" max="72" value="32">
         </div>
         <div class="control-item">
           <label for="spacingSlider">자간: <span id="spacingValue">0px</span></label>
@@ -327,55 +326,60 @@
         </div>
       </div>
 
-      <div class="font-sample-area" id="typingArea" contenteditable="true" spellcheck="false">세상에 하나뿐인 나만의 손글씨 웹 폰트입니다!
-세, 웹, 에, 쳇, 입, 밥, 글, 손, 2026.
-다람쥐 헌 쳇바퀴에 타고파.
-11,172자 모든 한글 조합을 깨짐 없이 자유롭게 입력해 보세요.</div>
+      <div class="font-sample-area" id="typingArea" contenteditable="true" spellcheck="false">와우리말 손글씨 폰트가 세상에 태어났습니다! (2026.10.30)
+The quick brown fox jumps over the lazy dog.
+세, 웹, 에, 쳇, 입, 밥, 글, 손, 0123456789.
+Special Symbols: [Apple] {Orange} &lt;Grape&gt; $100 &amp; 50% discount!
+한글 전체 11,172자와 영문, 숫자를 자유롭게 입력해 보세요.</div>
     </div>
 
     <!-- 추천 샘플 문장 프리뷰 -->
     <div class="card">
-      <div class="section-title">📜 문장 스타일 미리보기</div>
+      <div class="section-title">📜 실사용 문장 미리보기</div>
       <div class="preset-list">
         <div class="preset-item">
           <div class="preset-meta">웹 타이틀 / 헤드라인</div>
-          <div class="preset-text dynamic-sample" style="font-size: 32px; font-weight: bold;">와우리말 손글씨 폰트가 세상에 태어났습니다!</div>
+          <div class="preset-text dynamic-sample" style="font-size: 30px; font-weight: bold;">와우리말 손글씨 폰트가 완성되었습니다! (Version 4.0)</div>
         </div>
         <div class="preset-item">
-          <div class="preset-meta">시 / 감성 문구</div>
-          <div class="preset-text dynamic-sample">별 하나에 추억과 별 하나에 사랑과 별 하나에 쓸쓸함과 별 하나에 동경.</div>
+          <div class="preset-meta">영문 팬그램 (A~Z 전수 검증)</div>
+          <div class="preset-text dynamic-sample">The quick brown fox jumps over the lazy dog.</div>
         </div>
         <div class="preset-item">
-          <div class="preset-meta">숫자 및 기호 테스트</div>
-          <div class="preset-text dynamic-sample">0 1 2 3 4 5 6 7 8 9 ! ? . , - ~</div>
+          <div class="preset-meta">한글 교정 문장 검증</div>
+          <div class="preset-text dynamic-sample">쳇, 이것도 내 입맛대로 완벽하게 만들 수 있잖아? [100% Verified!]</div>
+        </div>
+        <div class="preset-item">
+          <div class="preset-meta">숫자 및 키보드 특수기호</div>
+          <div class="preset-text dynamic-sample">0 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * ( ) _ + = - ~ ` [ ] { } &lt; &gt; / ? : ; " ' \ | , .</div>
         </div>
       </div>
     </div>
 
-    <!-- 다운로드 및 양식 다운로드 안내 -->
+    <!-- 다운로드 및 사양 -->
     <div class="card">
-      <div class="section-title">📥 폰트 다운로드 & 영문/특수문자 추가 양식</div>
+      <div class="section-title">📥 폰트 다운로드 & 적용 가이드</div>
       <p style="color: var(--text-sub); font-size: 14px; margin-bottom: 12px;">
-        영문 알파벳과 추가 특수문자까지 손글씨로 채우고 싶으시다면 아래 양식 PDF를 인쇄하여 작성 후 스캔하여 업로드해 주시면 즉시 병합됩니다.
+        웹 페이지에서는 가볍고 빠른 WOFF2 형식을, PC(Windows/Mac)에 직접 설치하여 문서 작성이나 디자인에 사용할 때는 TTF 파일을 다운로드하세요.
       </p>
 
       <div class="btn-group">
-        <a class="btn btn-primary" href="MyHandwriting.woff2" download>⬇️ WOFF2 다운로드 (웹용 425 KB)</a>
-        <a class="btn btn-secondary" href="MyHandwriting.ttf" download>⬇️ TTF 다운로드 (PC 설치용 11.5 MB)</a>
-        <a class="btn btn-secondary" href="손글씨_영문_특수문자_작성양식.pdf" download>📄 영문/특수기호 손글씨 양식 (PDF)</a>
+        <a class="btn btn-primary" href="MyHandwriting.woff2" download>⬇️ WOFF2 다운로드 (웹용 432.8 KB)</a>
+        <a class="btn btn-secondary" href="MyHandwriting.ttf" download>⬇️ TTF 다운로드 (PC 설치용 11.55 MB)</a>
+        <a class="btn btn-secondary" href="master_full_preview.png" target="_blank">🖼️ 전수 검증 프리뷰 이미지</a>
       </div>
 
       <div class="stats-grid">
         <div class="stat-box">
-          <div class="stat-val">11,172 자</div>
-          <div class="stat-lbl">한글 전체 유니코드 지원 (가~힣)</div>
+          <div class="stat-val">11,268 자</div>
+          <div class="stat-lbl">총 글자 수 (한글 11,172 + 영문/기호 94)</div>
         </div>
         <div class="stat-box">
-          <div class="stat-val">424.7 KB</div>
-          <div class="stat-lbl">WOFF2 파일 용량 (웹 최적화)</div>
+          <div class="stat-val">432.8 KB</div>
+          <div class="stat-lbl">WOFF2 파일 용량 (웹 로딩 최적화)</div>
         </div>
         <div class="stat-box">
-          <div class="stat-val">11.52 MB</div>
+          <div class="stat-val">11.55 MB</div>
           <div class="stat-lbl">TTF 파일 용량</div>
         </div>
       </div>
