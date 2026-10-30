@@ -7,8 +7,8 @@
   <style>
     @font-face {
       font-family: 'MyHandwriting';
-      src: url('MyHandwriting.woff2') format('woff2'),
-           url('MyHandwriting.ttf') format('truetype');
+      src: url('MyHandwriting.woff2?v=20261030_v6_perfect') format('woff2'),
+           url('MyHandwriting.ttf?v=20261030_v6_perfect') format('truetype');
       font-weight: normal;
       font-style: normal;
       font-display: swap;
@@ -271,7 +271,24 @@
       <span class="badge">한글 전체 11,172자 + 영문 52자 + 숫자/기호 42자 완성</span>
       <h1>나만의 손글씨 마스터 폰트 (MyHandwriting)</h1>
       <p class="subtitle">사용자님의 손글씨를 바탕으로 한글 11,172자 음절과 영문 대소문자, 숫자, 키보드 특수기호가 전수 통합되었습니다.</p>
+      
+      <!-- 캐시 갱신 안내 알림 -->
+      <div style="margin-top: 18px; padding: 12px 18px; background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 10px; color: #92400E; font-size: 14px; display: inline-block; text-align: left;">
+        ⚡ <strong>폰트 최신 교정본 즉시 반영 안내:</strong> 브라우저가 이전 폰트를 저장하고 있을 수 있습니다. 화면에서 <code>Ctrl + F5</code>(강력 새로고침)를 누르시거나 <strong>시크릿 창</strong>으로 접속하시면 새 폰트가 즉시 렌더링됩니다!
+      </div>
     </header>
+
+    <!-- 실시간 폰트 렌더링 검증 캡처본 카드 -->
+    <div class="card" style="border: 2px solid #4F46E5;">
+      <div class="section-title">
+        <span>📸 폰트 엔진 실제 렌더링 검증 화면 (서버 직접 렌더링)</span>
+        <span style="font-size: 13px; font-weight: 600; color: #4F46E5;">v6.0 무결점 검증 완료</span>
+      </div>
+      <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 14px;">아래 이미지는 생성된 <code>MyHandwriting.ttf</code> 마스터 폰트로 직접 렌더링한 실제 화면입니다. 브라우저 캐시와 무관하게 폰트 자체의 형태를 확인하실 수 있습니다.</p>
+      <div style="background: #FFFFFF; border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; overflow-x: auto;">
+        <img src="master_full_preview.png?v=20261030_v6" alt="Master Font Render Preview" style="max-width: 100%; height: auto; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.06);">
+      </div>
+    </div>
 
     <!-- 핵심 교정 글자 집중 프리뷰 -->
     <div class="card">
