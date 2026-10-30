@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나만의 손글씨 웹 폰트 (MyHandwriting) 프리뷰</title>
+  <style>
+    @font-face {
+      font-family: 'MyHandwriting';
+      src: url('MyHandwriting.woff2') format('woff2'),
+           url('MyHandwriting.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --primary: #4F46E5;
+      --primary-light: #EEF2FF;
+      --bg: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --text-main: #1E293B;
+      --text-sub: #64748B;
+      --border: #E2E8F0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      padding: 40px 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 800;
+      color: #0F172A;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: var(--text-sub);
+      font-size: 15px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: center;
+      padding-bottom: 20px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .control-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-main);
+    }
+
+    .control-item input[type="range"] {
+      cursor: pointer;
+    }
+
+    .font-sample-area {
+      font-family: 'MyHandwriting', cursive;
+      font-size: 32px;
+      line-height: 1.8;
+      outline: none;
+      border: 1px dashed var(--border);
+      padding: 24px;
+      border-radius: 12px;
+      background: #FAFAFA;
+      min-height: 180px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .font-sample-area:focus {
+      border-color: var(--primary);
+      background: #FFFFFF;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: #0F172A;
+    }
+
+    .preset-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .preset-item {
+      padding: 16px;
+      border-radius: 12px;
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+    }
+
+    .preset-meta {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-sub);
+      margin-bottom: 6px;
+      font-family: -apple-system, sans-serif;
+    }
+
+    .preset-text {
+      font-family: 'MyHandwriting', cursive;
+      color: #1E293B;
+      font-size: 26px;
+      line-height: 1.6;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .stat-box {
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-val {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+
+    .stat-lbl {
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+
+    code {
+      background: #F1F5F9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: Consolas, monospace;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">Antigravity AI 손글씨 생성 완료</span>
+      <h1>나만의 손글씨 웹 폰트 프리뷰</h1>
+      <p class="subtitle">사용자님의 손글씨를 바탕으로 한글 완성형 2,360자가 모두 생성되었습니다.</p>
+    </header>
+
+    <!-- 인터랙티브 타이핑 영역 -->
+    <div class="card">
+      <div class="section-title">✏️ 자유 타이핑 테스트 (직접 써보세요!)</div>
+      
+      <div class="controls">
+        <div class="control-item">
+          <label for="sizeSlider">글자 크기: <span id="sizeValue">32px</span></label>
+          <input type="range" id="sizeSlider" min="16" max="72" value="32">
+        </div>
+        <div class="control-item">
+          <label for="spacingSlider">자간(Letter Spacing): <span id="spacingValue">0px</span></label>
+          <input type="range" id="spacingSlider" min="-4" max="12" value="0">
+        </div>
+        <div class="control-item">
+          <label for="lineSlider">줄 간격: <span id="lineValue">1.8</span></label>
+          <input type="range" id="lineSlider" min="1.0" max="2.6" step="0.1" value="1.8">
+        </div>
+      </div>
+
+      <div class="font-sample-area" id="typingArea" contenteditable="true" spellcheck="false">안녕하세요! 내 손글씨로 만든 웹 폰트입니다.
+다람쥐 헌 쳇바퀴에 타고파.
+1 2 3 4 5 6 7 8 9 0.
+여기에 원하는 문장을 자유롭게 입력해 보세요!</div>
+    </div>
+
+    <!-- 추천 샘플 문장 프리뷰 -->
+    <div class="card">
+      <div class="section-title">📜 다양한 스타일 미리보기</div>
+      <div class="preset-list">
+        <div class="preset-item">
+          <div class="preset-meta">시 / 감성 문구</div>
+          <div class="preset-text dynamic-sample">별 하나에 추억과 별 하나에 사랑과 별 하나에 쓸쓸함과 별 하나에 동경.</div>
+        </div>
+        <div class="preset-item">
+          <div class="preset-meta">웹 타이틀 / 헤드라인</div>
+          <div class="preset-text dynamic-sample" style="font-size: 32px; font-weight: bold;">우리말 배움터와 함께하는 즐거운 하루</div>
+        </div>
+        <div class="preset-item">
+          <div class="preset-meta">손편지 느낌</div>
+          <div class="preset-text dynamic-sample">오늘 하루도 정말 고생 많으셨습니다. 따뜻하고 행복한 저녁 시간 보내세요.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 파일 정보 및 적용 가이드 -->
+    <div class="card">
+      <div class="section-title">📦 웹 폰트 빌드 사양</div>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-val">2,360 자</div>
+          <div class="stat-lbl">포함된 글자 수 (KS X 1001)</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">67.2 KB</div>
+          <div class="stat-lbl">WOFF2 파일 용량 (초경량)</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">0.90 MB</div>
+          <div class="stat-lbl">TTF 파일 용량</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border);">
+        <h3 style="font-size: 15px; margin-bottom: 8px;">💡 내 웹사이트에서 바로 사용하는 방법 (CSS)</h3>
+        <pre style="background: #0F172A; color: #E2E8F0; padding: 16px; border-radius: 8px; font-size: 13px; overflow-x: auto;"><code>@font-face {
+  font-family: 'MyHandwriting';
+  src: url('MyHandwriting.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+body {
+  font-family: 'MyHandwriting', cursive, sans-serif;
+}</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const sizeSlider = document.getElementById('sizeSlider');
+    const sizeValue = document.getElementById('sizeValue');
+    const spacingSlider = document.getElementById('spacingSlider');
+    const spacingValue = document.getElementById('spacingValue');
+    const lineSlider = document.getElementById('lineSlider');
+    const lineValue = document.getElementById('lineValue');
+    const typingArea = document.getElementById('typingArea');
+    const dynamicSamples = document.querySelectorAll('.dynamic-sample');
+
+    sizeSlider.addEventListener('input', (e) => {
+      const val = e.target.value + 'px';
+      sizeValue.textContent = val;
+      typingArea.style.fontSize = val;
+    });
+
+    spacingSlider.addEventListener('input', (e) => {
+      const val = e.target.value + 'px';
+      spacingValue.textContent = val;
+      typingArea.style.letterSpacing = val;
+      dynamicSamples.forEach(el => el.style.letterSpacing = val);
+    });
+
+    lineSlider.addEventListener('input', (e) => {
+      const val = e.target.value;
+      lineValue.textContent = val;
+      typingArea.style.lineHeight = val;
+    });
+  </script>
+</body>
+</html>
