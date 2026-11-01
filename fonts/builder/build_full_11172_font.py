@@ -294,16 +294,45 @@ class MasterHangulSynthesizer:
                 c_comb[:h2, nw1+4:] = r2
                 self.cache_jong[c_idx] = trim_bbox(c_comb)
 
+        # 5. 사용자가 직접 작성한 손글씨 글자(닭, 삶, 닳, 값, 앉, 몫, 핥, 않, 넓 등)에서 100% 실제 겹받침 자모 추출
+        DIRECT_JONGS = {
+            3: "몫",   # ㄳ
+            5: "앉",   # ㄵ
+            6: "않",   # ㄶ
+            9: "닭",   # ㄺ
+            10: "삶",  # ㄻ
+            11: "넓",  # ㄼ
+            13: "핥",  # ㄾ
+            15: "닳",  # ㅀ
+            18: "값",  # ㅄ
+        }
+        for j_idx, char_src in DIRECT_JONGS.items():
+            if char_src in self.direct_chars:
+                img_src = self.direct_chars[char_src]
+                pts = cv2.findNonZero(img_src)
+                if pts is not None:
+                    x, y, w, h = cv2.boundingRect(pts)
+                    crop = img_src[y:y+h, x:x+w]
+                    bottom = crop[int(h * 0.48):, :]
+                    if cv2.countNonZero(bottom) > 10:
+                        self.cache_jong[j_idx] = trim_bbox(bottom)
+
     def render(self, char, size=200):
         code = ord(char) - 0xAC00
         if code < 0 or code > 11171:
             return None
 
+        jong_idx = code % 28
+        has_jong = (jong_idx > 0)
+
+        # 1. 사용자가 직접 쓴 손글씨 글자가 존재하면 100% 실제 손글씨 원형 최우선 탑재
+        if char in self.direct_chars:
+            raw_direct = self.direct_chars[char]
+            if raw_direct is not None and cv2.countNonZero(raw_direct) > 20:
+                return normalize_ink_canvas(raw_direct, target_size=size, has_jong=has_jong)
+
         cho = code // (21 * 28)
         jung_idx = (code % (21 * 28)) // 28
-        jong_idx = code % 28
-
-        # 모든 한글 11,172자에 대해 정밀 마스터 엔진으로 100% 균일 조판 (원시 스캔 셀 잡음 및 잘림 방지)
 
         JUNG_TYPES = {
             0: 'V', 1: 'V', 2: 'V', 3: 'V', 4: 'V', 5: 'V', 6: 'V', 7: 'V', 20: 'V',
@@ -311,7 +340,6 @@ class MasterHangulSynthesizer:
             9: 'C', 10: 'C', 11: 'C', 14: 'C', 15: 'C', 16: 'C', 19: 'C'
         }
         j_type = JUNG_TYPES.get(jung_idx, 'V')
-        has_jong = (jong_idx > 0)
 
         canvas = np.zeros((size, size), dtype=np.uint8)
 
@@ -333,13 +361,13 @@ class MasterHangulSynthesizer:
                 if jung_img is not None:
                     paste_centered(canvas, jung_img, (int(size * 0.48), 18, int(size * 0.48), int(size * 0.82)))
             else:
-                # 세로모임 유받침 (쳇, 입, 밥, 김, 빛 등)
+                # 세로모임 유받침 (모음이 받침 아래로 처지지 않도록 상단 54% 영역에 안착 및 받침 중앙 배치)
                 if cho_img is not None:
-                    paste_centered(canvas, cho_img, (18, 12, int(size * 0.40), int(size * 0.44)))
-                if jong_img is not None:
-                    paste_centered(canvas, jong_img, (20, int(size * 0.58), int(size * 0.42), int(size * 0.36)))
+                    paste_centered(canvas, cho_img, (16, 12, int(size * 0.38), int(size * 0.44)))
                 if jung_img is not None:
-                    paste_centered(canvas, jung_img, (int(size * 0.50), 12, int(size * 0.46), int(size * 0.82)))
+                    paste_centered(canvas, jung_img, (int(size * 0.52), 12, int(size * 0.44), int(size * 0.54)))
+                if jong_img is not None:
+                    paste_centered(canvas, jong_img, (20, int(size * 0.58), int(size * 0.58), int(size * 0.36)))
 
         elif j_type == 'H':
             jung_img = self.cache_jung.get(jung_idx, self.cache_jung.get(18))
