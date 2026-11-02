@@ -624,7 +624,7 @@ def build_full_font(output_ttf="waurimal.ttf", output_woff2="waurimal.woff2"):
     fb.setupCharacterMap(cmap)
     fb.setupGlyf(glyphs)
     fb.setupHorizontalMetrics(metrics)
-    fb.setupHorizontalHeader(ascent=824, descent=-200)
+    fb.setupHorizontalHeader(ascent=1000, descent=-400, lineGap=0)
     fb.setupNameTable({
         'familyName': 'waurimal',
         'styleName': 'Regular',
@@ -633,8 +633,42 @@ def build_full_font(output_ttf="waurimal.ttf", output_woff2="waurimal.woff2"):
         'psName': 'waurimal-Regular',
         'version': 'Version 1.000'
     })
-    fb.setupOS2(sTypoAscender=824, sTypoDescender=-200, usWeightClass=400)
-    fb.setupPost()
+    # Add Korean (1042) name records for Windows compatibility
+    for nid, val in [
+        (1, 'waurimal'),
+        (2, 'Regular'),
+        (3, 'waurimal:Antigravity:2026'),
+        (4, 'waurimal Regular'),
+        (5, 'Version 1.000'),
+        (6, 'waurimal-Regular'),
+    ]:
+        fb.font['name'].setName(val, nameID=nid, platformID=3, platEncID=1, langID=1042)
+
+    fb.setupOS2(
+        version=4,
+        sTypoAscender=824,
+        sTypoDescender=-200,
+        sTypoLineGap=100,
+        usWinAscent=1000,
+        usWinDescent=400,
+        usWeightClass=400,
+        usWidthClass=5,
+        fsType=0,          # 0 = Installable (free embedding and installation)
+        fsSelection=64,    # Bit 6: Regular
+        achVendID='WAUR',
+        ulCodePageRange1=524289, # CP1252 (Latin 1) + CP949 (Korean KS C 5601 / Unified Hangul)
+        ulCodePageRange2=0,
+        sCapHeight=700,
+        sxHeight=500
+    )
+    # Panose: Latin Text (2), Casual Handwriting (11), Book/Normal (5), Modern (3)
+    fb.font['OS/2'].panose.bFamilyType = 2
+    fb.font['OS/2'].panose.bSerifStyle = 11
+    fb.font['OS/2'].panose.bWeight = 5
+    fb.font['OS/2'].panose.bProportion = 3
+
+    # Format 3.0 avoids 11,000+ redundant glyph name strings, standard for CJK fonts
+    fb.setupPost(keepGlyphNames=False)
 
     fb.save(output_ttf)
     ttf_size = os.path.getsize(output_ttf)
