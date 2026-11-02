@@ -145,6 +145,10 @@ class MasterHangulSynthesizer:
         if os.path.exists("debug_true_s_h.png"):
             self.cache_cho_h[9] = trim_bbox(cv2_imread_gray("debug_true_s_h.png"))
 
+        # 초성 'ㅍ' (index 17)의 가로모임 형태는 포에서 추출한 전용 가로형 적용 (폭, 퐁, 폴, 폰 등 최적화)
+        if os.path.exists("debug_true_p_h_po.png"):
+            self.cache_cho_h[17] = trim_bbox(cv2_imread_gray("debug_true_p_h_po.png"))
+
         # 3. 완벽한 단자모 라이브러리 확립
         # (1) pure_i (키 큰 온전한 수직 기둥)
         if os.path.exists("debug_tall_i.png"):
@@ -382,13 +386,13 @@ class MasterHangulSynthesizer:
                 if jung_img is not None:
                     paste_centered(canvas, jung_img, (15, int(size * 0.48), int(size * 0.80), int(size * 0.45)))
             else:
-                # 가로모임 유받침 (손, 폰, 든, 뜻, 문, 글, 증 등)
+                # 가로모임 유받침 (손, 폰, 든, 뜻, 문, 글, 증 등 - 3단 간격 비례 최적화 및 겹침 방지)
                 if cho_img is not None:
-                    paste_centered(canvas, cho_img, (25, 10, int(size * 0.65), int(size * 0.35)))
+                    paste_centered(canvas, cho_img, (25, 10, int(size * 0.65), int(size * 0.32)))
                 if jung_img is not None:
-                    paste_centered(canvas, jung_img, (15, int(size * 0.40), int(size * 0.76), int(size * 0.26)))
+                    paste_centered(canvas, jung_img, (15, int(size * 0.38), int(size * 0.76), int(size * 0.24)))
                 if jong_img is not None:
-                    paste_centered(canvas, jong_img, (25, int(size * 0.64), int(size * 0.64), int(size * 0.34)))
+                    paste_centered(canvas, jong_img, (25, int(size * 0.65), int(size * 0.64), int(size * 0.30)))
 
         else: # 'C' 복합모임 (웹, 웨, 과, 와, 왜, 워, 위, 의 등)
             h_part, v_part = self.compound_vowels.get(jung_idx, (self.cache_jung.get(13), self.cache_jung.get(20)))
