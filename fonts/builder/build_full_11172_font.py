@@ -553,7 +553,7 @@ def ascii_ink_to_ttglyph(char, img_cell, is_page1=True):
 # ==========================================
 # 4. 전체 완성형 폰트 컴파일러 (한글 11,172자 + 영문/기호 94자)
 # ==========================================
-def build_full_font(output_ttf="MyHandwriting.ttf", output_woff2="MyHandwriting.woff2"):
+def build_full_font(output_ttf="waurimal.ttf", output_woff2="waurimal.woff2"):
     start_time = time.time()
     print("Step 1: Initializing Master Synthesizer & Resources...")
     syn = MasterHangulSynthesizer("jamo_library", "extracted_chars")
@@ -626,12 +626,12 @@ def build_full_font(output_ttf="MyHandwriting.ttf", output_woff2="MyHandwriting.
     fb.setupHorizontalMetrics(metrics)
     fb.setupHorizontalHeader(ascent=824, descent=-200)
     fb.setupNameTable({
-        'familyName': 'MyHandwriting',
+        'familyName': 'waurimal',
         'styleName': 'Regular',
-        'uniqueFontIdentifier': 'MyHandwriting:Antigravity:MasterFull:2026',
-        'fullName': 'MyHandwriting Regular',
-        'psName': 'MyHandwriting-Regular',
-        'version': 'Version 4.000'
+        'uniqueFontIdentifier': 'waurimal:Antigravity:2026',
+        'fullName': 'waurimal Regular',
+        'psName': 'waurimal-Regular',
+        'version': 'Version 1.000'
     })
     fb.setupOS2(sTypoAscender=824, sTypoDescender=-200, usWeightClass=400)
     fb.setupPost()

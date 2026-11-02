@@ -1,11 +1,11 @@
-# 나만의 손글씨 마스터 폰트 빌더 (MyHandwriting Font Builder)
+# 와우리말 손글씨 마스터 폰트 빌더 (waurimal Font Builder)
 
-사용자가 종이에 작성한 손글씨 스캔 이미지(한글 96자 + 영문/기호 94자)로부터 유니코드 한글 전체 11,172자와 영문 52자, 숫자 10자, 특수기호 32자를 100% 자율 합성 및 컴파일하는 트루타입(TTF) & 웹폰트(WOFF2) 생성 파이프라인입니다.
+사용자가 종이에 작성한 손글씨 스캔 이미지로부터 유니코드 한글 전체 11,172자와 영문 52자, 숫자 10자, 특수기호 32자를 100% 자율 합성 및 컴파일하는 트루타입(TTF) & 웹폰트(WOFF2) 생성 파이프라인입니다.
 
 ---
 
 ## 1. 폰트 사양
-* **글꼴 이름**: MyHandwriting
+* **글꼴 이름**: waurimal
 * **포맷**: TTF (TrueType), WOFF2 (Web Open Font Format 2.0)
 * **총 수록 글리프**: 11,268자
   - 현대 한글 전수: 11,172자 (`U+AC00` ~ `U+D7A3`)
@@ -16,7 +16,20 @@
 
 ---
 
-## 2. 핵심 알고리즘 및 특징
+## 2. 웹에서 사용하기 (CDN)
+HTML `<head>`에 아래 한 줄만 추가하면 웹 어디서나 바로 사용할 수 있습니다:
+```html
+<link rel="stylesheet" href="https://waurimal.github.io/fonts/waurimal.css">
+```
+```css
+body {
+  font-family: 'waurimal', cursive, sans-serif;
+}
+```
+
+---
+
+## 3. 핵심 알고리즘 및 특징
 1. **정밀 자소 분해 & 복합모음 조판 엔진**:
    - `clean_e`: 순수 `ㅓ`(- |)와 `ㅣ`(|) 분리 정제 (초성 충돌 및 겹침 제로).
    - `clean_ae`: `| - |` 구조의 순수 `ㅐ` 모음 유지.
@@ -39,4 +52,4 @@
 ```bash
 python build_full_11172_font.py
 ```
-- 결과물: `MyHandwriting.ttf` 및 `MyHandwriting.woff2` 자동 생성
+- 결과물: `waurimal.ttf` 및 `waurimal.woff2` 자동 생성
