@@ -141,6 +141,10 @@ class MasterHangulSynthesizer:
             # 가로모임 및 복합모임에도 온전한 형태의 초성을 사용하여 하단 잘림을 완전히 방지
             self.cache_cho_h[i] = self.cache_cho_v.get(i)
 
+        # 초성 'ㅅ' (index 9)의 가로모임 형태는 송에서 추출한 전용 가로형 적용 (손, 솜, 솔, 송 등 비율 최적화)
+        if os.path.exists("debug_true_s_h.png"):
+            self.cache_cho_h[9] = trim_bbox(cv2_imread_gray("debug_true_s_h.png"))
+
         # 3. 완벽한 단자모 라이브러리 확립
         # (1) pure_i (키 큰 온전한 수직 기둥)
         if os.path.exists("debug_tall_i.png"):
