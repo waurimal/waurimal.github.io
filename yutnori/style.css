@@ -167,6 +167,11 @@ body {
     background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%) !important;
 }
 
+.yut-piece.cursor-not-allowed,
+.yut-piece.enemy-piece {
+    cursor: not-allowed !important;
+}
+
 /* 선택 가능한 말 바운스 애니메이션 */
 .yut-piece.selectable {
     animation: pieceBounce 0.8s infinite alternate ease-in-out;

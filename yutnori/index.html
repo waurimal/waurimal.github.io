@@ -219,6 +219,20 @@
                                     </div>
                                 </div>
 
+                                <!-- 팀전 전용: 방장 게임 참여 옵션 -->
+                                <div id="onlineHostParticipateWrapper" class="mb-3 p-2.5 rounded-xl bg-slate-900/90 border border-amber-500/40 hidden">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div>
+                                            <span class="text-xs font-bold text-amber-300 block">방장 게임 직접 참여</span>
+                                            <span class="text-[10px] text-slate-400 block">체크 해제 시 방장은 진행/관전만 하고 학생들만 경기합니다.</span>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                                            <input type="checkbox" id="onlineHostParticipateCheck" class="sr-only peer" checked>
+                                            <div class="w-10 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                                        </label>
+                                    </div>
+                                </div>
+
                                 <button type="button" id="createOnlineRoomBtn" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
                                     <i class="fa-solid fa-tower-broadcast"></i> 실명으로 방 만들기 & 4자리 코드 발급
                                 </button>
@@ -646,13 +660,47 @@
                 </p>
             </div>
 
+            <!-- 팀전 전용: 방장 역할 전환 (직접 플레이어 ↔ 진행·관전) -->
+            <div id="lobbyHostRoleSection" class="p-3 rounded-2xl bg-slate-950/80 border border-amber-500/40 mb-3 hidden">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-crown text-amber-400"></i> 방장 역할:
+                        </span>
+                        <span id="lobbyHostRoleBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            직접 참여 중 (청팀)
+                        </span>
+                    </div>
+                    <button type="button" id="lobbyToggleHostRoleBtn" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 transition cursor-pointer">
+                        관전 모드로 변경
+                    </button>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1">
+                    * 관전 모드로 전환하면 방장은 말을 두지 않고 사회자/선생님으로서 경기를 진행·관전합니다.
+                </p>
+            </div>
+
+            <!-- 진행·관전자 안내 (방장이 관전 중일 때 참가자 모두에게 표시) -->
+            <div id="lobbySpectatorSection" class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 mb-3 hidden flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2 text-amber-300 font-bold">
+                    <i class="fa-solid fa-eye"></i>
+                    <span>진행·관전자: <strong id="lobbySpectatorName" class="text-amber-200">-</strong></span>
+                </div>
+                <span class="text-[10px] bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full font-bold">진행·심판</span>
+            </div>
+
             <!-- 팀별 참가자 목록 -->
             <div class="mb-4">
                 <div class="flex items-center justify-between mb-2">
                     <span class="text-xs font-black text-slate-300">참가자 명단 (<span id="lobbyPlayerCount">0</span>명)</span>
-                    <button type="button" id="lobbySwitchTeamBtn" class="text-[11px] font-bold text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1 rounded-lg border border-amber-500/30 transition flex items-center gap-1 cursor-pointer">
-                        <i class="fa-solid fa-arrows-rotate"></i> 청 ↔ 백 팀 변경
-                    </button>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" id="lobbyAutoBalanceBtn" class="text-[11px] font-bold text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-2.5 py-1 rounded-lg border border-emerald-500/30 transition flex items-center gap-1 cursor-pointer hidden" title="양 팀 인원을 균등하게 자동 재배정합니다">
+                            <i class="fa-solid fa-scale-balanced"></i> 팀 균등 배정
+                        </button>
+                        <button type="button" id="lobbySwitchTeamBtn" class="text-[11px] font-bold text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1 rounded-lg border border-amber-500/30 transition flex items-center gap-1 cursor-pointer">
+                            <i class="fa-solid fa-arrows-rotate"></i> 청 ↔ 백 팀 변경
+                        </button>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-2.5">
@@ -1420,6 +1468,14 @@
             const lobbyWaitingNotice = document.getElementById('lobbyWaitingNotice');
             const lobbyLeaveBtn = document.getElementById('lobbyLeaveBtn');
             const closeLobbyTopBtn = document.getElementById('closeLobbyTopBtn');
+            const onlineHostParticipateWrapper = document.getElementById('onlineHostParticipateWrapper');
+            const onlineHostParticipateCheck = document.getElementById('onlineHostParticipateCheck');
+            const lobbyHostRoleSection = document.getElementById('lobbyHostRoleSection');
+            const lobbyHostRoleBadge = document.getElementById('lobbyHostRoleBadge');
+            const lobbyToggleHostRoleBtn = document.getElementById('lobbyToggleHostRoleBtn');
+            const lobbySpectatorSection = document.getElementById('lobbySpectatorSection');
+            const lobbySpectatorName = document.getElementById('lobbySpectatorName');
+            const lobbyAutoBalanceBtn = document.getElementById('lobbyAutoBalanceBtn');
 
             // 학생 학적 및 실명 입력 요소
             const studentGradeSelect = document.getElementById('studentGradeSelect');
@@ -1490,6 +1546,19 @@
             const joinOnlineRoomCodeInput = document.getElementById('joinOnlineRoomCodeInput');
             const joinOnlineRoomBtn = document.getElementById('joinOnlineRoomBtn');
             const leaveOnlineRoomBtn = document.getElementById('leaveOnlineRoomBtn');
+
+            // 팀전 모드일 때만 방장 게임 직접 참여 토글 박스 표시
+            if (onlineCreateModeSelect && onlineHostParticipateWrapper) {
+                const updateHostParticipateVisibility = () => {
+                    if (onlineCreateModeSelect.value === 'team') {
+                        onlineHostParticipateWrapper.classList.remove('hidden');
+                    } else {
+                        onlineHostParticipateWrapper.classList.add('hidden');
+                    }
+                };
+                onlineCreateModeSelect.addEventListener('change', updateHostParticipateVisibility);
+                updateHostParticipateVisibility();
+            }
 
             // 모드 탭 전환 (AI 컴퓨터 대전 vs 실시간 온라인 멀티)
             const modeTabs = document.querySelectorAll('.mode-tab-btn');
@@ -1803,6 +1872,7 @@
                     const mode = onlineCreateModeSelect.value;
                     const pieceCount = parseInt(onlineCreatePieceCountSelect.value, 10);
                     const grade = document.getElementById('gradeSelect').value;
+                    const hostParticipates = (mode === 'team') ? (onlineHostParticipateCheck ? onlineHostParticipateCheck.checked : true) : true;
 
                     try {
                         createOnlineRoomBtn.disabled = true;
@@ -1814,7 +1884,8 @@
                             studentNum: sNum,
                             mode,
                             pieceCount,
-                            gradeFilter: grade
+                            gradeFilter: grade,
+                            hostParticipates
                         });
                         if (reconnectBanner) reconnectBanner.classList.add('hidden');
                         onlineLobbyModal.classList.remove('hidden');
@@ -1907,6 +1978,34 @@
                 });
             }
 
+            // 4-1. 방장 역할 전환 버튼 (직접 플레이어 ↔ 진행·관전)
+            if (lobbyToggleHostRoleBtn) {
+                lobbyToggleHostRoleBtn.addEventListener('click', async () => {
+                    try {
+                        lobbyToggleHostRoleBtn.disabled = true;
+                        await multiplayerManager.toggleHostParticipation();
+                    } catch (e) {
+                        alert(e.message || "방장 역할 변경 실패");
+                    } finally {
+                        lobbyToggleHostRoleBtn.disabled = false;
+                    }
+                });
+            }
+
+            // 4-2. 팀 균등 자동 배정 버튼 (방장 전용)
+            if (lobbyAutoBalanceBtn) {
+                lobbyAutoBalanceBtn.addEventListener('click', async () => {
+                    try {
+                        lobbyAutoBalanceBtn.disabled = true;
+                        await multiplayerManager.autoBalanceTeams();
+                    } catch (e) {
+                        alert(e.message || "팀 균등 배정 실패");
+                    } finally {
+                        lobbyAutoBalanceBtn.disabled = false;
+                    }
+                });
+            }
+
             // 5. 방장의 게임 시작 버튼
             if (lobbyStartGameBtn) {
                 lobbyStartGameBtn.addEventListener('click', async () => {
@@ -1970,48 +2069,130 @@
                     lobbyRoomCodeDisplay.textContent = data.roomId;
 
                     const players = Object.values(data.players || {});
-                    lobbyPlayerCount.textContent = players.length;
+                    const nonSpectatorPlayers = players.filter(p => !p.isSpectator);
+                    const bluePlayers = players.filter(p => !p.isSpectator && p.team === 'blue');
+                    const whitePlayers = players.filter(p => !p.isSpectator && p.team === 'white');
+                    const spectatorPlayer = players.find(p => p.isSpectator);
 
-                    const bluePlayers = players.filter(p => p.team === 'blue');
-                    const whitePlayers = players.filter(p => p.team === 'white');
+                    const mySessionId = multiplayerManager.mySessionId;
+                    const isHost = (data.hostId === mySessionId);
+                    const isTeamMode = (data.mode === 'team');
+                    const myInfo = data.players ? data.players[mySessionId] : null;
+
+                    // 참가자 수 표시
+                    if (spectatorPlayer) {
+                        lobbyPlayerCount.textContent = `${nonSpectatorPlayers.length}명 (+진행자 1명)`;
+                    } else {
+                        lobbyPlayerCount.textContent = `${players.length}명`;
+                    }
 
                     lobbyBlueCountBadge.textContent = `${bluePlayers.length}명`;
                     lobbyWhiteCountBadge.textContent = `${whitePlayers.length}명`;
 
-                    const mySessionId = multiplayerManager.mySessionId;
+                    // 진행·관전자 영역 표시
+                    if (lobbySpectatorSection && lobbySpectatorName) {
+                        if (spectatorPlayer) {
+                            lobbySpectatorSection.classList.remove('hidden');
+                            lobbySpectatorName.textContent = spectatorPlayer.name + (spectatorPlayer.id === mySessionId ? ' (나)' : '');
+                        } else {
+                            lobbySpectatorSection.classList.add('hidden');
+                        }
+                    }
 
-                    // 청팀 리스트 렌더링
+                    // 방장 전용 팀전 컨트롤 및 역할 토글 영역
+                    if (isHost && isTeamMode) {
+                        if (lobbyHostRoleSection) lobbyHostRoleSection.classList.remove('hidden');
+                        if (lobbyAutoBalanceBtn) lobbyAutoBalanceBtn.classList.remove('hidden');
+
+                        if (myInfo && myInfo.isSpectator) {
+                            if (lobbyHostRoleBadge) {
+                                lobbyHostRoleBadge.textContent = '진행·관전 모드 (사회자)';
+                                lobbyHostRoleBadge.className = 'text-xs font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40';
+                            }
+                            if (lobbyToggleHostRoleBtn) lobbyToggleHostRoleBtn.textContent = '선수로 직접 참여';
+                            if (lobbySwitchTeamBtn) lobbySwitchTeamBtn.classList.add('hidden');
+                        } else {
+                            const myTeamName = (myInfo && myInfo.team === 'blue') ? '청팀' : '백팀';
+                            if (lobbyHostRoleBadge) {
+                                lobbyHostRoleBadge.textContent = `직접 참여 중 (${myTeamName})`;
+                                lobbyHostRoleBadge.className = 'text-xs font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+                            }
+                            if (lobbyToggleHostRoleBtn) lobbyToggleHostRoleBtn.textContent = '관전 모드로 변경';
+                            if (lobbySwitchTeamBtn) lobbySwitchTeamBtn.classList.remove('hidden');
+                        }
+                    } else {
+                        if (lobbyHostRoleSection) lobbyHostRoleSection.classList.add('hidden');
+                        if (lobbyAutoBalanceBtn) lobbyAutoBalanceBtn.classList.add('hidden');
+                        if (myInfo && myInfo.isSpectator) {
+                            if (lobbySwitchTeamBtn) lobbySwitchTeamBtn.classList.add('hidden');
+                        } else {
+                            if (lobbySwitchTeamBtn) lobbySwitchTeamBtn.classList.remove('hidden');
+                        }
+                    }
+
+                    // 청팀 리스트 렌더링 (방장은 백팀 이동 버튼 제공)
                     lobbyBlueList.innerHTML = bluePlayers.map(p => {
                         const isMe = (p.id === mySessionId);
-                        const isHost = (p.id === data.hostId);
+                        const isPlayerHost = (p.id === data.hostId);
+                        const hostAssignBtn = (isHost && isTeamMode)
+                            ? `<button type="button" class="btn-host-assign-team px-2 py-0.5 text-[10px] font-bold rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 cursor-pointer ml-1 transition" data-uid="${p.id}" data-target="white" title="백팀으로 이동">백팀 →</button>`
+                            : '';
                         return `
                             <li class="flex items-center justify-between p-2 rounded-xl bg-blue-950/60 border border-blue-500/30 text-xs">
-                                <span class="font-bold text-blue-200 flex items-center gap-1.5">
-                                    ${isHost ? '<i class="fa-solid fa-crown text-amber-400 text-xs" title="방장"></i>' : '<i class="fa-solid fa-user text-blue-400 text-xs"></i>'}
-                                    ${p.name} ${isMe ? '<span class="text-[10px] text-amber-400 font-black">(나)</span>' : ''}
+                                <span class="font-bold text-blue-200 flex items-center gap-1.5 truncate">
+                                    ${isPlayerHost ? '<i class="fa-solid fa-crown text-amber-400 text-xs shrink-0" title="방장"></i>' : '<i class="fa-solid fa-user text-blue-400 text-xs shrink-0"></i>'}
+                                    <span class="truncate">${p.name}</span> ${isMe ? '<span class="text-[10px] text-amber-400 font-black shrink-0">(나)</span>' : ''}
                                 </span>
-                                <span class="text-[10px] font-bold text-blue-300">청팀</span>
+                                <div class="flex items-center gap-1 shrink-0">
+                                    <span class="text-[10px] font-bold text-blue-300">청팀</span>
+                                    ${hostAssignBtn}
+                                </div>
                             </li>
                         `;
                     }).join('') || '<li class="text-slate-500 text-center py-4 text-[11px]">참가자 대기 중...</li>';
 
-                    // 백팀 리스트 렌더링
+                    // 백팀 리스트 렌더링 (방장은 청팀 이동 버튼 제공)
                     lobbyWhiteList.innerHTML = whitePlayers.map(p => {
                         const isMe = (p.id === mySessionId);
-                        const isHost = (p.id === data.hostId);
+                        const isPlayerHost = (p.id === data.hostId);
+                        const hostAssignBtn = (isHost && isTeamMode)
+                            ? `<button type="button" class="btn-host-assign-team px-2 py-0.5 text-[10px] font-bold rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/40 cursor-pointer mr-1 transition" data-uid="${p.id}" data-target="blue" title="청팀으로 이동">← 청팀</button>`
+                            : '';
                         return `
                             <li class="flex items-center justify-between p-2 rounded-xl bg-rose-950/60 border border-rose-500/30 text-xs">
-                                <span class="font-bold text-rose-200 flex items-center gap-1.5">
-                                    ${isHost ? '<i class="fa-solid fa-crown text-amber-400 text-xs" title="방장"></i>' : '<i class="fa-solid fa-user text-rose-400 text-xs"></i>'}
-                                    ${p.name} ${isMe ? '<span class="text-[10px] text-amber-400 font-black">(나)</span>' : ''}
+                                <div class="flex items-center gap-1 shrink-0">
+                                    ${hostAssignBtn}
+                                    <span class="text-[10px] font-bold text-rose-300">백팀</span>
+                                </div>
+                                <span class="font-bold text-rose-200 flex items-center gap-1.5 truncate">
+                                    <span class="truncate">${p.name}</span> ${isMe ? '<span class="text-[10px] text-amber-400 font-black shrink-0">(나)</span>' : ''}
+                                    ${isPlayerHost ? '<i class="fa-solid fa-crown text-amber-400 text-xs shrink-0" title="방장"></i>' : '<i class="fa-solid fa-user text-rose-400 text-xs shrink-0"></i>'}
                                 </span>
-                                <span class="text-[10px] font-bold text-rose-300">백팀</span>
                             </li>
                         `;
                     }).join('') || '<li class="text-slate-500 text-center py-4 text-[11px]">참가자 대기 중...</li>';
 
+                    // 방장의 팀 분류 버튼 이벤트 바인딩
+                    if (isHost && isTeamMode) {
+                        const assignBtns = onlineLobbyModal.querySelectorAll('.btn-host-assign-team');
+                        assignBtns.forEach(btn => {
+                            btn.addEventListener('click', async (e) => {
+                                e.stopPropagation();
+                                const targetUid = btn.getAttribute('data-uid');
+                                const targetTeam = btn.getAttribute('data-target');
+                                if (!targetUid || !targetTeam) return;
+                                try {
+                                    btn.disabled = true;
+                                    await multiplayerManager.assignPlayerTeam(targetUid, targetTeam);
+                                } catch (err) {
+                                    alert(err.message || "팀 변경 실패");
+                                    btn.disabled = false;
+                                }
+                            });
+                        });
+                    }
+
                     // 방장 vs 참가자 버튼 분기
-                    const isHost = (data.hostId === mySessionId);
                     if (isHost) {
                         lobbyStartGameBtn.classList.remove('hidden');
                         lobbyWaitingNotice.classList.add('hidden');

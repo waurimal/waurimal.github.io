@@ -2003,8 +2003,8 @@
             this._lastHandledActionTimestamp = 0;
 
             const players = Object.values(roomData.players || {});
-            const bluePlayers = players.filter(p => p.team === 'blue');
-            const whitePlayers = players.filter(p => p.team === 'white');
+            const bluePlayers = players.filter(p => !p.isSpectator && p.team === 'blue');
+            const whitePlayers = players.filter(p => !p.isSpectator && p.team === 'white');
 
             this.teams = [
                 {
@@ -2129,11 +2129,11 @@
             const isMyTurn = (roomData.currentTurnId === mySessionId);
             const isRemoteAction = Boolean(roomData.lastAction && roomData.lastAction.actorId !== mySessionId);
 
-            // 플레이어 명단 및 UID 실시간 동기화 (재접속/세션 마이그레이션 반영)
+            // 플레이어 명단 및 UID 실시간 동기화 (재접속/세션 마이그레이션 반영, 관전자 제외)
             if (roomData.players) {
                 const players = Object.values(roomData.players);
-                const bluePlayers = players.filter(p => p.team === 'blue');
-                const whitePlayers = players.filter(p => p.team === 'white');
+                const bluePlayers = players.filter(p => !p.isSpectator && p.team === 'blue');
+                const whitePlayers = players.filter(p => !p.isSpectator && p.team === 'white');
                 if (this.teams[0]) {
                     this.teams[0].players = bluePlayers.map(p => p.name || '청팀 플레이어');
                     this.teams[0].playerUids = bluePlayers.map(p => p.id);
@@ -2148,9 +2148,14 @@
             if (this.dom.activeMyRoleText && window.YutnoriMultiplayer) {
                 const myInfo = window.YutnoriMultiplayer.getMyPlayerInfo();
                 if (myInfo) {
-                    const teamName = myInfo.team === 'blue' ? '청팀' : '백팀';
-                    this.dom.activeMyRoleText.textContent = `${teamName} (${myInfo.name})`;
-                    this.dom.activeMyRoleText.className = `font-black ml-1 ${myInfo.team === 'blue' ? 'text-blue-400' : 'text-rose-400'}`;
+                    if (myInfo.isSpectator || myInfo.team === 'spectator') {
+                        this.dom.activeMyRoleText.textContent = `진행·관전 (방장: ${myInfo.name})`;
+                        this.dom.activeMyRoleText.className = 'font-black ml-1 text-amber-400';
+                    } else {
+                        const teamName = myInfo.team === 'blue' ? '청팀' : '백팀';
+                        this.dom.activeMyRoleText.textContent = `${teamName} (${myInfo.name})`;
+                        this.dom.activeMyRoleText.className = `font-black ml-1 ${myInfo.team === 'blue' ? 'text-blue-400' : 'text-rose-400'}`;
+                    }
                 }
             }
 
@@ -2377,8 +2382,10 @@
             if (this.isOnline) {
                 const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
                 const isMyTurn = (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId);
+                const myInfo = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.getMyPlayerInfo) ? window.YutnoriMultiplayer.getMyPlayerInfo() : null;
+                const isSpectator = myInfo && (myInfo.isSpectator || myInfo.team === 'spectator');
 
-                if (isMyTurn && this.gameState === 'WAIT_ROLL') {
+                if (isMyTurn && this.gameState === 'WAIT_ROLL' && !isSpectator) {
                     this.dom.rollBtn.disabled = false;
                     this.dom.rollBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                     this.dom.rollBtn.innerHTML = '<i class="fa-solid fa-dice mr-2"></i> 내 차례! 윷 던지기';
@@ -2389,7 +2396,11 @@
                         ? this.currentRoomData.players[this.currentRoomData.currentTurnId] 
                         : null;
                     const name = currentTurnPlayer ? currentTurnPlayer.name : '상대방';
-                    this.dom.rollBtn.innerHTML = `<i class="fa-solid fa-hourglass-half mr-2"></i> ${name}님의 차례...`;
+                    if (isSpectator) {
+                        this.dom.rollBtn.innerHTML = `<i class="fa-solid fa-eye mr-2 text-amber-400"></i> [진행·관전] ${name}님의 차례...`;
+                    } else {
+                        this.dom.rollBtn.innerHTML = `<i class="fa-solid fa-hourglass-half mr-2"></i> ${name}님의 차례...`;
+                    }
                 }
                 return;
             }
@@ -2422,9 +2433,14 @@
                 if (this.isOnline) {
                     const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
                     const isMyTurn = (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId);
+                    const myInfo = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.getMyPlayerInfo) ? window.YutnoriMultiplayer.getMyPlayerInfo() : null;
+                    const isSpectator = myInfo && (myInfo.isSpectator || myInfo.team === 'spectator');
 
                     if (isMyTurn) {
                         this.dom.turnPlayerName.textContent = `🎯 내 차례입니다 (${playerName})`;
+                        if (this.dom.remoteTurnNotice) this.dom.remoteTurnNotice.classList.add('hidden');
+                    } else if (isSpectator) {
+                        this.dom.turnPlayerName.textContent = `👀 [진행·관전] ${playerName}님의 차례입니다`;
                         if (this.dom.remoteTurnNotice) this.dom.remoteTurnNotice.classList.add('hidden');
                     } else {
                         this.dom.turnPlayerName.textContent = `⏳ ${playerName}님의 차례`;
@@ -2734,8 +2750,9 @@
                     ((this.selectedPiece.teamId !== undefined ? this.selectedPiece.teamId : (this.selectedPiece.team === 'white' ? 1 : 0)) === topTeamId) && 
                     piecesAtLocation.some(p => p.id === this.selectedPiece.id));
 
+                const isCurrentTeamTop = (currentTeam && topTeamId === currentTeam.id);
                 const pieceEl = document.createElement('div');
-                pieceEl.className = `yut-piece team-${topTeamId} ${isSelectable ? 'selectable' : ''} ${isSelected ? 'selected' : ''}`;
+                pieceEl.className = `yut-piece team-${topTeamId} ${isSelectable ? 'selectable' : ''} ${isSelected ? 'selected' : ''} ${!isCurrentTeamTop ? 'cursor-not-allowed enemy-piece' : ''}`;
                 pieceEl.style.left = `${nodeInfo.x}%`;
                 pieceEl.style.top = `${nodeInfo.y}%`;
                 pieceEl.style.transform = 'translate(-50%, -50%)';
@@ -2748,14 +2765,20 @@
                     badge.className = 'stacked-badge';
                     badge.textContent = `x${totalStacked}`;
                     pieceEl.appendChild(badge);
-                    pieceEl.title = `[${topTeam.name}] 업힌 말 (${piecesAtLocation.map(p => '#' + (p.id + 1)).join(', ')}) x${totalStacked}`;
+                    pieceEl.title = !isCurrentTeamTop
+                        ? `[${topTeam.name}] 상대방 말 (${piecesAtLocation.map(p => '#' + (p.id + 1)).join(', ')}) x${totalStacked} (선택 불가)`
+                        : `[${topTeam.name}] 업힌 말 (${piecesAtLocation.map(p => '#' + (p.id + 1)).join(', ')}) x${totalStacked}`;
                 } else {
-                    pieceEl.title = `[${topTeam.name}] 말 #${topPiece.id + 1}`;
+                    pieceEl.title = !isCurrentTeamTop
+                        ? `[${topTeam.name}] 상대방 말 #${topPiece.id + 1} (선택 불가)`
+                        : `[${topTeam.name}] 말 #${topPiece.id + 1}`;
                 }
 
-                // 항상 클릭 이벤트 리스너를 바인딩하여 무응답 현상 원천 차단
+                // 클릭 이벤트 바인딩 (컴퓨터 턴일 때 사용자 클릭 차단)
                 pieceEl.addEventListener('click', (e) => {
                     e.stopPropagation();
+                    const curTeam = this.getCurrentTeam();
+                    if (!this.isOnline && curTeam && curTeam.isAI) return;
                     this.onPieceSelected(topPiece);
                 });
 
@@ -2809,9 +2832,11 @@
                     pBtn.textContent = p.id + 1;
                     pBtn.title = `${team.name} 대기 말 #${p.id + 1} (개별 출발 대기)`;
 
-                    // 항상 클릭 이벤트 리스너를 연결하여 언제든 안전하게 반응하도록 보장
+                    // 클릭 이벤트 바인딩 (컴퓨터 턴일 때 사용자 클릭 차단)
                     pBtn.addEventListener('click', (e) => {
                         e.stopPropagation();
+                        const curTeam = this.getCurrentTeam();
+                        if (!this.isOnline && curTeam && curTeam.isAI) return;
                         this.onPieceSelected(p);
                     });
                     piecesWrapper.appendChild(pBtn);
@@ -2838,10 +2863,20 @@
             }
 
             const currentTeam = this.getCurrentTeam();
-            const pieceTeamId = (piece.teamId !== undefined) ? piece.teamId : (piece.team === 'white' ? 1 : 0);
-            const isCurrentTeamPiece = (pieceTeamId === currentTeam.id) || 
-                                       (piece.team === currentTeam.key) ||
-                                       (currentTeam.pieces && currentTeam.pieces.some(p => p.id === piece.id));
+            if (!currentTeam) return;
+
+            // 말 소속 팀 엄격 검증:
+            // 1) piece.teamId 또는 piece.team이 currentTeam과 일치해야 함
+            // 2) piece 객체 자체가 currentTeam.pieces 배열에 속해 있거나 동일 ID의 아군 말이어야 함
+            // ※ 주의: 단순히 p.id === piece.id로만 비교하면 모든 팀이 말 번호(0~3)를 공유하므로
+            // 상대방 말이 선택되어 다시 던지게 되는 심각한 버그(무한 턴/말 가로채기)가 발생함.
+            const pieceTeamId = (piece.teamId !== undefined) ? piece.teamId : (piece.team === 'white' ? 1 : (piece.team === 'blue' ? 0 : -1));
+            const isTeamMatch = (pieceTeamId === currentTeam.id) && (!piece.team || piece.team === currentTeam.key);
+            const isOwnedPiece = Array.isArray(currentTeam.pieces) && (
+                currentTeam.pieces.includes(piece) ||
+                currentTeam.pieces.some(p => p === piece || (p.id === piece.id && (p.teamId === currentTeam.id || p.team === currentTeam.key)))
+            );
+            const isCurrentTeamPiece = isTeamMatch && isOwnedPiece;
 
             if (!isCurrentTeamPiece) {
                 this.logMessage(`⚠️ 자신의 팀(${currentTeam.name}) 말만 선택할 수 있습니다.`);
@@ -3269,7 +3304,11 @@
             // A. 적군 말 잡기!
             const enemies = this.teams.filter(t => t.id !== currentTeam.id);
             enemies.forEach(enemyTeam => {
-                const caughtList = enemyTeam.pieces.filter(ep => !ep.isGoal && !ep.isHome && ep.pos === targetNode);
+                // 이동 중인 말 묶음(movingGroup)은 절대 스스로를 잡을 수 없음
+                const caughtList = enemyTeam.pieces.filter(ep => 
+                    !ep.isGoal && !ep.isHome && ep.pos === targetNode &&
+                    !movingGroup.some(mp => mp === ep || (mp.teamId === ep.teamId && mp.id === ep.id))
+                );
                 if (caughtList.length > 0) {
                     caughtEnemy = true;
                     totalCaught += caughtList.length;

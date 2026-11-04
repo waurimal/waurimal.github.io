@@ -141,13 +141,15 @@ class YutnoriMultiplayerManager {
     // ==========================================
     // 1. 방 만들기 (Host)
     // ==========================================
-    async createRoom({ hostName, grade = 6, classNum = 1, studentNum = 1, mode = '1v1', pieceCount = 4, gradeFilter = 'all' }) {
+    async createRoom({ hostName, grade = 6, classNum = 1, studentNum = 1, mode = '1v1', pieceCount = 4, gradeFilter = 'all', hostParticipates = true }) {
         const cleanName = (hostName || '').trim();
         if (!cleanName) {
             throw new Error("닉네임 대신 학생 본인의 실명을 입력해주세요.");
         }
         const code = this.generateRoomCode();
         const roomRef = doc(db, ROOMS_COLLECTION, code);
+
+        const isHostPlaying = (mode === 'team') ? Boolean(hostParticipates) : true;
 
         const initialRoom = {
             roomId: code,
@@ -156,6 +158,7 @@ class YutnoriMultiplayerManager {
             pieceCount: pieceCount,
             grade: gradeFilter,
             hostId: this.mySessionId,
+            hostParticipates: isHostPlaying,
             players: {
                 [this.mySessionId]: {
                     id: this.mySessionId,
@@ -163,14 +166,15 @@ class YutnoriMultiplayerManager {
                     grade: Number(grade) || 6,
                     classNum: Number(classNum) || 1,
                     studentNum: Number(studentNum) || 1,
-                    team: 'blue', // 청팀 기본 배정
+                    team: isHostPlaying ? 'blue' : 'spectator',
+                    isSpectator: !isHostPlaying,
                     isHost: true,
                     joinedAt: Date.now()
                 }
             },
-            turnOrder: [this.mySessionId],
+            turnOrder: isHostPlaying ? [this.mySessionId] : [],
             currentTurnIndex: 0,
-            currentTurnId: this.mySessionId,
+            currentTurnId: isHostPlaying ? this.mySessionId : null,
             currentTeam: 'blue',
             
             // 인게임 동기화 데이터
@@ -400,19 +404,20 @@ class YutnoriMultiplayerManager {
             }
         } else {
             // 신규 참가자 입장
-            if (data.mode === '1v1' && existingPlayers.length >= 2) {
+            const activePlayers = existingPlayers.filter(p => !p.isSpectator);
+            if (data.mode === '1v1' && activePlayers.length >= 2) {
                 throw new Error("1:1 대전 방 정원(2명)이 이미 찼습니다.");
             }
-            if (data.mode === 'team' && existingPlayers.length >= 8) {
+            if (data.mode === 'team' && activePlayers.length >= 8) {
                 throw new Error("팀전 방 정원(최대 8명)이 찼습니다.");
             }
 
-            // 팀 균형 배정: 청팀 수와 백팀 수 비교하여 적은 쪽에 자동 배정
+            // 팀 균형 배정: 청팀 수와 백팀 수 비교하여 적은 쪽에 자동 배정 (관전자 제외)
             let blueCount = 0;
             let whiteCount = 0;
             existingPlayers.forEach(p => {
-                if (p.team === 'blue') blueCount++;
-                else whiteCount++;
+                if (!p.isSpectator && p.team === 'blue') blueCount++;
+                else if (!p.isSpectator && p.team === 'white') whiteCount++;
             });
             const assignedTeam = (blueCount <= whiteCount) ? 'blue' : 'white';
 
@@ -423,6 +428,7 @@ class YutnoriMultiplayerManager {
                 classNum: sClass,
                 studentNum: sNum,
                 team: assignedTeam,
+                isSpectator: false,
                 isHost: false,
                 joinedAt: Date.now(),
                 lastSeen: Date.now()
@@ -455,12 +461,16 @@ class YutnoriMultiplayerManager {
     }
 
     // ==========================================
-    // 3. 팀 변경 (청팀 <-> 백팀)
+    // 3. 팀 변경 & 방장 팀 관리 (팀 분류 / 자동 배정 / 방장 관전 전환)
     // ==========================================
+
+    /**
+     * 본인 팀 변경 (청팀 <-> 백팀)
+     */
     async switchTeam() {
         if (!this.currentRoomId || !this.roomData) return;
         const myInfo = this.getMyPlayerInfo();
-        if (!myInfo) return;
+        if (!myInfo || myInfo.isSpectator) return;
 
         const nextTeam = (myInfo.team === 'blue') ? 'white' : 'blue';
         const roomRef = doc(db, ROOMS_COLLECTION, this.currentRoomId);
@@ -469,6 +479,95 @@ class YutnoriMultiplayerManager {
             [`players.${this.mySessionId}.team`]: nextTeam,
             updatedAt: Date.now()
         });
+    }
+
+    /**
+     * 방장이 참가자의 팀을 직접 지정 (팀 분류 기능)
+     */
+    async assignPlayerTeam(playerId, targetTeam) {
+        if (!this.currentRoomId || !this.roomData) return;
+        if (this.roomData.hostId !== this.mySessionId) {
+            throw new Error("방장만 참가자의 팀을 변경할 수 있습니다.");
+        }
+        if (this.roomData.status !== 'lobby') return;
+        if (targetTeam !== 'blue' && targetTeam !== 'white') return;
+
+        const targetPlayer = this.roomData.players ? this.roomData.players[playerId] : null;
+        if (!targetPlayer) return;
+
+        const roomRef = doc(db, ROOMS_COLLECTION, this.currentRoomId);
+        await updateDoc(roomRef, {
+            [`players.${playerId}.team`]: targetTeam,
+            [`players.${playerId}.isSpectator`]: false,
+            updatedAt: Date.now()
+        });
+    }
+
+    /**
+     * 방장의 팀 자동 균등 배정 (셔플 배정)
+     */
+    async autoBalanceTeams() {
+        if (!this.currentRoomId || !this.roomData) return;
+        if (this.roomData.hostId !== this.mySessionId) {
+            throw new Error("방장만 팀을 자동 배정할 수 있습니다.");
+        }
+        if (this.roomData.status !== 'lobby') return;
+
+        const allPlayers = Object.values(this.roomData.players || {});
+        // 관전 중인 방장은 자동 배정 대상에서 제외
+        const eligiblePlayers = allPlayers.filter(p => !p.isSpectator && p.team !== 'spectator');
+        if (eligiblePlayers.length === 0) return;
+
+        // 랜덤 셔플
+        const shuffled = [...eligiblePlayers].sort(() => Math.random() - 0.5);
+        const updates = { updatedAt: Date.now() };
+
+        shuffled.forEach((p, idx) => {
+            const targetTeam = (idx % 2 === 0) ? 'blue' : 'white';
+            updates[`players.${p.id}.team`] = targetTeam;
+            updates[`players.${p.id}.isSpectator`] = false;
+        });
+
+        const roomRef = doc(db, ROOMS_COLLECTION, this.currentRoomId);
+        await updateDoc(roomRef, updates);
+    }
+
+    /**
+     * 방장의 게임 참여 / 관전 모드 전환 (팀전 시)
+     */
+    async toggleHostParticipation() {
+        if (!this.currentRoomId || !this.roomData) return;
+        if (this.roomData.hostId !== this.mySessionId) return;
+        if (this.roomData.status !== 'lobby') return;
+
+        const hostPlayer = this.roomData.players ? this.roomData.players[this.mySessionId] : null;
+        if (!hostPlayer) return;
+
+        const currentlySpectating = Boolean(hostPlayer.isSpectator || hostPlayer.team === 'spectator');
+        const roomRef = doc(db, ROOMS_COLLECTION, this.currentRoomId);
+
+        if (currentlySpectating) {
+            // 관전 -> 선수 참여: 참가자가 더 적은 팀으로 자동 배정
+            const otherPlayers = Object.values(this.roomData.players || {}).filter(p => p.id !== this.mySessionId && !p.isSpectator);
+            let blueCount = otherPlayers.filter(p => p.team === 'blue').length;
+            let whiteCount = otherPlayers.filter(p => p.team === 'white').length;
+            const assignedTeam = (blueCount <= whiteCount) ? 'blue' : 'white';
+
+            await updateDoc(roomRef, {
+                [`players.${this.mySessionId}.team`]: assignedTeam,
+                [`players.${this.mySessionId}.isSpectator`]: false,
+                hostParticipates: true,
+                updatedAt: Date.now()
+            });
+        } else {
+            // 선수 참여 -> 관전 모드로 전환
+            await updateDoc(roomRef, {
+                [`players.${this.mySessionId}.team`]: 'spectator',
+                [`players.${this.mySessionId}.isSpectator`]: true,
+                hostParticipates: false,
+                updatedAt: Date.now()
+            });
+        }
     }
 
     // ==========================================
@@ -481,8 +580,8 @@ class YutnoriMultiplayerManager {
         }
 
         const players = Object.values(this.roomData.players || {});
-        const bluePlayers = players.filter(p => p.team === 'blue');
-        const whitePlayers = players.filter(p => p.team === 'white');
+        const bluePlayers = players.filter(p => p.team === 'blue' && !p.isSpectator);
+        const whitePlayers = players.filter(p => p.team === 'white' && !p.isSpectator);
 
         if (bluePlayers.length === 0 || whitePlayers.length === 0) {
             throw new Error("청팀과 백팀에 각각 최소 1명 이상 참가해야 시작할 수 있습니다.");
