@@ -200,14 +200,14 @@
                                 <div class="text-xs font-black text-amber-400 mb-1 flex items-center gap-1.5">
                                     <i class="fa-solid fa-plus-circle"></i> 새 방 만들기 (내가 방장)
                                 </div>
-                                <p class="text-[11px] text-slate-400 mb-3">4자리 코드를 발급받아 친구들에게 공유하여 함께 플레이합니다.</p>
+                                <p class="text-[11px] text-slate-400 mb-3">4자리 코드를 발급받아 친구들에게 공유하여 함께 플레이합니다. (팀전 시 인원 제한 없이 학급 전체 참여 가능)</p>
                                 
                                 <div class="grid grid-cols-2 gap-2 mb-3">
                                     <div>
                                         <span class="text-[10px] text-slate-400 font-bold block mb-1">대전 유형</span>
                                         <select id="onlineCreateModeSelect" class="w-full px-2.5 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white">
-                                            <option value="1v1" selected>1:1 대전 (2인)</option>
-                                            <option value="team">팀전 (청팀 vs 백팀 다수)</option>
+                                            <option value="team" selected>팀전 (청팀 vs 백팀 · 학급 전체 무제한)</option>
+                                            <option value="1v1">1:1 대전 (2인)</option>
                                         </select>
                                     </div>
                                     <div>
@@ -630,7 +630,7 @@
     <!-- 모달 1-B: 실시간 온라인 대기실 모달 (방 코드 공유 & 팀 배정) -->
     <!-- ============================================================== -->
     <div id="onlineLobbyModal" class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 hidden backdrop-blur-md">
-        <div class="bg-slate-900 border-2 border-emerald-500/60 rounded-3xl max-w-md w-full p-6 shadow-2xl overflow-y-auto max-h-[92vh] relative">
+        <div class="bg-slate-900 border-2 border-emerald-500/60 rounded-3xl max-w-lg sm:max-w-xl w-full p-6 shadow-2xl overflow-y-auto max-h-[92vh] relative">
             <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
                 <div class="flex items-center gap-2">
                     <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm font-bold border border-emerald-500/40">
@@ -638,7 +638,7 @@
                     </span>
                     <div>
                         <h3 class="font-black text-lg text-emerald-400">온라인 대기실</h3>
-                        <p class="text-[11px] text-slate-400">참가자들이 모두 들어오면 시작하세요</p>
+                        <p class="text-[11px] text-slate-400">참가자들이 모두 들어오면 시작하세요 (인원 제한 없이 반 전체 참여 가능)</p>
                     </div>
                 </div>
                 <button id="closeLobbyTopBtn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center cursor-pointer">
@@ -712,7 +712,7 @@
                             </span>
                             <span id="lobbyBlueCountBadge" class="text-[10px] font-bold text-blue-300 bg-blue-500/20 px-1.5 py-0.2 rounded-full">0명</span>
                         </div>
-                        <ul id="lobbyBlueList" class="flex flex-col gap-1.5 min-h-[70px] text-xs">
+                        <ul id="lobbyBlueList" class="flex flex-col gap-1.5 min-h-[70px] max-h-60 sm:max-h-72 overflow-y-auto custom-scrollbar pr-1 text-xs">
                             <li class="text-slate-500 text-center py-4 text-[11px]">대기 중...</li>
                         </ul>
                     </div>
@@ -725,11 +725,14 @@
                             </span>
                             <span id="lobbyWhiteCountBadge" class="text-[10px] font-bold text-rose-300 bg-rose-500/20 px-1.5 py-0.2 rounded-full">0명</span>
                         </div>
-                        <ul id="lobbyWhiteList" class="flex flex-col gap-1.5 min-h-[70px] text-xs">
+                        <ul id="lobbyWhiteList" class="flex flex-col gap-1.5 min-h-[70px] max-h-60 sm:max-h-72 overflow-y-auto custom-scrollbar pr-1 text-xs">
                             <li class="text-slate-500 text-center py-4 text-[11px]">대기 중...</li>
                         </ul>
                     </div>
                 </div>
+                <p class="text-[10px] text-slate-400 mt-2 text-center">
+                    * 팀전은 학급 전체 인원 제한 없이 모두 참여할 수 있습니다. 방장은 '팀 균등 배정'으로 한 번에 반을 나눌 수 있습니다.
+                </p>
             </div>
 
             <!-- 하단 액션 버튼 -->
@@ -862,7 +865,7 @@
                         🏆 명예의 전당 반영 완료
                     </span>
                 </div>
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto max-h-60 overflow-y-auto custom-scrollbar">
                     <table class="w-full text-xs">
                         <thead>
                             <tr class="text-slate-400 border-b border-slate-800 text-center font-bold text-[11px]">
@@ -1408,14 +1411,14 @@
         <span>교사 모드</span>
     </button>
 
-    <!-- 스크립트 연결 -->
-    <script src="questions.js"></script>
-    <script src="game.js"></script>
-    <script type="module" src="multiplayer.js"></script>
+    <!-- 스크립트 연결 (캐시 무효화 버전 쿼리 파라미터 적용) -->
+    <script src="questions.js?v=20261105_unlimited"></script>
+    <script src="game.js?v=20261105_unlimited"></script>
+    <script type="module" src="multiplayer.js?v=20261105_unlimited"></script>
 
     <!-- UI 화면 전환 및 온라인 멀티 제어 스크립트 -->
     <script type="module">
-        import { multiplayerManager } from './multiplayer.js';
+        import { multiplayerManager } from './multiplayer.js?v=20261105_unlimited';
 
         // 전역 화면 전환 함수 (home: 첫화면 설정/명예의전당, game: 몰입형 게임화면)
         window.showScreen = function(screenId) {
@@ -2134,6 +2137,7 @@
                     lobbyBlueList.innerHTML = bluePlayers.map(p => {
                         const isMe = (p.id === mySessionId);
                         const isPlayerHost = (p.id === data.hostId);
+                        const studentNumBadge = (p.studentNum) ? `<span class="text-[10px] text-blue-300/80 font-normal">(${p.studentNum}번)</span>` : '';
                         const hostAssignBtn = (isHost && isTeamMode)
                             ? `<button type="button" class="btn-host-assign-team px-2 py-0.5 text-[10px] font-bold rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 cursor-pointer ml-1 transition" data-uid="${p.id}" data-target="white" title="백팀으로 이동">백팀 →</button>`
                             : '';
@@ -2141,7 +2145,7 @@
                             <li class="flex items-center justify-between p-2 rounded-xl bg-blue-950/60 border border-blue-500/30 text-xs">
                                 <span class="font-bold text-blue-200 flex items-center gap-1.5 truncate">
                                     ${isPlayerHost ? '<i class="fa-solid fa-crown text-amber-400 text-xs shrink-0" title="방장"></i>' : '<i class="fa-solid fa-user text-blue-400 text-xs shrink-0"></i>'}
-                                    <span class="truncate">${p.name}</span> ${isMe ? '<span class="text-[10px] text-amber-400 font-black shrink-0">(나)</span>' : ''}
+                                    <span class="truncate">${p.name}</span> ${studentNumBadge} ${isMe ? '<span class="text-[10px] text-amber-400 font-black shrink-0">(나)</span>' : ''}
                                 </span>
                                 <div class="flex items-center gap-1 shrink-0">
                                     <span class="text-[10px] font-bold text-blue-300">청팀</span>
@@ -2155,6 +2159,7 @@
                     lobbyWhiteList.innerHTML = whitePlayers.map(p => {
                         const isMe = (p.id === mySessionId);
                         const isPlayerHost = (p.id === data.hostId);
+                        const studentNumBadge = (p.studentNum) ? `<span class="text-[10px] text-rose-300/80 font-normal">(${p.studentNum}번)</span>` : '';
                         const hostAssignBtn = (isHost && isTeamMode)
                             ? `<button type="button" class="btn-host-assign-team px-2 py-0.5 text-[10px] font-bold rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/40 cursor-pointer mr-1 transition" data-uid="${p.id}" data-target="blue" title="청팀으로 이동">← 청팀</button>`
                             : '';
@@ -2165,7 +2170,7 @@
                                     <span class="text-[10px] font-bold text-rose-300">백팀</span>
                                 </div>
                                 <span class="font-bold text-rose-200 flex items-center gap-1.5 truncate">
-                                    <span class="truncate">${p.name}</span> ${isMe ? '<span class="text-[10px] text-amber-400 font-black shrink-0">(나)</span>' : ''}
+                                    <span class="truncate">${p.name}</span> ${studentNumBadge} ${isMe ? '<span class="text-[10px] text-amber-400 font-black shrink-0">(나)</span>' : ''}
                                     ${isPlayerHost ? '<i class="fa-solid fa-crown text-amber-400 text-xs shrink-0" title="방장"></i>' : '<i class="fa-solid fa-user text-rose-400 text-xs shrink-0"></i>'}
                                 </span>
                             </li>

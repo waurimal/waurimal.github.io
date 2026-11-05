@@ -2425,7 +2425,10 @@
             const playerName = this.getCurrentPlayerName();
 
             if (this.dom.turnTeamName) {
-                this.dom.turnTeamName.textContent = currentTeam.name;
+                const teamMemberCount = (this.isOnline && currentTeam.players && currentTeam.players.length > 1) 
+                    ? ` (${currentTeam.players.length}명)` 
+                    : '';
+                this.dom.turnTeamName.textContent = `${currentTeam.name}${teamMemberCount}`;
                 this.dom.turnTeamName.className = `font-black text-lg ${currentTeam.id === 0 ? 'text-blue-500' : 'text-rose-500'}`;
             }
 
@@ -2440,10 +2443,10 @@
                         this.dom.turnPlayerName.textContent = `🎯 내 차례입니다 (${playerName})`;
                         if (this.dom.remoteTurnNotice) this.dom.remoteTurnNotice.classList.add('hidden');
                     } else if (isSpectator) {
-                        this.dom.turnPlayerName.textContent = `👀 [진행·관전] ${playerName}님의 차례입니다`;
+                        this.dom.turnPlayerName.textContent = `👀 [진행·관전] ${playerName}님의 차례 (${currentTeam.name})`;
                         if (this.dom.remoteTurnNotice) this.dom.remoteTurnNotice.classList.add('hidden');
                     } else {
-                        this.dom.turnPlayerName.textContent = `⏳ ${playerName}님의 차례`;
+                        this.dom.turnPlayerName.textContent = `⏳ ${playerName}님의 차례 (${currentTeam.name})`;
                         if (this.dom.remoteTurnNotice) {
                             this.dom.remoteTurnNotice.classList.remove('hidden');
                             if (this.dom.remoteTurnNoticeText) {
@@ -2462,13 +2465,16 @@
                 this.teams.forEach(team => {
                     const goalCount = team.pieces.filter(p => p.isGoal).length;
                     const isCurrent = (team.id === currentTeam.id);
+                    const memberCountText = (this.isOnline && team.players && team.players.length > 0)
+                        ? `<span class="text-xs font-normal opacity-80">(${team.players.length}명)</span>`
+                        : '';
 
                     const teamCard = document.createElement('div');
                     teamCard.className = `p-3 rounded-2xl border-2 transition-all ${isCurrent ? 'bg-amber-50 border-amber-400 shadow-md scale-102' : 'bg-slate-800/80 border-slate-700 text-slate-200'}`;
 
                     teamCard.innerHTML = `
                         <div class="flex items-center justify-between mb-1">
-                            <span class="font-bold text-sm ${isCurrent ? 'text-amber-900' : 'text-white'}">${team.name}</span>
+                            <span class="font-bold text-sm ${isCurrent ? 'text-amber-900' : 'text-white'}">${team.name} ${memberCountText}</span>
                             <span class="text-xs px-2 py-0.5 rounded-full font-bold ${isCurrent ? 'bg-amber-200 text-amber-900' : 'bg-slate-700 text-slate-300'}">완주 ${goalCount}/${this.pieceCount}</span>
                         </div>
                         <div class="flex gap-1.5 items-center">

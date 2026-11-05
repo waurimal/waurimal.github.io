@@ -408,9 +408,7 @@ class YutnoriMultiplayerManager {
             if (data.mode === '1v1' && activePlayers.length >= 2) {
                 throw new Error("1:1 대전 방 정원(2명)이 이미 찼습니다.");
             }
-            if (data.mode === 'team' && activePlayers.length >= 8) {
-                throw new Error("팀전 방 정원(최대 8명)이 찼습니다.");
-            }
+            // 팀전(team)은 학급 전체가 참여할 수 있도록 인원 제한 없음 (무제한)
 
             // 팀 균형 배정: 청팀 수와 백팀 수 비교하여 적은 쪽에 자동 배정 (관전자 제외)
             let blueCount = 0;
@@ -587,12 +585,12 @@ class YutnoriMultiplayerManager {
             throw new Error("청팀과 백팀에 각각 최소 1명 이상 참가해야 시작할 수 있습니다.");
         }
 
-        // 턴 오더 구성: 청팀 1번 -> 백팀 1번 -> 청팀 2번 -> 백팀 2번 교차
-        const orderedTurnIds = [];
+        // 턴 오더 구성: 청팀과 백팀이 1:1로 엄격히 교차 (인원수 불일치 시에도 각 팀 내에서 순환)
         const maxLen = Math.max(bluePlayers.length, whitePlayers.length);
+        const orderedTurnIds = [];
         for (let i = 0; i < maxLen; i++) {
-            if (bluePlayers[i]) orderedTurnIds.push(bluePlayers[i].id);
-            if (whitePlayers[i]) orderedTurnIds.push(whitePlayers[i].id);
+            orderedTurnIds.push(bluePlayers[i % bluePlayers.length].id);
+            orderedTurnIds.push(whitePlayers[i % whitePlayers.length].id);
         }
 
         const pieceCount = this.roomData.pieceCount || 4;
@@ -635,13 +633,15 @@ class YutnoriMultiplayerManager {
             }
         ];
 
-        const firstPlayerId = orderedTurnIds[0];
-        const firstTeam = this.roomData.players[firstPlayerId].team;
+        const firstPlayerId = bluePlayers[0].id;
+        const firstTeam = 'blue';
 
         const roomRef = doc(db, ROOMS_COLLECTION, this.currentRoomId);
         await updateDoc(roomRef, {
             status: 'playing',
             turnOrder: orderedTurnIds,
+            bluePlayerIndex: 0,
+            whitePlayerIndex: -1,
             currentTurnIndex: 0,
             currentTurnId: firstPlayerId,
             currentTeam: firstTeam,
@@ -835,23 +835,56 @@ class YutnoriMultiplayerManager {
     }
 
     /**
-     * 다음 플레이어로 턴 계산
+     * 다음 플레이어로 턴 계산 (청팀과 백팀이 1:1로 엄격하게 교차하며 각 팀 내에서 순환)
      */
     calculateNextTurn(isAfterMove = true) {
-        if (!this.roomData || !this.roomData.turnOrder || this.roomData.turnOrder.length === 0) {
+        if (!this.roomData || !this.roomData.players) {
             return {};
         }
 
-        const turnOrder = this.roomData.turnOrder;
-        const nextIdx = (this.roomData.currentTurnIndex + 1) % turnOrder.length;
-        const nextUid = turnOrder[nextIdx];
-        const nextPlayer = this.roomData.players ? this.roomData.players[nextUid] : null;
-        const nextTeam = nextPlayer ? nextPlayer.team : 'blue';
+        const players = Object.values(this.roomData.players);
+        const bluePlayers = players.filter(p => !p.isSpectator && p.team === 'blue');
+        const whitePlayers = players.filter(p => !p.isSpectator && p.team === 'white');
+
+        if (bluePlayers.length === 0 && whitePlayers.length === 0) {
+            return {};
+        }
+
+        // 청팀과 백팀 교차 전환
+        const currentTeam = this.roomData.currentTeam || 'blue';
+        const nextTeam = (currentTeam === 'blue') ? 'white' : 'blue';
+
+        let nextPlayer = null;
+        let nextBlueIndex = (typeof this.roomData.bluePlayerIndex === 'number') ? this.roomData.bluePlayerIndex : 0;
+        let nextWhiteIndex = (typeof this.roomData.whitePlayerIndex === 'number') ? this.roomData.whitePlayerIndex : -1;
+
+        if (nextTeam === 'white') {
+            if (whitePlayers.length > 0) {
+                nextWhiteIndex = (nextWhiteIndex + 1) % whitePlayers.length;
+                nextPlayer = whitePlayers[nextWhiteIndex];
+            } else if (bluePlayers.length > 0) {
+                nextBlueIndex = (nextBlueIndex + 1) % bluePlayers.length;
+                nextPlayer = bluePlayers[nextBlueIndex];
+            }
+        } else { // nextTeam === 'blue'
+            if (bluePlayers.length > 0) {
+                nextBlueIndex = (nextBlueIndex + 1) % bluePlayers.length;
+                nextPlayer = bluePlayers[nextBlueIndex];
+            } else if (whitePlayers.length > 0) {
+                nextWhiteIndex = (nextWhiteIndex + 1) % whitePlayers.length;
+                nextPlayer = whitePlayers[nextWhiteIndex];
+            }
+        }
+
+        const finalTeam = nextPlayer ? nextPlayer.team : nextTeam;
+        const nextTurnId = nextPlayer ? nextPlayer.id : null;
 
         return {
-            currentTurnIndex: nextIdx,
-            currentTurnId: nextUid,
-            currentTeam: nextTeam
+            currentTeam: finalTeam,
+            currentTurnId: nextTurnId,
+            bluePlayerIndex: nextBlueIndex,
+            whitePlayerIndex: nextWhiteIndex,
+            currentTurnIndex: ((this.roomData.currentTurnIndex || 0) + 1)
         };
     }
 
@@ -875,11 +908,20 @@ class YutnoriMultiplayerManager {
                     const remainingPlayers = { ...this.roomData.players };
                     delete remainingPlayers[this.mySessionId];
                     const remainingTurnOrder = (this.roomData.turnOrder || []).filter(id => id !== this.mySessionId);
-                    await updateDoc(roomRef, {
+                    
+                    const updates = {
                         players: remainingPlayers,
                         turnOrder: remainingTurnOrder,
                         updatedAt: Date.now()
-                    });
+                    };
+
+                    // 진행 중인데 나간 사람이 현재 차례였다면 다음 사람으로 자동 넘김
+                    if (this.roomData.status === 'playing' && this.roomData.currentTurnId === this.mySessionId) {
+                        const nextTurn = this.calculateNextTurn(false);
+                        Object.assign(updates, nextTurn);
+                    }
+
+                    await updateDoc(roomRef, updates);
                 }
             } catch (e) {
                 console.warn("[Multiplayer] Error leaving room:", e);
