@@ -1,6 +1,6 @@
 /**
  * 스펠링 갤러그 (Spelling Galaga) - 캔버스 픽셀아트 그래픽 & 스프라이트 렌더러
- * 고전 갤러그(Galaga) 아케이드 스타일의 비행체, 외계인(파리/나방/보스), 파워업 아이템, 트랙터 빔 렌더링
+ * 고전 갤러그(Galaga) 아케이드 스타일의 비행체, 외계인(파리/나방/보스), 파워업 아이템, 트랙터 빔, 조준 인디케이터
  */
 
 class SpriteRenderer {
@@ -113,7 +113,6 @@ class SpriteRenderer {
 
     // 좌우 날개 (빨간색 & 흰색 갤러그 고유 배색)
     ctx.fillStyle = '#ff2244';
-    // 좌측 날개
     ctx.beginPath();
     ctx.moveTo(-hw * 0.2, -hh * 0.1);
     ctx.lineTo(-hw, hh * 0.5);
@@ -122,7 +121,6 @@ class SpriteRenderer {
     ctx.closePath();
     ctx.fill();
 
-    // 우측 날개
     ctx.beginPath();
     ctx.moveTo(hw * 0.2, -hh * 0.1);
     ctx.lineTo(hw, hh * 0.5);
@@ -140,7 +138,7 @@ class SpriteRenderer {
   }
 
   // 외계인 적 유닛 렌더링 (type: 'zako' | 'goei' | 'boss')
-  drawEnemy(ctx, x, y, width, height, type = 'zako', letter = '', isTargetLetter = false, rotation = 0, difficulty = 'normal', hasCapturedFighter = false) {
+  drawEnemy(ctx, x, y, width, height, type = 'zako', letter = '', isTargetLetter = false, rotation = 0, difficulty = 'easy', hasCapturedFighter = false) {
     ctx.save();
     ctx.translate(x, y);
     if (rotation !== 0) {
@@ -179,7 +177,6 @@ class SpriteRenderer {
     const hw = w / 2;
     const hh = h / 2;
 
-    // 날개 (초록/노랑)
     ctx.fillStyle = frame === 0 ? '#00e676' : '#69f0ae';
     ctx.beginPath();
     ctx.moveTo(0, -hh * 0.3);
@@ -191,13 +188,11 @@ class SpriteRenderer {
     ctx.closePath();
     ctx.fill();
 
-    // 몸체 (노란색/오렌지)
     ctx.fillStyle = '#ffb300';
     ctx.beginPath();
     ctx.ellipse(0, 0, hw * 0.45, hh * 0.55, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 눈 (빨간 점)
     ctx.fillStyle = '#ff1744';
     ctx.fillRect(-hw * 0.25, -hh * 0.4, 4, 4);
     ctx.fillRect(hw * 0.25 - 4, -hh * 0.4, 4, 4);
@@ -208,7 +203,6 @@ class SpriteRenderer {
     const hw = w / 2;
     const hh = h / 2;
 
-    // 큰 빨간 날개
     ctx.fillStyle = '#ff3d00';
     ctx.beginPath();
     ctx.moveTo(0, -hh * 0.2);
@@ -220,7 +214,6 @@ class SpriteRenderer {
     ctx.closePath();
     ctx.fill();
 
-    // 더듬이
     ctx.strokeStyle = '#ffd600';
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -230,7 +223,6 @@ class SpriteRenderer {
     ctx.lineTo(hw * 0.6, -hh);
     ctx.stroke();
 
-    // 몸통 (파란색)
     ctx.fillStyle = '#2979ff';
     ctx.beginPath();
     ctx.ellipse(0, 0, hw * 0.4, hh * 0.6, 0, 0, Math.PI * 2);
@@ -242,7 +234,6 @@ class SpriteRenderer {
     const hw = w / 2;
     const hh = h / 2;
 
-    // 구출 대상 납치된 아군 기체가 위에 도킹되어 있는 경우
     if (hasCapturedFighter) {
       ctx.save();
       ctx.translate(0, -hh - 8);
@@ -251,7 +242,6 @@ class SpriteRenderer {
       ctx.restore();
     }
 
-    // 보스 외곽 뿔
     ctx.fillStyle = '#2979ff';
     ctx.beginPath();
     ctx.moveTo(0, -hh * 0.9);
@@ -265,7 +255,6 @@ class SpriteRenderer {
     ctx.closePath();
     ctx.fill();
 
-    // 중앙 코어 (빛나는 노란색/에메랄드 펄스)
     const corePulse = Math.sin(this.animTick * 0.2) * 2;
     ctx.fillStyle = frame === 0 ? '#ffd600' : '#00e5ff';
     ctx.beginPath();
@@ -273,7 +262,7 @@ class SpriteRenderer {
     ctx.fill();
   }
 
-  // 보스 갤러그의 트랙터 빔 (인력 광선) 렌더링
+  // 보스 갤러그의 트랙터 빔 렌더링
   drawTractorBeam(ctx, bossX, bossY, beamHeight = 220) {
     ctx.save();
     ctx.translate(bossX, bossY);
@@ -281,7 +270,6 @@ class SpriteRenderer {
     const beamTopW = 20;
     const beamBottomW = 90;
 
-    // 투명 원뿔 그라데이션
     const grad = ctx.createLinearGradient(0, 0, 0, beamHeight);
     grad.addColorStop(0, 'rgba(0, 229, 255, 0.6)');
     grad.addColorStop(0.5, 'rgba(0, 229, 255, 0.25)');
@@ -296,7 +284,6 @@ class SpriteRenderer {
     ctx.closePath();
     ctx.fill();
 
-    // 물결 파동 링 애니메이션
     const rings = 5;
     ctx.strokeStyle = '#00e5ff';
     ctx.lineWidth = 2;
@@ -313,43 +300,36 @@ class SpriteRenderer {
     ctx.restore();
   }
 
-  // 외계인이 싣고 있는 알파벳 스펠링 뱃지 렌더링 (난이도 모드 반영)
-  _drawLetterBadge(ctx, ox, oy, enemyWidth, letter, isTargetLetter, difficulty = 'normal') {
+  // 알파벳 스펠링 뱃지 & 타깃 조준 인디케이터
+  _drawLetterBadge(ctx, ox, oy, enemyWidth, letter, isTargetLetter, difficulty = 'easy') {
     const badgeR = enemyWidth * 0.48;
-
-    // 난이도별 힌트 제어
-    // easy: 황금 후광 펄스
-    // normal: 은은한 펄스
-    // hard: 힌트 없음(일반 외계인과 완전 동일)
     const showHighlight = isTargetLetter && (difficulty !== 'hard');
 
     if (showHighlight) {
-      const pulseMag = (difficulty === 'easy') ? 5 : 2.5;
-      const pulse = Math.sin(this.animTick * 0.15) * pulseMag + pulseMag;
+      const pulseMag = (difficulty === 'easy') ? 6 : 3;
+      const pulse = Math.sin(this.animTick * 0.2) * pulseMag + pulseMag;
       ctx.save();
       ctx.beginPath();
       ctx.arc(ox, oy, badgeR + pulse, 0, Math.PI * 2);
-      ctx.fillStyle = (difficulty === 'easy') ? 'rgba(255, 215, 0, 0.4)' : 'rgba(56, 189, 248, 0.25)';
+      ctx.fillStyle = (difficulty === 'easy') ? 'rgba(255, 215, 0, 0.45)' : 'rgba(56, 189, 248, 0.25)';
       ctx.shadowColor = (difficulty === 'easy') ? '#ffd700' : '#38bdf8';
-      ctx.shadowBlur = (difficulty === 'easy') ? 16 : 8;
+      ctx.shadowBlur = (difficulty === 'easy') ? 18 : 8;
       ctx.fill();
       ctx.restore();
     }
 
-    // 뱃지 배경 원
     ctx.save();
     ctx.beginPath();
     ctx.arc(ox, oy, badgeR, 0, Math.PI * 2);
     ctx.fillStyle = showHighlight ? '#111827' : '#0f172a';
     ctx.fill();
 
-    ctx.lineWidth = showHighlight ? 3 : 2;
+    ctx.lineWidth = showHighlight ? 3.5 : 2;
     ctx.strokeStyle = showHighlight
       ? ((difficulty === 'easy') ? '#ffd700' : '#38bdf8')
       : '#334155';
     ctx.stroke();
 
-    // 글자 렌더링
     ctx.fillStyle = showHighlight
       ? ((difficulty === 'easy') ? '#ffeb3b' : '#38bdf8')
       : '#ffffff';
@@ -357,10 +337,33 @@ class SpriteRenderer {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(letter, ox, oy + 2);
+
+    // 🎯 초급/중급 모드: 타깃 외계인 상단에 큼직한 조준 화살표(▼) 표시
+    if (showHighlight) {
+      const arrowBounce = Math.sin(this.animTick * 0.25) * 5;
+      ctx.fillStyle = '#ffd700';
+      ctx.shadowColor = '#ffd700';
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.moveTo(ox, oy - badgeR - 10 + arrowBounce);
+      ctx.lineTo(ox - 7, oy - badgeR - 20 + arrowBounce);
+      ctx.lineTo(ox + 7, oy - badgeR - 20 + arrowBounce);
+      ctx.closePath();
+      ctx.fill();
+
+      if (difficulty === 'easy') {
+        ctx.font = "bold 11px 'DungGeunMo', 'Pretendard', sans-serif";
+        ctx.fillStyle = '#fef08a';
+        ctx.shadowBlur = 8;
+        ctx.textAlign = 'center';
+        ctx.fillText('🎯조준!', ox, oy - badgeR - 24 + arrowBounce);
+      }
+    }
+
     ctx.restore();
   }
 
-  // 드롭 아이템 캡슐 렌더링 (type: 'heart' | 'dual' | 'shield' | 'bomb' | 'slow')
+  // 드롭 아이템 캡슐 렌더링
   drawPowerup(ctx, x, y, type = 'heart') {
     ctx.save();
     ctx.translate(x, y);
@@ -368,7 +371,6 @@ class SpriteRenderer {
     const bob = Math.sin(this.animTick * 0.2) * 3;
     const r = 16;
 
-    // 외곽 반짝임
     ctx.beginPath();
     ctx.arc(0, bob, r + 2, 0, Math.PI * 2);
     let glowColor = '#ffd700';
@@ -383,13 +385,11 @@ class SpriteRenderer {
     ctx.shadowBlur = 10;
     ctx.fill();
 
-    // 내부 알약 캡슐
     ctx.fillStyle = '#0f172a';
     ctx.beginPath();
     ctx.arc(0, bob, r, 0, Math.PI * 2);
     ctx.fill();
 
-    // 아이콘 텍스트
     ctx.font = "14px 'Pretendard', sans-serif";
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -404,7 +404,7 @@ class SpriteRenderer {
     ctx.restore();
   }
 
-  // 플레이어 미사일
+  // 플레이어 미사일 (더 넓고 시원하게)
   drawMissile(ctx, x, y, width, height) {
     ctx.save();
     ctx.fillStyle = '#ffeb3b';

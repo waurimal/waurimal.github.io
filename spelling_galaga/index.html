@@ -24,7 +24,7 @@
 </head>
 <body>
 
-  <!-- 상단 HUD 바 (뜻 전광판, 스펠링 슬롯, 목숨, 점수, 제어 버튼) -->
+  <!-- 상단 HUD 바 (뜻 전광판, 지금 쏠 글자, 스펠링 슬롯, 목숨, 점수, 제어 버튼) -->
   <header class="game-header">
     <div class="hud-left">
       <div class="logo-area">
@@ -37,6 +37,12 @@
       <div class="target-display">
         <span class="meaning-label">목표 뜻:</span>
         <span id="hudMeaning" class="meaning-text">게임을 시작하세요!</span>
+      </div>
+
+      <!-- 🎯 지금 쏴야 하는 글자 안내 뱃지 -->
+      <div class="next-letter-display" title="지금 편대에서 격추해야 할 알파벳">
+        <span class="next-label">🎯 쏠 글자:</span>
+        <span id="hudNextLetter" class="next-letter-box">?</span>
       </div>
 
       <!-- 스펠링 슬롯 -->
@@ -74,11 +80,11 @@
 
       <!-- 제어 버튼들 -->
       <div class="control-buttons">
-        <!-- 난이도 선택 -->
+        <!-- 난이도 선택: 기본값 초급(오답 안심) -->
         <select id="selectDifficulty" class="hud-select" title="학습 난이도 선택">
-          <option value="easy">🟢 초급 (힌트)</option>
-          <option value="normal" selected>🟡 중급 (표준)</option>
-          <option value="hard">🔴 고급 (암기)</option>
+          <option value="easy" selected>🟢 초급 (초등 추천 / 오답 안심)</option>
+          <option value="normal">🟡 중급 (3회 누적 경고)</option>
+          <option value="hard">🔴 고급 (1회 즉시 차감)</option>
         </select>
 
         <button type="button" id="btnHof" class="hud-btn" title="명예의 전당 랭킹"><i class="fas fa-trophy" style="color:#ffd700;"></i> 랭킹</button>
@@ -214,13 +220,17 @@
       </div>
 
       <div class="guide-content">
+        <div class="guide-item" style="border-left-color: #4ade80;">
+          <strong style="color: #4ade80;">🟢 초급 모드 (기본 추천 / 오답 안심)</strong><br>
+          엉뚱한 외계인을 쏴도 <strong>목숨이 절대 깎이지 않습니다!</strong> 외계인 머리 위에 떠 있는 <strong>🎯조준 화살표</strong>를 보며 편안하고 신나게 단어를 완성해 보세요.
+        </div>
         <div class="guide-item">
           <strong>🎯 기본 게임 룰</strong><br>
-          상단 전광판의 <strong>단어 뜻</strong>을 확인하고, 편대 비행 중인 외계인이 품은 알파벳을 <strong>철자 순서대로 정확하게 조준 격추</strong>하세요!
+          상단 전광판의 <strong>단어 뜻</strong>과 <strong>🎯 쏠 글자</strong>를 확인하고, 편대 비행 중인 외계인이 품은 알파벳을 <strong>철자 순서대로 정확하게 조준 격추</strong>하세요!
         </div>
         <div class="guide-item">
           <strong>❤️ 5개 목숨 시스템</strong><br>
-          순서에 맞지 않는 엉뚱한 철자를 맞히거나 적 기체/탄환과 충돌하면 목숨이 1개 차감됩니다 (총 5번 실패 시 게임 오버).
+          적 기체나 탄환과 충돌하면 목숨이 1개 차감됩니다 (총 5번 실패 시 게임 오버).
         </div>
         <div class="guide-item">
           <strong>⚡ 듀얼 파이터 & 트랙터 빔 구출</strong><br>
@@ -402,7 +412,6 @@
         try {
           let list = [];
 
-          // 1. Firestore 조회
           if (window.WaurimalFirebase && window.WaurimalFirebase.getDb) {
             const db = window.WaurimalFirebase.getDb();
             if (db) {
@@ -417,7 +426,6 @@
             }
           }
 
-          // 2. 로컬 백업과 병합
           if (list.length === 0) {
             list = JSON.parse(localStorage.getItem('spelling_galaga_scores_history') || '[]');
           }
@@ -427,7 +435,6 @@
             return;
           }
 
-          // 중복 정렬 및 TOP 30 렌더링
           list.sort((a, b) => b.score - a.score);
           const top30 = list.slice(0, 30);
 
@@ -437,7 +444,6 @@
             const rankClass = rank === 1 ? 'hof-rank-1' : (rank === 2 ? 'hof-rank-2' : (rank === 3 ? 'hof-rank-3' : ''));
             const medal = rank === 1 ? '🥇 ' : (rank === 2 ? '🥈 ' : (rank === 3 ? '🥉 ' : ''));
 
-            // 이름 마스킹 처리
             const rawName = item.name || '도전자';
             const masked = (window.WaurimalMask && window.WaurimalMask.maskName)
               ? window.WaurimalMask.maskName(rawName)

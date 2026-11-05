@@ -1,6 +1,6 @@
 /**
  * 스펠링 갤러그 (Spelling Galaga) - 게임 엔진 및 메인 루프
- * 갤러그 곡선 편대 비행, 듀얼 파이터 구출, 트랙터 빔, 파워업 아이템, 5 목숨 시스템, 크롬북 터치/키보드 완벽 대응
+ * 갤러그 편대 비행, 듀얼 파이터 구출, 트랙터 빔, 파워업 아이템, 5 목숨 시스템, 초등 맞춤 3단계 난이도
  */
 
 class SpellingGalagaGame {
@@ -18,11 +18,12 @@ class SpellingGalagaGame {
     this.sounds = new SoundEffects();
     this.sprites = new SpriteRenderer();
 
-    // 게임 상태: 'TITLE' | 'ENTERING' | 'PLAYING' | 'WORD_CLEAR' | 'CHALLENGE' | 'GAME_OVER' | 'VICTORY'
+    // 게임 상태: 'TITLE' | 'PLAYING' | 'WORD_CLEAR' | 'GAME_OVER' | 'VICTORY'
     this.state = 'TITLE';
 
-    // 난이도 모드: 'easy' (힌트 글자+황금광채) | 'normal' (?표시+은은광채) | 'hard' (스펠링 암기 챌린지)
-    this.difficulty = 'normal';
+    // 기본 난이도 모드: 'easy' (초등 배려: 오답 시 목숨 보호 & 조준 가이드) | 'normal' | 'hard'
+    this.difficulty = 'easy';
+    this.wrongShotCount = 0; // 중급 모드용 연속 오답 카운터
 
     // 기본 게임 규칙 & 상태 변수
     this.maxLives = 5;
@@ -47,22 +48,21 @@ class SpellingGalagaGame {
     this.totalShots = 0;
     this.hitShots = 0;
 
-    // 플레이어 객체
+    // 플레이어 객체 (스피드 8.2로 민첩한 회피 지원)
     this.player = {
       x: this.virtualWidth / 2,
       y: this.virtualHeight - 50,
-      width: 44,
-      height: 40,
-      speed: 6.8,
+      width: 46,
+      height: 42,
+      speed: 8.2,
       tilt: 0,
       isInvincible: false,
       invincibleTimer: 0,
       isDual: false,
       hasShield: false,
-      captured: false // 트랙터 빔에 납치된 상태
+      captured: false
     };
 
-    // 납치된 아군 기체 추적 (트랙터 빔으로 납치되어 보스에 붙어있는 경우)
     this.capturedFighterBoss = null;
 
     // 엔티티 컬렉션
@@ -77,7 +77,7 @@ class SpellingGalagaGame {
     // 입력 상태
     this.keys = {};
     this.lastFireTime = 0;
-    this.fireCooldown = 160; // ms
+    this.fireCooldown = 150; // ms
     this.touchControl = {
       active: false,
       targetX: this.virtualWidth / 2,
@@ -88,7 +88,6 @@ class SpellingGalagaGame {
     this.formationOffset = 0;
     this.formationDirection = 1;
     this.diveTimer = 0;
-    this.tractorBeamTimer = 0;
     this.activeTractorBeam = null;
     this.shakeTimer = 0;
     this.warpTimer = 0;
@@ -100,7 +99,6 @@ class SpellingGalagaGame {
     this.resizeCanvas();
     window.addEventListener('resize', () => this.resizeCanvas());
 
-    // 메인 루프 가동
     this.lastFrameTime = performance.now();
     requestAnimationFrame((t) => this.loop(t));
   }
@@ -143,7 +141,6 @@ class SpellingGalagaGame {
 
   // 이벤트 바인딩
   bindEvents() {
-    // 키보드 조작
     window.addEventListener('keydown', (e) => {
       this.keys[e.code] = true;
 
@@ -205,6 +202,7 @@ class SpellingGalagaGame {
   setDifficulty(diff) {
     if (['easy', 'normal', 'hard'].includes(diff)) {
       this.difficulty = diff;
+      this.wrongShotCount = 0;
       this.updateHUD();
     }
   }
@@ -225,6 +223,7 @@ class SpellingGalagaGame {
     this.stage = 1;
     this.lives = this.maxLives;
     this.combo = 0;
+    this.wrongShotCount = 0;
     this.learnedWords = [];
     this.missedWords = [];
     this.totalShots = 0;
@@ -255,13 +254,14 @@ class SpellingGalagaGame {
     this.currentWordObj = wordObj;
     this.currentWord = wordObj.word.toUpperCase();
     this.targetLetterIndex = 0;
+    this.wrongShotCount = 0;
     this.spellingSlots = new Array(this.currentWord.length).fill(null);
 
     this.updateHUD();
     this.spawnEnemiesForWord();
   }
 
-  // 갤러그 편대 곡선 진입 생성
+  // 갤러그 편대 생성
   spawnEnemiesForWord() {
     this.enemies = [];
     const neededLetters = this.currentWord.split('');
@@ -309,9 +309,12 @@ class SpellingGalagaGame {
         const targetGridY = startY + r * rowSpacing;
         const letter = assignedLetters[enemyIdx++];
 
-        // 좌/우 곡선 진입 진로 생성
         const entrySide = (c % 2 === 0) ? -1 : 1;
         const startXPos = entrySide === -1 ? -40 - c * 20 : this.virtualWidth + 40 + c * 20;
+
+        // 난이도별 다이빙 속도 및 총알 쿨다운 차등화
+        let baseDiveSpeed = (this.difficulty === 'easy') ? 1.5 : (this.difficulty === 'normal' ? 2.2 : 2.9);
+        let baseShootCooldown = (this.difficulty === 'easy') ? 600 : (this.difficulty === 'normal' ? 300 : 150);
 
         this.enemies.push({
           type,
@@ -322,20 +325,17 @@ class SpellingGalagaGame {
           y: -40 - r * 30,
           width: type === 'boss' ? 44 : 36,
           height: type === 'boss' ? 40 : 32,
-          state: 'ENTERING', // 'ENTERING' | 'FORMATION' | 'DIVING' | 'TRACTOR_BEAM'
-          diveSpeed: 2.8 + Math.random() * 1.2,
-          diveCurve: (Math.random() - 0.5) * 4,
-          shootCooldown: Math.floor(80 + Math.random() * 260),
-          entryProgress: 0,
-          entryStartX: startXPos,
-          entryStartY: -40 - r * 30,
+          state: 'ENTERING',
+          diveSpeed: baseDiveSpeed + Math.random() * 0.6,
+          diveCurve: (Math.random() - 0.5) * 3,
+          shootCooldown: Math.floor(baseShootCooldown + Math.random() * 300),
           hasCapturedFighter: false
         });
       }
     }
   }
 
-  // 플레이어 미사일 발사
+  // 플레이어 미사일 발사 (더 빠르고 시원한 명중)
   shootMissile() {
     if (this.player.captured) return;
     const now = performance.now();
@@ -347,25 +347,25 @@ class SpellingGalagaGame {
       this.missiles.push({
         x: this.player.x - 14,
         y: this.player.y - 15,
-        width: 4,
-        height: 14,
-        speed: 13
+        width: 6,
+        height: 16,
+        speed: 15
       });
       this.missiles.push({
         x: this.player.x + 14,
         y: this.player.y - 15,
-        width: 4,
-        height: 14,
-        speed: 13
+        width: 6,
+        height: 16,
+        speed: 15
       });
       this.sounds.playDualLaser();
     } else {
       this.missiles.push({
         x: this.player.x,
         y: this.player.y - 15,
-        width: 5,
-        height: 15,
-        speed: 13
+        width: 6,
+        height: 16,
+        speed: 15
       });
       this.sounds.playLaser();
     }
@@ -386,13 +386,11 @@ class SpellingGalagaGame {
   update(dt) {
     this.sprites.update();
 
-    // 슬로우 모션 타이머 차감
     const speedMult = this.slowMotionTimer > 0 ? 0.5 : 1.0;
     if (this.slowMotionTimer > 0) {
       this.slowMotionTimer -= dt;
     }
 
-    // 스타필드 스크롤 (워프 시 초고속)
     const starSpeedMult = this.warpTimer > 0 ? 8.0 : 1.0;
     this.stars.forEach(s => {
       s.y += s.speed * starSpeedMult;
@@ -405,7 +403,6 @@ class SpellingGalagaGame {
     if (this.shakeTimer > 0) this.shakeTimer--;
     if (this.warpTimer > 0) this.warpTimer -= dt;
 
-    // 파티클 & 텍스트 업데이트
     this.particles = this.particles.filter(p => {
       p.x += p.vx;
       p.y += p.vy;
@@ -420,24 +417,14 @@ class SpellingGalagaGame {
       return ft.life > 0;
     });
 
-    if (this.state !== 'PLAYING' && this.state !== 'CHALLENGE') return;
+    if (this.state !== 'PLAYING') return;
 
-    // 플레이어 업데이트
     this.updatePlayer(dt);
-
-    // 미사일 업데이트 & 적 피격
     this.updateMissiles(dt);
-
-    // 드롭 파워업 아이템 업데이트
     this.updatePowerups(dt);
-
-    // 적 탄환 업데이트
     this.updateEnemyBullets(dt * speedMult);
-
-    // 외계인 편대 & 급강하 AI
     this.updateEnemies(dt * speedMult);
 
-    // 연속 발사 지원 (스페이스바 유지 시)
     if (this.keys['Space'] || this.keys['Enter']) {
       this.shootMissile();
     }
@@ -449,7 +436,6 @@ class SpellingGalagaGame {
 
     let targetTilt = 0;
 
-    // 키보드 조작
     if (this.keys['ArrowLeft'] || this.keys['KeyA']) {
       this.player.x -= this.player.speed;
       this.touchControl.active = false;
@@ -461,21 +447,17 @@ class SpellingGalagaGame {
       targetTilt = 0.22;
     }
 
-    // 마우스/터치스크린 추종
     if (this.touchControl.active) {
       const dx = this.touchControl.targetX - this.player.x;
-      this.player.x += dx * 0.28;
+      this.player.x += dx * 0.32;
       targetTilt = Math.max(-0.25, Math.min(0.25, dx * 0.02));
     }
 
-    // 롤링 뱅크 부드러운 보간
-    this.player.tilt += (targetTilt - this.player.tilt) * 0.2;
+    this.player.tilt += (targetTilt - this.player.tilt) * 0.25;
 
-    // 경계 제한
     const halfW = (this.player.isDual ? this.player.width * 1.2 : this.player.width) / 2;
     this.player.x = Math.max(halfW + 10, Math.min(this.virtualWidth - halfW - 10, this.player.x));
 
-    // 무적 시간 차감
     if (this.player.isInvincible) {
       this.player.invincibleTimer -= dt;
       if (this.player.invincibleTimer <= 0) {
@@ -495,9 +477,8 @@ class SpellingGalagaGame {
         continue;
       }
 
-      // 플레이어 획득 검사
       const dist = Math.hypot(p.x - this.player.x, p.y - this.player.y);
-      if (dist < (this.player.width / 2 + 18) && !this.player.captured) {
+      if (dist < (this.player.width / 2 + 20) && !this.player.captured) {
         this.handlePowerupPickup(p.type, p.x, p.y);
         this.powerups.splice(i, 1);
       }
@@ -525,10 +506,9 @@ class SpellingGalagaGame {
       this.addFloatingText('🛡️ SHIELD ACTIVE!', x, y - 25, '#38bdf8', 22);
     } else if (type === 'bomb') {
       this.sounds.playBombExplosion();
-      this.shakeTimer = 22;
+      this.shakeTimer = 20;
       this.addFloatingText('💣 SMART EMP BOMB!', this.virtualWidth / 2, this.virtualHeight / 2, '#f97316', 26);
 
-      // 화면 내 모든 오답 외계인 제거
       const expectedLetter = this.currentWord[this.targetLetterIndex];
       for (let i = this.enemies.length - 1; i >= 0; i--) {
         const e = this.enemies[i];
@@ -539,7 +519,7 @@ class SpellingGalagaGame {
       }
       this.ensureTargetLetterAvailable();
     } else if (type === 'slow') {
-      this.slowMotionTimer = 8.0; // 8초간 50% 감속
+      this.slowMotionTimer = 8.0;
       this.addFloatingText('⏱️ TIME SLOW WARP!', x, y - 25, '#c084fc', 20);
     }
   }
@@ -555,7 +535,6 @@ class SpellingGalagaGame {
         continue;
       }
 
-      // 적과의 충돌 판정
       let hit = false;
       for (let j = this.enemies.length - 1; j >= 0; j--) {
         const enemy = this.enemies[j];
@@ -573,14 +552,13 @@ class SpellingGalagaGame {
     }
   }
 
-  // 외계인 피격 처리 (스펠링 규칙의 핵심 & 버그 원천 차단)
+  // 외계인 피격 처리 (난이도별 오답 패널티 완화)
   handleEnemyHit(enemy, index) {
     const expectedLetter = this.currentWord[this.targetLetterIndex];
     const isCorrect = (enemy.letter === expectedLetter);
 
     this.createExplosion(enemy.x, enemy.y, isCorrect ? '#ffd700' : '#ff1744');
 
-    // 보스에 납치된 아군 기체가 있는 경우 구출!
     if (enemy.hasCapturedFighter) {
       this.sounds.playDualRescue();
       this.player.isDual = true;
@@ -588,8 +566,8 @@ class SpellingGalagaGame {
       this.capturedFighterBoss = null;
     }
 
-    // 아이템 드롭 확률 (다이빙 중 처치하거나 콤보 달성 시)
-    if (Math.random() < 0.22 || this.combo >= 4) {
+    // 아이템 드롭 확률 대폭 상향 (45% 확률로 쏟아짐)
+    if (Math.random() < 0.45 || this.combo >= 3) {
       this.spawnRandomPowerup(enemy.x, enemy.y);
     }
 
@@ -599,6 +577,7 @@ class SpellingGalagaGame {
       // 🎯 정답 글자 맞힘!
       this.sounds.playCorrect();
       this.sounds.playExplosion();
+      this.wrongShotCount = 0; // 오답 누적 초기화
 
       this.spellingSlots[this.targetLetterIndex] = expectedLetter;
       this.targetLetterIndex++;
@@ -618,26 +597,40 @@ class SpellingGalagaGame {
 
       this.updateHUD();
 
-      // 단어 완성 여부 확인
       if (this.targetLetterIndex >= this.currentWord.length) {
         this.handleWordCleared();
       } else {
-        // 다음 글자가 편대에 없으면 보장
         this.ensureTargetLetterAvailable();
       }
     } else {
-      // ❌ 오답 글자 맞힘! (사용자 요구사항: 잘못 맞히면 5개 목숨 중 1개 차감, 5번 실패 시 종료)
+      // ❌ 오답 글자 맞힘 (난이도별 친화적 규칙 적용)
       this.sounds.playWrong();
-      this.shakeTimer = 16;
       this.combo = 0;
-      this.lives--;
 
-      this.addFloatingText(`MISS! '${enemy.letter}'`, enemy.x, enemy.y - 15, '#ef4444');
-      this.addFloatingText(`목숨 -1 (남은 목숨: ${this.lives})`, this.virtualWidth / 2, this.virtualHeight / 2, '#f87171', 20);
+      if (this.difficulty === 'easy') {
+        // 🟢 초급 모드: 목숨 절대 안 깎임! (학생들의 좌절 방지)
+        this.shakeTimer = 6;
+        this.addFloatingText(`MISS! '${enemy.letter}' (초급: 목숨 보호)`, enemy.x, enemy.y - 15, '#fbbf24', 16);
+      } else if (this.difficulty === 'normal') {
+        // 🟡 중급 모드: 3번 누적 실수할 때만 목숨 1개 차감
+        this.wrongShotCount++;
+        if (this.wrongShotCount >= 3) {
+          this.wrongShotCount = 0;
+          this.lives--;
+          this.shakeTimer = 14;
+          this.addFloatingText(`3연속 오답! -1 LIFE`, this.virtualWidth / 2, this.virtualHeight / 2, '#f87171', 20);
+        } else {
+          this.shakeTimer = 6;
+          this.addFloatingText(`주의! (${this.wrongShotCount}/3 경고)`, enemy.x, enemy.y - 15, '#fbbf24', 16);
+        }
+      } else {
+        // 🔴 고급 모드: 즉시 목숨 1개 차감
+        this.lives--;
+        this.shakeTimer = 16;
+        this.addFloatingText(`MISS! -1 LIFE`, enemy.x, enemy.y - 15, '#ef4444', 18);
+      }
 
       this.updateHUD();
-
-      // 오답 격추로 인해 정답 글자 외계인이 사라졌을 수 있으므로 즉시 보장!
       this.ensureTargetLetterAvailable();
 
       if (this.lives <= 0) {
@@ -646,10 +639,10 @@ class SpellingGalagaGame {
     }
   }
 
-  // 아이템 생성
+  // 아이템 생성 (하트 & 쉴드 가중치 상향)
   spawnRandomPowerup(x, y) {
     const types = ['heart', 'dual', 'shield', 'bomb', 'slow'];
-    const weights = [0.3, 0.25, 0.2, 0.15, 0.1]; // 확률 배정
+    const weights = [0.35, 0.25, 0.20, 0.12, 0.08];
     let rand = Math.random();
     let selected = types[0];
 
@@ -665,11 +658,11 @@ class SpellingGalagaGame {
       x,
       y,
       type: selected,
-      speed: 1.8
+      speed: 1.6
     });
   }
 
-  // 편대 내에 현재 타깃 알파벳이 반드시 1개 이상 존재하도록 보장 (게임 프리징 원천 방어!)
+  // 편대 내 타깃 알파벳 보장
   ensureTargetLetterAvailable() {
     if (this.targetLetterIndex >= this.currentWord.length) return;
     const nextChar = this.currentWord[this.targetLetterIndex];
@@ -680,16 +673,15 @@ class SpellingGalagaGame {
         const candidate = this.enemies[Math.floor(Math.random() * this.enemies.length)];
         candidate.letter = nextChar;
       } else {
-        // 편대가 완전히 전멸했을 경우 새 편대 긴급 재보충
         this.spawnEnemiesForWord();
       }
     }
   }
 
-  // 단어 완성 성공!
+  // 단어 완성
   handleWordCleared() {
     this.state = 'WORD_CLEAR';
-    this.warpTimer = 2.0; // 하이퍼스페이스 워프 연출
+    this.warpTimer = 2.0;
     this.learnedWords.push(this.currentWordObj);
 
     this.sounds.playWordComplete();
@@ -719,7 +711,7 @@ class SpellingGalagaGame {
     }, 2000);
   }
 
-  // 5회 실패로 게임 오버
+  // 게임 오버
   handleGameOver() {
     this.state = 'GAME_OVER';
     if (this.currentWordObj) {
@@ -728,7 +720,6 @@ class SpellingGalagaGame {
     this.sounds.stopBgm();
     this.sounds.playGameOver();
 
-    // 명예의 전당 저장 시도
     this.saveScoreToCloud();
 
     setTimeout(() => {
@@ -749,7 +740,7 @@ class SpellingGalagaGame {
     }, 1500);
   }
 
-  // 명예의 전당 (Firebase Firestore) 클라우드 기록 저장
+  // 클라우드 점수 저장
   async saveScoreToCloud() {
     try {
       const studentInfo = (typeof window !== 'undefined' && window.WaurimalNav && window.WaurimalNav.getStudentInfo)
@@ -767,13 +758,11 @@ class SpellingGalagaGame {
         timestamp: Date.now()
       };
 
-      // 1. 로컬 스토리지 랭킹 백업
       let localScores = JSON.parse(localStorage.getItem('spelling_galaga_scores_history') || '[]');
       localScores.push(record);
       localScores.sort((a, b) => b.score - a.score);
       localStorage.setItem('spelling_galaga_scores_history', JSON.stringify(localScores.slice(0, 50)));
 
-      // 2. Firebase Firestore 저장
       if (typeof window !== 'undefined' && window.WaurimalFirebase && window.WaurimalFirebase.getDb) {
         const db = window.WaurimalFirebase.getDb();
         if (db) {
@@ -788,7 +777,7 @@ class SpellingGalagaGame {
     }
   }
 
-  // 결과 리포트 모달 표시
+  // 결과 모달
   showResultModal(isWin) {
     const dialog = document.getElementById('resultModal');
     if (!dialog) return;
@@ -824,16 +813,18 @@ class SpellingGalagaGame {
     dialog.showModal();
   }
 
-  // 외계인 편대 및 급강하/트랙터 빔 AI 루프
+  // 외계인 편대 & 급강하 AI 루프 (난이도별 다이빙 빈도 완화)
   updateEnemies(dt) {
     this.formationOffset += 0.8 * this.formationDirection;
     if (Math.abs(this.formationOffset) > 25) {
       this.formationDirection *= -1;
     }
 
-    // 급강하 트리거
+    // 급강하 쿨다운 (초급은 5.2초로 매우 넉넉함)
+    const diveInterval = (this.difficulty === 'easy') ? 5.2 : (this.difficulty === 'normal' ? 3.5 : 2.0);
+
     this.diveTimer += dt;
-    if (this.diveTimer > 1.8 && this.enemies.length > 0) {
+    if (this.diveTimer > diveInterval && this.enemies.length > 0) {
       this.diveTimer = 0;
       const formationEnemies = this.enemies.filter(e => e.state === 'FORMATION');
       if (formationEnemies.length > 0) {
@@ -841,8 +832,8 @@ class SpellingGalagaGame {
         diver.state = 'DIVING';
         diver.diveTargetX = this.player.x;
 
-        // 보스 외계인 급강하 시 일정 확률로 트랙터 빔 발사 (아군 미납치 상태일 때)
-        if (diver.type === 'boss' && !this.player.isDual && !this.capturedFighterBoss && Math.random() < 0.4) {
+        // 초급에서는 트랙터 빔 비활성화, 중/고급에서만 발동
+        if (this.difficulty !== 'easy' && diver.type === 'boss' && !this.player.isDual && !this.capturedFighterBoss && Math.random() < 0.3) {
           diver.isTractorBoss = true;
         }
       }
@@ -852,7 +843,6 @@ class SpellingGalagaGame {
       const e = this.enemies[i];
 
       if (e.state === 'ENTERING') {
-        // 부드러운 곡선 진입
         e.y += 3.8;
         const dx = e.formationX - e.x;
         e.x += dx * 0.08;
@@ -868,14 +858,14 @@ class SpellingGalagaGame {
 
         e.shootCooldown--;
         if (e.shootCooldown <= 0) {
-          e.shootCooldown = 220 + Math.random() * 280;
+          const cooldownBase = (this.difficulty === 'easy') ? 700 : (this.difficulty === 'normal' ? 350 : 200);
+          e.shootCooldown = cooldownBase + Math.random() * 300;
           this.shootEnemyBullet(e.x, e.y);
         }
       } else if (e.state === 'DIVING') {
         e.y += e.diveSpeed;
-        e.x += Math.sin(e.y * 0.03) * 3 + (e.diveCurve || 0);
+        e.x += Math.sin(e.y * 0.03) * 2.5 + (e.diveCurve || 0);
 
-        // 보스 트랙터 빔 발동 검사
         if (e.isTractorBoss && e.y > 180 && e.y < 350) {
           this.activeTractorBeam = {
             bossX: e.x,
@@ -884,7 +874,6 @@ class SpellingGalagaGame {
           };
           this.sounds.playTractorBeam();
 
-          // 플레이어가 트랙터 빔 원뿔 영역에 있는지 검사
           const beamTopW = 20;
           const beamBottomW = 90;
           const dy = this.player.y - this.activeTractorBeam.bossY;
@@ -892,12 +881,10 @@ class SpellingGalagaGame {
             const currentBeamW = beamTopW + (beamBottomW - beamTopW) * (dy / 240);
             if (Math.abs(this.player.x - e.x) < currentBeamW / 2) {
               if (this.player.hasShield) {
-                // 쉴드가 있으면 트랙터 빔 튕겨냄
                 this.player.hasShield = false;
                 this.sounds.playShieldDeflect();
                 this.addFloatingText('SHIELD BLOCKED BEAM!', this.player.x, this.player.y - 25, '#38bdf8');
               } else if (!this.player.isInvincible && !this.player.captured) {
-                // 빔에 납치됨!
                 e.hasCapturedFighter = true;
                 this.capturedFighterBoss = e;
                 this.handleFighterCaptured();
@@ -908,8 +895,7 @@ class SpellingGalagaGame {
           this.activeTractorBeam = null;
         }
 
-        // 플레이어 방향으로 탄환 1발
-        if (Math.abs(e.y - (this.virtualHeight * 0.5)) < 4) {
+        if (Math.abs(e.y - (this.virtualHeight * 0.5)) < 4 && this.difficulty !== 'easy') {
           this.shootEnemyBullet(e.x, e.y);
         }
 
@@ -935,17 +921,16 @@ class SpellingGalagaGame {
     }
   }
 
-  // 기체 납치 처리
+  // 기체 납치
   handleFighterCaptured() {
     this.player.captured = true;
     this.addFloatingText('CAPTURED BY BOSS!', this.player.x, this.player.y - 30, '#ef4444', 22);
 
-    // 1초 후 새 기체 출격
     setTimeout(() => {
       this.player.captured = false;
       this.player.x = this.virtualWidth / 2;
       this.player.isInvincible = true;
-      this.player.invincibleTimer = 2.0;
+      this.player.invincibleTimer = 3.0;
       this.lives--;
       this.updateHUD();
       if (this.lives <= 0) {
@@ -954,14 +939,18 @@ class SpellingGalagaGame {
     }, 1200);
   }
 
-  // 적 탄환 발사
+  // 적 탄환 발사 (초급은 최대 2발로 아주 안전)
   shootEnemyBullet(x, y) {
-    if (this.enemyBullets.length > 7) return;
+    const maxBullets = (this.difficulty === 'easy') ? 2 : (this.difficulty === 'normal' ? 4 : 7);
+    if (this.enemyBullets.length >= maxBullets) return;
+
+    const bulletSpeed = (this.difficulty === 'easy') ? 1.8 : (this.difficulty === 'normal' ? 2.5 : 3.2);
+
     this.enemyBullets.push({
       x,
       y: y + 10,
-      size: 6,
-      speed: 3.2
+      size: 5,
+      speed: bulletSpeed
     });
   }
 
@@ -986,13 +975,13 @@ class SpellingGalagaGame {
     }
   }
 
-  // 플레이어 피격 처리 (쉴드 -> 듀얼 파이터 -> 일반 목숨 차감)
+  // 플레이어 피격 처리 (3초간 넉넉한 무적 시간 부여)
   handlePlayerDamage() {
     if (this.player.hasShield) {
       this.player.hasShield = false;
       this.sounds.playShieldDeflect();
       this.player.isInvincible = true;
-      this.player.invincibleTimer = 1.0;
+      this.player.invincibleTimer = 2.0;
       this.addFloatingText('SHIELD DEFLECTED!', this.player.x, this.player.y - 25, '#38bdf8', 18);
       return;
     }
@@ -1002,8 +991,8 @@ class SpellingGalagaGame {
       this.sounds.playExplosion();
       this.createExplosion(this.player.x + 14, this.player.y, '#ffd700');
       this.player.isInvincible = true;
-      this.player.invincibleTimer = 2.0;
-      this.shakeTimer = 12;
+      this.player.invincibleTimer = 3.0;
+      this.shakeTimer = 10;
       this.addFloatingText('DUAL LOST! (1 FIGHTER REMAIN)', this.player.x, this.player.y - 25, '#f59e0b', 18);
       return;
     }
@@ -1011,9 +1000,9 @@ class SpellingGalagaGame {
     this.lives--;
     this.sounds.playLifeLost();
     this.sounds.playExplosion();
-    this.shakeTimer = 18;
+    this.shakeTimer = 14;
     this.player.isInvincible = true;
-    this.player.invincibleTimer = 2.0;
+    this.player.invincibleTimer = 3.0; // 3초간 무적으로 피격 후 안전 회피 지원
 
     this.addFloatingText('충돌 피격! -1 LIFE', this.player.x, this.player.y - 30, '#ef4444', 18);
     this.updateHUD();
@@ -1053,15 +1042,23 @@ class SpellingGalagaGame {
     });
   }
 
-  // 상단 웹 DOM HUD 업데이트 (난이도 모드별 힌트 분기)
+  // 상단 HUD 업데이트 (지금 쏠 글자 또렷하게 노출)
   updateHUD() {
-    // 1. 단어 뜻
     const meaningEl = document.getElementById('hudMeaning');
     if (meaningEl && this.currentWordObj) {
       meaningEl.textContent = this.currentWordObj.meaning;
     }
 
-    // 2. 스펠링 슬롯들
+    // 🎯 지금 쏴야 하는 글자 뱃지 업데이트
+    const nextLetterEl = document.getElementById('hudNextLetter');
+    if (nextLetterEl) {
+      const nextChar = (this.currentWord && this.targetLetterIndex < this.currentWord.length)
+        ? this.currentWord[this.targetLetterIndex]
+        : '✓';
+      nextLetterEl.textContent = nextChar;
+    }
+
+    // 스펠링 슬롯들
     const slotsContainer = document.getElementById('spellingSlots');
     if (slotsContainer && this.currentWord) {
       slotsContainer.innerHTML = '';
@@ -1088,7 +1085,6 @@ class SpellingGalagaGame {
       }
     }
 
-    // 3. 목숨(하트 5개) 표시
     const livesEl = document.getElementById('hudLives');
     if (livesEl) {
       let hearts = '';
@@ -1098,7 +1094,6 @@ class SpellingGalagaGame {
       livesEl.textContent = hearts.trim();
     }
 
-    // 4. 점수 & 최고 점수 & 스테이지
     const scoreEl = document.getElementById('hudScore');
     if (scoreEl) {
       scoreEl.textContent = this.score.toLocaleString();
@@ -1118,17 +1113,15 @@ class SpellingGalagaGame {
     this.ctx.save();
 
     if (this.shakeTimer > 0) {
-      const shakeMag = (this.shakeTimer / 16) * 8;
+      const shakeMag = (this.shakeTimer / 14) * 6;
       const ox = (Math.random() - 0.5) * shakeMag;
       const oy = (Math.random() - 0.5) * shakeMag;
       this.ctx.translate(ox, oy);
     }
 
-    // 깊은 우주 배경
     this.ctx.fillStyle = '#050814';
     this.ctx.fillRect(0, 0, this.virtualWidth, this.virtualHeight);
 
-    // 스타필드 (워프 시 속도선 스트레치)
     const isWarp = this.warpTimer > 0;
     this.stars.forEach(s => {
       this.ctx.fillStyle = s.color;
@@ -1139,7 +1132,6 @@ class SpellingGalagaGame {
       }
     });
 
-    // 트랙터 빔 렌더링
     if (this.activeTractorBeam) {
       this.sprites.drawTractorBeam(
         this.ctx,
@@ -1149,17 +1141,15 @@ class SpellingGalagaGame {
       );
     }
 
-    // 파워업 아이템 렌더링
     this.powerups.forEach(p => {
       this.sprites.drawPowerup(this.ctx, p.x, p.y, p.type);
     });
 
-    // 적 탄환
     this.enemyBullets.forEach(b => {
       this.sprites.drawEnemyBullet(this.ctx, b.x, b.y, b.size);
     });
 
-    // 외계인 편대
+    // 외계인 편대 렌더링
     const expectedLetter = this.currentWord ? this.currentWord[this.targetLetterIndex] : null;
     this.enemies.forEach(e => {
       const isTarget = (e.letter === expectedLetter);
@@ -1178,12 +1168,10 @@ class SpellingGalagaGame {
       );
     });
 
-    // 플레이어 미사일
     this.missiles.forEach(m => {
       this.sprites.drawMissile(this.ctx, m.x, m.y, m.width, m.height);
     });
 
-    // 플레이어 전투기
     if ((this.state === 'PLAYING' || this.state === 'WORD_CLEAR') && !this.player.captured) {
       this.sprites.drawPlayer(
         this.ctx,
@@ -1198,13 +1186,11 @@ class SpellingGalagaGame {
       );
     }
 
-    // 폭발 파티클
     this.particles.forEach(p => {
       this.ctx.fillStyle = p.color;
       this.ctx.fillRect(p.x, p.y, p.size, p.size);
     });
 
-    // 플로팅 텍스트
     this.floatingTexts.forEach(ft => {
       this.ctx.save();
       this.ctx.fillStyle = ft.color;
@@ -1216,7 +1202,6 @@ class SpellingGalagaGame {
       this.ctx.restore();
     });
 
-    // 오버레이 화면들
     if (this.state === 'TITLE') {
       this.renderTitleScreen();
     } else if (this.state === 'WORD_CLEAR') {
@@ -1244,13 +1229,12 @@ class SpellingGalagaGame {
     this.ctx.font = "bold 18px 'DungGeunMo', sans-serif";
     this.ctx.fillText("우주 단어 수호대 - 스펠링 갤러그", this.virtualWidth / 2, 205);
 
-    // 가이드 텍스트
     this.ctx.fillStyle = '#ffffff';
     this.ctx.shadowBlur = 0;
     this.ctx.font = "14px 'DungGeunMo', sans-serif";
-    this.ctx.fillText("1. 화면 상단의 [단어 뜻]을 보고 올바른 스펠링을 확인하세요.", this.virtualWidth / 2, 270);
-    this.ctx.fillText("2. 적 외계인이 품은 알파벳을 철자 순서대로 정확하게 격추하세요!", this.virtualWidth / 2, 300);
-    this.ctx.fillText("3. 엉뚱한 글자를 쏘면 목숨이 깎입니다 (총 5개 목숨 시스템).", this.virtualWidth / 2, 330);
+    this.ctx.fillText("1. 상단 전광판의 [단어 뜻]과 [지금 쏠 글자]를 확인하세요.", this.virtualWidth / 2, 270);
+    this.ctx.fillText("2. 🎯 머리 위에 노란 화살표가 있는 외계인을 조준 사격하세요!", this.virtualWidth / 2, 300);
+    this.ctx.fillText("3. 🟢 초급 모드에서는 오답을 쏴도 목숨이 깎이지 않습니다 (안심 사격)!", this.virtualWidth / 2, 330);
     this.ctx.fillText("4. ⚡ 듀얼 파이터, 🛡️ 쉴드, 💣 폭탄, ❤️ 하트 아이템을 획득하세요!", this.virtualWidth / 2, 360);
     this.ctx.fillText("5. 크롬북: 방향키 이동 & 스페이스바 발사 (또는 화면 드래그 & 터치)!", this.virtualWidth / 2, 390);
 
