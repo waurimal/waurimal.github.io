@@ -1,0 +1,594 @@
+@charset "UTF-8";
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+@import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff');
+
+@font-face {
+  font-family: 'DungGeunMo';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+:root {
+  --neon-blue: #38bdf8;
+  --neon-gold: #ffd700;
+  --neon-red: #ff3366;
+  --neon-green: #4ade80;
+  --bg-dark: #050814;
+  --panel-bg: rgba(15, 23, 42, 0.85);
+  --border-neon: rgba(56, 189, 248, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: #ffffff;
+  font-family: 'Pretendard Variable', 'DungGeunMo', sans-serif;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 상단 메인 HUD 바 */
+.game-header {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(5, 8, 20, 0.9) 100%);
+  border-bottom: 2px solid var(--border-neon);
+  box-shadow: 0 4px 20px rgba(56, 189, 248, 0.2);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  z-index: 10;
+}
+
+.hud-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 0 8px var(--neon-blue));
+}
+
+.logo-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.9rem;
+  color: var(--neon-gold);
+  letter-spacing: 1px;
+}
+
+/* 목표 단어 뜻 전광판 */
+.target-display {
+  display: flex;
+  align-items: center;
+  background: rgba(30, 41, 59, 0.9);
+  border: 2px solid var(--neon-gold);
+  border-radius: 8px;
+  padding: 6px 14px;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.35);
+}
+
+.meaning-label {
+  font-family: 'DungGeunMo', sans-serif;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-right: 8px;
+}
+
+.meaning-text {
+  font-family: 'DungGeunMo', 'Pretendard', sans-serif;
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #fef08a;
+  letter-spacing: 0.5px;
+}
+
+/* 스펠링 슬롯 컨테이너 (_ _ _ _ _) */
+.spelling-slots-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.letter-slot {
+  width: 32px;
+  height: 38px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 2px solid #475569;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1rem;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+/* 이미 맞힌 글자 */
+.letter-slot.filled {
+  border-color: var(--neon-blue);
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+}
+
+/* 지금 맞춰야 하는 타깃 글자 (빛나는 효과) */
+.letter-slot.target {
+  border-color: var(--neon-gold);
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.2);
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.6);
+  animation: pulseGlow 0.8s infinite alternate ease-in-out;
+}
+
+@keyframes pulseGlow {
+  0% { transform: scale(1); border-color: var(--neon-blue); }
+  100% { transform: scale(1.08); border-color: var(--neon-gold); box-shadow: 0 0 16px var(--neon-gold); }
+}
+
+/* 우측 정보 패널 (목숨, 점수, 제어 버튼) */
+.hud-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.stats-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.stat-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.55rem;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.95rem;
+  color: #38bdf8;
+}
+
+.lives-value {
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+}
+
+/* 컨트롤 액션 버튼 */
+.control-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.hud-btn {
+  background: #1e293b;
+  border: 1px solid #475569;
+  color: #e2e8f0;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-family: 'DungGeunMo', sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.hud-btn:hover {
+  background: #334155;
+  border-color: var(--neon-blue);
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+}
+
+.hud-btn.primary {
+  background: #2563eb;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+.hud-btn.primary:hover {
+  background: #1d4ed8;
+}
+
+.hud-select {
+  background: #1e293b;
+  border: 1px solid #475569;
+  color: #ffd700;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-family: 'DungGeunMo', sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.hud-select:focus {
+  border-color: var(--neon-blue);
+}
+
+/* 게임 캔버스 메인 영역 */
+.game-viewport {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #030712;
+  overflow: hidden;
+}
+
+#gameCanvas {
+  display: block;
+  background-color: #050814;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+  image-rendering: pixelated;
+}
+
+/* 터치 / 크롬북 화면 컨트롤 오버레이 */
+.touch-controls {
+  position: absolute;
+  bottom: 16px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  pointer-events: none;
+}
+
+.touch-hint {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.touch-fire-btn {
+  pointer-events: auto;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ff3366 0%, #b91c1c 100%);
+  border: 3px solid #fecdd3;
+  color: #ffffff;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.75rem;
+  box-shadow: 0 0 16px rgba(255, 51, 102, 0.6);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s ease;
+}
+
+.touch-fire-btn:active {
+  transform: scale(0.92);
+  filter: brightness(1.2);
+}
+
+/* 모던 네이티브 다이얼로그 (Dialog) 스타일링 */
+dialog {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: auto;
+  max-width: 92vw;
+  width: 580px;
+  outline: none;
+}
+
+dialog::backdrop {
+  background: rgba(5, 8, 20, 0.82);
+  backdrop-filter: blur(6px);
+}
+
+.modal-card {
+  background: #0f172a;
+  border: 2px solid var(--neon-blue);
+  border-radius: 14px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 24px rgba(56, 189, 248, 0.4);
+  padding: 24px;
+  color: #ffffff;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #334155;
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+}
+
+.modal-title {
+  font-family: 'DungGeunMo', sans-serif;
+  font-size: 1.3rem;
+  color: var(--neon-gold);
+}
+
+.result-title.win {
+  color: #4ade80;
+}
+
+.result-title.lose {
+  color: #f87171;
+}
+
+.modal-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.modal-close-btn:hover {
+  color: #ffffff;
+}
+
+/* 학습 리포트 모달 */
+.result-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.res-stat-card {
+  background: #1e293b;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  text-align: center;
+}
+
+.res-stat-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.res-stat-num {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1.1rem;
+  color: var(--neon-blue);
+}
+
+.words-history-title {
+  font-family: 'DungGeunMo', sans-serif;
+  font-size: 0.95rem;
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.words-history-list {
+  max-height: 180px;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  background: #090d16;
+  padding: 6px;
+  margin-bottom: 20px;
+}
+
+.words-history-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-bottom: 1px solid #1e293b;
+  font-size: 0.9rem;
+}
+
+.words-history-list li:last-child {
+  border-bottom: none;
+}
+
+.words-history-list li.cleared .word-badge {
+  background: #065f46;
+  color: #34d399;
+}
+
+.words-history-list li.missed .word-badge {
+  background: #881337;
+  color: #f87171;
+}
+
+.word-badge {
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.word-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.85rem;
+  color: #ffffff;
+}
+
+.word-mean {
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.btn-tts {
+  background: #334155;
+  border: 1px solid #475569;
+  color: #f1f5f9;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.btn-tts:hover {
+  background: #475569;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* 선생님 커스텀 단어 관리 모달 */
+.custom-input-guide {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.custom-textarea {
+  width: 100%;
+  height: 160px;
+  background: #090d16;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 10px;
+  color: #ffffff;
+  font-family: monospace;
+  font-size: 0.95rem;
+  resize: vertical;
+  margin-bottom: 14px;
+}
+
+.custom-textarea:focus {
+  outline: none;
+  border-color: var(--neon-blue);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+}
+
+/* 카테고리 선택 드롭다운 팝업 */
+.category-selector-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 55vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.cat-btn {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #ffffff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.cat-btn:hover {
+  background: #2563eb;
+  border-color: #60a5fa;
+  transform: translateY(-2px);
+}
+
+.cat-name {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.cat-desc {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.cat-btn:hover .cat-desc {
+  color: #e2e8f0;
+}
+
+/* 명예의 전당 테이블 스타일링 */
+.hof-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-top: 10px;
+}
+
+.hof-table th, .hof-table td {
+  padding: 8px 10px;
+  text-align: center;
+  border-bottom: 1px solid #1e293b;
+}
+
+.hof-table th {
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
+.hof-table tr:hover {
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.hof-rank-1 { color: #ffd700; font-weight: bold; }
+.hof-rank-2 { color: #cbd5e1; font-weight: bold; }
+.hof-rank-3 { color: #f97316; font-weight: bold; }
+
+/* 안내 가이드 카드 */
+.guide-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #e2e8f0;
+}
+
+.guide-item {
+  background: #1e293b;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border-left: 3px solid var(--neon-blue);
+}

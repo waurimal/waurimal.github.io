@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>우주 단어 수호대: 스펠링 갤러그 (Spelling Galaga) - 와우리말 영어 놀이터</title>
+  
+  <!-- Pretendard 최신 웹폰트 및 아이콘 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- 와우리말 공통 에코시스템 -->
+  <link rel="stylesheet" href="../common/waurimal-theme.css">
+  <script src="../common/firebase-config.js"></script>
+  <script src="../common/curriculum.js"></script>
+
+  <!-- Firebase SDK (v10 compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
+  <link rel="stylesheet" href="css/game.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+</head>
+<body>
+
+  <!-- 상단 HUD 바 (뜻 전광판, 스펠링 슬롯, 목숨, 점수, 제어 버튼) -->
+  <header class="game-header">
+    <div class="hud-left">
+      <div class="logo-area">
+        <button type="button" class="hud-btn" style="background:#0284c7; border-color:#38bdf8;" onclick="location.href = (window.location.protocol === 'file:') ? '../waurimal.github.io/index.html' : 'https://waurimal.github.io/'" title="와우리말 포털 홈으로 이동">🏠 홈</button>
+        <span class="logo-icon">🚀</span>
+        <span class="logo-text">SPELLING GALAGA</span>
+      </div>
+
+      <!-- 목표 단어 뜻 전광판 -->
+      <div class="target-display">
+        <span class="meaning-label">목표 뜻:</span>
+        <span id="hudMeaning" class="meaning-text">게임을 시작하세요!</span>
+      </div>
+
+      <!-- 스펠링 슬롯 -->
+      <div id="spellingSlots" class="spelling-slots-container">
+        <!-- 동적으로 letter-slot 생성됨 -->
+      </div>
+    </div>
+
+    <div class="hud-right">
+      <div class="stats-group">
+        <!-- 스테이지 -->
+        <div class="stat-item">
+          <span class="stat-label">STAGE</span>
+          <span id="hudStage" class="stat-value">STAGE 1</span>
+        </div>
+
+        <!-- 목숨 (하트 5개) -->
+        <div class="stat-item">
+          <span class="stat-label">LIVES</span>
+          <span id="hudLives" class="stat-value lives-value">❤️ ❤️ ❤️ ❤️ ❤️</span>
+        </div>
+
+        <!-- 점수 -->
+        <div class="stat-item">
+          <span class="stat-label">SCORE</span>
+          <span id="hudScore" class="stat-value">0</span>
+        </div>
+
+        <!-- 최고 점수 -->
+        <div class="stat-item">
+          <span class="stat-label">HIGH</span>
+          <span id="hudHighScore" class="stat-value">0</span>
+        </div>
+      </div>
+
+      <!-- 제어 버튼들 -->
+      <div class="control-buttons">
+        <!-- 난이도 선택 -->
+        <select id="selectDifficulty" class="hud-select" title="학습 난이도 선택">
+          <option value="easy">🟢 초급 (힌트)</option>
+          <option value="normal" selected>🟡 중급 (표준)</option>
+          <option value="hard">🔴 고급 (암기)</option>
+        </select>
+
+        <button type="button" id="btnHof" class="hud-btn" title="명예의 전당 랭킹"><i class="fas fa-trophy" style="color:#ffd700;"></i> 랭킹</button>
+        <button type="button" id="btnGuide" class="hud-btn" title="게임 방법"><i class="fas fa-question-circle"></i> 도움말</button>
+        <button type="button" id="btnCategory" class="hud-btn" title="단어장 및 교과서 단원 선택">📚 단어장</button>
+        <button type="button" id="btnCustomWord" class="hud-btn" title="선생님 맞춤 단어 등록">✏️ 맞춤 단어</button>
+        <button type="button" id="btnAudioToggle" class="hud-btn" title="음악 및 효과음 켜기/끄기">🔊 소리 ON</button>
+        <button type="button" id="btnFullscreen" class="hud-btn" title="전체화면">⛶ 전체화면</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 메인 게임 뷰포트 -->
+  <main class="game-viewport">
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <!-- 크롬북 터치스크린 및 모바일용 터치 오버레이 -->
+    <div class="touch-controls">
+      <div class="touch-hint">크롬북: 방향키 이동 & 스페이스바 발사 (또는 화면 드래그)</div>
+      <button type="button" id="touchFireBtn" class="touch-fire-btn" aria-label="미사일 발사">FIRE</button>
+    </div>
+  </main>
+
+  <!-- 1. 게임 결과 및 학습 리포트 모달 (Native Dialog) -->
+  <dialog id="resultModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="resultTitle" class="modal-title result-title win">🏆 은하계 수호 성공!</h2>
+        <button type="button" class="modal-close-btn" onclick="document.getElementById('resultModal').close()">✕</button>
+      </div>
+
+      <div class="result-stats">
+        <div class="res-stat-card">
+          <div class="res-stat-label">최종 점수</div>
+          <div id="resultScore" class="res-stat-num">0</div>
+        </div>
+        <div class="res-stat-card">
+          <div class="res-stat-label">사격 명중률</div>
+          <div id="resultAccuracy" class="res-stat-num">0%</div>
+        </div>
+      </div>
+
+      <h3 class="words-history-title">📖 오늘 학습한 단어 리스트</h3>
+      <ul id="resultWordsList" class="words-history-list">
+        <!-- 동적으로 단어 목록 추가 -->
+      </ul>
+
+      <div class="modal-actions">
+        <button type="button" id="btnResultChangeCategory" class="hud-btn">📚 다른 단어장</button>
+        <button type="button" id="btnResultRetry" class="hud-btn primary">🔄 다시 도전하기</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 2. 단어장(카테고리 & 교과서 단원) 선택 모달 -->
+  <dialog id="categoryModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title">📚 플레이할 단어장을 선택하세요</h2>
+        <button type="button" class="modal-close-btn" onclick="document.getElementById('categoryModal').close()">✕</button>
+      </div>
+
+      <div id="categoryListContainer" class="category-selector-card">
+        <!-- 동적으로 단어장 버튼 생성 -->
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 3. 교사 맞춤 단어 등록 모달 -->
+  <dialog id="customWordModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title">✏️ 선생님 맞춤 단어 등록</h2>
+        <button type="button" class="modal-close-btn" onclick="document.getElementById('customWordModal').close()">✕</button>
+      </div>
+
+      <p class="custom-input-guide">
+        오늘 수업에 필요한 단어를 입력하세요. 한 줄에 <strong>단어 : 뜻</strong> 형식으로 작성합니다.<br>
+        (예시: <code>APPLE: 사과</code>, <code>SCHOOL: 학교</code>)
+      </p>
+
+      <textarea id="customWordTextarea" class="custom-textarea" placeholder="APPLE: 사과&#10;BANANA: 바나나&#10;FRIEND: 친구&#10;TEACHER: 선생님"></textarea>
+
+      <div class="modal-actions">
+        <button type="button" id="btnClearCustom" class="hud-btn" style="color: #f87171;">기본값 초기화</button>
+        <button type="button" class="hud-btn" onclick="document.getElementById('customWordModal').close()">취소</button>
+        <button type="button" id="btnSaveCustom" class="hud-btn primary">저장하고 플레이</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 4. 명예의 전당 (Hall of Fame) 랭킹 모달 -->
+  <dialog id="hofModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title">🏆 은하계 명예의 전당 (TOP 30)</h2>
+        <button type="button" class="modal-close-btn" onclick="document.getElementById('hofModal').close()">✕</button>
+      </div>
+
+      <p style="font-size:0.85rem; color:#94a3b8; margin-bottom:12px;">
+        스펠링 갤러그 최고 점수 기록입니다. (1224 순위제 & 학생 이름 안심 마스킹 적용)
+      </p>
+
+      <div style="max-height:320px; overflow-y:auto;">
+        <table class="hof-table">
+          <thead>
+            <tr>
+              <th>순위</th>
+              <th>도전자</th>
+              <th>점수</th>
+              <th>명중률</th>
+              <th>학습 단어</th>
+            </tr>
+          </thead>
+          <tbody id="hofTableBody">
+            <tr><td colspan="5" style="color:#94a3b8; padding:20px;">기록을 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="hud-btn primary" onclick="document.getElementById('hofModal').close()">닫기</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 5. 게임 방법 및 아이템 안내 모달 -->
+  <dialog id="guideModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title">❓ 스펠링 갤러그 게임 가이드</h2>
+        <button type="button" class="modal-close-btn" onclick="document.getElementById('guideModal').close()">✕</button>
+      </div>
+
+      <div class="guide-content">
+        <div class="guide-item">
+          <strong>🎯 기본 게임 룰</strong><br>
+          상단 전광판의 <strong>단어 뜻</strong>을 확인하고, 편대 비행 중인 외계인이 품은 알파벳을 <strong>철자 순서대로 정확하게 조준 격추</strong>하세요!
+        </div>
+        <div class="guide-item">
+          <strong>❤️ 5개 목숨 시스템</strong><br>
+          순서에 맞지 않는 엉뚱한 철자를 맞히거나 적 기체/탄환과 충돌하면 목숨이 1개 차감됩니다 (총 5번 실패 시 게임 오버).
+        </div>
+        <div class="guide-item">
+          <strong>⚡ 듀얼 파이터 & 트랙터 빔 구출</strong><br>
+          보스 외계인의 인력 광선(트랙터 빔)에 아군이 납치된 후, 다음 급강하 때 보스를 격추하면 아군 기체를 구출하여 <strong>강력한 2연장 듀얼 파이터</strong>로 합체합니다!
+        </div>
+        <div class="guide-item">
+          <strong>🎁 우주 드롭 파워업 아이템</strong><br>
+          - ❤️ <strong>하트</strong>: 목숨 +1 회복 (최대 5개)<br>
+          - ⚡ <strong>듀얼</strong>: 듀얼 파이터 즉시 변신<br>
+          - 🛡️ <strong>쉴드</strong>: 적 탄환 및 충돌 1회 완벽 방어<br>
+          - 💣 <strong>폭탄</strong>: 화면 내 오답 방해 외계인들을 모두 제거하는 스마트 EMP<br>
+          - ⏱️ <strong>슬로우</strong>: 8초간 적 이동 및 탄환 50% 감속
+        </div>
+        <div class="guide-item">
+          <strong>🎮 크롬북 & 터치 조작</strong><br>
+          - 키보드: 좌우 방향키(`←`/`→` 또는 `A`/`D`) + 스페이스바 연사 발사<br>
+          - 터치스크린: 화면 드래그로 기체 이동 + 화면 터치(또는 FIRE 버튼) 발사
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="hud-btn primary" onclick="document.getElementById('guideModal').close()">확인</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 게임 스크립트 로드 -->
+  <script src="js/words.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/sprites.js"></script>
+  <script src="js/game.js"></script>
+
+  <!-- UI 상호작용 바인딩 스크립트 -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. 게임 인스턴스 생성
+      window.gameInstance = new SpellingGalagaGame('gameCanvas');
+
+      // 2. 오디오 토글
+      const audioBtn = document.getElementById('btnAudioToggle');
+      audioBtn.addEventListener('click', () => {
+        const isMuted = window.gameInstance.sounds.toggleMute();
+        audioBtn.textContent = isMuted ? '🔇 소리 OFF' : '🔊 소리 ON';
+      });
+
+      // 3. 전체화면 토글
+      const fsBtn = document.getElementById('btnFullscreen');
+      fsBtn.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(err => {
+            console.warn(`Fullscreen error: ${err.message}`);
+          });
+          fsBtn.textContent = '🗗 창모드';
+        } else {
+          document.exitFullscreen();
+          fsBtn.textContent = '⛶ 전체화면';
+        }
+      });
+
+      // 4. 난이도 변경 셀렉트
+      const selectDiff = document.getElementById('selectDifficulty');
+      selectDiff.addEventListener('change', (e) => {
+        window.gameInstance.setDifficulty(e.target.value);
+      });
+
+      // 5. 터치 발사 버튼
+      const touchFireBtn = document.getElementById('touchFireBtn');
+      const handleFire = (e) => {
+        e.preventDefault();
+        window.gameInstance.sounds.init();
+        if (window.gameInstance.state === 'TITLE' || window.gameInstance.state === 'GAME_OVER' || window.gameInstance.state === 'VICTORY') {
+          window.gameInstance.startGame();
+        } else {
+          window.gameInstance.shootMissile();
+        }
+      };
+      touchFireBtn.addEventListener('touchstart', handleFire, { passive: false });
+      touchFireBtn.addEventListener('mousedown', handleFire);
+
+      // 6. 단어장 모달 열기 & 목록 렌더링
+      const catModal = document.getElementById('categoryModal');
+      const btnCategory = document.getElementById('btnCategory');
+      const catListContainer = document.getElementById('categoryListContainer');
+
+      const renderCategoryList = () => {
+        catListContainer.innerHTML = '';
+        const cats = window.gameInstance.wordManager.getCategoryList();
+        cats.forEach(c => {
+          const btn = document.createElement('button');
+          btn.className = 'cat-btn';
+          btn.innerHTML = `
+            <span class="cat-name">${c.name} (${c.count}단어)</span>
+            <span class="cat-desc">${c.description}</span>
+          `;
+          btn.addEventListener('click', () => {
+            catModal.close();
+            window.gameInstance.startGame(c.key);
+          });
+          catListContainer.appendChild(btn);
+        });
+      };
+
+      btnCategory.addEventListener('click', () => {
+        renderCategoryList();
+        catModal.showModal();
+      });
+
+      // 7. 커스텀 단어 등록 모달
+      const customModal = document.getElementById('customWordModal');
+      const btnCustomWord = document.getElementById('btnCustomWord');
+      const customTextarea = document.getElementById('customWordTextarea');
+      const btnSaveCustom = document.getElementById('btnSaveCustom');
+      const btnClearCustom = document.getElementById('btnClearCustom');
+
+      btnCustomWord.addEventListener('click', () => {
+        const existing = window.gameInstance.wordManager.getCustomWords();
+        if (existing.length > 0) {
+          customTextarea.value = existing.map(item => `${item.word}: ${item.meaning}`).join('\n');
+        } else {
+          customTextarea.value = "APPLE: 사과\nBANANA: 바나나\nFRIEND: 친구\nSCHOOL: 학교\nTEACHER: 선생님";
+        }
+        customModal.showModal();
+      });
+
+      btnSaveCustom.addEventListener('click', () => {
+        const lines = customTextarea.value.split('\n');
+        const items = [];
+        lines.forEach(line => {
+          const trimmed = line.trim();
+          if (!trimmed) return;
+          const parts = trimmed.split(/[:=,-]/);
+          if (parts.length >= 2) {
+            items.push({
+              word: parts[0].trim(),
+              meaning: parts.slice(1).join(':').trim()
+            });
+          }
+        });
+
+        if (items.length === 0) {
+          alert("단어 형식이 올바르지 않습니다. (예: APPLE: 사과)");
+          return;
+        }
+
+        try {
+          window.gameInstance.wordManager.saveCustomWords(items);
+          customModal.close();
+          alert(`총 ${items.length}개의 맞춤 단어가 성공적으로 저장되었습니다!`);
+          window.gameInstance.startGame('custom');
+        } catch (e) {
+          alert(e.message || "단어 저장 중 오류가 발생했습니다.");
+        }
+      });
+
+      btnClearCustom.addEventListener('click', () => {
+        if (confirm("등록된 커스텀 단어를 초기화하시겠습니까?")) {
+          window.gameInstance.wordManager.clearCustomWords();
+          customTextarea.value = '';
+          customModal.close();
+          alert("커스텀 단어가 초기화되었습니다.");
+        }
+      });
+
+      // 8. 도움말 모달
+      const guideModal = document.getElementById('guideModal');
+      document.getElementById('btnGuide').addEventListener('click', () => {
+        guideModal.showModal();
+      });
+
+      // 9. 명예의 전당 (HOF) 모달
+      const hofModal = document.getElementById('hofModal');
+      const btnHof = document.getElementById('btnHof');
+      const hofTableBody = document.getElementById('hofTableBody');
+
+      btnHof.addEventListener('click', async () => {
+        hofModal.showModal();
+        hofTableBody.innerHTML = '<tr><td colspan="5" style="color:#94a3b8; padding:20px;"><i class="fas fa-spinner fa-spin"></i> 랭킹을 불러오는 중...</td></tr>';
+
+        try {
+          let list = [];
+
+          // 1. Firestore 조회
+          if (window.WaurimalFirebase && window.WaurimalFirebase.getDb) {
+            const db = window.WaurimalFirebase.getDb();
+            if (db) {
+              const snap = await db.collection('games').doc('spelling_galaga').collection('scores')
+                .orderBy('score', 'desc')
+                .limit(40)
+                .get();
+
+              snap.forEach(doc => {
+                list.push(doc.data());
+              });
+            }
+          }
+
+          // 2. 로컬 백업과 병합
+          if (list.length === 0) {
+            list = JSON.parse(localStorage.getItem('spelling_galaga_scores_history') || '[]');
+          }
+
+          if (list.length === 0) {
+            hofTableBody.innerHTML = '<tr><td colspan="5" style="color:#94a3b8; padding:20px;">아직 등록된 기록이 없습니다. 첫 주인공이 되어보세요!</td></tr>';
+            return;
+          }
+
+          // 중복 정렬 및 TOP 30 렌더링
+          list.sort((a, b) => b.score - a.score);
+          const top30 = list.slice(0, 30);
+
+          hofTableBody.innerHTML = '';
+          top30.forEach((item, idx) => {
+            const rank = idx + 1;
+            const rankClass = rank === 1 ? 'hof-rank-1' : (rank === 2 ? 'hof-rank-2' : (rank === 3 ? 'hof-rank-3' : ''));
+            const medal = rank === 1 ? '🥇 ' : (rank === 2 ? '🥈 ' : (rank === 3 ? '🥉 ' : ''));
+
+            // 이름 마스킹 처리
+            const rawName = item.name || '도전자';
+            const masked = (window.WaurimalMask && window.WaurimalMask.maskName)
+              ? window.WaurimalMask.maskName(rawName)
+              : (rawName.length > 2 ? rawName[0] + 'O' + rawName.slice(2) : rawName[0] + 'O');
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td class="${rankClass}">${medal}${rank}위</td>
+              <td>${item.grade ? `${item.grade}-${item.classNum || 1} ` : ''}<strong>${masked}</strong></td>
+              <td style="color:#38bdf8; font-weight:bold;">${(item.score || 0).toLocaleString()}</td>
+              <td>${item.accuracy || 0}%</td>
+              <td style="color:#94a3b8; font-size:0.8rem;">${item.clearedCount || 0}단어</td>
+            `;
+            hofTableBody.appendChild(tr);
+          });
+        } catch (err) {
+          console.warn("HOF load error:", err);
+          hofTableBody.innerHTML = '<tr><td colspan="5" style="color:#f87171; padding:20px;">랭킹을 불러오지 못했습니다. 로컬 점수를 확인해주세요.</td></tr>';
+        }
+      });
+
+      // 10. 결과 모달 내 액션
+      const resultModal = document.getElementById('resultModal');
+      document.getElementById('btnResultRetry').addEventListener('click', () => {
+        resultModal.close();
+        window.gameInstance.startGame();
+      });
+      document.getElementById('btnResultChangeCategory').addEventListener('click', () => {
+        resultModal.close();
+        renderCategoryList();
+        catModal.showModal();
+      });
+    });
+  </script>
+</body>
+</html>
