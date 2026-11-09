@@ -150,6 +150,7 @@ class YutnoriMultiplayerManager {
         const roomRef = doc(db, ROOMS_COLLECTION, code);
 
         const isHostPlaying = (mode === 'team') ? Boolean(hostParticipates) : true;
+        const selectedThrowerMode = (mode === 'team') ? (options.throwerMode || 'all_once') : 'all_once';
 
         const initialRoom = {
             roomId: code,
@@ -157,6 +158,7 @@ class YutnoriMultiplayerManager {
             mode: mode, // '1v1' | 'team'
             pieceCount: pieceCount,
             grade: gradeFilter,
+            throwerMode: selectedThrowerMode, // 'all_once' (모두 한 번씩 던지기) | 'streak' (보너스 연속) | 'leader' (대표 1인)
             hostId: this.mySessionId,
             hostParticipates: isHostPlaying,
             players: {
@@ -568,6 +570,45 @@ class YutnoriMultiplayerManager {
         }
     }
 
+    /**
+     * 방장의 윷 던지는 사람 설정 토글/변경 (all_once <-> streak <-> leader)
+     */
+    async toggleThrowerMode() {
+        if (!this.currentRoomId || !this.roomData) return;
+        if (this.roomData.hostId !== this.mySessionId) {
+            throw new Error("방장만 설정을 변경할 수 있습니다.");
+        }
+        if (this.roomData.status !== 'lobby') return;
+
+        const currentMode = this.roomData.throwerMode || 'all_once';
+        let newMode = 'all_once';
+        if (currentMode === 'all_once') newMode = 'streak';
+        else if (currentMode === 'streak') newMode = 'leader';
+        else newMode = 'all_once';
+
+        const roomRef = doc(db, ROOMS_COLLECTION, this.currentRoomId);
+        await updateDoc(roomRef, {
+            throwerMode: newMode,
+            updatedAt: Date.now()
+        });
+        return newMode;
+    }
+
+    async setThrowerMode(newMode) {
+        if (!this.currentRoomId || !this.roomData) return;
+        if (this.roomData.hostId !== this.mySessionId) {
+            throw new Error("방장만 설정을 변경할 수 있습니다.");
+        }
+        if (this.roomData.status !== 'lobby') return;
+        if (!['all_once', 'streak', 'leader'].includes(newMode)) return;
+
+        const roomRef = doc(db, ROOMS_COLLECTION, this.currentRoomId);
+        await updateDoc(roomRef, {
+            throwerMode: newMode,
+            updatedAt: Date.now()
+        });
+    }
+
     // ==========================================
     // 4. 게임 시작 (방장 전용)
     // ==========================================
@@ -794,9 +835,48 @@ class YutnoriMultiplayerManager {
             }
 
             if (hasExtraTurn) {
-                // 윷, 모 또는 말 잡기로 인한 추가 턴 유지!
+                // 윷 던지는 사람 설정(throwerMode) 반영:
+                // 'all_once': 모두 한 번씩 던지기 - 윷·모·말 잡기 보너스 기회에도 팀 내 다음 선수가 윷을 던짐
+                // 'streak': 보너스 연속 던지기 - 기존과 같이 던진 학생이 한 번 더 던짐
+                // 'leader': 대표 1인 던지기 - 팀 대표(0번)가 던짐
+                const throwerMode = this.roomData.throwerMode || 'all_once';
+                let nextTurnId = this.mySessionId;
+                let nextBlueIndex = (typeof this.roomData.bluePlayerIndex === 'number') ? this.roomData.bluePlayerIndex : 0;
+                let nextWhiteIndex = (typeof this.roomData.whitePlayerIndex === 'number') ? this.roomData.whitePlayerIndex : -1;
+
+                if (throwerMode === 'all_once') {
+                    const currentTeam = this.roomData.currentTeam || 'blue';
+                    const players = Object.values(this.roomData.players || {});
+                    const currentTeamPlayers = players.filter(p => !p.isSpectator && p.team === currentTeam);
+
+                    if (currentTeamPlayers.length > 0) {
+                        if (currentTeam === 'blue') {
+                            nextBlueIndex = (nextBlueIndex + 1) % currentTeamPlayers.length;
+                            nextTurnId = currentTeamPlayers[nextBlueIndex].id;
+                        } else {
+                            nextWhiteIndex = (nextWhiteIndex + 1) % currentTeamPlayers.length;
+                            nextTurnId = currentTeamPlayers[nextWhiteIndex].id;
+                        }
+                    }
+                } else if (throwerMode === 'leader') {
+                    const currentTeam = this.roomData.currentTeam || 'blue';
+                    const players = Object.values(this.roomData.players || {});
+                    const currentTeamPlayers = players.filter(p => !p.isSpectator && p.team === currentTeam);
+                    if (currentTeamPlayers.length > 0) {
+                        nextTurnId = currentTeamPlayers[0].id;
+                    }
+                }
+
+                const nextPlayer = this.roomData.players ? this.roomData.players[nextTurnId] : null;
+                const nextPlayerName = nextPlayer ? nextPlayer.name : '팀원';
+
+                // 윷, 모 또는 말 잡기로 인한 추가 턴 유지 (all_once 모드에서는 팀의 다음 학생에게 기회 부여)
                 await updateDoc(roomRef, {
                     gameState: 'WAIT_ROLL',
+                    currentTurnId: nextTurnId,
+                    bluePlayerIndex: nextBlueIndex,
+                    whitePlayerIndex: nextWhiteIndex,
+                    currentTurnIndex: ((this.roomData.currentTurnIndex || 0) + 1),
                     teamsState: teamsState,
                     matchStats: currentStats,
                     currentRoll: null,
@@ -805,6 +885,8 @@ class YutnoriMultiplayerManager {
                     lastAction: {
                         type: caughtEnemy ? 'CAUGHT_PIECE' : 'EXTRA_TURN',
                         actorId: this.mySessionId,
+                        nextTurnPlayerId: nextTurnId,
+                        nextTurnPlayerName: nextPlayerName,
                         caughtCount: caughtCount || 1,
                         timestamp: Date.now()
                     },
@@ -842,6 +924,7 @@ class YutnoriMultiplayerManager {
             return {};
         }
 
+        const throwerMode = this.roomData.throwerMode || 'all_once';
         const players = Object.values(this.roomData.players);
         const bluePlayers = players.filter(p => !p.isSpectator && p.team === 'blue');
         const whitePlayers = players.filter(p => !p.isSpectator && p.team === 'white');
@@ -858,21 +941,31 @@ class YutnoriMultiplayerManager {
         let nextBlueIndex = (typeof this.roomData.bluePlayerIndex === 'number') ? this.roomData.bluePlayerIndex : 0;
         let nextWhiteIndex = (typeof this.roomData.whitePlayerIndex === 'number') ? this.roomData.whitePlayerIndex : -1;
 
-        if (nextTeam === 'white') {
-            if (whitePlayers.length > 0) {
-                nextWhiteIndex = (nextWhiteIndex + 1) % whitePlayers.length;
-                nextPlayer = whitePlayers[nextWhiteIndex];
-            } else if (bluePlayers.length > 0) {
-                nextBlueIndex = (nextBlueIndex + 1) % bluePlayers.length;
-                nextPlayer = bluePlayers[nextBlueIndex];
+        if (throwerMode === 'leader') {
+            if (nextTeam === 'white') {
+                nextPlayer = whitePlayers[0] || bluePlayers[0];
+                nextWhiteIndex = 0;
+            } else {
+                nextPlayer = bluePlayers[0] || whitePlayers[0];
+                nextBlueIndex = 0;
             }
-        } else { // nextTeam === 'blue'
-            if (bluePlayers.length > 0) {
-                nextBlueIndex = (nextBlueIndex + 1) % bluePlayers.length;
-                nextPlayer = bluePlayers[nextBlueIndex];
-            } else if (whitePlayers.length > 0) {
-                nextWhiteIndex = (nextWhiteIndex + 1) % whitePlayers.length;
-                nextPlayer = whitePlayers[nextWhiteIndex];
+        } else {
+            if (nextTeam === 'white') {
+                if (whitePlayers.length > 0) {
+                    nextWhiteIndex = (nextWhiteIndex + 1) % whitePlayers.length;
+                    nextPlayer = whitePlayers[nextWhiteIndex];
+                } else if (bluePlayers.length > 0) {
+                    nextBlueIndex = (nextBlueIndex + 1) % bluePlayers.length;
+                    nextPlayer = bluePlayers[nextBlueIndex];
+                }
+            } else { // nextTeam === 'blue'
+                if (bluePlayers.length > 0) {
+                    nextBlueIndex = (nextBlueIndex + 1) % bluePlayers.length;
+                    nextPlayer = bluePlayers[nextBlueIndex];
+                } else if (whitePlayers.length > 0) {
+                    nextWhiteIndex = (nextWhiteIndex + 1) % whitePlayers.length;
+                    nextPlayer = whitePlayers[nextWhiteIndex];
+                }
             }
         }
 

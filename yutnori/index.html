@@ -219,6 +219,26 @@
                                     </div>
                                 </div>
 
+                                <!-- 팀전 전용: 윷 던지는 사람 설정 -->
+                                <div id="onlineThrowerModeWrapper" class="mb-3 p-2.5 rounded-xl bg-slate-900/90 border border-amber-500/40">
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <label for="onlineCreateThrowerModeSelect" class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                                            <i class="fa-solid fa-users text-amber-400"></i> 윷 던지는 사람 설정
+                                        </label>
+                                        <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                                            모두 한 번씩 추천 ✨
+                                        </span>
+                                    </div>
+                                    <select id="onlineCreateThrowerModeSelect" class="w-full px-2.5 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white font-bold focus:outline-none focus:border-amber-500">
+                                        <option value="all_once" selected>모두가 한 번씩 던지기 (팀원 전원 순환 · 보너스도 다음 학생)</option>
+                                        <option value="streak">보너스 연속 던지기 (전통 룰 · 윷/모/잡기 시 동일인 한 번 더)</option>
+                                        <option value="leader">팀 대표 1인 던지기 (각 팀 대표 학생만 전담)</option>
+                                    </select>
+                                    <p class="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
+                                        • <strong>모두가 한 번씩 던지기</strong>: 윷·모·말 잡기 보너스 기회가 생겨도 팀의 다음 학생이 던져 모든 학생이 소외 없이 공평하게 한 번씩 던집니다.
+                                    </p>
+                                </div>
+
                                 <!-- 팀전 전용: 방장 게임 참여 옵션 -->
                                 <div id="onlineHostParticipateWrapper" class="mb-3 p-2.5 rounded-xl bg-slate-900/90 border border-amber-500/40 hidden">
                                     <div class="flex items-center justify-between gap-2">
@@ -677,6 +697,26 @@
                 </div>
                 <p class="text-[10px] text-slate-400 mt-1">
                     * 관전 모드로 전환하면 방장은 말을 두지 않고 사회자/선생님으로서 경기를 진행·관전합니다.
+                </p>
+            </div>
+
+            <!-- 팀전 전용: 윷 던지는 사람 설정 섹션 -->
+            <div id="lobbyThrowerSection" class="p-3 rounded-2xl bg-slate-950/80 border border-amber-500/40 mb-3 hidden">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-dice-d6 text-amber-400"></i> 던지는 사람:
+                        </span>
+                        <span id="lobbyThrowerModeBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            모두 한 번씩 던지기
+                        </span>
+                    </div>
+                    <button type="button" id="lobbyToggleThrowerModeBtn" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 transition cursor-pointer hidden">
+                        설정 변경 🔄
+                    </button>
+                </div>
+                <p id="lobbyThrowerModeDesc" class="text-[10px] text-slate-400 mt-1">
+                    * 윷·모·말 잡기 보너스 기회에도 팀의 다음 학생이 던져 모든 학생이 공평하게 한 번씩 던집니다.
                 </p>
             </div>
 
@@ -1412,13 +1452,13 @@
     </button>
 
     <!-- 스크립트 연결 (캐시 무효화 버전 쿼리 파라미터 적용) -->
-    <script src="questions.js?v=20261105_unlimited"></script>
-    <script src="game.js?v=20261105_unlimited"></script>
-    <script type="module" src="multiplayer.js?v=20261105_unlimited"></script>
+    <script src="questions.js?v=20261109_thrower_mode"></script>
+    <script src="game.js?v=20261109_thrower_mode"></script>
+    <script type="module" src="multiplayer.js?v=20261109_thrower_mode"></script>
 
     <!-- UI 화면 전환 및 온라인 멀티 제어 스크립트 -->
     <script type="module">
-        import { multiplayerManager } from './multiplayer.js?v=20261105_unlimited';
+        import { multiplayerManager } from './multiplayer.js?v=20261109_thrower_mode';
 
         // 전역 화면 전환 함수 (home: 첫화면 설정/명예의전당, game: 몰입형 게임화면)
         window.showScreen = function(screenId) {
@@ -1473,9 +1513,15 @@
             const closeLobbyTopBtn = document.getElementById('closeLobbyTopBtn');
             const onlineHostParticipateWrapper = document.getElementById('onlineHostParticipateWrapper');
             const onlineHostParticipateCheck = document.getElementById('onlineHostParticipateCheck');
+            const onlineThrowerModeWrapper = document.getElementById('onlineThrowerModeWrapper');
+            const onlineCreateThrowerModeSelect = document.getElementById('onlineCreateThrowerModeSelect');
             const lobbyHostRoleSection = document.getElementById('lobbyHostRoleSection');
             const lobbyHostRoleBadge = document.getElementById('lobbyHostRoleBadge');
             const lobbyToggleHostRoleBtn = document.getElementById('lobbyToggleHostRoleBtn');
+            const lobbyThrowerSection = document.getElementById('lobbyThrowerSection');
+            const lobbyThrowerModeBadge = document.getElementById('lobbyThrowerModeBadge');
+            const lobbyToggleThrowerModeBtn = document.getElementById('lobbyToggleThrowerModeBtn');
+            const lobbyThrowerModeDesc = document.getElementById('lobbyThrowerModeDesc');
             const lobbySpectatorSection = document.getElementById('lobbySpectatorSection');
             const lobbySpectatorName = document.getElementById('lobbySpectatorName');
             const lobbyAutoBalanceBtn = document.getElementById('lobbyAutoBalanceBtn');
@@ -1550,17 +1596,19 @@
             const joinOnlineRoomBtn = document.getElementById('joinOnlineRoomBtn');
             const leaveOnlineRoomBtn = document.getElementById('leaveOnlineRoomBtn');
 
-            // 팀전 모드일 때만 방장 게임 직접 참여 토글 박스 표시
-            if (onlineCreateModeSelect && onlineHostParticipateWrapper) {
-                const updateHostParticipateVisibility = () => {
-                    if (onlineCreateModeSelect.value === 'team') {
-                        onlineHostParticipateWrapper.classList.remove('hidden');
-                    } else {
-                        onlineHostParticipateWrapper.classList.add('hidden');
+            // 팀전 모드일 때만 방장 게임 직접 참여 토글 박스 및 윷 던지는 사람 설정 표시
+            if (onlineCreateModeSelect) {
+                const updateTeamOptionsVisibility = () => {
+                    const isTeam = (onlineCreateModeSelect.value === 'team');
+                    if (onlineHostParticipateWrapper) {
+                        onlineHostParticipateWrapper.classList.toggle('hidden', !isTeam);
+                    }
+                    if (onlineThrowerModeWrapper) {
+                        onlineThrowerModeWrapper.classList.toggle('hidden', !isTeam);
                     }
                 };
-                onlineCreateModeSelect.addEventListener('change', updateHostParticipateVisibility);
-                updateHostParticipateVisibility();
+                onlineCreateModeSelect.addEventListener('change', updateTeamOptionsVisibility);
+                updateTeamOptionsVisibility();
             }
 
             // 모드 탭 전환 (AI 컴퓨터 대전 vs 실시간 온라인 멀티)
@@ -1876,6 +1924,7 @@
                     const pieceCount = parseInt(onlineCreatePieceCountSelect.value, 10);
                     const grade = document.getElementById('gradeSelect').value;
                     const hostParticipates = (mode === 'team') ? (onlineHostParticipateCheck ? onlineHostParticipateCheck.checked : true) : true;
+                    const throwerMode = (mode === 'team' && onlineCreateThrowerModeSelect) ? onlineCreateThrowerModeSelect.value : 'all_once';
 
                     try {
                         createOnlineRoomBtn.disabled = true;
@@ -1888,7 +1937,8 @@
                             mode,
                             pieceCount,
                             gradeFilter: grade,
-                            hostParticipates
+                            hostParticipates,
+                            throwerMode
                         });
                         if (reconnectBanner) reconnectBanner.classList.add('hidden');
                         onlineLobbyModal.classList.remove('hidden');
@@ -2005,6 +2055,20 @@
                         alert(e.message || "팀 균등 배정 실패");
                     } finally {
                         lobbyAutoBalanceBtn.disabled = false;
+                    }
+                });
+            }
+
+            // 4-3. 윷 던지는 사람 설정 토글 버튼 (방장 전용)
+            if (lobbyToggleThrowerModeBtn) {
+                lobbyToggleThrowerModeBtn.addEventListener('click', async () => {
+                    try {
+                        lobbyToggleThrowerModeBtn.disabled = true;
+                        await multiplayerManager.toggleThrowerMode();
+                    } catch (e) {
+                        alert(e.message || "윷 던지는 사람 설정 변경 실패");
+                    } finally {
+                        lobbyToggleThrowerModeBtn.disabled = false;
                     }
                 });
             }
@@ -2131,6 +2195,43 @@
                         } else {
                             if (lobbySwitchTeamBtn) lobbySwitchTeamBtn.classList.remove('hidden');
                         }
+                    }
+
+                    // 팀전 전용: 윷 던지는 사람 설정 영역 표시 및 실시간 동기화
+                    if (isTeamMode) {
+                        if (lobbyThrowerSection) lobbyThrowerSection.classList.remove('hidden');
+                        if (lobbyToggleThrowerModeBtn) {
+                            if (isHost) {
+                                lobbyToggleThrowerModeBtn.classList.remove('hidden');
+                            } else {
+                                lobbyToggleThrowerModeBtn.classList.add('hidden');
+                            }
+                        }
+
+                        const tMode = data.throwerMode || 'all_once';
+                        if (lobbyThrowerModeBadge) {
+                            if (tMode === 'all_once') {
+                                lobbyThrowerModeBadge.textContent = '모두 한 번씩 던지기 🔄';
+                                lobbyThrowerModeBadge.className = 'text-xs font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+                            } else if (tMode === 'streak') {
+                                lobbyThrowerModeBadge.textContent = '보너스 연속 던지기 🎯';
+                                lobbyThrowerModeBadge.className = 'text-xs font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30';
+                            } else {
+                                lobbyThrowerModeBadge.textContent = '팀 대표 1인 던지기 👑';
+                                lobbyThrowerModeBadge.className = 'text-xs font-black px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30';
+                            }
+                        }
+                        if (lobbyThrowerModeDesc) {
+                            if (tMode === 'all_once') {
+                                lobbyThrowerModeDesc.textContent = '* 윷·모·말 잡기 보너스 기회에도 팀의 다음 학생이 던져 모든 학생이 소외 없이 공평하게 한 번씩 던집니다.';
+                            } else if (tMode === 'streak') {
+                                lobbyThrowerModeDesc.textContent = '* 기본 턴은 번갈아 던지되, 윷·모·말 잡기 보너스는 던진 학생이 한 번 더 던집니다 (전통 룰).';
+                            } else {
+                                lobbyThrowerModeDesc.textContent = '* 각 팀의 대표 1번 학생이 윷 던지기와 말 이동을 전담합니다.';
+                            }
+                        }
+                    } else {
+                        if (lobbyThrowerSection) lobbyThrowerSection.classList.add('hidden');
                     }
 
                     // 청팀 리스트 렌더링 (방장은 백팀 이동 버튼 제공)

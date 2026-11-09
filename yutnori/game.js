@@ -2278,13 +2278,29 @@
                 Sound.playCatch();
                 this.recordStat(actorName, 'catchCount', action.caughtCount || 1);
                 const countText = (action.caughtCount > 1) ? `${action.caughtCount}마리의 말이` : '말이';
-                this.logMessage(`💥 [${actorName}]님이 내 말을 잡아 대기실로 돌아갔습니다! (${countText} 잡힘, 상대방 한 번 더 던지기)`);
+                const nextName = action.nextTurnPlayerName || actorName;
+                const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
+                const isNextMe = (action.nextTurnPlayerId === mySessionId);
+                if (isNextMe) {
+                    this.logMessage(`💥 [${actorName}]님이 상대 말을 잡아 대기실로 보냈습니다! (${countText} 잡힘) 🎉 보너스 기회로 이제 내 차례! 윷을 던지세요!`);
+                } else {
+                    this.logMessage(`💥 [${actorName}]님이 상대 말을 잡았습니다! (${countText} 잡힘) 보너스 차례: [${nextName}]님이 윷을 던집니다!`);
+                }
             } else if (action.type === 'END_TURN') {
                 this.logMessage(`🔄 ${actorName}님의 턴이 끝나고 차례가 넘어왔습니다.`);
                 Sound.playStep();
             } else if (action.type === 'EXTRA_TURN') {
-                this.logMessage(`🎉 ${actorName}님이 윷/모로 한 번 더 윷을 던집니다!`);
                 Sound.playStep();
+                const nextName = action.nextTurnPlayerName || actorName;
+                const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
+                const isNextMe = (action.nextTurnPlayerId === mySessionId);
+                if (isNextMe) {
+                    this.logMessage(`🎉 우리 팀의 윷/모 보너스 기회! 이제 내 차례입니다! 윷을 던지세요!`);
+                } else if (nextName !== actorName) {
+                    this.logMessage(`🎉 [${actorName}]님의 윷/모 보너스 기회! (모두 한 번씩 던지기) 다음 차례 [${nextName}]님이 윷을 던집니다!`);
+                } else {
+                    this.logMessage(`🎉 [${actorName}]님이 윷/모로 한 번 더 윷을 던집니다!`);
+                }
             } else if (action.type === 'GAME_OVER') {
                 const winnerTeamObj = this.teams.find(t => t.name === action.winnerTeam) || this.teams[0];
                 this.triggerVictory(winnerTeamObj);
@@ -2388,7 +2404,13 @@
                 if (isMyTurn && this.gameState === 'WAIT_ROLL' && !isSpectator) {
                     this.dom.rollBtn.disabled = false;
                     this.dom.rollBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                    this.dom.rollBtn.innerHTML = '<i class="fa-solid fa-dice mr-2"></i> 내 차례! 윷 던지기';
+                    const lastActionType = (this.currentRoomData && this.currentRoomData.lastAction) ? this.currentRoomData.lastAction.type : '';
+                    const isBonusTurn = (lastActionType === 'EXTRA_TURN' || lastActionType === 'CAUGHT_PIECE');
+                    if (isBonusTurn) {
+                        this.dom.rollBtn.innerHTML = '<i class="fa-solid fa-dice mr-2 text-amber-300"></i> 🎉 보너스 차례! 윷 던지기';
+                    } else {
+                        this.dom.rollBtn.innerHTML = '<i class="fa-solid fa-dice mr-2"></i> 내 차례! 윷 던지기';
+                    }
                 } else {
                     this.dom.rollBtn.disabled = true;
                     this.dom.rollBtn.classList.add('opacity-50', 'cursor-not-allowed');
