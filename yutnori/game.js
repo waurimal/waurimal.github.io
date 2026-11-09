@@ -3436,12 +3436,30 @@
                     });
                     this.lastCatchInfo = null;
                 }
+
+                // 온라인 모드: 내 액션 완료 후 즉시 버튼 잠금 & Firestore 스냅샷 동기화 대기
+                this.pendingExtraTurn = false;
+                this.setGameState('MOVING'); // 버튼 비활성화 유지
+                if (this.dom.rollBtn) {
+                    this.dom.rollBtn.disabled = true;
+                    this.dom.rollBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    this.dom.rollBtn.innerHTML = '<i class="fa-solid fa-hourglass-half mr-2"></i> 턴 넘기는 중...';
+                }
+                return;
             }
 
-            // 추가 턴(윷, 모, 또는 말 잡기)이 남아있는 경우
+            // [오프라인 / 컴퓨터 대전] 추가 턴(윷, 모, 또는 말 잡기)이 남아있는 경우
             if (this.pendingExtraTurn) {
                 this.pendingExtraTurn = false;
-                this.logMessage(`🔄 추가 기회! [${this.getCurrentTeam().name}] 윷을 한 번 더 던지세요!`);
+                const currentTeam = this.getCurrentTeam();
+                // 오프라인 팀전에서 팀원이 2명 이상이면 보너스 턴 시에도 다음 팀원으로 순환
+                if (currentTeam.players && currentTeam.players.length > 1) {
+                    currentTeam.currentPlayerIdx = (currentTeam.currentPlayerIdx + 1) % currentTeam.players.length;
+                    const nextPlayer = currentTeam.players[currentTeam.currentPlayerIdx];
+                    this.logMessage(`🔄 추가 기회! [${currentTeam.name}] 다음 선수 [${nextPlayer}]님이 윷을 던지세요!`);
+                } else {
+                    this.logMessage(`🔄 추가 기회! [${currentTeam.name}] 윷을 한 번 더 던지세요!`);
+                }
                 this.setGameState('WAIT_ROLL');
                 this.updateTurnUI();
                 this.checkAndTriggerAI();

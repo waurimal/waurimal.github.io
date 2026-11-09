@@ -834,6 +834,13 @@ class YutnoriMultiplayerManager {
                 return;
             }
 
+            const getSortedTeamPlayers = (teamKey) => {
+                const plist = Object.values(this.roomData.players || {});
+                return plist
+                    .filter(p => !p.isSpectator && p.team === teamKey)
+                    .sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0) || String(a.id).localeCompare(String(b.id)));
+            };
+
             if (hasExtraTurn) {
                 // 윷 던지는 사람 설정(throwerMode) 반영:
                 // 'all_once': 모두 한 번씩 던지기 - 윷·모·말 잡기 보너스 기회에도 팀 내 다음 선수가 윷을 던짐
@@ -846,8 +853,7 @@ class YutnoriMultiplayerManager {
 
                 if (throwerMode === 'all_once') {
                     const currentTeam = this.roomData.currentTeam || 'blue';
-                    const players = Object.values(this.roomData.players || {});
-                    const currentTeamPlayers = players.filter(p => !p.isSpectator && p.team === currentTeam);
+                    const currentTeamPlayers = getSortedTeamPlayers(currentTeam);
 
                     if (currentTeamPlayers.length > 0) {
                         if (currentTeam === 'blue') {
@@ -860,8 +866,7 @@ class YutnoriMultiplayerManager {
                     }
                 } else if (throwerMode === 'leader') {
                     const currentTeam = this.roomData.currentTeam || 'blue';
-                    const players = Object.values(this.roomData.players || {});
-                    const currentTeamPlayers = players.filter(p => !p.isSpectator && p.team === currentTeam);
+                    const currentTeamPlayers = getSortedTeamPlayers(currentTeam);
                     if (currentTeamPlayers.length > 0) {
                         nextTurnId = currentTeamPlayers[0].id;
                     }
@@ -924,10 +929,16 @@ class YutnoriMultiplayerManager {
             return {};
         }
 
+        const getSortedTeamPlayers = (teamKey) => {
+            const plist = Object.values(this.roomData.players || {});
+            return plist
+                .filter(p => !p.isSpectator && p.team === teamKey)
+                .sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0) || String(a.id).localeCompare(String(b.id)));
+        };
+
         const throwerMode = this.roomData.throwerMode || 'all_once';
-        const players = Object.values(this.roomData.players);
-        const bluePlayers = players.filter(p => !p.isSpectator && p.team === 'blue');
-        const whitePlayers = players.filter(p => !p.isSpectator && p.team === 'white');
+        const bluePlayers = getSortedTeamPlayers('blue');
+        const whitePlayers = getSortedTeamPlayers('white');
 
         if (bluePlayers.length === 0 && whitePlayers.length === 0) {
             return {};
