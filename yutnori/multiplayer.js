@@ -141,7 +141,7 @@ class YutnoriMultiplayerManager {
     // ==========================================
     // 1. 방 만들기 (Host)
     // ==========================================
-    async createRoom({ hostName, grade = 6, classNum = 1, studentNum = 1, mode = '1v1', pieceCount = 4, gradeFilter = 'all', hostParticipates = true }) {
+    async createRoom({ hostName, grade = 6, classNum = 1, studentNum = 1, mode = '1v1', pieceCount = 4, gradeFilter = 'all', hostParticipates = true, throwerMode = 'all_once' }) {
         const cleanName = (hostName || '').trim();
         if (!cleanName) {
             throw new Error("닉네임 대신 학생 본인의 실명을 입력해주세요.");
@@ -150,7 +150,7 @@ class YutnoriMultiplayerManager {
         const roomRef = doc(db, ROOMS_COLLECTION, code);
 
         const isHostPlaying = (mode === 'team') ? Boolean(hostParticipates) : true;
-        const selectedThrowerMode = (mode === 'team') ? (options.throwerMode || 'all_once') : 'all_once';
+        const selectedThrowerMode = (mode === 'team') ? (throwerMode || 'all_once') : 'all_once';
 
         const initialRoom = {
             roomId: code,
