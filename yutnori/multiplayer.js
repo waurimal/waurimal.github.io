@@ -922,6 +922,86 @@ class YutnoriMultiplayerManager {
     }
 
     /**
+     * 방장 전용: 학생 기기 랙 발생 시 방장이 대신 윷 던지기
+     */
+    async hostForceRoll(rollResult, sticks, quizData) {
+        if (!this.currentRoomId || !this.roomData) return;
+        if (this.roomData.hostId !== this.mySessionId) {
+            throw new Error("방장만 대신 윷을 던질 수 있습니다.");
+        }
+        if (this.roomData.status !== 'playing') return;
+
+        const currentTurnPlayer = this.roomData.players ? this.roomData.players[this.roomData.currentTurnId] : null;
+        const currentStudentName = currentTurnPlayer ? currentTurnPlayer.name : '학생';
+        const roomRef = doc(db, ROOMS_COLLECTION, this.currentRoomId);
+
+        try {
+            await updateDoc(roomRef, {
+                gameState: 'WAIT_PIECE_SELECT',
+                currentRoll: rollResult,
+                sticks: sticks,
+                activeQuiz: quizData || null,
+                quizResult: null,
+                lastAction: {
+                    type: 'HOST_PROXY_ROLL',
+                    actorId: this.roomData.currentTurnId,
+                    hostId: this.mySessionId,
+                    studentName: currentStudentName,
+                    rollResult: rollResult,
+                    timestamp: Date.now()
+                },
+                updatedAt: Date.now()
+            });
+        } catch (e) {
+            console.error("[Multiplayer] hostForceRoll Error:", e);
+            throw e;
+        }
+    }
+
+    /**
+     * 방장 전용: 학생 기기 랙 또는 멈춤 시 다음 차례로 강제 턴 넘기기 (스킵)
+     */
+    async hostSkipTurn() {
+        if (!this.currentRoomId || !this.roomData) return;
+        if (this.roomData.hostId !== this.mySessionId) {
+            throw new Error("방장만 턴을 넘길 수 있습니다.");
+        }
+        if (this.roomData.status !== 'playing') return;
+
+        const currentTurnPlayer = this.roomData.players ? this.roomData.players[this.roomData.currentTurnId] : null;
+        const currentStudentName = currentTurnPlayer ? currentTurnPlayer.name : '학생';
+
+        const nextTurnInfo = this.calculateNextTurn(false);
+        const nextPlayer = (this.roomData.players && nextTurnInfo.currentTurnId) 
+            ? this.roomData.players[nextTurnInfo.currentTurnId] 
+            : null;
+        const nextPlayerName = nextPlayer ? nextPlayer.name : '다음 선수';
+
+        const roomRef = doc(db, ROOMS_COLLECTION, this.currentRoomId);
+        try {
+            await updateDoc(roomRef, {
+                gameState: 'WAIT_ROLL',
+                currentRoll: null,
+                activeQuiz: null,
+                quizResult: null,
+                ...nextTurnInfo,
+                lastAction: {
+                    type: 'HOST_SKIP_TURN',
+                    actorId: this.mySessionId,
+                    skippedPlayerId: this.roomData.currentTurnId,
+                    skippedPlayerName: currentStudentName,
+                    nextTurnPlayerName: nextPlayerName,
+                    timestamp: Date.now()
+                },
+                updatedAt: Date.now()
+            });
+        } catch (e) {
+            console.error("[Multiplayer] hostSkipTurn Error:", e);
+            throw e;
+        }
+    }
+
+    /**
      * 다음 플레이어로 턴 계산 (청팀과 백팀이 1:1로 엄격하게 교차하며 각 팀 내에서 순환)
      */
     calculateNextTurn(isAfterMove = true) {

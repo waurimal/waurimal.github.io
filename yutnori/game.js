@@ -1571,6 +1571,11 @@
                 activeMyRoleText: document.getElementById('activeMyRoleText'),
                 leaveOnlineRoomBtn: document.getElementById('leaveOnlineRoomBtn'),
 
+                // 방장 비상 제어 도구 (랙 해결용)
+                hostEmergencyControls: document.getElementById('hostEmergencyControls'),
+                hostForceRollBtn: document.getElementById('hostForceRollBtn'),
+                hostSkipTurnBtn: document.getElementById('hostSkipTurnBtn'),
+
                 // 퀴즈 모달
                 quizModal: document.getElementById('quizModal'),
                 quizCategoryBadge: document.getElementById('quizCategoryBadge'),
@@ -1671,6 +1676,14 @@
         bindEvents() {
             if (this.dom.rollBtn) {
                 this.dom.rollBtn.addEventListener('click', () => this.onRollClicked());
+            }
+
+            // 방장 비상 제어 (랙 해결용 버튼)
+            if (this.dom.hostForceRollBtn) {
+                this.dom.hostForceRollBtn.addEventListener('click', () => this.onHostForceRollClicked());
+            }
+            if (this.dom.hostSkipTurnBtn) {
+                this.dom.hostSkipTurnBtn.addEventListener('click', () => this.onHostSkipTurnClicked());
             }
 
             if (this.dom.quizTtsBtn) {
@@ -2301,6 +2314,27 @@
                 } else {
                     this.logMessage(`🎉 [${actorName}]님이 윷/모로 한 번 더 윷을 던집니다!`);
                 }
+            } else if (action.type === 'HOST_PROXY_ROLL') {
+                if (action.rollResult) {
+                    this.playRemoteRollAnimation(action.rollResult);
+                }
+                const targetName = action.studentName || '학생';
+                this.logMessage(`🚨 [방장 비상제어] [${targetName}] 학생 대신 윷(${action.rollResult ? action.rollResult.name : ''})을 던졌습니다.`);
+                if (window.showToast) {
+                    window.showToast("방장 윷 던지기 대행", `[${targetName}] 학생 대신 윷을 던졌습니다.`, "🎲");
+                }
+            } else if (action.type === 'HOST_SKIP_TURN') {
+                Sound.playStep();
+                const skippedName = action.studentName || '학생';
+                const nextName = action.nextTurnPlayerName || '다음 플레이어';
+                this.logMessage(`⏭️ [방장 비상제어] 랙으로 인해 [${skippedName}] 학생의 차례를 건너뛰고 [${nextName}] 님에게 넘겼습니다.`);
+                if (this.dom.quizModal) this.dom.quizModal.classList.add('hidden');
+                if (this.dom.feedbackModal) this.dom.feedbackModal.classList.add('hidden');
+                this.clearHighlights();
+                this.setGameState('WAIT_ROLL');
+                if (window.showToast) {
+                    window.showToast("차례 강제 넘김", `방장님이 [${skippedName}] 학생의 차례를 넘겼습니다.`, "⏭️");
+                }
             } else if (action.type === 'GAME_OVER') {
                 const winnerTeamObj = this.teams.find(t => t.name === action.winnerTeam) || this.teams[0];
                 this.triggerVictory(winnerTeamObj);
@@ -2400,6 +2434,8 @@
                 const isMyTurn = (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId);
                 const myInfo = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.getMyPlayerInfo) ? window.YutnoriMultiplayer.getMyPlayerInfo() : null;
                 const isSpectator = myInfo && (myInfo.isSpectator || myInfo.team === 'spectator');
+                const isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
+                               (this.currentRoomData && this.currentRoomData.hostId === mySessionId);
 
                 if (isMyTurn && this.gameState === 'WAIT_ROLL' && !isSpectator) {
                     this.dom.rollBtn.disabled = false;
@@ -2424,7 +2460,35 @@
                         this.dom.rollBtn.innerHTML = `<i class="fa-solid fa-hourglass-half mr-2"></i> ${name}님의 차례...`;
                     }
                 }
+
+                // 방장 비상 제어 도구 (랙 해결) UI 표시/상태 갱신
+                if (this.dom.hostEmergencyControls) {
+                    if (isHost && this.gameState !== 'GAME_OVER' && this.currentRoomData && this.currentRoomData.status === 'playing') {
+                        this.dom.hostEmergencyControls.classList.remove('hidden');
+                        if (this.dom.hostForceRollBtn) {
+                            const canForceRoll = (this.gameState === 'WAIT_ROLL');
+                            this.dom.hostForceRollBtn.disabled = !canForceRoll;
+                            if (canForceRoll) {
+                                this.dom.hostForceRollBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                            } else {
+                                this.dom.hostForceRollBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                            }
+                        }
+                        if (this.dom.hostSkipTurnBtn) {
+                            this.dom.hostSkipTurnBtn.disabled = false;
+                            this.dom.hostSkipTurnBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        }
+                    } else {
+                        this.dom.hostEmergencyControls.classList.add('hidden');
+                    }
+                }
+
                 return;
+            }
+
+            // 오프라인 로컬 플레이
+            if (this.dom.hostEmergencyControls) {
+                this.dom.hostEmergencyControls.classList.add('hidden');
             }
 
             const currentTeam = this.getCurrentTeam();
@@ -2526,6 +2590,86 @@
                 this.dom.gameLogContainer.innerHTML = this.gameLogs.map((log, idx) => {
                     return `<div class="text-xs py-1 border-b border-slate-700/50 ${idx === 0 ? 'text-amber-300 font-semibold' : 'text-slate-300'}">${log}</div>`;
                 }).join('');
+            }
+        }
+
+        // ==========================================
+        // 6. 방장 비상 제어 (학생 기기 랙/먹통 대응)
+        // ==========================================
+        async onHostForceRollClicked() {
+            if (!this.isOnline || !window.YutnoriMultiplayer || !window.YutnoriMultiplayer.isHost) return;
+            if (this.gameState !== 'WAIT_ROLL') {
+                if (window.showToast) window.showToast("안내", "현재 윷을 던지는 단계가 아닙니다.", "ℹ️");
+                return;
+            }
+
+            const currentTurnPlayer = (this.currentRoomData && this.currentRoomData.players) 
+                ? this.currentRoomData.players[this.currentRoomData.currentTurnId] 
+                : null;
+            const name = currentTurnPlayer ? currentTurnPlayer.name : '해당 학생';
+
+            if (!confirm(`[${name}] 학생 기기 랙 대응:\n방장 선생님이 대신 윷을 던져주시겠습니까?`)) {
+                return;
+            }
+
+            try {
+                if (this.dom.hostForceRollBtn) {
+                    this.dom.hostForceRollBtn.disabled = true;
+                    this.dom.hostForceRollBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+
+                const rollResult = window.YUT_PROBABILITY.roll();
+                const currentGrade = (this.currentRoomData && this.currentRoomData.settings && this.currentRoomData.settings.grade) || 'grade3';
+                const quizData = (window.YutnoriQuestions && window.YutnoriQuestions.generateQuestion) 
+                    ? window.YutnoriQuestions.generateQuestion(currentGrade) 
+                    : null;
+
+                await window.YutnoriMultiplayer.hostForceRoll(rollResult, rollResult.sticks, quizData);
+                this.logMessage(`🚨 [방장 비상제어] [${name}] 학생 대신 윷(${rollResult.name})을 던졌습니다.`);
+                if (window.showToast) {
+                    window.showToast("대신 윷 던지기 완료", `[${name}] 학생 대신 ${rollResult.name}(으)로 윷을 던졌습니다.`, "🎲");
+                }
+            } catch (err) {
+                console.error("onHostForceRollClicked error:", err);
+                alert("대신 윷 던지기 실패: " + err.message);
+            } finally {
+                if (this.dom.hostForceRollBtn) {
+                    this.dom.hostForceRollBtn.disabled = false;
+                    this.dom.hostForceRollBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
+        }
+
+        async onHostSkipTurnClicked() {
+            if (!this.isOnline || !window.YutnoriMultiplayer || !window.YutnoriMultiplayer.isHost) return;
+            const currentTurnPlayer = (this.currentRoomData && this.currentRoomData.players) 
+                ? this.currentRoomData.players[this.currentRoomData.currentTurnId] 
+                : null;
+            const name = currentTurnPlayer ? currentTurnPlayer.name : '현재 플레이어';
+
+            if (!confirm(`[${name}] 학생의 차례를 강제로 종료하고 다음 플레이어에게 넘기시겠습니까?\n(기기 랙/멈춤 비상 해결용)`)) {
+                return;
+            }
+
+            try {
+                if (this.dom.hostSkipTurnBtn) {
+                    this.dom.hostSkipTurnBtn.disabled = true;
+                    this.dom.hostSkipTurnBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+
+                await window.YutnoriMultiplayer.hostSkipTurn();
+                this.logMessage(`⏭️ [방장 비상제어] [${name}] 학생의 차례를 강제로 다음 플레이어에게 넘겼습니다.`);
+                if (window.showToast) {
+                    window.showToast("차례 넘기기 완료", `다음 플레이어 차례로 강제 전환되었습니다.`, "⏭️");
+                }
+            } catch (err) {
+                console.error("onHostSkipTurnClicked error:", err);
+                alert("차례 넘기기 실패: " + err.message);
+            } finally {
+                if (this.dom.hostSkipTurnBtn) {
+                    this.dom.hostSkipTurnBtn.disabled = false;
+                    this.dom.hostSkipTurnBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
             }
         }
 

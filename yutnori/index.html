@@ -613,6 +613,29 @@
                         <button id="rollBtn" class="w-full mt-2 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 active:scale-98 text-slate-950 font-black text-lg shadow-lg shadow-amber-900/40 transition flex items-center justify-center gap-2 cursor-pointer">
                             <i class="fa-solid fa-bullseye"></i> 윷 던지기!
                         </button>
+
+                        <!-- 방장(선생님) 전용 랙 해결 / 긴급 제어 패널 -->
+                        <div id="hostEmergencyControls" class="w-full mt-2.5 p-3 rounded-2xl bg-slate-900/90 border-2 border-amber-500/50 shadow-lg hidden flex flex-col gap-2">
+                            <div class="flex items-center justify-between text-xs font-bold text-amber-300">
+                                <span class="flex items-center gap-1.5">
+                                    <i class="fa-solid fa-crown text-amber-400"></i> 방장 전용 랙 해결 도구
+                                </span>
+                                <span class="text-[10px] text-amber-400/80 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30">
+                                    학생 기기 멈춤 시 사용
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" id="hostForceRollBtn" class="py-2.5 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/35 text-amber-200 border border-amber-500/50 font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow">
+                                    <i class="fa-solid fa-dice text-amber-400"></i> 대신 윷 던지기
+                                </button>
+                                <button type="button" id="hostSkipTurnBtn" class="py-2.5 px-3 rounded-xl bg-rose-500/20 hover:bg-rose-500/35 text-rose-200 border border-rose-500/50 font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow">
+                                    <i class="fa-solid fa-forward-step text-rose-400"></i> 다음 차례로 넘기기
+                                </button>
+                            </div>
+                            <p class="text-[10px] text-slate-400 text-center">
+                                * 학생 기기에서 랙이나 멈춤이 발생했을 때 방장이 대신 던져주거나 다음 선수로 바로 넘깁니다.
+                            </p>
+                        </div>
                     </div>
 
                     <!-- 3. 팀별 진행 현황판 -->
@@ -1452,13 +1475,13 @@
     </button>
 
     <!-- 스크립트 연결 (캐시 무효화 버전 쿼리 파라미터 적용) -->
-    <script src="questions.js?v=20261109_turn_fix"></script>
-    <script src="game.js?v=20261109_turn_fix"></script>
-    <script type="module" src="multiplayer.js?v=20261109_turn_fix"></script>
+    <script src="questions.js?v=20261109_host_controls"></script>
+    <script src="game.js?v=20261109_host_controls"></script>
+    <script type="module" src="multiplayer.js?v=20261109_host_controls"></script>
 
     <!-- UI 화면 전환 및 온라인 멀티 제어 스크립트 -->
     <script type="module">
-        import { multiplayerManager } from './multiplayer.js?v=20261109_turn_fix';
+        import { multiplayerManager } from './multiplayer.js?v=20261109_host_controls';
 
         // 전역 화면 전환 함수 (home: 첫화면 설정/명예의전당, game: 몰입형 게임화면)
         window.showScreen = function(screenId) {
