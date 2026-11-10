@@ -2355,7 +2355,9 @@
                 }
             } else if (action.type === 'GAME_OVER') {
                 const winnerTeamObj = this.teams.find(t => t.name === action.winnerTeam) || this.teams[0];
-                this.triggerVictory(winnerTeamObj);
+                if (this.gameState !== 'GAME_OVER') {
+                    this.triggerVictory(winnerTeamObj);
+                }
             }
         }
 
@@ -2373,8 +2375,9 @@
             sticks.forEach((st, idx) => {
                 if (st) {
                     st.classList.remove('tossing');
-                    void st.offsetWidth;
-                    st.classList.add('tossing');
+                    requestAnimationFrame(() => {
+                        st.classList.add('tossing');
+                    });
                 }
                 if (labels[idx]) {
                     labels[idx].textContent = '회전 중...';
@@ -2754,10 +2757,31 @@
             if (!this.isOnline || !isHost) return;
 
             if (this.dom.quizModal) this.dom.quizModal.classList.add('hidden');
-            if (this.currentQuestion && this.selectedPiece) {
-                const movePath = calculateMovePath(this.selectedPiece, this.currentRoll.result);
-                this.logMessage(`⚡ [방장 권한] 문제를 정답으로 인정하고 말을 이동시킵니다.`);
-                this.handleQuizResult(true, this.currentQuestion, this.selectedPiece, movePath);
+            if (this.dom.hostQuizEmergencyBar) this.dom.hostQuizEmergencyBar.classList.add('hidden');
+
+            const roll = this.currentRoll || (this.currentRoomData && this.currentRoomData.currentRoll);
+            if (!roll || !roll.result) return;
+
+            let pieceToMove = this.selectedPiece;
+            if (!pieceToMove) {
+                const currentTeam = this.getCurrentTeam();
+                if (currentTeam && currentTeam.pieces) {
+                    const movable = currentTeam.pieces.filter(p => {
+                        if (p.isGoal) return false;
+                        const pathInfo = calculateMovePath(p, roll.result);
+                        return pathInfo && pathInfo.valid;
+                    });
+                    if (movable.length > 0) {
+                        pieceToMove = this.getAIBestPiece(movable);
+                    }
+                }
+            }
+
+            if (pieceToMove) {
+                const movePath = calculateMovePath(pieceToMove, roll.result);
+                const q = this.currentQuestion || { explanation: '방장 권한 정답 인정 및 즉시 이동', answer: '' };
+                this.logMessage(`⚡ [방장 권한] 문제를 정답으로 인정하고 말(#${pieceToMove.id + 1})을 이동시킵니다.`);
+                this.handleQuizResult(true, q, pieceToMove, movePath);
             }
         }
 
@@ -2832,8 +2856,9 @@
             sticks.forEach((st, idx) => {
                 if (st) {
                     st.classList.remove('tossing');
-                    void st.offsetWidth; // 리플로우 강제
-                    st.classList.add('tossing');
+                    requestAnimationFrame(() => {
+                        st.classList.add('tossing');
+                    });
                 }
                 if (labels[idx]) {
                     labels[idx].textContent = '회전 중...';
@@ -2930,10 +2955,10 @@
                 }
             }
 
-            this.dom.resultBadge.classList.remove('hidden');
-            this.dom.resultBadge.classList.remove('yut-result-badge');
-            void this.dom.resultBadge.offsetWidth;
-            this.dom.resultBadge.classList.add('yut-result-badge');
+            this.dom.resultBadge.classList.remove('hidden', 'yut-result-badge');
+            requestAnimationFrame(() => {
+                this.dom.resultBadge.classList.add('yut-result-badge');
+            });
         }
 
         /**
@@ -3517,8 +3542,24 @@
                 this._feedbackAutoCloseTimer = setTimeout(() => {
                     this.closeFeedbackModal();
                 }, 1500);
+            } else if (this.isOnline) {
+                // 온라인 모드: 학생이 '확인'을 누르지 않아 전체 방의 게임이 멈추는(랙) 현상 방지
+                // 3초 후 자동 진행, 학생이 직접 '확인' 클릭 시 즉시 진행
+                if (this.dom.feedbackAutoCloseNotice) {
+                    this.dom.feedbackAutoCloseNotice.classList.remove('hidden');
+                }
+                if (this.dom.feedbackCountdownText) {
+                    this.dom.feedbackCountdownText.textContent = '3초 후 자동 진행 (클릭 시 즉시 진행)...';
+                }
+                if (this.dom.feedbackOkBtnText) {
+                    this.dom.feedbackOkBtnText.textContent = '확인 (즉시 진행)';
+                }
+
+                this._feedbackAutoCloseTimer = setTimeout(() => {
+                    this.closeFeedbackModal();
+                }, 3000);
             } else {
-                // 사람 플레이어 차례: 수동 확인 대기
+                // 오프라인 로컬 플레이어 차례: 수동 확인 대기
                 if (this.dom.feedbackAutoCloseNotice) {
                     this.dom.feedbackAutoCloseNotice.classList.add('hidden');
                 }
@@ -3908,6 +3949,7 @@
         // 12. 게임 승리 & 축하 팡파르 & 기여도 HOF 저장
         // ==========================================
         triggerVictory(winningTeam) {
+            if (this.gameState === 'GAME_OVER') return; // 중복 호출 및 명예의 전당 중복 저장 원천 차단
             this.setGameState('GAME_OVER');
             Sound.playVictory();
 
