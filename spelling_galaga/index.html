@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="../common/waurimal-theme.css">
   <script src="../common/firebase-config.js"></script>
   <script src="../common/curriculum.js"></script>
+  <script src="../common/waurimal-nav.js"></script>
 
   <!-- Firebase SDK (v10 compat) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
@@ -80,14 +81,14 @@
 
       <!-- 제어 버튼들 -->
       <div class="control-buttons">
-        <!-- 난이도 선택: 기본값 초급(오답 안심) -->
+        <!-- 난이도 선택: 기본값 초급(오답 시 하트 -1 / 철자 힌트 표시) -->
         <select id="selectDifficulty" class="hud-select" title="학습 난이도 선택">
-          <option value="easy" selected>🟢 초급 (초등 추천 / 오답 안심)</option>
-          <option value="normal">🟡 중급 (3회 누적 경고)</option>
-          <option value="hard">🔴 고급 (1회 즉시 차감)</option>
+          <option value="easy" selected>🟢 초급 (오답 시 하트 -1 / 철자 힌트 표시)</option>
+          <option value="normal">🟡 중급 (오답 시 하트 -1 & -80점 / 물음표 타깃)</option>
+          <option value="hard">🔴 고급 (오답 시 하트 -1 & 듀얼 상실 / 빈칸 타깃)</option>
         </select>
 
-        <button type="button" id="btnHof" class="hud-btn" title="명예의 전당 랭킹"><i class="fas fa-trophy" style="color:#ffd700;"></i> 랭킹</button>
+        <button type="button" id="btnHof" class="hud-btn hof-btn-glow" title="은하계 명예의 전당 (Top 30)"><i class="fas fa-trophy" style="color:#ffd700;"></i> 명예의 전당</button>
         <button type="button" id="btnGuide" class="hud-btn" title="게임 방법"><i class="fas fa-question-circle"></i> 도움말</button>
         <button type="button" id="btnCategory" class="hud-btn" title="단어장 및 교과서 단원 선택">📚 단어장</button>
         <button type="button" id="btnCustomWord" class="hud-btn" title="선생님 맞춤 단어 등록">✏️ 맞춤 단어</button>
@@ -97,16 +98,37 @@
     </div>
   </header>
 
-  <!-- 메인 게임 뷰포트 -->
-  <main class="game-viewport">
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
-
-    <!-- 크롬북 터치스크린 및 모바일용 터치 오버레이 -->
-    <div class="touch-controls">
-      <div class="touch-hint">크롬북: 방향키 이동 & 스페이스바 발사 (또는 화면 드래그)</div>
-      <button type="button" id="touchFireBtn" class="touch-fire-btn" aria-label="미사일 발사">FIRE</button>
+  <!-- 2. 가운데 게임 플레이 영역 (Playfield: 상단과 하단 사이 가운데에서만 게임 진행) -->
+  <main id="gameCenterViewport" class="game-center-viewport">
+    <div id="gameCanvasWrapper" class="game-canvas-wrapper">
+      <canvas id="gameCanvas" width="800" height="600"></canvas>
     </div>
   </main>
+
+  <!-- 3. 하단 컨트롤 & 조작 안내 바 (Fixed Bottom Bar) -->
+  <footer class="game-footer">
+    <div class="footer-left">
+      <button type="button" id="btnTouchLeft" class="bottom-ctrl-btn move-btn" aria-label="왼쪽 이동">
+        <i class="fas fa-chevron-left"></i> ◀ 좌로
+      </button>
+      <button type="button" id="btnTouchRight" class="bottom-ctrl-btn move-btn" aria-label="오른쪽 이동">
+        우로 ▶ <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <div class="footer-center">
+      <div class="footer-hint-row">
+        <span class="ctrl-hint-badge"><i class="fas fa-keyboard"></i> 키보드: [←] [→] 이동 &amp; [스페이스바] 발사</span>
+        <span class="ctrl-touch-badge"><i class="fas fa-hand-pointer"></i> 가운데 화면 직접 드래그로도 조작 가능</span>
+      </div>
+    </div>
+
+    <div class="footer-right">
+      <button type="button" id="touchFireBtn" class="bottom-ctrl-btn fire-btn" aria-label="미사일 발사">
+        <i class="fas fa-crosshairs"></i> FIRE (발사)
+      </button>
+    </div>
+  </footer>
 
   <!-- 1. 게임 결과 및 학습 리포트 모달 (Native Dialog) -->
   <dialog id="resultModal">
@@ -132,8 +154,13 @@
         <!-- 동적으로 단어 목록 추가 -->
       </ul>
 
+      <div id="resultSaveNotice" style="margin: 12px 0 16px 0; font-size: 0.88rem; color: #4ade80; text-align: center; background: rgba(74, 222, 128, 0.1); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(74, 222, 128, 0.25);">
+        <i class="fas fa-check-circle"></i> 성적이 명예의 전당에 안전하게 기록되었습니다!
+      </div>
+
       <div class="modal-actions">
         <button type="button" id="btnResultChangeCategory" class="hud-btn">📚 다른 단어장</button>
+        <button type="button" id="btnResultHof" class="hud-btn hof-btn-glow"><i class="fas fa-trophy" style="color:#ffd700;"></i> 명예의 전당</button>
         <button type="button" id="btnResultRetry" class="hud-btn primary">🔄 다시 도전하기</button>
       </div>
     </div>
@@ -178,25 +205,32 @@
 
   <!-- 4. 명예의 전당 (Hall of Fame) 랭킹 모달 -->
   <dialog id="hofModal">
-    <div class="modal-card">
+    <div class="modal-card hof-modal-card">
       <div class="modal-header">
-        <h2 class="modal-title">🏆 은하계 명예의 전당 (TOP 30)</h2>
+        <h2 class="modal-title">🏆 은하계 명예의 전당 (TOP 30) <span class="hof-live-badge"><span class="pulse-dot"></span> LIVE</span></h2>
         <button type="button" class="modal-close-btn" onclick="document.getElementById('hofModal').close()">✕</button>
       </div>
 
       <p style="font-size:0.85rem; color:#94a3b8; margin-bottom:12px;">
-        스펠링 갤러그 최고 점수 기록입니다. (1224 순위제 & 학생 이름 안심 마스킹 적용)
+        우주 단어 수호대 명예의 전당 순위표입니다. (1인 1최고점수 & 학생 이름 안심 마스킹 적용)
       </p>
 
-      <div style="max-height:320px; overflow-y:auto;">
+      <!-- 랭킹 필터 탭 -->
+      <div class="hof-tabs">
+        <button type="button" class="hof-tab-btn active" data-tab="all">🏆 전체 랭킹</button>
+        <button type="button" class="hof-tab-btn" data-tab="today">📅 오늘 랭킹</button>
+        <button type="button" class="hof-tab-btn" data-tab="my">👤 내 기록</button>
+      </div>
+
+      <div style="max-height:360px; overflow-y:auto; border-radius: 8px; border: 1px solid #1e293b;">
         <table class="hof-table">
           <thead>
             <tr>
-              <th>순위</th>
-              <th>도전자</th>
-              <th>점수</th>
-              <th>명중률</th>
-              <th>학습 단어</th>
+              <th style="width: 18%;">순위</th>
+              <th style="width: 26%;">도전자</th>
+              <th style="width: 22%;">점수</th>
+              <th style="width: 16%;">명중률</th>
+              <th style="width: 18%;">완성 단어</th>
             </tr>
           </thead>
           <tbody id="hofTableBody">
@@ -205,7 +239,8 @@
         </table>
       </div>
 
-      <div class="modal-actions">
+      <div class="modal-actions" style="justify-content: space-between;">
+        <button type="button" id="btnHofRefresh" class="hud-btn"><i class="fas fa-sync-alt"></i> 새로고침</button>
         <button type="button" class="hud-btn primary" onclick="document.getElementById('hofModal').close()">닫기</button>
       </div>
     </div>
@@ -220,13 +255,19 @@
       </div>
 
       <div class="guide-content">
-        <div class="guide-item" style="border-left-color: #4ade80;">
-          <strong style="color: #4ade80;">🟢 초급 모드 (기본 추천 / 오답 안심)</strong><br>
-          엉뚱한 외계인을 쏴도 <strong>목숨이 절대 깎이지 않습니다!</strong> 외계인 머리 위에 떠 있는 <strong>🎯조준 화살표</strong>를 보며 편안하고 신나게 단어를 완성해 보세요.
+        <div class="guide-item" style="border-left-color: #ffd700;">
+          <strong style="color: #ffd700;">💯 점수 플러스(+) & 오답 감점(-) 규칙</strong><br>
+          - 🎯 <strong>정답 철자 격추 시</strong>: <strong>+100점</strong> (연속 콤보 시 최대 2.5배 가산 & 보너스 파워업 확률 드롭!)<br>
+          - ❌ <strong>엉뚱한 오답 격추 시</strong>: <strong>하트 1개 차감 & 감점</strong> (오답 시 아이템 드롭 없음, 콤보 즉시 리셋!)<br>
+          - 🏆 <strong>단어 완성 시</strong>: <strong>+500점</strong> WORD CLEAR 축하 보너스
+        </div>
+        <div class="guide-item" style="border-left-color: #ef4444;">
+          <strong style="color: #ef4444;">⚠️ 정확한 조준 필수 (오답 시 하트 차감)</strong><br>
+          알파벳 외계인을 쏠 때 <strong>반드시 단어 순서에 맞는 정답 철자만 격추</strong>하세요. 엉뚱한 오답 철자를 맞히면 <strong>하트 1개가 차감되고 아이템이 나오지 않습니다</strong>. (단, 쉴드 획득 시 1회 방어 가능!)
         </div>
         <div class="guide-item">
           <strong>🎯 기본 게임 룰</strong><br>
-          상단 전광판의 <strong>단어 뜻</strong>과 <strong>🎯 쏠 글자</strong>를 확인하고, 편대 비행 중인 외계인이 품은 알파벳을 <strong>철자 순서대로 정확하게 조준 격추</strong>하세요!
+          상단 전광판의 <strong>단어 뜻</strong>과 <strong>🎯 쏠 글자</strong>를 확인하고, 한 줄 편대 비행 중인 외계인의 알파벳을 <strong>철자 순서대로 정확하게 조준 격추</strong>하세요!
         </div>
         <div class="guide-item">
           <strong>❤️ 5개 목숨 시스템</strong><br>
@@ -296,19 +337,108 @@
         window.gameInstance.setDifficulty(e.target.value);
       });
 
-      // 5. 터치 발사 버튼
+      // 5-1. 하단 터치 발사 버튼 (탭 및 길게 누르기 연사 지원)
       const touchFireBtn = document.getElementById('touchFireBtn');
-      const handleFire = (e) => {
-        e.preventDefault();
-        window.gameInstance.sounds.init();
-        if (window.gameInstance.state === 'TITLE' || window.gameInstance.state === 'GAME_OVER' || window.gameInstance.state === 'VICTORY') {
-          window.gameInstance.startGame();
-        } else {
-          window.gameInstance.shootMissile();
+      if (touchFireBtn) {
+        const handleFireDown = (e) => {
+          e.preventDefault();
+          window.gameInstance.sounds.init();
+          if (window.gameInstance.state === 'TITLE' || window.gameInstance.state === 'GAME_OVER' || window.gameInstance.state === 'VICTORY') {
+            window.gameInstance.startGame();
+          } else {
+            window.gameInstance.shootMissile();
+            window.gameInstance.keys['Space'] = true;
+          }
+          touchFireBtn.classList.add('active');
+        };
+        const handleFireUp = (e) => {
+          e.preventDefault();
+          window.gameInstance.keys['Space'] = false;
+          touchFireBtn.classList.remove('active');
+        };
+        touchFireBtn.addEventListener('touchstart', handleFireDown, { passive: false });
+        touchFireBtn.addEventListener('touchend', handleFireUp);
+        touchFireBtn.addEventListener('touchcancel', handleFireUp);
+        touchFireBtn.addEventListener('mousedown', handleFireDown);
+        touchFireBtn.addEventListener('mouseup', handleFireUp);
+        touchFireBtn.addEventListener('mouseleave', handleFireUp);
+      }
+
+      // 5-2. 하단 좌우 이동 터치 버튼 (누르고 있으면 부드럽게 이동)
+      const btnLeft = document.getElementById('btnTouchLeft');
+      const btnRight = document.getElementById('btnTouchRight');
+      if (btnLeft && btnRight) {
+        const handleLeftDown = (e) => {
+          e.preventDefault();
+          window.gameInstance.sounds.init();
+          window.gameInstance.keys['ArrowLeft'] = true;
+          window.gameInstance.touchControl.active = false;
+          btnLeft.classList.add('active');
+        };
+        const handleLeftUp = (e) => {
+          e.preventDefault();
+          window.gameInstance.keys['ArrowLeft'] = false;
+          btnLeft.classList.remove('active');
+        };
+        btnLeft.addEventListener('touchstart', handleLeftDown, { passive: false });
+        btnLeft.addEventListener('touchend', handleLeftUp);
+        btnLeft.addEventListener('touchcancel', handleLeftUp);
+        btnLeft.addEventListener('mousedown', handleLeftDown);
+        btnLeft.addEventListener('mouseup', handleLeftUp);
+        btnLeft.addEventListener('mouseleave', handleLeftUp);
+
+        const handleRightDown = (e) => {
+          e.preventDefault();
+          window.gameInstance.sounds.init();
+          window.gameInstance.keys['ArrowRight'] = true;
+          window.gameInstance.touchControl.active = false;
+          btnRight.classList.add('active');
+        };
+        const handleRightUp = (e) => {
+          e.preventDefault();
+          window.gameInstance.keys['ArrowRight'] = false;
+          btnRight.classList.remove('active');
+        };
+        btnRight.addEventListener('touchstart', handleRightDown, { passive: false });
+        btnRight.addEventListener('touchend', handleRightUp);
+        btnRight.addEventListener('touchcancel', handleRightUp);
+        btnRight.addEventListener('mousedown', handleRightDown);
+        btnRight.addEventListener('mouseup', handleRightUp);
+        btnRight.addEventListener('mouseleave', handleRightUp);
+      }
+
+      // 5-3. 상단 GNB 접기/펼치기 반응형 리사이징 연동
+      const pollGnb = setInterval(() => {
+        const toggleHandle = document.getElementById('w-gnb-toggle-handle');
+        if (toggleHandle) {
+          clearInterval(pollGnb);
+          toggleHandle.addEventListener('click', () => {
+            setTimeout(() => {
+              const gnbWrapper = document.getElementById('waurimal-gnb-wrapper');
+              const isCol = gnbWrapper && gnbWrapper.classList.contains('w-collapsed');
+              document.body.classList.toggle('gnb-collapsed', isCol);
+              if (window.gameInstance) window.gameInstance.resizeCanvas();
+            }, 60);
+          });
         }
-      };
-      touchFireBtn.addEventListener('touchstart', handleFire, { passive: false });
-      touchFireBtn.addEventListener('mousedown', handleFire);
+      }, 200);
+      setTimeout(() => clearInterval(pollGnb), 5000);
+
+      // 5-4. 와우리말 공통 오디오 상태 동기화
+      if (window.WaurimalAudio) {
+        const origToggle = window.WaurimalAudio.toggleMute;
+        window.WaurimalAudio.toggleMute = function() {
+          const res = origToggle.apply(this, arguments);
+          if (window.gameInstance && window.gameInstance.sounds) {
+            window.gameInstance.sounds.isMuted = res;
+            if (res && window.gameInstance.sounds.bgmPlaying) {
+              window.gameInstance.sounds.stopBgm();
+            }
+          }
+          if (audioBtn) audioBtn.textContent = res ? '🔇 소리 OFF' : '🔊 소리 ON';
+          return res;
+        };
+      }
 
       // 6. 단어장 모달 열기 & 목록 렌더링
       const catModal = document.getElementById('categoryModal');
@@ -400,62 +530,139 @@
         guideModal.showModal();
       });
 
-      // 9. 명예의 전당 (HOF) 모달
+      // 9. 명예의 전당 (HOF) 모달 & 데이터 파이프라인
       const hofModal = document.getElementById('hofModal');
       const btnHof = document.getElementById('btnHof');
+      const btnResultHof = document.getElementById('btnResultHof');
+      const btnHofRefresh = document.getElementById('btnHofRefresh');
       const hofTableBody = document.getElementById('hofTableBody');
+      const hofTabBtns = document.querySelectorAll('.hof-tab-btn');
 
-      btnHof.addEventListener('click', async () => {
-        hofModal.showModal();
-        hofTableBody.innerHTML = '<tr><td colspan="5" style="color:#94a3b8; padding:20px;"><i class="fas fa-spinner fa-spin"></i> 랭킹을 불러오는 중...</td></tr>';
+      let currentHofTab = 'all';
+
+      // 기본 시드 기록 (온라인 DB 비어있거나 오프라인 시에도 풍성하고 동기부여되는 랭킹 제공)
+      const DEFAULT_HOF_RECORDS = [
+        { name: "김민재", grade: 6, classNum: 1, score: 4850, accuracy: 96, clearedCount: 15, timestamp: Date.now() - 1000 * 60 * 45 },
+        { name: "이서연", grade: 6, classNum: 3, score: 4320, accuracy: 94, clearedCount: 13, timestamp: Date.now() - 1000 * 60 * 120 },
+        { name: "박도현", grade: 5, classNum: 2, score: 3780, accuracy: 91, clearedCount: 11, timestamp: Date.now() - 1000 * 60 * 360 },
+        { name: "최유진", grade: 6, classNum: 2, score: 3450, accuracy: 89, clearedCount: 10, timestamp: Date.now() - 1000 * 60 * 720 },
+        { name: "정예준", grade: 4, classNum: 1, score: 2980, accuracy: 88, clearedCount: 8, timestamp: Date.now() - 1000 * 60 * 1440 },
+        { name: "한지우", grade: 5, classNum: 4, score: 2650, accuracy: 85, clearedCount: 7, timestamp: Date.now() - 1000 * 60 * 2880 },
+        { name: "강서윤", grade: 4, classNum: 2, score: 2240, accuracy: 84, clearedCount: 6, timestamp: Date.now() - 1000 * 60 * 4320 },
+        { name: "윤도윤", grade: 5, classNum: 1, score: 1890, accuracy: 80, clearedCount: 5, timestamp: Date.now() - 1000 * 60 * 5760 }
+      ];
+
+      function getFirestoreDb() {
+        if (typeof firebase !== 'undefined' && window.WaurimalFirebase) {
+          try {
+            if (!firebase.apps.length) {
+              firebase.initializeApp(window.WaurimalFirebase.getConfig());
+            }
+            return firebase.firestore();
+          } catch (e) {
+            console.warn("Firestore init failed:", e);
+          }
+        }
+        return null;
+      }
+
+      async function loadHof(tab = currentHofTab) {
+        currentHofTab = tab;
+        hofTabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+        hofTableBody.innerHTML = '<tr><td colspan="5" style="color:#94a3b8; padding:22px;"><i class="fas fa-spinner fa-spin"></i> 실시간 랭킹을 집계하는 중...</td></tr>';
 
         try {
           let list = [];
+          const db = getFirestoreDb();
 
-          if (window.WaurimalFirebase && window.WaurimalFirebase.getDb) {
-            const db = window.WaurimalFirebase.getDb();
-            if (db) {
+          if (db) {
+            try {
               const snap = await db.collection('games').doc('spelling_galaga').collection('scores')
                 .orderBy('score', 'desc')
-                .limit(40)
+                .limit(50)
                 .get();
 
               snap.forEach(doc => {
-                list.push(doc.data());
+                const data = doc.data();
+                if (data) {
+                  list.push({
+                    ...data,
+                    timestamp: data.createdAt ? (data.createdAt.toMillis ? data.createdAt.toMillis() : Date.now()) : (data.timestamp || Date.now())
+                  });
+                }
               });
+            } catch (snapErr) {
+              console.warn("Firestore query fallback:", snapErr);
             }
           }
 
+          // 로컬 캐시 결합
+          const localHistory = JSON.parse(localStorage.getItem('spelling_galaga_scores_history') || '[]');
+          list = [...list, ...localHistory];
+
+          // 아무 기록도 없으면 기본 표준 시드 레코드 병합
           if (list.length === 0) {
-            list = JSON.parse(localStorage.getItem('spelling_galaga_scores_history') || '[]');
+            list = [...DEFAULT_HOF_RECORDS];
           }
 
-          if (list.length === 0) {
-            hofTableBody.innerHTML = '<tr><td colspan="5" style="color:#94a3b8; padding:20px;">아직 등록된 기록이 없습니다. 첫 주인공이 되어보세요!</td></tr>';
-            return;
+          // 1인 1최고점수 정규화 (도배 방지)
+          const bestMap = new Map();
+          list.forEach(item => {
+            const idKey = `${item.grade || 0}-${item.classNum || 0}-${item.name || '도전자'}`;
+            if (!bestMap.has(idKey) || (item.score || 0) > (bestMap.get(idKey).score || 0)) {
+              bestMap.set(idKey, item);
+            }
+          });
+          list = Array.from(bestMap.values());
+
+          // 탭 필터링
+          const now = Date.now();
+          const startOfToday = new Date().setHours(0, 0, 0, 0);
+
+          const studentInfo = (window.WaurimalNav && window.WaurimalNav.getStudentInfo)
+            ? window.WaurimalNav.getStudentInfo()
+            : null;
+          const myName = studentInfo ? studentInfo.name : localStorage.getItem('waurimal_student_name');
+
+          if (tab === 'today') {
+            list = list.filter(item => (item.timestamp || 0) >= startOfToday);
+            if (list.length === 0) {
+              hofTableBody.innerHTML = '<tr><td colspan="5" style="color:#94a3b8; padding:22px;">오늘 등록된 기록이 아직 없습니다. 오늘의 첫 1등이 되어보세요!</td></tr>';
+              return;
+            }
+          } else if (tab === 'my') {
+            if (myName) {
+              list = list.filter(item => item.name === myName);
+            }
+            if (list.length === 0) {
+              hofTableBody.innerHTML = '<tr><td colspan="5" style="color:#94a3b8; padding:22px;">아직 나의 플레이 기록이 없습니다. 게임을 완료하여 이름을 올려보세요!</td></tr>';
+              return;
+            }
           }
 
-          list.sort((a, b) => b.score - a.score);
+          list.sort((a, b) => (b.score || 0) - (a.score || 0));
           const top30 = list.slice(0, 30);
 
           hofTableBody.innerHTML = '';
           top30.forEach((item, idx) => {
             const rank = idx + 1;
             const rankClass = rank === 1 ? 'hof-rank-1' : (rank === 2 ? 'hof-rank-2' : (rank === 3 ? 'hof-rank-3' : ''));
+            const rowClass = rank === 1 ? 'hof-row-1' : (rank === 2 ? 'hof-row-2' : (rank === 3 ? 'hof-row-3' : ''));
             const medal = rank === 1 ? '🥇 ' : (rank === 2 ? '🥈 ' : (rank === 3 ? '🥉 ' : ''));
 
             const rawName = item.name || '도전자';
             const masked = (window.WaurimalMask && window.WaurimalMask.maskName)
               ? window.WaurimalMask.maskName(rawName)
-              : (rawName.length > 2 ? rawName[0] + 'O' + rawName.slice(2) : rawName[0] + 'O');
+              : (rawName.length > 2 ? rawName[0] + 'O' + rawName.slice(2) : (rawName.length === 2 ? rawName[0] + 'O' : rawName));
 
             const tr = document.createElement('tr');
+            tr.className = rowClass;
             tr.innerHTML = `
               <td class="${rankClass}">${medal}${rank}위</td>
               <td>${item.grade ? `${item.grade}-${item.classNum || 1} ` : ''}<strong>${masked}</strong></td>
-              <td style="color:#38bdf8; font-weight:bold;">${(item.score || 0).toLocaleString()}</td>
+              <td style="color:#38bdf8; font-weight:bold; font-size:0.95rem;">${(item.score || 0).toLocaleString()}</td>
               <td>${item.accuracy || 0}%</td>
-              <td style="color:#94a3b8; font-size:0.8rem;">${item.clearedCount || 0}단어</td>
+              <td style="color:#94a3b8; font-size:0.82rem;">${item.clearedCount || 0}단어</td>
             `;
             hofTableBody.appendChild(tr);
           });
@@ -463,6 +670,30 @@
           console.warn("HOF load error:", err);
           hofTableBody.innerHTML = '<tr><td colspan="5" style="color:#f87171; padding:20px;">랭킹을 불러오지 못했습니다. 로컬 점수를 확인해주세요.</td></tr>';
         }
+      }
+
+      btnHof.addEventListener('click', () => {
+        hofModal.showModal();
+        loadHof('all');
+      });
+
+      if (btnResultHof) {
+        btnResultHof.addEventListener('click', () => {
+          hofModal.showModal();
+          loadHof('all');
+        });
+      }
+
+      if (btnHofRefresh) {
+        btnHofRefresh.addEventListener('click', () => {
+          loadHof(currentHofTab);
+        });
+      }
+
+      hofTabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          loadHof(btn.dataset.tab);
+        });
       });
 
       // 10. 결과 모달 내 액션

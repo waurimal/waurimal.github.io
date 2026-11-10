@@ -21,9 +21,9 @@ class SpellingGalagaGame {
     // 게임 상태: 'TITLE' | 'PLAYING' | 'WORD_CLEAR' | 'GAME_OVER' | 'VICTORY'
     this.state = 'TITLE';
 
-    // 기본 난이도 모드: 'easy' (초등 배려: 오답 시 목숨 보호 & 조준 가이드) | 'normal' | 'hard'
+    // 기본 난이도 모드: 'easy' (초급: 오답 시 하트 -1 / 철자 힌트) | 'normal' (중급: 오답 시 하트 -1 & -80점) | 'hard' (고급: 오답 시 하트 -1 & 듀얼 해제)
     this.difficulty = 'easy';
-    this.wrongShotCount = 0; // 중급 모드용 연속 오답 카운터
+    this.wrongShotCount = 0;
 
     // 기본 게임 규칙 & 상태 변수
     this.maxLives = 5;
@@ -117,11 +117,15 @@ class SpellingGalagaGame {
     }
   }
 
-  // 캔버스 반응형 리사이징
+  // 캔버스 반응형 리사이징 (상단과 하단을 안전하게 유지하고 가운데 영역에 완벽 피팅)
   resizeCanvas() {
-    const container = this.canvas.parentElement;
-    const cw = container.clientWidth;
-    const ch = container.clientHeight;
+    const viewport = document.getElementById('gameCenterViewport') || this.canvas.parentElement;
+    if (!viewport) return;
+
+    const paddingX = 20;
+    const paddingY = 16;
+    const cw = Math.max(100, viewport.clientWidth - paddingX);
+    const ch = Math.max(100, viewport.clientHeight - paddingY);
 
     const aspect = this.virtualWidth / this.virtualHeight;
     let w = cw;
@@ -196,6 +200,31 @@ class SpellingGalagaGame {
       handlePointerMove(e);
       e.preventDefault();
     }, { passive: false });
+
+    // 가운데 뷰포트 영역 터치/마우스 유연 지원
+    setTimeout(() => {
+      const viewport = document.getElementById('gameCenterViewport');
+      if (viewport) {
+        viewport.addEventListener('mousedown', (e) => {
+          if (e.target === viewport) handlePointerDown(e);
+        });
+        viewport.addEventListener('mousemove', (e) => {
+          if (e.buttons > 0 && e.target === viewport) handlePointerMove(e);
+        });
+        viewport.addEventListener('touchstart', (e) => {
+          if (e.target === viewport) {
+            handlePointerDown(e);
+            e.preventDefault();
+          }
+        }, { passive: false });
+        viewport.addEventListener('touchmove', (e) => {
+          if (e.target === viewport) {
+            handlePointerMove(e);
+            e.preventDefault();
+          }
+        }, { passive: false });
+      }
+    }, 100);
   }
 
   // 난이도 설정 변경
@@ -261,7 +290,7 @@ class SpellingGalagaGame {
     this.spawnEnemiesForWord();
   }
 
-  // 갤러그 편대 생성
+  // 갤러그 편대 생성 (단일 1열 가로 배치)
   spawnEnemiesForWord() {
     this.enemies = [];
     const neededLetters = this.currentWord.split('');
@@ -269,69 +298,63 @@ class SpellingGalagaGame {
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const distractorPool = alphabet.split('').filter(ch => !neededLetters.includes(ch));
 
-    const rows = 4;
-    const cols = 8;
-    const startX = 140;
-    const startY = 110;
-    const colSpacing = 74;
-    const rowSpacing = 48;
+    // 단일 가로 1줄 배치 (단어 길이에 맞추어 최소 8개, 필요시 단어 길이만큼 확장)
+    const cols = Math.max(8, neededLetters.length);
+    const colSpacing = Math.min(76, Math.floor((this.virtualWidth - 140) / (cols - 1)));
+    const totalSpan = (cols - 1) * colSpacing;
+    const startX = (this.virtualWidth - totalSpan) / 2;
+    const startY = 135;
 
-    let assignedLetters = [];
+    let assignedLetters = [...neededLetters];
 
-    // 목표 단어의 모든 글자를 최소 1~2개씩 반드시 배치
-    neededLetters.forEach(ch => assignedLetters.push(ch));
-    if (assignedLetters.length < 8) {
-      neededLetters.forEach(ch => assignedLetters.push(ch));
-    }
-
-    const totalEnemies = 20;
-    while (assignedLetters.length < totalEnemies) {
+    // 남은 자리는 무작위 방해 글자로 채움
+    while (assignedLetters.length < cols) {
       const randomDistractor = distractorPool[Math.floor(Math.random() * distractorPool.length)];
       assignedLetters.push(randomDistractor);
     }
 
-    // 셔플
+    // 셔플 (학생들이 한 줄에서 정답 글자를 직접 찾도록)
     for (let i = assignedLetters.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [assignedLetters[i], assignedLetters[j]] = [assignedLetters[j], assignedLetters[i]];
     }
 
-    let enemyIdx = 0;
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        if (enemyIdx >= totalEnemies) break;
-
-        let type = 'zako';
-        if (r === 0) type = 'boss';
-        else if (r === 1) type = 'goei';
-
-        const targetGridX = startX + c * colSpacing;
-        const targetGridY = startY + r * rowSpacing;
-        const letter = assignedLetters[enemyIdx++];
-
-        const entrySide = (c % 2 === 0) ? -1 : 1;
-        const startXPos = entrySide === -1 ? -40 - c * 20 : this.virtualWidth + 40 + c * 20;
-
-        // 난이도별 다이빙 속도 및 총알 쿨다운 차등화
-        let baseDiveSpeed = (this.difficulty === 'easy') ? 1.5 : (this.difficulty === 'normal' ? 2.2 : 2.9);
-        let baseShootCooldown = (this.difficulty === 'easy') ? 600 : (this.difficulty === 'normal' ? 300 : 150);
-
-        this.enemies.push({
-          type,
-          letter,
-          formationX: targetGridX,
-          formationY: targetGridY,
-          x: startXPos,
-          y: -40 - r * 30,
-          width: type === 'boss' ? 44 : 36,
-          height: type === 'boss' ? 40 : 32,
-          state: 'ENTERING',
-          diveSpeed: baseDiveSpeed + Math.random() * 0.6,
-          diveCurve: (Math.random() - 0.5) * 3,
-          shootCooldown: Math.floor(baseShootCooldown + Math.random() * 300),
-          hasCapturedFighter: false
-        });
+    for (let c = 0; c < cols; c++) {
+      // 1줄 내 유닛 타입 다양화 (가운데 보스, 양 날개 호위기, 나머지 자코)
+      let type = 'zako';
+      const mid = Math.floor(cols / 2);
+      if (c === mid || (cols % 2 === 0 && c === mid - 1)) {
+        type = 'boss';
+      } else if (c === 1 || c === cols - 2) {
+        type = 'goei';
       }
+
+      const targetGridX = startX + c * colSpacing;
+      const targetGridY = startY;
+      const letter = assignedLetters[c];
+
+      const entrySide = (c % 2 === 0) ? -1 : 1;
+      const startXPos = entrySide === -1 ? -40 - c * 25 : this.virtualWidth + 40 + c * 25;
+
+      // 난이도별 다이빙 속도 및 총알 쿨다운 차등화
+      let baseDiveSpeed = (this.difficulty === 'easy') ? 2.0 : (this.difficulty === 'normal' ? 2.6 : 3.2);
+      let baseShootCooldown = (this.difficulty === 'easy') ? 400 : (this.difficulty === 'normal' ? 250 : 140);
+
+      this.enemies.push({
+        type,
+        letter,
+        formationX: targetGridX,
+        formationY: targetGridY,
+        x: startXPos,
+        y: -40,
+        width: type === 'boss' ? 44 : 36,
+        height: type === 'boss' ? 40 : 32,
+        state: 'ENTERING',
+        diveSpeed: baseDiveSpeed + Math.random() * 0.6,
+        diveCurve: (Math.random() - 0.5) * 3,
+        shootCooldown: Math.floor(baseShootCooldown + Math.random() * 300),
+        hasCapturedFighter: false
+      });
     }
   }
 
@@ -566,11 +589,6 @@ class SpellingGalagaGame {
       this.capturedFighterBoss = null;
     }
 
-    // 아이템 드롭 확률 대폭 상향 (45% 확률로 쏟아짐)
-    if (Math.random() < 0.45 || this.combo >= 3) {
-      this.spawnRandomPowerup(enemy.x, enemy.y);
-    }
-
     this.enemies.splice(index, 1);
 
     if (isCorrect) {
@@ -595,6 +613,11 @@ class SpellingGalagaGame {
         this.addFloatingText(`COMBO x${this.combo}!`, enemy.x, enemy.y - 35, '#facc15');
       }
 
+      // 🎁 정답 철자를 격추했을 때만 유용한 보너스 아이템 확률 드롭! (기본 30% 확률, 3콤보 이상 시 50%)
+      if (Math.random() < 0.30 || this.combo >= 3) {
+        this.spawnRandomPowerup(enemy.x, enemy.y);
+      }
+
       this.updateHUD();
 
       if (this.targetLetterIndex >= this.currentWord.length) {
@@ -603,31 +626,38 @@ class SpellingGalagaGame {
         this.ensureTargetLetterAvailable();
       }
     } else {
-      // ❌ 오답 글자 맞힘 (난이도별 친화적 규칙 적용)
+      // ❌ 오답 글자 맞힘 (엉뚱한 알파벳 격추 시 하트 즉시 차감 & 페널티 처리, 아이템 절대 미지급)
       this.sounds.playWrong();
-      this.combo = 0;
+      this.combo = 0; // 콤보 즉시 초기화
 
-      if (this.difficulty === 'easy') {
-        // 🟢 초급 모드: 목숨 절대 안 깎임! (학생들의 좌절 방지)
-        this.shakeTimer = 6;
-        this.addFloatingText(`MISS! '${enemy.letter}' (초급: 목숨 보호)`, enemy.x, enemy.y - 15, '#fbbf24', 16);
-      } else if (this.difficulty === 'normal') {
-        // 🟡 중급 모드: 3번 누적 실수할 때만 목숨 1개 차감
-        this.wrongShotCount++;
-        if (this.wrongShotCount >= 3) {
-          this.wrongShotCount = 0;
-          this.lives--;
-          this.shakeTimer = 14;
-          this.addFloatingText(`3연속 오답! -1 LIFE`, this.virtualWidth / 2, this.virtualHeight / 2, '#f87171', 20);
-        } else {
-          this.shakeTimer = 6;
-          this.addFloatingText(`주의! (${this.wrongShotCount}/3 경고)`, enemy.x, enemy.y - 15, '#fbbf24', 16);
-        }
+      // 난이도별 감점 처리 (0점 미만으로는 내려가지 않음)
+      const penaltyScore = (this.difficulty === 'easy') ? 50 : (this.difficulty === 'normal' ? 80 : 100);
+      this.score = Math.max(0, this.score - penaltyScore);
+      this.addFloatingText(`-${penaltyScore}`, enemy.x, enemy.y - 15, '#ef4444', 18);
+
+      // 🛡️ 쉴드가 있다면 오답 페널티를 1회 막아주고 쉴드 소멸
+      if (this.player.hasShield) {
+        this.player.hasShield = false;
+        this.sounds.playShieldDeflect();
+        this.shakeTimer = 10;
+        this.addFloatingText('🛡️ SHIELD BLOCKED WRONG PENALTY!', enemy.x, enemy.y - 35, '#38bdf8', 18);
       } else {
-        // 🔴 고급 모드: 즉시 목숨 1개 차감
+        // 💔 하트(목숨) 즉시 1개 차감!
         this.lives--;
-        this.shakeTimer = 16;
-        this.addFloatingText(`MISS! -1 LIFE`, enemy.x, enemy.y - 15, '#ef4444', 18);
+        this.sounds.playLifeLost();
+        this.shakeTimer = 14;
+
+        if (this.difficulty === 'hard') {
+          // 고급 모드: 오답 시 듀얼 파이터 상태까지 즉시 파괴
+          if (this.player.isDual) {
+            this.player.isDual = false;
+            this.addFloatingText('❌ 오답! -1 LIFE & DUAL LOST!', enemy.x, enemy.y - 35, '#ef4444', 20);
+          } else {
+            this.addFloatingText('❌ 오답 철자 피격! -1 LIFE ❤️', enemy.x, enemy.y - 35, '#ef4444', 20);
+          }
+        } else {
+          this.addFloatingText('❌ 오답 철자 피격! -1 LIFE ❤️', enemy.x, enemy.y - 35, '#ef4444', 20);
+        }
       }
 
       this.updateHUD();
@@ -639,10 +669,10 @@ class SpellingGalagaGame {
     }
   }
 
-  // 아이템 생성 (하트 & 쉴드 가중치 상향)
+  // 아이템 생성 (정답 철자 격추 시에만 드롭)
   spawnRandomPowerup(x, y) {
     const types = ['heart', 'dual', 'shield', 'bomb', 'slow'];
-    const weights = [0.35, 0.25, 0.20, 0.12, 0.08];
+    const weights = [0.20, 0.25, 0.25, 0.18, 0.12];
     let rand = Math.random();
     let selected = types[0];
 
@@ -740,7 +770,7 @@ class SpellingGalagaGame {
     }, 1500);
   }
 
-  // 클라우드 점수 저장
+  // 클라우드 및 로컬 명예의 전당 점수 저장
   async saveScoreToCloud() {
     try {
       const studentInfo = (typeof window !== 'undefined' && window.WaurimalNav && window.WaurimalNav.getStudentInfo)
@@ -758,22 +788,31 @@ class SpellingGalagaGame {
         timestamp: Date.now()
       };
 
+      // 1. 로컬 스토리지 명예의 전당 캐시
       let localScores = JSON.parse(localStorage.getItem('spelling_galaga_scores_history') || '[]');
       localScores.push(record);
       localScores.sort((a, b) => b.score - a.score);
       localStorage.setItem('spelling_galaga_scores_history', JSON.stringify(localScores.slice(0, 50)));
 
-      if (typeof window !== 'undefined' && window.WaurimalFirebase && window.WaurimalFirebase.getDb) {
-        const db = window.WaurimalFirebase.getDb();
-        if (db) {
-          await db.collection('games').doc('spelling_galaga').collection('scores').add({
-            ...record,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
+      // 2. Firebase Firestore 명예의 전당 실시간 클라우드 동기화
+      if (typeof window !== 'undefined' && typeof firebase !== 'undefined' && window.WaurimalFirebase) {
+        try {
+          if (!firebase.apps.length) {
+            firebase.initializeApp(window.WaurimalFirebase.getConfig());
+          }
+          const db = firebase.firestore();
+          if (db) {
+            await db.collection('games').doc('spelling_galaga').collection('scores').add({
+              ...record,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          }
+        } catch (fbErr) {
+          console.warn("Firestore save score error:", fbErr);
         }
       }
     } catch (e) {
-      console.warn("Save score to cloud failed:", e);
+      console.warn("Save score failed:", e);
     }
   }
 
@@ -820,8 +859,8 @@ class SpellingGalagaGame {
       this.formationDirection *= -1;
     }
 
-    // 급강하 쿨다운 (초급은 5.2초로 매우 넉넉함)
-    const diveInterval = (this.difficulty === 'easy') ? 5.2 : (this.difficulty === 'normal' ? 3.5 : 2.0);
+    // 급강하 쿨다운 (초급 3.4초, 중급 2.4초, 고급 1.6초)
+    const diveInterval = (this.difficulty === 'easy') ? 3.4 : (this.difficulty === 'normal' ? 2.4 : 1.6);
 
     this.diveTimer += dt;
     if (this.diveTimer > diveInterval && this.enemies.length > 0) {
@@ -832,8 +871,9 @@ class SpellingGalagaGame {
         diver.state = 'DIVING';
         diver.diveTargetX = this.player.x;
 
-        // 초급에서는 트랙터 빔 비활성화, 중/고급에서만 발동
-        if (this.difficulty !== 'easy' && diver.type === 'boss' && !this.player.isDual && !this.capturedFighterBoss && Math.random() < 0.3) {
+        // 보스 트랙터 빔 (초급도 20% 확률로 발동되어 듀얼 파이터 구출 재미 제공)
+        const tractorChance = (this.difficulty === 'easy') ? 0.2 : (this.difficulty === 'normal' ? 0.3 : 0.4);
+        if (diver.type === 'boss' && !this.player.isDual && !this.capturedFighterBoss && Math.random() < tractorChance) {
           diver.isTractorBoss = true;
         }
       }
@@ -858,8 +898,8 @@ class SpellingGalagaGame {
 
         e.shootCooldown--;
         if (e.shootCooldown <= 0) {
-          const cooldownBase = (this.difficulty === 'easy') ? 700 : (this.difficulty === 'normal' ? 350 : 200);
-          e.shootCooldown = cooldownBase + Math.random() * 300;
+          const cooldownBase = (this.difficulty === 'easy') ? 450 : (this.difficulty === 'normal' ? 280 : 160);
+          e.shootCooldown = cooldownBase + Math.random() * 250;
           this.shootEnemyBullet(e.x, e.y);
         }
       } else if (e.state === 'DIVING') {
@@ -895,7 +935,7 @@ class SpellingGalagaGame {
           this.activeTractorBeam = null;
         }
 
-        if (Math.abs(e.y - (this.virtualHeight * 0.5)) < 4 && this.difficulty !== 'easy') {
+        if (Math.abs(e.y - (this.virtualHeight * 0.5)) < 4 && (this.difficulty !== 'easy' || Math.random() < 0.4)) {
           this.shootEnemyBullet(e.x, e.y);
         }
 
@@ -939,12 +979,12 @@ class SpellingGalagaGame {
     }, 1200);
   }
 
-  // 적 탄환 발사 (초급은 최대 2발로 아주 안전)
+  // 적 탄환 발사 (난이도별 탄환 수 및 속도)
   shootEnemyBullet(x, y) {
-    const maxBullets = (this.difficulty === 'easy') ? 2 : (this.difficulty === 'normal' ? 4 : 7);
+    const maxBullets = (this.difficulty === 'easy') ? 3 : (this.difficulty === 'normal' ? 5 : 7);
     if (this.enemyBullets.length >= maxBullets) return;
 
-    const bulletSpeed = (this.difficulty === 'easy') ? 1.8 : (this.difficulty === 'normal' ? 2.5 : 3.2);
+    const bulletSpeed = (this.difficulty === 'easy') ? 2.2 : (this.difficulty === 'normal' ? 2.7 : 3.3);
 
     this.enemyBullets.push({
       x,
@@ -1152,7 +1192,6 @@ class SpellingGalagaGame {
     // 외계인 편대 렌더링
     const expectedLetter = this.currentWord ? this.currentWord[this.targetLetterIndex] : null;
     this.enemies.forEach(e => {
-      const isTarget = (e.letter === expectedLetter);
       this.sprites.drawEnemy(
         this.ctx,
         e.x,
@@ -1161,9 +1200,7 @@ class SpellingGalagaGame {
         e.height,
         e.type,
         e.letter,
-        isTarget,
         e.state === 'DIVING' ? Math.sin(e.y * 0.05) * 0.3 : 0,
-        this.difficulty,
         e.hasCapturedFighter
       );
     });
@@ -1233,10 +1270,10 @@ class SpellingGalagaGame {
     this.ctx.shadowBlur = 0;
     this.ctx.font = "14px 'DungGeunMo', sans-serif";
     this.ctx.fillText("1. 상단 전광판의 [단어 뜻]과 [지금 쏠 글자]를 확인하세요.", this.virtualWidth / 2, 270);
-    this.ctx.fillText("2. 🎯 머리 위에 노란 화살표가 있는 외계인을 조준 사격하세요!", this.virtualWidth / 2, 300);
-    this.ctx.fillText("3. 🟢 초급 모드에서는 오답을 쏴도 목숨이 깎이지 않습니다 (안심 사격)!", this.virtualWidth / 2, 330);
+    this.ctx.fillText("2. 한 줄로 늘어선 외계인 편대에서 철자에 맞는 알파벳을 찾아 조준 사격하세요!", this.virtualWidth / 2, 300);
+    this.ctx.fillText("3. 정답 철자 격추 시 점수 UP! 엉뚱한 오답 격추 시 감점(-50점) & 기회 차감!", this.virtualWidth / 2, 330);
     this.ctx.fillText("4. ⚡ 듀얼 파이터, 🛡️ 쉴드, 💣 폭탄, ❤️ 하트 아이템을 획득하세요!", this.virtualWidth / 2, 360);
-    this.ctx.fillText("5. 크롬북: 방향키 이동 & 스페이스바 발사 (또는 화면 드래그 & 터치)!", this.virtualWidth / 2, 390);
+    this.ctx.fillText("5. 🏆 상단 [명예의 전당]에서 은하계 랭킹 TOP 30을 확인하세요!", this.virtualWidth / 2, 390);
 
     const blink = Math.floor(performance.now() / 450) % 2 === 0;
     if (blink) {
