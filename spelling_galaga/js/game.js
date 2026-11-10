@@ -865,11 +865,15 @@ class SpellingGalagaGame {
       }
       localStorage.setItem('spelling_galaga_scores_history', JSON.stringify(localScores));
 
-      // 2. Firebase Firestore 명예의 전당 실시간 클라우드 비동기 동기화 (백그라운드)
+      // 2. Firebase Firestore 명예의 전당 실시간 클라우드 비동기 동기화 (백그라운드 샤딩)
       if (typeof window !== 'undefined' && typeof firebase !== 'undefined' && window.WaurimalFirebase) {
         try {
+          const fbConfig = window.WaurimalFirebase.getConfig('spelling_galaga');
+          if (window.WaurimalFirebase.isCircuitBroken && window.WaurimalFirebase.isCircuitBroken(fbConfig.projectId)) {
+            return record;
+          }
           if (!firebase.apps.length) {
-            firebase.initializeApp(window.WaurimalFirebase.getConfig());
+            firebase.initializeApp(fbConfig);
           }
           const db = firebase.firestore();
           if (db) {
@@ -877,6 +881,9 @@ class SpellingGalagaGame {
               ...record,
               createdAt: firebase.firestore.FieldValue.serverTimestamp()
             }).catch(fbErr => {
+              if (fbErr && (fbErr.code === 'resource-exhausted' || String(fbErr).includes('429'))) {
+                window.WaurimalFirebase.tripCircuitBreaker(fbConfig.projectId);
+              }
               console.warn("Firestore save score warning (quota/offline):", fbErr);
             });
           }

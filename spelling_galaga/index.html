@@ -684,8 +684,13 @@
       function getFirestoreDb() {
         if (typeof firebase !== 'undefined' && window.WaurimalFirebase) {
           try {
+            const fbConfig = window.WaurimalFirebase.getConfig('spelling_galaga');
+            if (window.WaurimalFirebase.isCircuitBroken && window.WaurimalFirebase.isCircuitBroken(fbConfig.projectId)) {
+              console.warn(`[HOF] Project '${fbConfig.projectId}' is circuit-broken, using local cache.`);
+              return null;
+            }
             if (!firebase.apps.length) {
-              firebase.initializeApp(window.WaurimalFirebase.getConfig());
+              firebase.initializeApp(fbConfig);
             }
             return firebase.firestore();
           } catch (e) {
@@ -849,6 +854,12 @@
               renderHofTable(Array.from(mergedMap.values()), tab);
             }
           } catch (snapErr) {
+            if (snapErr && (snapErr.code === 'resource-exhausted' || String(snapErr).includes('429'))) {
+              if (window.WaurimalFirebase && window.WaurimalFirebase.tripCircuitBreaker) {
+                const conf = window.WaurimalFirebase.getConfig('spelling_galaga');
+                window.WaurimalFirebase.tripCircuitBreaker(conf.projectId);
+              }
+            }
             console.warn("Firestore query fallback (quota/network):", snapErr);
           }
         }
