@@ -134,6 +134,12 @@ class YutnoriMultiplayerManager {
         return this.roomData.currentTurnId === this.mySessionId;
     }
 
+    isMyTurnOrHost() {
+        if (!this.roomData || this.roomData.status !== 'playing') return false;
+        const isHost = this.isHost || (this.roomData.hostId === this.mySessionId);
+        return (this.roomData.currentTurnId === this.mySessionId) || isHost;
+    }
+
     generateRoomCode() {
         return Math.floor(1000 + Math.random() * 9000).toString();
     }
@@ -764,8 +770,14 @@ class YutnoriMultiplayerManager {
      * 퀴즈 풀이 결과 동기화
      */
     async sendQuizResult(isCorrect, explanation, answer) {
-        if (!this.currentRoomId || !this.isMyTurn()) return;
+        if (!this.currentRoomId) return;
+        const isTurnPlayer = this.isMyTurn();
+        const isHost = this.isHost || (this.roomData && this.roomData.hostId === this.mySessionId);
+        if (!isTurnPlayer && !isHost) return;
         const roomRef = doc(db, ROOMS_COLLECTION, this.currentRoomId);
+
+        const currentTurnPlayer = (this.roomData && this.roomData.players) ? this.roomData.players[this.roomData.currentTurnId] : null;
+        const actorName = currentTurnPlayer ? currentTurnPlayer.name : '플레이어';
 
         try {
             if (isCorrect) {
@@ -779,7 +791,9 @@ class YutnoriMultiplayerManager {
                     },
                     lastAction: {
                         type: 'QUIZ_CORRECT',
-                        actorId: this.mySessionId,
+                        actorId: this.roomData.currentTurnId,
+                        playerName: actorName,
+                        proxyHostId: (!isTurnPlayer && isHost) ? this.mySessionId : null,
                         timestamp: Date.now()
                     },
                     updatedAt: Date.now()
@@ -795,7 +809,9 @@ class YutnoriMultiplayerManager {
                     },
                     lastAction: {
                         type: 'QUIZ_WRONG',
-                        actorId: this.mySessionId,
+                        actorId: this.roomData.currentTurnId,
+                        playerName: actorName,
+                        proxyHostId: (!isTurnPlayer && isHost) ? this.mySessionId : null,
                         timestamp: Date.now()
                     },
                     updatedAt: Date.now()
@@ -810,9 +826,15 @@ class YutnoriMultiplayerManager {
      * 말 이동 및 턴 종료 / 추가 턴 동기화
      */
     async sendPieceMovement({ teamsState, hasExtraTurn, winnerTeam, pieceId, movePath, caughtEnemy, caughtCount }) {
-        if (!this.currentRoomId || !this.isMyTurn()) return;
+        if (!this.currentRoomId) return;
+        const isTurnPlayer = this.isMyTurn();
+        const isHost = this.isHost || (this.roomData && this.roomData.hostId === this.mySessionId);
+        if (!isTurnPlayer && !isHost) return;
         const roomRef = doc(db, ROOMS_COLLECTION, this.currentRoomId);
         const currentStats = (this.gameEngine && this.gameEngine.matchStats) ? this.gameEngine.matchStats : null;
+
+        const currentTurnPlayer = (this.roomData && this.roomData.players) ? this.roomData.players[this.roomData.currentTurnId] : null;
+        const actorName = currentTurnPlayer ? currentTurnPlayer.name : '플레이어';
 
         try {
             if (winnerTeam) {
@@ -823,10 +845,12 @@ class YutnoriMultiplayerManager {
                     teamsState: teamsState,
                     matchStats: currentStats,
                     winner: winnerTeam,
+                    isHostProxyTurn: false,
                     lastAction: {
                         type: 'GAME_OVER',
-                        actorId: this.mySessionId,
+                        actorId: this.roomData.currentTurnId,
                         winnerTeam: winnerTeam,
+                        proxyHostId: (!isTurnPlayer && isHost) ? this.mySessionId : null,
                         timestamp: Date.now()
                     },
                     updatedAt: Date.now()
@@ -847,7 +871,7 @@ class YutnoriMultiplayerManager {
                 // 'streak': 보너스 연속 던지기 - 기존과 같이 던진 학생이 한 번 더 던짐
                 // 'leader': 대표 1인 던지기 - 팀 대표(0번)가 던짐
                 const throwerMode = this.roomData.throwerMode || 'all_once';
-                let nextTurnId = this.mySessionId;
+                let nextTurnId = this.roomData.currentTurnId; // 던진 학생/팀 본래의 턴 유지
                 let nextBlueIndex = (typeof this.roomData.bluePlayerIndex === 'number') ? this.roomData.bluePlayerIndex : 0;
                 let nextWhiteIndex = (typeof this.roomData.whitePlayerIndex === 'number') ? this.roomData.whitePlayerIndex : -1;
 
@@ -887,12 +911,15 @@ class YutnoriMultiplayerManager {
                     currentRoll: null,
                     activeQuiz: null,
                     quizResult: null,
+                    isHostProxyTurn: false,
                     lastAction: {
                         type: caughtEnemy ? 'CAUGHT_PIECE' : 'EXTRA_TURN',
-                        actorId: this.mySessionId,
+                        actorId: this.roomData.currentTurnId,
+                        playerName: actorName,
                         nextTurnPlayerId: nextTurnId,
                         nextTurnPlayerName: nextPlayerName,
                         caughtCount: caughtCount || 1,
+                        proxyHostId: (!isTurnPlayer && isHost) ? this.mySessionId : null,
                         timestamp: Date.now()
                     },
                     updatedAt: Date.now()
@@ -907,10 +934,13 @@ class YutnoriMultiplayerManager {
                     currentRoll: null,
                     activeQuiz: null,
                     quizResult: null,
+                    isHostProxyTurn: false,
                     ...nextTurnInfo,
                     lastAction: {
                         type: 'END_TURN',
-                        actorId: this.mySessionId,
+                        actorId: this.roomData.currentTurnId,
+                        playerName: actorName,
+                        proxyHostId: (!isTurnPlayer && isHost) ? this.mySessionId : null,
                         timestamp: Date.now()
                     },
                     updatedAt: Date.now()
@@ -926,7 +956,8 @@ class YutnoriMultiplayerManager {
      */
     async hostForceRoll(rollResult, sticks, quizData) {
         if (!this.currentRoomId || !this.roomData) return;
-        if (this.roomData.hostId !== this.mySessionId) {
+        const isHost = this.isHost || (this.roomData.hostId === this.mySessionId);
+        if (!isHost) {
             throw new Error("방장만 대신 윷을 던질 수 있습니다.");
         }
         if (this.roomData.status !== 'playing') return;
@@ -942,6 +973,7 @@ class YutnoriMultiplayerManager {
                 sticks: sticks,
                 activeQuiz: quizData || null,
                 quizResult: null,
+                isHostProxyTurn: true,
                 lastAction: {
                     type: 'HOST_PROXY_ROLL',
                     actorId: this.roomData.currentTurnId,
@@ -963,7 +995,8 @@ class YutnoriMultiplayerManager {
      */
     async hostSkipTurn() {
         if (!this.currentRoomId || !this.roomData) return;
-        if (this.roomData.hostId !== this.mySessionId) {
+        const isHost = this.isHost || (this.roomData.hostId === this.mySessionId);
+        if (!isHost) {
             throw new Error("방장만 턴을 넘길 수 있습니다.");
         }
         if (this.roomData.status !== 'playing') return;
@@ -984,6 +1017,7 @@ class YutnoriMultiplayerManager {
                 currentRoll: null,
                 activeQuiz: null,
                 quizResult: null,
+                isHostProxyTurn: false,
                 ...nextTurnInfo,
                 lastAction: {
                     type: 'HOST_SKIP_TURN',

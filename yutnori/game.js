@@ -471,6 +471,7 @@
             };
         }
     };
+    window.YUT_PROBABILITY = YUT_PROBABILITY;
 
     // ==========================================
     // 5. 명예의 전당 (Hall of Fame) & 이름 마스킹
@@ -1574,6 +1575,7 @@
                 // 방장 비상 제어 도구 (랙 해결용)
                 hostEmergencyControls: document.getElementById('hostEmergencyControls'),
                 hostForceRollBtn: document.getElementById('hostForceRollBtn'),
+                hostAutoMoveBtn: document.getElementById('hostAutoMoveBtn'),
                 hostSkipTurnBtn: document.getElementById('hostSkipTurnBtn'),
 
                 // 퀴즈 모달
@@ -1589,6 +1591,8 @@
                 quizSourceTokensContainer: document.getElementById('quizSourceTokensContainer'),
                 quizScrambleSubmitBtn: document.getElementById('quizScrambleSubmitBtn'),
                 quizScrambleResetBtn: document.getElementById('quizScrambleResetBtn'),
+                hostQuizEmergencyBar: document.getElementById('hostQuizEmergencyBar'),
+                hostApproveQuizBtn: document.getElementById('hostApproveQuizBtn'),
 
                 // 피드백 모달
                 feedbackModal: document.getElementById('feedbackModal'),
@@ -1682,8 +1686,14 @@
             if (this.dom.hostForceRollBtn) {
                 this.dom.hostForceRollBtn.addEventListener('click', () => this.onHostForceRollClicked());
             }
+            if (this.dom.hostAutoMoveBtn) {
+                this.dom.hostAutoMoveBtn.addEventListener('click', () => this.onHostAutoMoveClicked());
+            }
             if (this.dom.hostSkipTurnBtn) {
                 this.dom.hostSkipTurnBtn.addEventListener('click', () => this.onHostSkipTurnClicked());
+            }
+            if (this.dom.hostApproveQuizBtn) {
+                this.dom.hostApproveQuizBtn.addEventListener('click', () => this.onHostApproveQuizClicked());
             }
 
             if (this.dom.quizTtsBtn) {
@@ -2140,6 +2150,8 @@
 
             const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
             const isMyTurn = (roomData.currentTurnId === mySessionId);
+            const isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
+                           (roomData.hostId === mySessionId);
             const isRemoteAction = Boolean(roomData.lastAction && roomData.lastAction.actorId !== mySessionId);
 
             // 플레이어 명단 및 UID 실시간 동기화 (재접속/세션 마이그레이션 반영, 관전자 제외)
@@ -2208,19 +2220,25 @@
             }
 
             // 재접속 또는 초기 동기화 시 윷 상태 및 턴 상태 복원
-            if (isMyTurn && roomData.status === 'playing') {
+            if (roomData.status === 'playing') {
+                const canControlTurn = isMyTurn || (isHost && (roomData.isHostProxyTurn || roomData.gameState === 'WAIT_PIECE_SELECT' || roomData.gameState === 'WAIT_QUIZ'));
                 if (roomData.gameState === 'WAIT_PIECE_SELECT' && roomData.currentRoll) {
                     this.currentRoll = roomData.currentRoll;
                     this.displayRollResult(roomData.currentRoll);
                     this.updateStickVisuals(roomData.sticks || roomData.currentRoll.sticks);
-                    if (!isLocalBusy || isInitial) {
+                    if (canControlTurn && (!isLocalBusy || isInitial)) {
                         this.preparePieceSelection();
                     }
-                } else if (!isLocalBusy && this.gameState !== 'WAIT_PIECE_SELECT') {
-                    this.setGameState('WAIT_ROLL');
+                } else if (roomData.gameState === 'WAIT_ROLL') {
+                    if (!isLocalBusy || isInitial) {
+                        this.setGameState('WAIT_ROLL');
+                        this.currentRoll = null;
+                        if (this.dom.resultBadge) this.dom.resultBadge.classList.add('hidden');
+                        this.clearHighlights();
+                    }
+                } else if (roomData.currentRoll) {
+                    this.updateStickVisuals(roomData.sticks || roomData.currentRoll.sticks);
                 }
-            } else if (!isMyTurn && roomData.currentRoll) {
-                this.updateStickVisuals(roomData.sticks || roomData.currentRoll.sticks);
             }
 
             this.updateTurnUI();
@@ -2380,6 +2398,15 @@
 
                 Sound.playLand(rollResult.result);
                 this.displayRollResult(rollResult);
+
+                const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
+                const isMyTurn = (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId);
+                const isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
+                               (this.currentRoomData && this.currentRoomData.hostId === mySessionId);
+
+                if (isMyTurn || isHost) {
+                    this.preparePieceSelection();
+                }
             }, 700);
         }
 
@@ -2465,15 +2492,35 @@
                 if (this.dom.hostEmergencyControls) {
                     if (isHost && this.gameState !== 'GAME_OVER' && this.currentRoomData && this.currentRoomData.status === 'playing') {
                         this.dom.hostEmergencyControls.classList.remove('hidden');
+                        
+                        const roomGameState = (this.currentRoomData && this.currentRoomData.gameState) || this.gameState;
+                        const canForceRoll = (roomGameState === 'WAIT_ROLL');
+                        const canAutoMove = (roomGameState === 'WAIT_PIECE_SELECT');
+
                         if (this.dom.hostForceRollBtn) {
-                            const canForceRoll = (this.gameState === 'WAIT_ROLL');
-                            this.dom.hostForceRollBtn.disabled = !canForceRoll;
-                            if (canForceRoll) {
-                                this.dom.hostForceRollBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                            if (canAutoMove) {
+                                this.dom.hostForceRollBtn.classList.add('hidden');
                             } else {
-                                this.dom.hostForceRollBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                                this.dom.hostForceRollBtn.classList.remove('hidden');
+                                this.dom.hostForceRollBtn.disabled = !canForceRoll;
+                                if (canForceRoll) {
+                                    this.dom.hostForceRollBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                                } else {
+                                    this.dom.hostForceRollBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                                }
                             }
                         }
+
+                        if (this.dom.hostAutoMoveBtn) {
+                            if (canAutoMove) {
+                                this.dom.hostAutoMoveBtn.classList.remove('hidden');
+                                this.dom.hostAutoMoveBtn.disabled = false;
+                                this.dom.hostAutoMoveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                            } else {
+                                this.dom.hostAutoMoveBtn.classList.add('hidden');
+                            }
+                        }
+
                         if (this.dom.hostSkipTurnBtn) {
                             this.dom.hostSkipTurnBtn.disabled = false;
                             this.dom.hostSkipTurnBtn.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -2597,8 +2644,13 @@
         // 6. 방장 비상 제어 (학생 기기 랙/먹통 대응)
         // ==========================================
         async onHostForceRollClicked() {
-            if (!this.isOnline || !window.YutnoriMultiplayer || !window.YutnoriMultiplayer.isHost) return;
-            if (this.gameState !== 'WAIT_ROLL') {
+            const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
+            const isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
+                           (this.currentRoomData && this.currentRoomData.hostId === mySessionId);
+            if (!this.isOnline || !isHost) return;
+
+            const currentRoomState = (this.currentRoomData && this.currentRoomData.gameState) || this.gameState;
+            if (currentRoomState !== 'WAIT_ROLL') {
                 if (window.showToast) window.showToast("안내", "현재 윷을 던지는 단계가 아닙니다.", "ℹ️");
                 return;
             }
@@ -2618,17 +2670,25 @@
                     this.dom.hostForceRollBtn.classList.add('opacity-50', 'cursor-not-allowed');
                 }
 
-                const rollResult = window.YUT_PROBABILITY.roll();
-                const currentGrade = (this.currentRoomData && this.currentRoomData.settings && this.currentRoomData.settings.grade) || 'grade3';
+                // 윷 던지기 확률 모듈 호출 (window 및 로컬 클로저 모두 호환)
+                const rollResult = (window.YUT_PROBABILITY || YUT_PROBABILITY).roll();
+                const currentGrade = (this.currentRoomData && this.currentRoomData.grade) || this.gradeFilter || 'all';
                 const quizData = (window.YutnoriQuestions && window.YutnoriQuestions.generateQuestion) 
-                    ? window.YutnoriQuestions.generateQuestion(currentGrade) 
+                    ? window.YutnoriQuestions.generateQuestion({ grade: currentGrade }) 
                     : null;
 
+                // 방장 대행 윷 던지기 Firestore 동기화
                 await window.YutnoriMultiplayer.hostForceRoll(rollResult, rollResult.sticks, quizData);
                 this.logMessage(`🚨 [방장 비상제어] [${name}] 학생 대신 윷(${rollResult.name})을 던졌습니다.`);
                 if (window.showToast) {
                     window.showToast("대신 윷 던지기 완료", `[${name}] 학생 대신 ${rollResult.name}(으)로 윷을 던졌습니다.`, "🎲");
                 }
+
+                // 로컬 호스트 화면에서도 말 선택 모드로 즉시 진입 준비
+                this.currentRoll = rollResult;
+                this.displayRollResult(rollResult);
+                this.updateStickVisuals(rollResult.sticks);
+                this.preparePieceSelection();
             } catch (err) {
                 console.error("onHostForceRollClicked error:", err);
                 alert("대신 윷 던지기 실패: " + err.message);
@@ -2640,8 +2700,73 @@
             }
         }
 
+        async onHostAutoMoveClicked() {
+            const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
+            const isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
+                           (this.currentRoomData && this.currentRoomData.hostId === mySessionId);
+            if (!this.isOnline || !isHost) return;
+
+            if (!this.movablePieces || this.movablePieces.length === 0) {
+                if (this.currentRoll) {
+                    const currentTeam = this.getCurrentTeam();
+                    this.movablePieces = currentTeam.pieces.filter(p => {
+                        if (p.isGoal) return false;
+                        const pathInfo = calculateMovePath(p, this.currentRoll.result);
+                        return pathInfo.valid;
+                    });
+                }
+            }
+
+            if (!this.movablePieces || this.movablePieces.length === 0) {
+                if (window.showToast) window.showToast("안내", "이동할 수 있는 말이 없습니다.", "ℹ️");
+                return;
+            }
+
+            const bestPiece = this.getAIBestPiece(this.movablePieces);
+            if (!bestPiece) return;
+
+            const movePath = calculateMovePath(bestPiece, this.currentRoll.result);
+            if (!movePath || !movePath.valid) return;
+
+            this.selectedPiece = bestPiece;
+            this.highlightTargetNode(movePath);
+            this.renderAllPieces();
+
+            const currentGrade = (this.currentRoomData && this.currentRoomData.grade) || this.gradeFilter || 'all';
+            const q = (window.YutnoriQuestions && window.YutnoriQuestions.generateQuestion)
+                ? window.YutnoriQuestions.generateQuestion({ grade: currentGrade })
+                : { explanation: '방장 비상 자동 말 이동', answer: '' };
+
+            this.logMessage(`🤖 [방장 비상제어] AI가 최적의 말(#${bestPiece.id + 1})을 자동 이동시킵니다.`);
+            if (window.showToast) {
+                window.showToast("AI 최적 말 이동", `#${bestPiece.id + 1}번 말을 최적 경로로 전진시킵니다.`, "🤖");
+            }
+
+            setTimeout(() => {
+                this.handleQuizResult(true, q, bestPiece, movePath);
+            }, 300);
+        }
+
+        onHostApproveQuizClicked() {
+            const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
+            const isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
+                           (this.currentRoomData && this.currentRoomData.hostId === mySessionId);
+            if (!this.isOnline || !isHost) return;
+
+            if (this.dom.quizModal) this.dom.quizModal.classList.add('hidden');
+            if (this.currentQuestion && this.selectedPiece) {
+                const movePath = calculateMovePath(this.selectedPiece, this.currentRoll.result);
+                this.logMessage(`⚡ [방장 권한] 문제를 정답으로 인정하고 말을 이동시킵니다.`);
+                this.handleQuizResult(true, this.currentQuestion, this.selectedPiece, movePath);
+            }
+        }
+
         async onHostSkipTurnClicked() {
-            if (!this.isOnline || !window.YutnoriMultiplayer || !window.YutnoriMultiplayer.isHost) return;
+            const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
+            const isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
+                           (this.currentRoomData && this.currentRoomData.hostId === mySessionId);
+            if (!this.isOnline || !isHost) return;
+
             const currentTurnPlayer = (this.currentRoomData && this.currentRoomData.players) 
                 ? this.currentRoomData.players[this.currentRoomData.currentTurnId] 
                 : null;
@@ -2847,7 +2972,26 @@
 
             if (movablePieces.length === 0) {
                 this.logMessage(`⚠️ 이동할 수 있는 말이 없습니다. 턴이 넘어갑니다.`);
-                setTimeout(() => this.endTurn(), 1200);
+                setTimeout(() => {
+                    if (this.isOnline && window.YutnoriMultiplayer) {
+                        const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
+                        const isMyTurn = (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId);
+                        const isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
+                                       (this.currentRoomData && this.currentRoomData.hostId === mySessionId);
+                        if (isMyTurn || isHost) {
+                            const teamsState = this.getTeamsStateSnapshot();
+                            window.YutnoriMultiplayer.sendPieceMovement({
+                                teamsState,
+                                hasExtraTurn: false,
+                                winnerTeam: null,
+                                caughtEnemy: false,
+                                caughtCount: 0
+                            });
+                        }
+                    } else {
+                        this.endTurn();
+                    }
+                }, 1200);
                 return;
             }
 
@@ -2855,9 +2999,16 @@
             this.setGameState('WAIT_PIECE_SELECT');
             this.renderAllPieces(movablePieces);
 
+            const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
+            const isMyTurn = (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId);
+            const isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
+                           (this.currentRoomData && this.currentRoomData.hostId === mySessionId);
+
             // 컴퓨터 AI인 경우 스스로 말 선택
             if (currentTeam.isAI) {
                 setTimeout(() => this.executeAIChoice(movablePieces), 1000);
+            } else if (this.isOnline && !isMyTurn && isHost) {
+                this.logMessage(`🚨 [방장 대행] [${currentTeam.name}] 판 위의 말을 직접 클릭하거나 'AI 최적 말 이동' 버튼을 누르세요.`);
             } else {
                 this.logMessage(`👉 이동할 말을 클릭하세요! (말을 선택하면 영어 문제가 출제됩니다)`);
             }
@@ -3028,7 +3179,10 @@
 
             if (this.isOnline) {
                 const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
-                if (!this.currentRoomData || this.currentRoomData.currentTurnId !== mySessionId) {
+                const isMyTurn = (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId);
+                const isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
+                               (this.currentRoomData && this.currentRoomData.hostId === mySessionId);
+                if (!isMyTurn && !isHost) {
                     this.logMessage(`⏳ 지금은 내 턴이 아닙니다.`);
                     return;
                 }
@@ -3158,6 +3312,18 @@
                 this.setupMultipleChoiceUI(q, piece, movePath);
             }
 
+            // 방장 권한인 경우 비상 정답 인정 바 표시
+            if (this.dom.hostQuizEmergencyBar) {
+                const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
+                const isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
+                               (this.currentRoomData && this.currentRoomData.hostId === mySessionId);
+                if (isHost && this.isOnline) {
+                    this.dom.hostQuizEmergencyBar.classList.remove('hidden');
+                } else {
+                    this.dom.hostQuizEmergencyBar.classList.add('hidden');
+                }
+            }
+
             this.dom.quizModal.classList.remove('hidden');
         }
 
@@ -3243,11 +3409,13 @@
             const isCorrect = (userSentence === correctSentence);
 
             this.dom.quizModal.classList.add('hidden');
+            if (this.dom.hostQuizEmergencyBar) this.dom.hostQuizEmergencyBar.classList.add('hidden');
             this.handleQuizResult(isCorrect, this.scrambleState.target, this.scrambleState.piece, this.scrambleState.movePath);
         }
 
         onChoiceSelected(choiceIdx, choiceText, q, piece, movePath) {
             this.dom.quizModal.classList.add('hidden');
+            if (this.dom.hostQuizEmergencyBar) this.dom.hostQuizEmergencyBar.classList.add('hidden');
             const isCorrect = (choiceText === q.answer);
             this.handleQuizResult(isCorrect, q, piece, movePath);
         }
@@ -3554,23 +3722,11 @@
             // 실시간 온라인 모드일 때 Firestore 동기화
             if (this.isOnline && window.YutnoriMultiplayer) {
                 const mySessionId = window.YutnoriMultiplayer.mySessionId;
-                if (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId) {
-                    const teamsState = this.teams.map(t => ({
-                        id: t.id,
-                        key: t.key || (t.id === 0 ? 'blue' : 'white'),
-                        name: t.name,
-                        pieces: t.pieces.map(p => ({
-                            id: p.id,
-                            teamId: t.id,
-                            team: t.key || (t.id === 0 ? 'blue' : 'white'),
-                            pos: p.pos,
-                            route: p.route || 'OUTER',
-                            isGoal: Boolean(p.isGoal),
-                            isHome: Boolean(p.isHome),
-                            stackedPieces: Array.isArray(p.stackedPieces) ? [...p.stackedPieces] : [],
-                            history: Array.isArray(p.history) ? [...p.history] : []
-                        }))
-                    }));
+                const isTurnPlayer = (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId);
+                const isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
+                               (this.currentRoomData && this.currentRoomData.hostId === mySessionId);
+                if (isTurnPlayer || isHost) {
+                    const teamsState = this.getTeamsStateSnapshot();
                     window.YutnoriMultiplayer.sendPieceMovement({
                         teamsState,
                         hasExtraTurn: this.pendingExtraTurn,
@@ -3635,9 +3791,30 @@
             }
         }
 
-        executeAIChoice(movablePieces) {
+        getTeamsStateSnapshot() {
+            return this.teams.map(t => ({
+                id: t.id,
+                key: t.key || (t.id === 0 ? 'blue' : 'white'),
+                name: t.name,
+                pieces: t.pieces.map(p => ({
+                    id: p.id,
+                    teamId: t.id,
+                    team: t.key || (t.id === 0 ? 'blue' : 'white'),
+                    pos: p.pos,
+                    route: p.route || 'OUTER',
+                    isGoal: Boolean(p.isGoal),
+                    isHome: Boolean(p.isHome),
+                    stackedPieces: Array.isArray(p.stackedPieces) ? [...p.stackedPieces] : [],
+                    history: Array.isArray(p.history) ? [...p.history] : []
+                }))
+            }));
+        }
+
+        getAIBestPiece(movablePieces) {
+            if (!Array.isArray(movablePieces) || movablePieces.length === 0) return null;
             const currentTeam = this.getCurrentTeam();
             const roll = this.currentRoll;
+            if (!roll) return movablePieces[0];
 
             // AI 최적의 말 선택 평가 함수
             // 1순위: 상대 말을 잡을 수 있는 말 (+100점)
@@ -3702,7 +3879,14 @@
                 }
             });
 
-            this.onPieceSelected(bestPiece);
+            return bestPiece;
+        }
+
+        executeAIChoice(movablePieces) {
+            const bestPiece = this.getAIBestPiece(movablePieces);
+            if (bestPiece) {
+                this.onPieceSelected(bestPiece);
+            }
         }
 
         simulateAIQuiz(piece, movePath, q) {
@@ -3730,23 +3914,11 @@
             // 실시간 온라인 모드일 때 승리 상태 Firestore 동기화
             if (this.isOnline && window.YutnoriMultiplayer) {
                 const mySessionId = window.YutnoriMultiplayer.mySessionId;
-                if (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId) {
-                    const teamsState = this.teams.map(t => ({
-                        id: t.id,
-                        key: t.key || (t.id === 0 ? 'blue' : 'white'),
-                        name: t.name,
-                        pieces: t.pieces.map(p => ({
-                            id: p.id,
-                            teamId: t.id,
-                            team: t.key || (t.id === 0 ? 'blue' : 'white'),
-                            pos: p.pos,
-                            route: p.route || 'OUTER',
-                            isGoal: Boolean(p.isGoal),
-                            isHome: Boolean(p.isHome),
-                            stackedPieces: Array.isArray(p.stackedPieces) ? [...p.stackedPieces] : [],
-                            history: Array.isArray(p.history) ? [...p.history] : []
-                        }))
-                    }));
+                const isTurnPlayer = (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId);
+                const isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
+                               (this.currentRoomData && this.currentRoomData.hostId === mySessionId);
+                if (isTurnPlayer || isHost) {
+                    const teamsState = this.getTeamsStateSnapshot();
                     window.YutnoriMultiplayer.sendPieceMovement({
                         teamsState,
                         hasExtraTurn: false,

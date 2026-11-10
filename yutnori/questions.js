@@ -328,6 +328,9 @@
      * 6) sent_scramble: 단어 블록 순서대로 맞추기 (어순 배열)
      */
     function generateQuestion(options = {}) {
+        if (typeof options === 'string') {
+            options = { grade: options };
+        }
         const gradeFilter = options.grade || 'all'; // 'all', '3-4', '5-6'
         const categoryPref = options.category || 'mixed'; // 'mixed', 'word_only', 'sentence_only'
         const { words, sentences } = getActiveDataset(gradeFilter);

@@ -624,9 +624,12 @@
                                     학생 기기 멈춤 시 사용
                                 </span>
                             </div>
-                            <div class="grid grid-cols-2 gap-2">
+                            <div class="grid grid-cols-2 gap-2" id="hostEmergencyButtonsGrid">
                                 <button type="button" id="hostForceRollBtn" class="py-2.5 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/35 text-amber-200 border border-amber-500/50 font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow">
                                     <i class="fa-solid fa-dice text-amber-400"></i> 대신 윷 던지기
+                                </button>
+                                <button type="button" id="hostAutoMoveBtn" class="hidden py-2.5 px-3 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/35 text-indigo-200 border border-indigo-500/50 font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow">
+                                    <i class="fa-solid fa-robot text-indigo-400"></i> AI 최적 말 이동
                                 </button>
                                 <button type="button" id="hostSkipTurnBtn" class="py-2.5 px-3 rounded-xl bg-rose-500/20 hover:bg-rose-500/35 text-rose-200 border border-rose-500/50 font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow">
                                     <i class="fa-solid fa-forward-step text-rose-400"></i> 다음 차례로 넘기기
@@ -874,6 +877,16 @@
                         제출하기
                     </button>
                 </div>
+            </div>
+
+            <!-- 방장 긴급 제어: 정답 인정 및 즉시 이동 바 -->
+            <div id="hostQuizEmergencyBar" class="hidden mt-3 pt-3 border-t border-slate-200 flex items-center justify-between">
+                <span class="text-xs font-bold text-amber-800 flex items-center gap-1.5">
+                    <i class="fa-solid fa-crown text-amber-500"></i> 방장 긴급 권한
+                </span>
+                <button type="button" id="hostApproveQuizBtn" class="py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs shadow transition cursor-pointer flex items-center gap-1.5">
+                    <i class="fa-solid fa-check"></i> 정답 인정 (말 즉시 이동)
+                </button>
             </div>
         </div>
     </div>
@@ -1475,13 +1488,13 @@
     </button>
 
     <!-- 스크립트 연결 (캐시 무효화 버전 쿼리 파라미터 적용) -->
-    <script src="questions.js?v=20261109_host_controls"></script>
-    <script src="game.js?v=20261109_host_controls"></script>
-    <script type="module" src="multiplayer.js?v=20261109_host_controls"></script>
+    <script src="questions.js?v=20261110_proxy_roll_fix"></script>
+    <script src="game.js?v=20261110_proxy_roll_fix"></script>
+    <script type="module" src="multiplayer.js?v=20261110_proxy_roll_fix"></script>
 
     <!-- UI 화면 전환 및 온라인 멀티 제어 스크립트 -->
     <script type="module">
-        import { multiplayerManager } from './multiplayer.js?v=20261109_host_controls';
+        import { multiplayerManager } from './multiplayer.js?v=20261110_proxy_roll_fix';
 
         // 전역 화면 전환 함수 (home: 첫화면 설정/명예의전당, game: 몰입형 게임화면)
         window.showScreen = function(screenId) {
