@@ -19,6 +19,16 @@
 
     // 2. 앱별 전용 샤딩 프로젝트 (각각 일일 50,000회 읽기 / 20,000회 쓰기 독립 쿼터 보유)
     const SHARDED_CONFIGS = {
+        // [전통 윷놀이 & 배틀 토너먼트 멀티플레이]
+        "yutnori": {
+            apiKey: "AIzaSyAaRTZlJ_fQAKl8j0lCJfaOdJyx8wMP5Zo",
+            authDomain: "tournament-267ab.firebaseapp.com",
+            projectId: "tournament-267ab",
+            storageBucket: "tournament-267ab.firebasestorage.app",
+            messagingSenderId: "401796751337",
+            appId: "1:401796751337:web:6f3ba64fde25adf1a8f578"
+        },
+
         // [아케이드 & 슈팅] 스펠링 갤러그, 카드 뒤집기
         "spelling_galaga": {
             apiKey: "AIzaSyAaRTZlJ_fQAKl8j0lCJfaOdJyx8wMP5Zo",

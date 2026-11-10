@@ -9,16 +9,16 @@ import {
     getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, deleteDoc 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// 1. Firebase 통합 설정 (Waurimal 2026 표준)
+// 1. Firebase 통합 설정 (Waurimal 2026 표준 - 독립 샤딩 프로젝트)
 const firebaseConfig = (window.WaurimalFirebase && window.WaurimalFirebase.getConfig) 
-    ? window.WaurimalFirebase.getConfig() 
+    ? window.WaurimalFirebase.getConfig('yutnori') 
     : {
-        apiKey: "AIzaSyDHCnRrVE2dVuJpf77P-1oftGpczR5WDd4",
-        authDomain: "eng-activity.firebaseapp.com",
-        projectId: "eng-activity",
-        storageBucket: "eng-activity.firebasestorage.app",
-        messagingSenderId: "528859753713",
-        appId: "1:528859753713:web:a1ed4a054380d181c10d50"
+        apiKey: "AIzaSyAaRTZlJ_fQAKl8j0lCJfaOdJyx8wMP5Zo",
+        authDomain: "tournament-267ab.firebaseapp.com",
+        projectId: "tournament-267ab",
+        storageBucket: "tournament-267ab.firebasestorage.app",
+        messagingSenderId: "401796751337",
+        appId: "1:401796751337:web:6f3ba64fde25adf1a8f578"
     };
 
 const app = initializeApp(firebaseConfig);
