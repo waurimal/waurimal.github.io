@@ -3,6 +3,62 @@
  * 갤러그 편대 비행, 듀얼 파이터 구출, 트랙터 빔, 파워업 아이템, 5 목숨 시스템, 초등 맞춤 3단계 난이도
  */
 
+// 와우리말 공통 학생 SSO 프로필 헬퍼
+function getGalagaStudentProfile() {
+  if (typeof window !== 'undefined' && window.WaurimalStudent && typeof window.WaurimalStudent.get === 'function') {
+    const sso = window.WaurimalStudent.get();
+    if (sso && sso.name && sso.name.trim()) {
+      return {
+        name: sso.name.trim(),
+        grade: Number(sso.grade) || 4,
+        classNum: Number(sso.classNum) || 1,
+        studentNum: Number(sso.studentNum) || 1,
+        school: sso.school || '이의초등학교'
+      };
+    }
+  }
+
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('waurimal_student_profile');
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (p && p.name && p.name.trim()) {
+          return {
+            name: p.name.trim(),
+            grade: Number(p.grade) || 4,
+            classNum: Number(p.classNum) || 1,
+            studentNum: Number(p.studentNum) || 1,
+            school: p.school || '이의초등학교'
+          };
+        }
+      }
+    } catch (e) {}
+
+    const legacyName = localStorage.getItem('waurimal_student_name');
+    if (legacyName && legacyName.trim()) {
+      return {
+        name: legacyName.trim(),
+        grade: Number(localStorage.getItem('waurimal_student_grade')) || 4,
+        classNum: Number(localStorage.getItem('waurimal_student_class')) || 1,
+        studentNum: 1,
+        school: '이의초등학교'
+      };
+    }
+  }
+
+  return {
+    name: '도전자',
+    grade: 4,
+    classNum: 1,
+    studentNum: 1,
+    school: '이의초등학교'
+  };
+}
+if (typeof window !== 'undefined') {
+  window.getGalagaStudentProfile = getGalagaStudentProfile;
+}
+
 class SpellingGalagaGame {
   constructor(canvasId) {
     this.canvas = document.getElementById(canvasId);
@@ -770,31 +826,46 @@ class SpellingGalagaGame {
     }, 1500);
   }
 
-  // 클라우드 및 로컬 명예의 전당 점수 저장
+  // 클라우드 및 로컬 명예의 전당 점수 저장 (2중 캐시 엔진)
   async saveScoreToCloud() {
     try {
-      const studentInfo = (typeof window !== 'undefined' && window.WaurimalNav && window.WaurimalNav.getStudentInfo)
-        ? window.WaurimalNav.getStudentInfo()
-        : null;
+      // 0점 이하는 명예의 전당에 불필요한 레코드 누적 방지
+      if (!this.score || this.score <= 0) {
+        return null;
+      }
 
+      const student = getGalagaStudentProfile();
       const record = {
-        name: studentInfo ? studentInfo.name : (localStorage.getItem('waurimal_student_name') || '도전자'),
-        grade: studentInfo ? studentInfo.grade : (localStorage.getItem('waurimal_student_grade') || 4),
-        classNum: studentInfo ? studentInfo.classNum : (localStorage.getItem('waurimal_student_class') || 1),
+        id: 'galaga_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+        name: student.name,
+        grade: student.grade,
+        classNum: student.classNum,
+        studentNum: student.studentNum,
         score: this.score,
         accuracy: this.totalShots > 0 ? Math.round((this.hitShots / this.totalShots) * 100) : 0,
-        category: this.currentCategory,
-        clearedCount: this.learnedWords.length,
+        category: this.currentCategory || '기본 단어장',
+        clearedCount: this.learnedWords ? this.learnedWords.length : 0,
         timestamp: Date.now()
       };
 
-      // 1. 로컬 스토리지 명예의 전당 캐시
-      let localScores = JSON.parse(localStorage.getItem('spelling_galaga_scores_history') || '[]');
-      localScores.push(record);
-      localScores.sort((a, b) => b.score - a.score);
-      localStorage.setItem('spelling_galaga_scores_history', JSON.stringify(localScores.slice(0, 50)));
+      this.lastSavedRecord = record;
 
-      // 2. Firebase Firestore 명예의 전당 실시간 클라우드 동기화
+      // 1. 로컬 스토리지 명예의 전당 즉시 저장 (최신순 1순위)
+      let localScores = [];
+      try {
+        localScores = JSON.parse(localStorage.getItem('spelling_galaga_scores_history') || '[]');
+        if (!Array.isArray(localScores)) localScores = [];
+      } catch (e) {
+        localScores = [];
+      }
+
+      localScores.unshift(record);
+      if (localScores.length > 100) {
+        localScores = localScores.slice(0, 100);
+      }
+      localStorage.setItem('spelling_galaga_scores_history', JSON.stringify(localScores));
+
+      // 2. Firebase Firestore 명예의 전당 실시간 클라우드 비동기 동기화 (백그라운드)
       if (typeof window !== 'undefined' && typeof firebase !== 'undefined' && window.WaurimalFirebase) {
         try {
           if (!firebase.apps.length) {
@@ -802,17 +873,22 @@ class SpellingGalagaGame {
           }
           const db = firebase.firestore();
           if (db) {
-            await db.collection('games').doc('spelling_galaga').collection('scores').add({
+            db.collection('games').doc('spelling_galaga').collection('scores').add({
               ...record,
               createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(fbErr => {
+              console.warn("Firestore save score warning (quota/offline):", fbErr);
             });
           }
         } catch (fbErr) {
           console.warn("Firestore save score error:", fbErr);
         }
       }
+
+      return record;
     } catch (e) {
       console.warn("Save score failed:", e);
+      return null;
     }
   }
 
@@ -832,6 +908,11 @@ class SpellingGalagaGame {
 
     const accuracy = this.totalShots > 0 ? Math.round((this.hitShots / this.totalShots) * 100) : 0;
     accuracyEl.textContent = `${accuracy}% (${this.hitShots}/${this.totalShots})`;
+
+    // 등록자 프로필 표시 갱신
+    if (typeof window !== 'undefined' && typeof window.updateResultStudentDisplay === 'function') {
+      window.updateResultStudentDisplay();
+    }
 
     wordsListEl.innerHTML = '';
     const allWords = [...this.learnedWords, ...(this.state === 'GAME_OVER' ? this.missedWords : [])];

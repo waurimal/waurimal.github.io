@@ -154,8 +154,19 @@
         <!-- 동적으로 단어 목록 추가 -->
       </ul>
 
-      <div id="resultSaveNotice" style="margin: 12px 0 16px 0; font-size: 0.88rem; color: #4ade80; text-align: center; background: rgba(74, 222, 128, 0.1); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(74, 222, 128, 0.25);">
-        <i class="fas fa-check-circle"></i> 성적이 명예의 전당에 안전하게 기록되었습니다!
+      <div id="resultStudentBox" style="margin: 12px 0 8px 0; padding: 10px 14px; background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+        <div style="display:flex; align-items:center; gap:10px; text-align: left;">
+          <span style="font-size:1.4rem;">🎖️</span>
+          <div>
+            <div style="color:#94a3b8; font-size:0.75rem;">명예의 전당 등록자</div>
+            <div id="resultStudentNameDisplay" style="font-weight:bold; color:#38bdf8; font-size:0.95rem;">도전자</div>
+          </div>
+        </div>
+        <button type="button" id="btnResultEditProfile" class="hud-btn" style="padding: 5px 12px; font-size: 0.8rem; background: #0284c7; color:#fff;" title="학생 이름 및 학적 정보 변경"><i class="fas fa-user-edit"></i> 이름 변경</button>
+      </div>
+
+      <div id="resultSaveNotice" style="margin: 6px 0 16px 0; font-size: 0.85rem; color: #4ade80; text-align: center; background: rgba(74, 222, 128, 0.1); padding: 7px 12px; border-radius: 8px; border: 1px solid rgba(74, 222, 128, 0.25);">
+        <i class="fas fa-check-circle"></i> 성적이 명예의 전당(로컬 & 클라우드)에 안전하게 기록되었습니다!
       </div>
 
       <div class="modal-actions">
@@ -530,27 +541,145 @@
         guideModal.showModal();
       });
 
-      // 9. 명예의 전당 (HOF) 모달 & 데이터 파이프라인
+      // 9. 명예의 전당 (HOF) 모달 & 2중 캐시 데이터 파이프라인
       const hofModal = document.getElementById('hofModal');
       const btnHof = document.getElementById('btnHof');
       const btnResultHof = document.getElementById('btnResultHof');
       const btnHofRefresh = document.getElementById('btnHofRefresh');
       const hofTableBody = document.getElementById('hofTableBody');
       const hofTabBtns = document.querySelectorAll('.hof-tab-btn');
+      const resultStudentNameDisplay = document.getElementById('resultStudentNameDisplay');
+      const btnResultEditProfile = document.getElementById('btnResultEditProfile');
 
       let currentHofTab = 'all';
 
       // 기본 시드 기록 (온라인 DB 비어있거나 오프라인 시에도 풍성하고 동기부여되는 랭킹 제공)
       const DEFAULT_HOF_RECORDS = [
-        { name: "김민재", grade: 6, classNum: 1, score: 4850, accuracy: 96, clearedCount: 15, timestamp: Date.now() - 1000 * 60 * 45 },
-        { name: "이서연", grade: 6, classNum: 3, score: 4320, accuracy: 94, clearedCount: 13, timestamp: Date.now() - 1000 * 60 * 120 },
-        { name: "박도현", grade: 5, classNum: 2, score: 3780, accuracy: 91, clearedCount: 11, timestamp: Date.now() - 1000 * 60 * 360 },
-        { name: "최유진", grade: 6, classNum: 2, score: 3450, accuracy: 89, clearedCount: 10, timestamp: Date.now() - 1000 * 60 * 720 },
-        { name: "정예준", grade: 4, classNum: 1, score: 2980, accuracy: 88, clearedCount: 8, timestamp: Date.now() - 1000 * 60 * 1440 },
-        { name: "한지우", grade: 5, classNum: 4, score: 2650, accuracy: 85, clearedCount: 7, timestamp: Date.now() - 1000 * 60 * 2880 },
-        { name: "강서윤", grade: 4, classNum: 2, score: 2240, accuracy: 84, clearedCount: 6, timestamp: Date.now() - 1000 * 60 * 4320 },
-        { name: "윤도윤", grade: 5, classNum: 1, score: 1890, accuracy: 80, clearedCount: 5, timestamp: Date.now() - 1000 * 60 * 5760 }
+        { id: 'seed_1', name: "김민재", grade: 6, classNum: 1, score: 4850, accuracy: 96, clearedCount: 15, timestamp: Date.now() - 1000 * 60 * 45 },
+        { id: 'seed_2', name: "이서연", grade: 6, classNum: 3, score: 4320, accuracy: 94, clearedCount: 13, timestamp: Date.now() - 1000 * 60 * 120 },
+        { id: 'seed_3', name: "박도현", grade: 5, classNum: 2, score: 3780, accuracy: 91, clearedCount: 11, timestamp: Date.now() - 1000 * 60 * 360 },
+        { id: 'seed_4', name: "최유진", grade: 6, classNum: 2, score: 3450, accuracy: 89, clearedCount: 10, timestamp: Date.now() - 1000 * 60 * 720 },
+        { id: 'seed_5', name: "정예준", grade: 4, classNum: 1, score: 2980, accuracy: 88, clearedCount: 8, timestamp: Date.now() - 1000 * 60 * 1440 },
+        { id: 'seed_6', name: "한지우", grade: 5, classNum: 4, score: 2650, accuracy: 85, clearedCount: 7, timestamp: Date.now() - 1000 * 60 * 2880 },
+        { id: 'seed_7', name: "강서윤", grade: 4, classNum: 2, score: 2240, accuracy: 84, clearedCount: 6, timestamp: Date.now() - 1000 * 60 * 4320 },
+        { id: 'seed_8', name: "윤도윤", grade: 5, classNum: 1, score: 1890, accuracy: 80, clearedCount: 5, timestamp: Date.now() - 1000 * 60 * 5760 }
       ];
+
+      function getStudentProfile() {
+        if (typeof window.getGalagaStudentProfile === 'function') {
+          return window.getGalagaStudentProfile();
+        }
+        if (window.WaurimalStudent && typeof window.WaurimalStudent.get === 'function') {
+          const sso = window.WaurimalStudent.get();
+          if (sso && sso.name) {
+            return {
+              name: sso.name.trim(),
+              grade: Number(sso.grade) || 4,
+              classNum: Number(sso.classNum) || 1,
+              studentNum: Number(sso.studentNum) || 1,
+              school: sso.school || '이의초등학교'
+            };
+          }
+        }
+        try {
+          const raw = localStorage.getItem('waurimal_student_profile');
+          if (raw) {
+            const p = JSON.parse(raw);
+            if (p && p.name) return { name: p.name.trim(), grade: Number(p.grade) || 4, classNum: Number(p.classNum) || 1, studentNum: Number(p.studentNum) || 1, school: p.school || '이의초등학교' };
+          }
+        } catch (e) {}
+        return { name: '도전자', grade: 4, classNum: 1, studentNum: 1, school: '이의초등학교' };
+      }
+
+      function updateResultStudentDisplay() {
+        if (!resultStudentNameDisplay) return;
+        const prof = getStudentProfile();
+        if (prof.name && prof.name !== '도전자') {
+          resultStudentNameDisplay.innerHTML = `<span style="color:#38bdf8;">${prof.grade}학년 ${prof.classNum}반 ${prof.name}</span>`;
+        } else {
+          resultStudentNameDisplay.innerHTML = `<span style="color:#f59e0b;">도전자 (게스트)</span> <span style="font-size:0.75rem; color:#94a3b8;">- [이름 변경]으로 내 이름 등록 가능</span>`;
+        }
+      }
+      window.updateResultStudentDisplay = updateResultStudentDisplay;
+
+      function promptChangeStudentName() {
+        const cur = getStudentProfile();
+        const newName = prompt("명예의 전당에 등록할 학생 이름을 입력하세요:", cur.name === '도전자' ? '' : cur.name);
+        if (newName && newName.trim()) {
+          const cleanName = newName.trim().slice(0, 10);
+          const gradeStr = prompt("학년을 입력하세요 (예: 6):", cur.grade || "6");
+          const classStr = prompt("반을 입력하세요 (예: 1):", cur.classNum || "1");
+          const cleanGrade = Number(gradeStr) || 6;
+          const cleanClass = Number(classStr) || 1;
+
+          const updated = {
+            school: cur.school || '이의초등학교',
+            grade: String(cleanGrade),
+            classNum: String(cleanClass),
+            studentNum: String(cur.studentNum || 1),
+            name: cleanName
+          };
+
+          if (window.WaurimalStudent && typeof window.WaurimalStudent.save === 'function') {
+            window.WaurimalStudent.save(updated);
+          } else {
+            localStorage.setItem('waurimal_student_profile', JSON.stringify(updated));
+            localStorage.setItem('waurimal_student_name', cleanName);
+            localStorage.setItem('waurimal_student_grade', cleanGrade);
+            localStorage.setItem('waurimal_student_class', cleanClass);
+            applyStudentProfileUpdate(updated);
+          }
+        }
+      }
+
+      function applyStudentProfileUpdate(prof) {
+        updateResultStudentDisplay();
+        const cleanName = prof.name;
+        const cleanGrade = Number(prof.grade) || 4;
+        const cleanClass = Number(prof.classNum) || 1;
+
+        // 로컬 최근 기록에 이름 소급 적용 (도전자 -> 학생 이름)
+        try {
+          let localScores = JSON.parse(localStorage.getItem('spelling_galaga_scores_history') || '[]');
+          if (Array.isArray(localScores) && localScores.length > 0) {
+            // 가장 최근 기록이 도전자이거나 같은 세션의 기록이면 이름 업데이트
+            if (localScores[0].name === '도전자' || localScores[0].name === cleanName) {
+              localScores[0].name = cleanName;
+              localScores[0].grade = cleanGrade;
+              localScores[0].classNum = cleanClass;
+              localStorage.setItem('spelling_galaga_scores_history', JSON.stringify(localScores));
+            }
+          }
+        } catch (e) {}
+
+        if (window.gameInstance && window.gameInstance.lastSavedRecord) {
+          window.gameInstance.lastSavedRecord.name = cleanName;
+          window.gameInstance.lastSavedRecord.grade = cleanGrade;
+          window.gameInstance.lastSavedRecord.classNum = cleanClass;
+        }
+
+        // 명예의 전당 모달이 열려있다면 즉시 재렌더링
+        if (hofModal && hofModal.open) {
+          loadHof(currentHofTab);
+        }
+      }
+
+      if (btnResultEditProfile) {
+        btnResultEditProfile.addEventListener('click', () => {
+          if (window.WaurimalStudent && typeof window.WaurimalStudent.openModal === 'function') {
+            window.WaurimalStudent.openModal();
+          } else {
+            promptChangeStudentName();
+          }
+        });
+      }
+
+      window.addEventListener('waurimal_student_updated', (e) => {
+        const prof = e.detail;
+        if (prof && prof.name) {
+          applyStudentProfileUpdate(prof);
+        }
+      });
 
       function getFirestoreDb() {
         if (typeof firebase !== 'undefined' && window.WaurimalFirebase) {
@@ -566,109 +695,162 @@
         return null;
       }
 
-      async function loadHof(tab = currentHofTab) {
-        currentHofTab = tab;
-        hofTabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-        hofTableBody.innerHTML = '<tr><td colspan="5" style="color:#94a3b8; padding:22px;"><i class="fas fa-spinner fa-spin"></i> 실시간 랭킹을 집계하는 중...</td></tr>';
-
+      function getLocalHofScores() {
         try {
-          let list = [];
-          const db = getFirestoreDb();
+          const list = JSON.parse(localStorage.getItem('spelling_galaga_scores_history') || '[]');
+          return Array.isArray(list) ? list : [];
+        } catch (e) {
+          return [];
+        }
+      }
 
-          if (db) {
-            try {
-              const snap = await db.collection('games').doc('spelling_galaga').collection('scores')
-                .orderBy('score', 'desc')
-                .limit(50)
-                .get();
+      function formatHofDate(ts) {
+        if (!ts) return '';
+        const d = new Date(ts);
+        const now = new Date();
+        const isToday = d.toDateString() === now.toDateString();
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        if (isToday) {
+          return `오늘 ${hours}:${minutes}`;
+        }
+        const m = d.getMonth() + 1;
+        const day = d.getDate();
+        return `${m}/${day} ${hours}:${minutes}`;
+      }
 
-              snap.forEach(doc => {
-                const data = doc.data();
-                if (data) {
-                  list.push({
-                    ...data,
-                    timestamp: data.createdAt ? (data.createdAt.toMillis ? data.createdAt.toMillis() : Date.now()) : (data.timestamp || Date.now())
-                  });
-                }
-              });
-            } catch (snapErr) {
-              console.warn("Firestore query fallback:", snapErr);
-            }
-          }
+      function renderHofTable(rawList, tab = currentHofTab) {
+        let list = [...rawList];
+        const studentInfo = getStudentProfile();
+        const myName = studentInfo.name;
+        const startOfToday = new Date().setHours(0, 0, 0, 0);
 
-          // 로컬 캐시 결합
-          const localHistory = JSON.parse(localStorage.getItem('spelling_galaga_scores_history') || '[]');
-          list = [...list, ...localHistory];
-
-          // 아무 기록도 없으면 기본 표준 시드 레코드 병합
+        if (tab === 'today') {
+          // 1) 오늘 필터링 우선 적용
+          list = list.filter(item => (item.timestamp || 0) >= startOfToday);
           if (list.length === 0) {
-            list = [...DEFAULT_HOF_RECORDS];
+            hofTableBody.innerHTML = '<tr><td colspan="5" style="color:#94a3b8; padding:22px;">오늘 등록된 기록이 아직 없습니다. 오늘의 첫 1등이 되어보세요!</td></tr>';
+            return;
           }
-
-          // 1인 1최고점수 정규화 (도배 방지)
+          // 2) 오늘 기록 기준 학생별 최고 기록 1건 선별
+          const todayMap = new Map();
+          list.forEach(item => {
+            const key = item.name === '도전자' ? (item.id || String(item.timestamp)) : `${item.grade || 0}-${item.classNum || 0}-${item.name}`;
+            if (!todayMap.has(key) || (item.score || 0) > (todayMap.get(key).score || 0)) {
+              todayMap.set(key, item);
+            }
+          });
+          list = Array.from(todayMap.values());
+          list.sort((a, b) => (b.score || 0) - (a.score || 0));
+        } else if (tab === 'my') {
+          // 내 기록: 게스트일 경우 이 브라우저의 로컬 기록 전체 표시, 등록 학생일 경우 이름 매칭
+          if (myName && myName !== '도전자') {
+            list = list.filter(item => item.name === myName);
+          } else {
+            // 게스트: 로컬 스토리지에 저장된 플레이 기록 우선
+            const localOnly = getLocalHofScores();
+            list = localOnly.length > 0 ? localOnly : list.filter(item => item.name === '도전자');
+          }
+          if (list.length === 0) {
+            hofTableBody.innerHTML = '<tr><td colspan="5" style="color:#94a3b8; padding:22px;">아직 나의 플레이 기록이 없습니다. 게임을 완료하여 이름을 올려보세요!</td></tr>';
+            return;
+          }
+          // 내 기록은 중복 제거 없이 최신순으로 정렬하여 게임 히스토리 전체 제공
+          list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        } else {
+          // 전체 랭킹 (all): 학생별 최고 기록 1건 선별 (도배 방지)
           const bestMap = new Map();
           list.forEach(item => {
-            const idKey = `${item.grade || 0}-${item.classNum || 0}-${item.name || '도전자'}`;
-            if (!bestMap.has(idKey) || (item.score || 0) > (bestMap.get(idKey).score || 0)) {
-              bestMap.set(idKey, item);
+            const key = item.name === '도전자' ? (item.id || String(item.timestamp)) : `${item.grade || 0}-${item.classNum || 0}-${item.name}`;
+            if (!bestMap.has(key) || (item.score || 0) > (bestMap.get(key).score || 0)) {
+              bestMap.set(key, item);
             }
           });
           list = Array.from(bestMap.values());
-
-          // 탭 필터링
-          const now = Date.now();
-          const startOfToday = new Date().setHours(0, 0, 0, 0);
-
-          const studentInfo = (window.WaurimalNav && window.WaurimalNav.getStudentInfo)
-            ? window.WaurimalNav.getStudentInfo()
-            : null;
-          const myName = studentInfo ? studentInfo.name : localStorage.getItem('waurimal_student_name');
-
-          if (tab === 'today') {
-            list = list.filter(item => (item.timestamp || 0) >= startOfToday);
-            if (list.length === 0) {
-              hofTableBody.innerHTML = '<tr><td colspan="5" style="color:#94a3b8; padding:22px;">오늘 등록된 기록이 아직 없습니다. 오늘의 첫 1등이 되어보세요!</td></tr>';
-              return;
-            }
-          } else if (tab === 'my') {
-            if (myName) {
-              list = list.filter(item => item.name === myName);
-            }
-            if (list.length === 0) {
-              hofTableBody.innerHTML = '<tr><td colspan="5" style="color:#94a3b8; padding:22px;">아직 나의 플레이 기록이 없습니다. 게임을 완료하여 이름을 올려보세요!</td></tr>';
-              return;
-            }
-          }
-
           list.sort((a, b) => (b.score || 0) - (a.score || 0));
-          const top30 = list.slice(0, 30);
+        }
 
-          hofTableBody.innerHTML = '';
-          top30.forEach((item, idx) => {
-            const rank = idx + 1;
-            const rankClass = rank === 1 ? 'hof-rank-1' : (rank === 2 ? 'hof-rank-2' : (rank === 3 ? 'hof-rank-3' : ''));
-            const rowClass = rank === 1 ? 'hof-row-1' : (rank === 2 ? 'hof-row-2' : (rank === 3 ? 'hof-row-3' : ''));
-            const medal = rank === 1 ? '🥇 ' : (rank === 2 ? '🥈 ' : (rank === 3 ? '🥉 ' : ''));
+        const top30 = list.slice(0, 30);
+        hofTableBody.innerHTML = '';
 
-            const rawName = item.name || '도전자';
-            const masked = (window.WaurimalMask && window.WaurimalMask.maskName)
+        top30.forEach((item, idx) => {
+          const rank = idx + 1;
+          const rankClass = rank === 1 ? 'hof-rank-1' : (rank === 2 ? 'hof-rank-2' : (rank === 3 ? 'hof-rank-3' : ''));
+          const rowClass = rank === 1 ? 'hof-row-1' : (rank === 2 ? 'hof-row-2' : (rank === 3 ? 'hof-row-3' : ''));
+          const medal = rank === 1 ? '🥇 ' : (rank === 2 ? '🥈 ' : (rank === 3 ? '🥉 ' : ''));
+
+          const rawName = item.name || '도전자';
+          // 내 기록 탭에서는 본인 이름 마스킹 없이 선명하게 표시, 전체 랭킹에서는 표준 마스킹
+          let displayName = rawName;
+          if (tab !== 'my') {
+            displayName = (window.WaurimalMask && window.WaurimalMask.maskName)
               ? window.WaurimalMask.maskName(rawName)
               : (rawName.length > 2 ? rawName[0] + 'O' + rawName.slice(2) : (rawName.length === 2 ? rawName[0] + 'O' : rawName));
+          }
 
-            const tr = document.createElement('tr');
-            tr.className = rowClass;
-            tr.innerHTML = `
-              <td class="${rankClass}">${medal}${rank}위</td>
-              <td>${item.grade ? `${item.grade}-${item.classNum || 1} ` : ''}<strong>${masked}</strong></td>
-              <td style="color:#38bdf8; font-weight:bold; font-size:0.95rem;">${(item.score || 0).toLocaleString()}</td>
-              <td>${item.accuracy || 0}%</td>
-              <td style="color:#94a3b8; font-size:0.82rem;">${item.clearedCount || 0}단어</td>
-            `;
-            hofTableBody.appendChild(tr);
-          });
-        } catch (err) {
-          console.warn("HOF load error:", err);
-          hofTableBody.innerHTML = '<tr><td colspan="5" style="color:#f87171; padding:20px;">랭킹을 불러오지 못했습니다. 로컬 점수를 확인해주세요.</td></tr>';
+          const timeText = tab === 'my' && item.timestamp ? `<span style="font-size:0.75rem; color:#94a3b8; display:block;">${formatHofDate(item.timestamp)}</span>` : '';
+          const rankLabel = tab === 'my' ? `#${rank}` : `${medal}${rank}위`;
+
+          const tr = document.createElement('tr');
+          tr.className = rowClass;
+          tr.innerHTML = `
+            <td class="${rankClass}" style="font-weight:bold;">${rankLabel}</td>
+            <td>${item.grade ? `${item.grade}-${item.classNum || 1} ` : ''}<strong>${displayName}</strong>${timeText}</td>
+            <td style="color:#38bdf8; font-weight:bold; font-size:0.95rem;">${(item.score || 0).toLocaleString()}</td>
+            <td>${item.accuracy || 0}%</td>
+            <td style="color:#94a3b8; font-size:0.82rem;">${item.clearedCount || 0}단어</td>
+          `;
+          hofTableBody.appendChild(tr);
+        });
+      }
+
+      async function loadHof(tab = currentHofTab) {
+        currentHofTab = tab;
+        hofTabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+
+        // 1. 0ms 무지연 로컬 캐시 + 기본 시드 레코드 즉시 반영 (쿼터 소진/오프라인 시에도 항상 0ms 렌더링)
+        const localHistory = getLocalHofScores();
+        let cachedCombined = [...localHistory, ...DEFAULT_HOF_RECORDS];
+        renderHofTable(cachedCombined, tab);
+
+        // 2. Firebase Firestore 비동기 백그라운드 쿼리 (블로킹 없이 결과 수신 시 자동 병합)
+        const db = getFirestoreDb();
+        if (db) {
+          try {
+            const snap = await db.collection('games').doc('spelling_galaga').collection('scores')
+              .orderBy('score', 'desc')
+              .limit(50)
+              .get();
+
+            let cloudScores = [];
+            snap.forEach(doc => {
+              const data = doc.data();
+              if (data) {
+                cloudScores.push({
+                  id: doc.id,
+                  ...data,
+                  timestamp: data.createdAt ? (data.createdAt.toMillis ? data.createdAt.toMillis() : Date.now()) : (data.timestamp || Date.now())
+                });
+              }
+            });
+
+            if (cloudScores.length > 0) {
+              // 클라우드와 로컬 병합
+              const mergedMap = new Map();
+              cloudScores.forEach(r => mergedMap.set(r.id || `${r.name}_${r.score}_${r.timestamp}`, r));
+              localHistory.forEach(r => {
+                const k = r.id || `${r.name}_${r.score}_${r.timestamp}`;
+                if (!mergedMap.has(k)) mergedMap.set(k, r);
+              });
+              DEFAULT_HOF_RECORDS.forEach(r => {
+                const k = r.id || `${r.name}_${r.score}_${r.timestamp}`;
+                if (!mergedMap.has(k)) mergedMap.set(k, r);
+              });
+              renderHofTable(Array.from(mergedMap.values()), tab);
+            }
+          } catch (snapErr) {
+            console.warn("Firestore query fallback (quota/network):", snapErr);
+          }
         }
       }
 
