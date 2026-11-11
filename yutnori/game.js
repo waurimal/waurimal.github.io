@@ -2355,16 +2355,24 @@
                 }
             } else if (action.type === 'HOST_SKIP_TURN') {
                 Sound.playStep();
-                const skippedName = action.studentName || '학생';
+                const skippedName = action.skippedPlayerName || action.studentName || '학생';
                 const nextName = action.nextTurnPlayerName || '다음 플레이어';
-                this.logMessage(`⏭️ [방장 비상제어] 랙으로 인해 [${skippedName}] 학생의 차례를 건너뛰고 [${nextName}] 님에게 넘겼습니다.`);
+                const isSameTeam = Boolean(action.isSameTeam);
+                if (isSameTeam) {
+                    this.logMessage(`⏭️ [방장 비상제어] 랙으로 인해 [${skippedName}] 학생의 차례를 건너뛰고 같은 팀 [${nextName}] 학생에게 기회를 넘겼습니다.`);
+                    if (window.showToast) {
+                        window.showToast("같은 팀 차례 넘김", `[${skippedName}] 학생 대신 같은 팀 [${nextName}] 학생에게 차례를 넘겼습니다.`, "⏭️");
+                    }
+                } else {
+                    this.logMessage(`⏭️ [방장 비상제어] 랙으로 인해 [${skippedName}] 학생의 차례를 건너뛰고 [${nextName}] 님에게 넘겼습니다.`);
+                    if (window.showToast) {
+                        window.showToast("차례 강제 넘김", `방장님이 [${skippedName}] 학생의 차례를 넘겼습니다.`, "⏭️");
+                    }
+                }
                 if (this.dom.quizModal) this.dom.quizModal.classList.add('hidden');
                 if (this.dom.feedbackModal) this.dom.feedbackModal.classList.add('hidden');
                 this.clearHighlights();
                 this.setGameState('WAIT_ROLL');
-                if (window.showToast) {
-                    window.showToast("차례 강제 넘김", `방장님이 [${skippedName}] 학생의 차례를 넘겼습니다.`, "⏭️");
-                }
             } else if (action.type === 'GAME_OVER') {
                 const winnerTeamObj = this.teams.find(t => t.name === action.winnerTeam) || this.teams[0];
                 if (this.gameState !== 'GAME_OVER') {
@@ -2869,8 +2877,14 @@
                 ? this.currentRoomData.players[this.currentRoomData.currentTurnId] 
                 : null;
             const name = currentTurnPlayer ? currentTurnPlayer.name : '현재 플레이어';
+            const currentTeamKey = currentTurnPlayer ? currentTurnPlayer.team : (this.currentRoomData && this.currentRoomData.currentTeam) || 'blue';
+            const teamName = (currentTeamKey === 'white') ? '백팀' : '청팀';
 
-            if (!confirm(`[${name}] 학생의 차례를 강제로 종료하고 다음 플레이어에게 넘기시겠습니까?\n(기기 랙/멈춤 비상 해결용)`)) {
+            const plist = Object.values((this.currentRoomData && this.currentRoomData.players) || {});
+            const sameTeamCount = plist.filter(p => !p.isSpectator && p.team === currentTeamKey).length;
+            const targetDesc = (sameTeamCount > 1) ? `같은 ${teamName} 다음 학생` : '상대 팀';
+
+            if (!confirm(`[${name}] 학생의 기기 멈춤/랙 대응:\n차례를 건너뛰고 ${targetDesc}에게 기회를 넘기시겠습니까?`)) {
                 return;
             }
 
@@ -2880,10 +2894,20 @@
                     this.dom.hostSkipTurnBtn.classList.add('opacity-50', 'cursor-not-allowed');
                 }
 
-                await window.YutnoriMultiplayer.hostSkipTurn();
-                this.logMessage(`⏭️ [방장 비상제어] [${name}] 학생의 차례를 강제로 다음 플레이어에게 넘겼습니다.`);
-                if (window.showToast) {
-                    window.showToast("차례 넘기기 완료", `다음 플레이어 차례로 강제 전환되었습니다.`, "⏭️");
+                const result = await window.YutnoriMultiplayer.hostSkipTurn();
+                const nextName = (result && result.nextPlayerName) ? result.nextPlayerName : '다음 선수';
+                const isSameTeam = Boolean(result && result.isSameTeam);
+
+                if (isSameTeam) {
+                    this.logMessage(`⏭️ [방장 비상제어] [${name}] 학생의 차례를 건너뛰고 같은 팀 [${nextName}] 학생에게 기회를 넘겼습니다.`);
+                    if (window.showToast) {
+                        window.showToast("같은 팀 차례 전환", `같은 팀 [${nextName}] 학생 차례로 전환되었습니다.`, "⏭️");
+                    }
+                } else {
+                    this.logMessage(`⏭️ [방장 비상제어] [${name}] 학생의 차례를 건너뛰고 상대 팀 [${nextName}] 학생에게 넘겼습니다.`);
+                    if (window.showToast) {
+                        window.showToast("차례 넘기기 완료", `[${nextName}] 학생 차례로 전환되었습니다.`, "⏭️");
+                    }
                 }
             } catch (err) {
                 console.error("onHostSkipTurnClicked error:", err);

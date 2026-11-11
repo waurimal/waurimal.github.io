@@ -993,6 +993,8 @@ class YutnoriMultiplayerManager {
 
     /**
      * 방장 전용: 학생 기기 랙 또는 멈춤 시 다음 차례로 강제 턴 넘기기 (스킵)
+     * - 같은 팀에 다른 선수가 있으면 같은 편 다음 학생에게 기회를 넘김
+     * - 같은 팀에 다른 선수가 없는 경우(1인 팀 또는 1v1): 상대 팀으로 넘김
      */
     async hostSkipTurn() {
         if (!this.currentRoomId || !this.roomData) return;
@@ -1002,10 +1004,41 @@ class YutnoriMultiplayerManager {
         }
         if (this.roomData.status !== 'playing') return;
 
+        const getSortedTeamPlayers = (teamKey) => {
+            const plist = Object.values(this.roomData.players || {});
+            return plist
+                .filter(p => !p.isSpectator && p.team === teamKey)
+                .sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0) || String(a.id).localeCompare(String(b.id)));
+        };
+
         const currentTurnPlayer = this.roomData.players ? this.roomData.players[this.roomData.currentTurnId] : null;
         const currentStudentName = currentTurnPlayer ? currentTurnPlayer.name : '학생';
+        const currentTeamKey = currentTurnPlayer ? currentTurnPlayer.team : (this.roomData.currentTeam || 'blue');
 
-        const nextTurnInfo = this.calculateNextTurn(false);
+        const sameTeamPlayers = getSortedTeamPlayers(currentTeamKey);
+        let nextTurnInfo = {};
+        let isSameTeam = false;
+
+        if (sameTeamPlayers.length > 1) {
+            // 같은 팀 내 다음 선수로 넘기기 (같은 편에게 기회 부여)
+            const currentIdx = sameTeamPlayers.findIndex(p => p.id === this.roomData.currentTurnId);
+            const nextIdx = (currentIdx >= 0) ? ((currentIdx + 1) % sameTeamPlayers.length) : 0;
+            const nextPlayer = sameTeamPlayers[nextIdx];
+
+            nextTurnInfo = {
+                currentTeam: currentTeamKey,
+                currentTurnId: nextPlayer.id,
+                bluePlayerIndex: (currentTeamKey === 'blue') ? nextIdx : ((typeof this.roomData.bluePlayerIndex === 'number') ? this.roomData.bluePlayerIndex : 0),
+                whitePlayerIndex: (currentTeamKey === 'white') ? nextIdx : ((typeof this.roomData.whitePlayerIndex === 'number') ? this.roomData.whitePlayerIndex : -1),
+                currentTurnIndex: ((this.roomData.currentTurnIndex || 0) + 1)
+            };
+            isSameTeam = true;
+        } else {
+            // 같은 팀에 다른 선수가 없는 경우(1인 팀 또는 1v1): 상대 팀으로 교차 넘김
+            nextTurnInfo = this.calculateNextTurn(false);
+            isSameTeam = false;
+        }
+
         const nextPlayer = (this.roomData.players && nextTurnInfo.currentTurnId) 
             ? this.roomData.players[nextTurnInfo.currentTurnId] 
             : null;
@@ -1026,10 +1059,20 @@ class YutnoriMultiplayerManager {
                     skippedPlayerId: this.roomData.currentTurnId,
                     skippedPlayerName: currentStudentName,
                     nextTurnPlayerName: nextPlayerName,
+                    nextTurnPlayerId: nextTurnInfo.currentTurnId,
+                    isSameTeam: isSameTeam,
+                    team: currentTeamKey,
                     timestamp: Date.now()
                 },
                 updatedAt: Date.now()
             });
+
+            return {
+                isSameTeam,
+                nextPlayerName,
+                nextPlayerId: nextTurnInfo.currentTurnId,
+                team: currentTeamKey
+            };
         } catch (e) {
             console.error("[Multiplayer] hostSkipTurn Error:", e);
             throw e;
@@ -1134,10 +1177,22 @@ class YutnoriMultiplayerManager {
                         updatedAt: Date.now()
                     };
 
-                    // 진행 중인데 나간 사람이 현재 차례였다면 다음 사람으로 자동 넘김
+                    // 진행 중인데 나간 사람이 현재 차례였다면 다음 사람으로 자동 넘김 (같은 팀 우선)
                     if (this.roomData.status === 'playing' && this.roomData.currentTurnId === this.mySessionId) {
-                        const nextTurn = this.calculateNextTurn(false);
-                        Object.assign(updates, nextTurn);
+                        const myTeam = (this.roomData.players && this.roomData.players[this.mySessionId]) ? this.roomData.players[this.mySessionId].team : null;
+                        const remainingSameTeam = Object.values(remainingPlayers || {}).filter(p => !p.isSpectator && p.team === myTeam);
+                        if (remainingSameTeam.length > 0) {
+                            const nextPlayer = remainingSameTeam[0];
+                            const nextTurn = {
+                                currentTeam: myTeam,
+                                currentTurnId: nextPlayer.id,
+                                currentTurnIndex: ((this.roomData.currentTurnIndex || 0) + 1)
+                            };
+                            Object.assign(updates, nextTurn);
+                        } else {
+                            const nextTurn = this.calculateNextTurn(false);
+                            Object.assign(updates, nextTurn);
+                        }
                     }
 
                     await updateDoc(roomRef, updates);
