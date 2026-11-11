@@ -694,22 +694,29 @@
         "street": { title: "Crossy Road", icon: "🚦", teacher: "차도를 건너며 상황별 올바른 영어 표현을 선택하는 박진감 넘치는 게임입니다.", student: "달려오는 차들을 피하며 도로를 건너고 영어 미션을 완수하세요!" },
         "frog": { title: "개구리 게임", icon: "🐸", teacher: "통나무와 연잎을 타고 강을 건너며 단어 퀴즈를 푸는 타이밍 액션 게임입니다.", student: "강물에 빠지지 않게 점프 타이밍을 맞추고 목적지까지 무사히 도착하세요!" },
         "chain": { title: "단어 체인", icon: "🔗", teacher: "제시된 영단어의 끝 글자로 이어지는 단어를 찾아내는 어휘력 배틀입니다.", student: "마지막 알파벳으로 시작하는 새로운 단어를 재빠르게 입력하세요!" },
+        "jumpman": { 
+            title: "점프맨 게임", 
+            icon: "🏃", 
+            teacher: "1. 조작법: 좌우 이동(A/D 또는 방향키 ←/→), 점프 및 2단 점프(Space 또는 마우스 클릭).\n2. 3회 부활 영어 퀴즈: 장애물 충돌 시 3번의 부활 찬스가 제공되며, 학년별 영어 퀴즈를 맞히면 무적 보호막과 함께 부활합니다.\n3. 단계(스테이지) 모드 및 무한 서바이벌 모드를 제공하며, 탈락(게임 오버) 시 최종 합산 점수가 명예의 전당 클라우드에 자동 등록됩니다.", 
+            student: "1. 날아오는 공, 가시, 박쥐 등의 장애물을 피해 목적지까지 달리거나 최대한 오래 생존하세요!\n2. 장애물에 부딪혀도 3번의 찬스가 주어집니다! 영어 퀴즈를 맞히면 즉시 부활합니다!\n3. Space나 마우스 클릭을 한 번 더 누르면 강력한 2단 점프를 할 수 있습니다! 🏃💨" 
+        },
         "file_upload": { title: "파일 제출", icon: "📤", teacher: "학생들의 과제 파일, 학습 결과물을 간편하게 수합하는 포털입니다.", student: "자신의 학년, 반, 이름을 입력하고 과제 파일을 손쉽게 제출하세요!" },
         "feedback": { title: "평가 및 의견", icon: "💬", teacher: "에듀테크 앱에 대한 의견과 건의사항을 남길 수 있습니다.", student: "좋았던 점이나 개선할 점을 자유롭게 남겨주세요!" },
         "portal": { title: "학습 놀이터", icon: "🏫", teacher: "전체 20종의 에듀테크 영어 놀이를 한눈에 탐색하고 수업에 활용하세요.", student: "다양한 영어 놀이를 골라 재미있게 학습해 보세요!" }
     };
 
     function detectApp() {
-        const path = window.location.pathname;
+        const path = window.location.pathname.toLowerCase();
         if (path.includes('feedback.html')) return "feedback";
         if (path.includes('waurimal.github.io') && (path.endsWith('index.html') || path.endsWith('/'))) return "portal";
         for (const appId in APP_DATABASE) {
-            if (path.includes('/' + appId + '/') || path.endsWith('/' + appId)) return appId;
+            if (path.includes('/' + appId + '/') || path.endsWith('/' + appId) || path.includes('/' + appId)) return appId;
         }
-        const title = document.title;
+        const title = (document.title || '').toLowerCase();
         for (const appId in APP_DATABASE) {
-            if (title.includes(APP_DATABASE[appId].title)) return appId;
+            if (title.includes(APP_DATABASE[appId].title.toLowerCase())) return appId;
         }
+        if (path.includes('jumpman') || title.includes('점프맨') || title.includes('jumpman')) return "jumpman";
         return "wordtyping";
     }
 

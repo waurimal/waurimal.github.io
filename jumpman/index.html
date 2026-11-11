@@ -28,53 +28,47 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between">
 
-    <!-- 1. 상단 HUD 헤더 -->
-    <header class="game-header sticky top-0 z-40 px-3 py-2.5 flex flex-wrap items-center justify-between gap-2 border-b border-blue-500/30">
-        <!-- 좌측: 홈 링크 & 로고 & 상태 뱃지 -->
-        <div class="flex items-center gap-3">
-            <button type="button" id="btnHome" class="px-3 py-1.5 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-500/40 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shadow" title="게임 초기 화면으로 이동">
-                <i class="fa-solid fa-house"></i> 게임 홈
+    <!-- 1. 게임 인게임 HUD 상태바 (단일 행 정렬) -->
+    <header class="game-header sticky top-0 z-40 px-3 py-2 flex items-center justify-between gap-2 border-b border-blue-500/30 overflow-x-auto">
+        <!-- 좌측: 모드 뱃지 & 초기 화면 복귀 버튼 -->
+        <div class="flex items-center gap-2 flex-shrink-0">
+            <span id="hudStageBadge" class="px-2.5 py-1 rounded-full text-xs font-black bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-sm whitespace-nowrap">
+                무한 서바이벌
+            </span>
+            <button type="button" id="btnHome" class="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-bold text-xs transition flex items-center gap-1 cursor-pointer shadow-sm whitespace-nowrap" title="게임 초기 화면으로 이동">
+                <i class="fa-solid fa-rotate-left text-sky-400"></i> 초기화면
             </button>
-            <div class="flex items-center gap-2">
-                <span class="text-2xl">🏃</span>
-                <span class="font-black text-base md:text-lg tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-400">
-                    JUMPMAN
-                </span>
-                <span id="hudStageBadge" class="px-2.5 py-0.5 rounded-full text-xs font-black bg-rose-500/20 text-rose-300 border border-rose-500/40">
-                    무한 서바이벌
-                </span>
-            </div>
         </div>
 
-        <!-- 중앙: 찬스, 거리, 시간, 코인, 점수 HUD -->
-        <div class="flex items-center gap-2 sm:gap-4 bg-slate-900/90 px-3 py-1.5 rounded-xl border border-slate-700/80 shadow-inner">
+        <!-- 중앙: 찬스, 거리, 시간, 코인, 점수 HUD (한 줄 컴팩트) -->
+        <div class="flex items-center gap-2 sm:gap-3 bg-slate-900/90 px-3 py-1 rounded-xl border border-slate-700/80 shadow-inner flex-shrink-0">
             <!-- 3회 찬스 하트 표시 -->
-            <div class="flex items-center gap-1.5" title="남은 부활 찬스 (부딪혔을 때 영어 퀴즈를 풀면 부활!)">
+            <div class="flex items-center gap-1" title="남은 부활 찬스 (부딪혔을 때 영어 퀴즈를 풀면 부활!)">
                 <span class="text-xs text-rose-400 font-bold hidden sm:inline">찬스:</span>
                 <span id="hudChances" class="text-sm font-black text-rose-500 tracking-wider">❤️ ❤️ ❤️</span>
             </div>
-            <div class="h-4 w-px bg-slate-700"></div>
+            <div class="h-3.5 w-px bg-slate-700"></div>
 
             <!-- 거리 -->
             <div class="flex items-center gap-1" title="진행 거리">
                 <i class="fa-solid fa-flag text-amber-400 text-xs"></i>
-                <span id="hudDistance" class="font-bold text-xs sm:text-sm text-slate-200">0m</span>
+                <span id="hudDistance" class="font-bold text-xs text-slate-200">0m</span>
             </div>
-            <div class="h-4 w-px bg-slate-700"></div>
+            <div class="h-3.5 w-px bg-slate-700"></div>
 
             <!-- 생존 시간 -->
             <div class="flex items-center gap-1" title="생존 시간">
                 <i class="fa-solid fa-stopwatch text-sky-400 text-xs"></i>
-                <span id="hudTime" class="font-bold text-xs sm:text-sm text-slate-200">0:00</span>
+                <span id="hudTime" class="font-bold text-xs text-slate-200">0:00</span>
             </div>
-            <div class="h-4 w-px bg-slate-700"></div>
+            <div class="h-3.5 w-px bg-slate-700"></div>
 
             <!-- 코인 -->
             <div class="flex items-center gap-1" title="수집한 코인">
                 <span class="text-xs">🪙</span>
-                <span id="hudCoins" class="font-bold text-xs sm:text-sm text-amber-300">0</span>
+                <span id="hudCoins" class="font-bold text-xs text-amber-300">0</span>
             </div>
-            <div class="h-4 w-px bg-slate-700"></div>
+            <div class="h-3.5 w-px bg-slate-700"></div>
 
             <!-- 점수 -->
             <div class="flex items-center gap-1" title="현재 점수">
@@ -84,9 +78,9 @@
         </div>
 
         <!-- 우측: 제어 및 설정 버튼 -->
-        <div class="flex items-center gap-1.5 sm:gap-2">
+        <div class="flex items-center gap-1.5 flex-shrink-0">
             <!-- 학년 필터 드롭다운 -->
-            <select id="selectGrade" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs font-bold text-blue-200 focus:outline-none focus:border-blue-500 cursor-pointer" title="부활 퀴즈 학년 선택">
+            <select id="selectGrade" class="px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-xs font-bold text-blue-200 focus:outline-none focus:border-blue-500 cursor-pointer" title="부활 퀴즈 학년 선택">
                 <option value="all" selected>전체 학년</option>
                 <option value="3">3학년</option>
                 <option value="4">4학년</option>
@@ -94,16 +88,16 @@
                 <option value="6">6학년</option>
             </select>
 
-            <button type="button" id="btnHof" class="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition flex items-center gap-1 cursor-pointer" title="명예의 전당">
+            <button type="button" id="btnHof" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition flex items-center gap-1 cursor-pointer whitespace-nowrap" title="명예의 전당">
                 <i class="fa-solid fa-trophy text-amber-400"></i> <span class="hidden md:inline">명예의 전당</span>
             </button>
-            <button type="button" id="btnGuide" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold transition flex items-center gap-1 cursor-pointer" title="게임 방법">
-                <i class="fa-solid fa-circle-question"></i> <span class="hidden md:inline">도움말</span>
+            <button type="button" id="btnGuide" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold transition flex items-center gap-1 cursor-pointer" title="게임 방법">
+                <i class="fa-solid fa-circle-question"></i> <span class="hidden lg:inline">방법</span>
             </button>
-            <button type="button" id="btnAudioToggle" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold transition flex items-center gap-1 cursor-pointer" title="소리 켜기/끄기">
+            <button type="button" id="btnAudioToggle" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold transition cursor-pointer" title="소리 켜기/끄기">
                 <i class="fa-solid fa-volume-high text-sky-400"></i>
             </button>
-            <button type="button" id="btnFullscreen" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold transition cursor-pointer" title="전체화면">
+            <button type="button" id="btnFullscreen" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold transition cursor-pointer" title="전체화면">
                 <i class="fa-solid fa-expand"></i>
             </button>
         </div>
