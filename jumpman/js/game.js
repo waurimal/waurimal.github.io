@@ -56,6 +56,103 @@ class JumpmanGame {
         this.particles = [];
         this.backgroundStars = [];
 
+        // 배경 패럴랙스 교육용 영어 단어 & 문장 플로팅 시스템
+        this.backgroundTexts = [];
+        this.bgLanes = [65, 125, 185, 245, 305]; // 5개 수직 레인 (겹침 방지)
+        this.bgTextSpawnTimer = 30;
+        this.selectedGrade = 'all';
+
+        // 큐레이션된 초등 3~6학년 핵심 영어 단어 및 실생활 대화 문장 데이터셋
+        this.curatedBgItems = [
+            // [3학년] 핵심 단어 & 문장
+            { en: 'jump', kr: '뛰다, 점프하다', type: 'word', grade: 3 },
+            { en: 'run', kr: '달리다', type: 'word', grade: 3 },
+            { en: 'walk', kr: '걷다', type: 'word', grade: 3 },
+            { en: 'pencil', kr: '연필', type: 'word', grade: 3 },
+            { en: 'eraser', kr: '지우개', type: 'word', grade: 3 },
+            { en: 'book', kr: '책', type: 'word', grade: 3 },
+            { en: 'apple', kr: '사과', type: 'word', grade: 3 },
+            { en: 'happy', kr: '행복한', type: 'word', grade: 3 },
+            { en: 'friend', kr: '친구', type: 'word', grade: 3 },
+            { en: 'star', kr: '별', type: 'word', grade: 3 },
+            { en: 'heart', kr: '마음, 하트', type: 'word', grade: 3 },
+            { en: 'bird', kr: '새', type: 'word', grade: 3 },
+            { en: 'Do you have a pencil?', kr: '연필 있니?', type: 'sentence', grade: 3 },
+            { en: 'Here you are.', kr: '여기 있어.', type: 'sentence', grade: 3 },
+            { en: 'I like apples.', kr: '나는 사과를 좋아해.', type: 'sentence', grade: 3 },
+            { en: 'How are you today?', kr: '오늘 기분 어때?', type: 'sentence', grade: 3 },
+            { en: 'Nice to meet you!', kr: '만나서 반가워!', type: 'sentence', grade: 3 },
+            { en: 'Open your book.', kr: '책을 펴세요.', type: 'sentence', grade: 3 },
+            { en: 'Look at the star!', kr: '저 별을 봐!', type: 'sentence', grade: 3 },
+            { en: 'Thank you very much.', kr: '정말 고마워.', type: 'sentence', grade: 3 },
+
+            // [4학년] 핵심 단어 & 문장
+            { en: 'school', kr: '학교', type: 'word', grade: 4 },
+            { en: 'clock', kr: '시계', type: 'word', grade: 4 },
+            { en: 'music', kr: '음악', type: 'word', grade: 4 },
+            { en: 'summer', kr: '여름', type: 'word', grade: 4 },
+            { en: 'winter', kr: '겨울', type: 'word', grade: 4 },
+            { en: 'breakfast', kr: '아침식사', type: 'word', grade: 4 },
+            { en: 'lunch', kr: '점심식사', type: 'word', grade: 4 },
+            { en: 'clean', kr: '깨끗한, 청소하다', type: 'word', grade: 4 },
+            { en: 'weather', kr: '날씨', type: 'word', grade: 4 },
+            { en: 'fast', kr: '빠른, 빨리', type: 'word', grade: 4 },
+            { en: 'high', kr: '높은, 높이', type: 'word', grade: 4 },
+            { en: 'energy', kr: '에너지, 힘', type: 'word', grade: 4 },
+            { en: 'What time is it?', kr: '지금 몇 시니?', type: 'sentence', grade: 4 },
+            { en: 'It is time for lunch.', kr: '점심 먹을 시간이야.', type: 'sentence', grade: 4 },
+            { en: 'How is the weather?', kr: '날씨가 어때?', type: 'sentence', grade: 4 },
+            { en: 'It is sunny today.', kr: '오늘은 맑아.', type: 'sentence', grade: 4 },
+            { en: 'Can you swim fast?', kr: '너 빨리 수영할 수 있니?', type: 'sentence', grade: 4 },
+            { en: 'Let us play together!', kr: '우리 함께 놀자!', type: 'sentence', grade: 4 },
+            { en: 'I can jump high.', kr: '난 높이 점프할 수 있어.', type: 'sentence', grade: 4 },
+            { en: 'What are you doing?', kr: '너 지금 뭐 하고 있니?', type: 'sentence', grade: 4 },
+
+            // [5학년] 핵심 단어 & 문장
+            { en: 'library', kr: '도서관', type: 'word', grade: 5 },
+            { en: 'hospital', kr: '병원', type: 'word', grade: 5 },
+            { en: 'museum', kr: '박물관', type: 'word', grade: 5 },
+            { en: 'science', kr: '과학', type: 'word', grade: 5 },
+            { en: 'subject', kr: '과목', type: 'word', grade: 5 },
+            { en: 'favorite', kr: '가장 좋아하는', type: 'word', grade: 5 },
+            { en: 'yesterday', kr: '어제', type: 'word', grade: 5 },
+            { en: 'tomorrow', kr: '내일', type: 'word', grade: 5 },
+            { en: 'shield', kr: '방패, 보호막', type: 'word', grade: 5 },
+            { en: 'danger', kr: '위험', type: 'word', grade: 5 },
+            { en: 'escape', kr: '탈출하다', type: 'word', grade: 5 },
+            { en: 'speed', kr: '속도', type: 'word', grade: 5 },
+            { en: 'Where is the library?', kr: '도서관이 어디에 있니?', type: 'sentence', grade: 5 },
+            { en: 'Go straight and turn right.', kr: '직진해서 오른쪽으로 돌아.', type: 'sentence', grade: 5 },
+            { en: 'What is your favorite subject?', kr: '가장 좋아하는 과목이 뭐니?', type: 'sentence', grade: 5 },
+            { en: 'My favorite subject is English.', kr: '내가 제일 좋아하는 과목은 영어야.', type: 'sentence', grade: 5 },
+            { en: 'What did you do yesterday?', kr: '어제 뭐 했니?', type: 'sentence', grade: 5 },
+            { en: 'I played soccer with friends.', kr: '친구들과 축구를 했어.', type: 'sentence', grade: 5 },
+            { en: 'May I help you?', kr: '제가 도와드릴까요?', type: 'sentence', grade: 5 },
+            { en: 'You did a great job!', kr: '정말 잘했어!', type: 'sentence', grade: 5 },
+
+            // [6학년] 핵심 단어 & 문장
+            { en: 'future', kr: '미래', type: 'word', grade: 6 },
+            { en: 'adventure', kr: '모험', type: 'word', grade: 6 },
+            { en: 'discover', kr: '발견하다', type: 'word', grade: 6 },
+            { en: 'invent', kr: '발명하다', type: 'word', grade: 6 },
+            { en: 'protect', kr: '보호하다', type: 'word', grade: 6 },
+            { en: 'survive', kr: '살아남다', type: 'word', grade: 6 },
+            { en: 'environment', kr: '환경', type: 'word', grade: 6 },
+            { en: 'champion', kr: '챔피언, 우승자', type: 'word', grade: 6 },
+            { en: 'challenge', kr: '도전', type: 'word', grade: 6 },
+            { en: 'obstacle', kr: '장애물', type: 'word', grade: 6 },
+            { en: 'fantastic', kr: '환상적인', type: 'word', grade: 6 },
+            { en: 'wonderful', kr: '멋진, 훌륭한', type: 'word', grade: 6 },
+            { en: 'What will you do this weekend?', kr: '이번 주말에 뭐 할 예정이니?', type: 'sentence', grade: 6 },
+            { en: 'I will visit the science museum.', kr: '과학 박물관에 방문할 거야.', type: 'sentence', grade: 6 },
+            { en: 'We should protect our Earth.', kr: '우리는 지구를 보호해야 해.', type: 'sentence', grade: 6 },
+            { en: 'Never give up on your dreams!', kr: '너의 꿈을 절대 포기하지 마!', type: 'sentence', grade: 6 },
+            { en: 'You can do anything!', kr: '너는 무엇이든 해낼 수 있어!', type: 'sentence', grade: 6 },
+            { en: 'Practice makes perfect.', kr: '연습이 완벽을 만든다.', type: 'sentence', grade: 6 },
+            { en: 'Keep running forward!', kr: '계속 앞으로 힘차게 달려가자!', type: 'sentence', grade: 6 },
+            { en: 'Have a wonderful day!', kr: '행복하고 멋진 하루 보내!', type: 'sentence', grade: 6 }
+        ];
+
         // 카메라 및 속도
         this.gameSpeed = 5.0;
         this.baseSpeed = 5.0;
@@ -76,6 +173,7 @@ class JumpmanGame {
 
         this.initBackground();
         this.bindEvents();
+        this.render(); // 초기 화면 캔버스 렌더링
     }
 
     initBackground() {
@@ -89,6 +187,243 @@ class JumpmanGame {
                 speed: Math.random() * 0.4 + 0.1
             });
         }
+        this.initBackgroundTexts();
+    }
+
+    // 배경 영어 단어 & 문장 초기 배치
+    initBackgroundTexts() {
+        this.backgroundTexts = [];
+        this.bgTextSpawnTimer = 40;
+
+        // 게임 시작 직후에도 화면 전체에 5개의 단어/문장이 떠 있도록 균일하게 배치
+        const initialXPositions = [120, 310, 500, 690, 880];
+        initialXPositions.forEach(x => {
+            this.spawnBackgroundText(x);
+        });
+    }
+
+    setGrade(grade) {
+        this.selectedGrade = grade;
+    }
+
+    // 학년 조건 및 공통 교육과정 모듈(WaurimalCurriculum) 연동 단어/문장 풀 수합
+    getBackgroundItemPool() {
+        let pool = [];
+        const gradeFilter = this.selectedGrade;
+
+        // 1. WaurimalCurriculum 공통 모듈에서 동적 데이터 수합
+        if (typeof window !== 'undefined' && window.WaurimalCurriculum) {
+            try {
+                if (!gradeFilter || gradeFilter === 'all') {
+                    const cWords = window.WaurimalCurriculum.getAllWords() || [];
+                    cWords.forEach(w => {
+                        if (w && w.en) pool.push({ en: w.en, kr: w.kr || '', type: 'word', grade: w.grade || 3 });
+                    });
+                    const cSentences = window.WaurimalCurriculum.getAllSentences() || [];
+                    cSentences.forEach(s => {
+                        if (s && s.en) pool.push({ en: s.en, kr: s.kr || '', type: 'sentence', grade: s.grade || 3 });
+                    });
+                } else {
+                    const targetG = Number(gradeFilter);
+                    const lessons = window.WaurimalCurriculum.getLessonsByGrade(targetG) || [];
+                    lessons.forEach(l => {
+                        if (l && Array.isArray(l.words)) {
+                            l.words.forEach(w => {
+                                if (w && w.en) pool.push({ en: w.en, kr: w.kr || '', type: 'word', grade: l.grade });
+                            });
+                        }
+                        if (l && Array.isArray(l.sentences)) {
+                            l.sentences.forEach(s => {
+                                const en = typeof s === 'string' ? s : (s.en || '');
+                                const kr = typeof s === 'string' ? '' : (s.kr || '');
+                                if (en) pool.push({ en, kr, type: 'sentence', grade: l.grade });
+                            });
+                        }
+                    });
+                }
+            } catch (e) {
+                console.warn('Curriculum pool error:', e);
+            }
+        }
+
+        // 2. 큐레이션된 기본 데이터셋과 병합
+        const curated = (gradeFilter && gradeFilter !== 'all')
+            ? this.curatedBgItems.filter(item => Number(item.grade) === Number(gradeFilter))
+            : this.curatedBgItems;
+
+        const combined = pool.concat(curated);
+        return combined.length > 0 ? combined : this.curatedBgItems;
+    }
+
+    // 배경 영어 텍스트 신규 생성 (지정 X 또는 우측 화면 밖 스폰)
+    spawnBackgroundText(xPos = null) {
+        const pool = this.getBackgroundItemPool();
+        if (!pool || pool.length === 0) return;
+
+        const spawnX = (xPos !== null) ? xPos : (this.WIDTH + 50);
+
+        // 겹침 방지: 해당 레인에 spawnX와 230px 이내로 근접한 기존 텍스트가 없는 레인만 필터링
+        const availableLanes = this.bgLanes.filter(laneY => {
+            return !this.backgroundTexts.some(item => {
+                return item.baseY === laneY && Math.abs(item.x - spawnX) < 230;
+            });
+        });
+
+        if (availableLanes.length === 0) return; // 모든 레인이 차 있으면 대기
+
+        const laneY = availableLanes[Math.floor(Math.random() * availableLanes.length)];
+        const item = pool[Math.floor(Math.random() * pool.length)];
+
+        // 선명하고 아름다운 6종 네온/파스텔 컬러 테마
+        const colorThemes = [
+            { enColor: '#38BDF8', borderColor: 'rgba(56, 189, 248, 0.45)', glowColor: 'rgba(56, 189, 248, 0.35)' }, // Sky Cyan
+            { enColor: '#34D399', borderColor: 'rgba(52, 211, 153, 0.45)', glowColor: 'rgba(52, 211, 153, 0.35)' }, // Emerald Mint
+            { enColor: '#FBBF24', borderColor: 'rgba(251, 191, 36, 0.45)', glowColor: 'rgba(251, 191, 36, 0.35)' }, // Warm Amber
+            { enColor: '#F472B6', borderColor: 'rgba(244, 114, 182, 0.45)', glowColor: 'rgba(244, 114, 182, 0.35)' }, // Rose Pink
+            { enColor: '#C084FC', borderColor: 'rgba(192, 132, 252, 0.45)', glowColor: 'rgba(192, 132, 252, 0.35)' }, // Lavender Violet
+            { enColor: '#60A5FA', borderColor: 'rgba(96, 165, 250, 0.45)', glowColor: 'rgba(96, 165, 250, 0.35)' }   // Cool Blue
+        ];
+        const theme = colorThemes[Math.floor(Math.random() * colorThemes.length)];
+
+        // 패럴랙스 계수 (지면 달리기 속도보다 은은하게 흘러가는 원경 효과: 0.30 ~ 0.50)
+        const parallaxFactor = 0.30 + Math.random() * 0.20;
+
+        this.backgroundTexts.push({
+            en: item.en,
+            kr: item.kr || '',
+            type: item.type || (item.en.includes(' ') && item.en.length > 14 ? 'sentence' : 'word'),
+            grade: item.grade || 3,
+            x: spawnX,
+            baseY: laneY,
+            parallaxFactor: parallaxFactor,
+            floatPhase: Math.random() * Math.PI * 2,
+            floatSpeed: 0.03 + Math.random() * 0.02,
+            floatAmp: 3.5 + Math.random() * 2.5,
+            colorTheme: theme
+        });
+    }
+
+    // 배경 영어 텍스트 위치 갱신 및 주기적 스폰
+    updateBackgroundTexts(dt) {
+        // 스폰 타이머
+        this.bgTextSpawnTimer--;
+        if (this.bgTextSpawnTimer <= 0) {
+            if (this.backgroundTexts.length < 8) {
+                this.spawnBackgroundText();
+            }
+            this.bgTextSpawnTimer = Math.floor(Math.random() * 50) + 60; // 약 1.0 ~ 1.8초 주기
+        }
+
+        // 텍스트 이동 및 상하 부유 애니메이션
+        for (let i = this.backgroundTexts.length - 1; i >= 0; i--) {
+            const item = this.backgroundTexts[i];
+
+            // 게임 진행 중일 때는 게임 속도와 연동된 패럴랙스 이동, 대기 중일 때는 부드러운 0.6px 유영
+            const speed = (this.isRunning && !this.isPaused)
+                ? (this.gameSpeed * item.parallaxFactor)
+                : 0.6;
+
+            item.x -= speed;
+            item.floatPhase += item.floatSpeed;
+
+            // 화면 왼쪽 밖으로 충분히 벗어나면 제거
+            if (item.x < -500) {
+                this.backgroundTexts.splice(i, 1);
+            }
+        }
+    }
+
+    // 배경 영어 단어 & 문장 패럴랙스 렌더링
+    renderBackgroundTexts(ctx) {
+        if (!this.backgroundTexts || this.backgroundTexts.length === 0) return;
+
+        ctx.save();
+
+        for (let i = 0; i < this.backgroundTexts.length; i++) {
+            const item = this.backgroundTexts[i];
+
+            // 화면 좌우 가장자리 페이드 인/아웃 알파 처리
+            let edgeAlpha = 1.0;
+            if (item.x > this.WIDTH - 100) {
+                edgeAlpha = Math.max(0, (this.WIDTH - item.x) / 100 + 1);
+            } else if (item.x < 100) {
+                edgeAlpha = Math.max(0, (item.x + 300) / 400);
+            }
+            edgeAlpha = Math.min(1.0, Math.max(0, edgeAlpha));
+            if (edgeAlpha <= 0.02) continue;
+
+            // 사인파를 이용한 부드러운 둥실둥실 부유 좌표
+            const y = item.baseY + Math.sin(item.floatPhase) * item.floatAmp;
+
+            const isSentence = item.type === 'sentence';
+            const enFont = isSentence
+                ? 'bold 15px "Pretendard Variable", Pretendard, sans-serif'
+                : 'bold 17px "Pretendard Variable", Pretendard, sans-serif';
+            const krFont = '12px "Pretendard Variable", Pretendard, sans-serif';
+
+            ctx.font = enFont;
+            const enWidth = ctx.measureText(item.en).width;
+
+            ctx.font = krFont;
+            const krWidth = item.kr ? ctx.measureText(item.kr).width : 0;
+
+            const spacing = item.kr ? 10 : 0;
+            const totalContentWidth = enWidth + spacing + krWidth;
+            const paddingX = 14;
+            const boxHeight = isSentence ? 32 : 34;
+            const boxWidth = totalContentWidth + paddingX * 2;
+            const boxX = item.x;
+            const boxY = y - boxHeight / 2;
+
+            // 1. 반투명 글래스모피즘 캡슐(Pill) 배경 박스
+            ctx.globalAlpha = 0.82 * edgeAlpha;
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.72)';
+            ctx.strokeStyle = item.colorTheme.borderColor;
+            ctx.lineWidth = 1.2;
+
+            this.drawRoundedRect(ctx, boxX, boxY, boxWidth, boxHeight, boxHeight / 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // 2. 영어 단어/문장 텍스트 (네온 컬러 + 은은한 글로우)
+            ctx.font = enFont;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = item.colorTheme.enColor;
+            ctx.shadowColor = item.colorTheme.glowColor;
+            ctx.shadowBlur = 6;
+            ctx.fillText(item.en, boxX + paddingX, y);
+
+            // 3. 한글 뜻 (부드러운 화이트/슬레이트)
+            if (item.kr) {
+                ctx.shadowBlur = 0;
+                ctx.font = krFont;
+                ctx.fillStyle = 'rgba(226, 232, 240, 0.85)';
+                ctx.fillText(item.kr, boxX + paddingX + enWidth + spacing, y);
+            }
+        }
+
+        ctx.restore();
+    }
+
+    // 둥근 사각형 캔버스 그리기 헬퍼 함수
+    drawRoundedRect(ctx, x, y, width, height, radius) {
+        if (typeof ctx.roundRect === 'function') {
+            ctx.beginPath();
+            ctx.roundRect(x, y, width, height, radius);
+            return;
+        }
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.arcTo(x + width, y, x + width, y + height, radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.arcTo(x + width, y + height, x, y + height, radius);
+        ctx.lineTo(x + radius, y + height);
+        ctx.arcTo(x, y + height, x, y, radius);
+        ctx.lineTo(x, y + radius);
+        ctx.arcTo(x, y, x + width, y, radius);
+        ctx.closePath();
     }
 
     bindEvents() {
@@ -607,6 +942,9 @@ class JumpmanGame {
             if (s.x < 0) s.x = this.WIDTH;
         });
 
+        // 배경 패럴랙스 영어 단어 & 문장 업데이트
+        this.updateBackgroundTexts(dt);
+
         // 화면 흔들림 감쇠
         if (this.screenShake > 0) {
             this.screenShake *= 0.88;
@@ -819,6 +1157,9 @@ class JumpmanGame {
         ctx.lineTo(this.WIDTH, this.FLOOR_Y);
         ctx.closePath();
         ctx.fill();
+
+        // 3.5. 배경 패럴랙스 교육용 영어 단어 & 문장 플로팅
+        this.renderBackgroundTexts(ctx);
 
         // 4. 바닥 (지면 및 체크무늬 패턴)
         const floorGrad = ctx.createLinearGradient(0, this.FLOOR_Y, 0, this.HEIGHT);

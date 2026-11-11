@@ -557,7 +557,13 @@
             const selectGrade = document.getElementById('selectGrade');
             selectGrade.addEventListener('change', (e) => {
                 window.JumpmanQuiz.setGrade(e.target.value);
+                if (game && typeof game.setGrade === 'function') {
+                    game.setGrade(e.target.value);
+                }
             });
+            if (selectGrade && game && typeof game.setGrade === 'function') {
+                game.setGrade(selectGrade.value);
+            }
 
             // 도움말 모달
             const guideModal = document.getElementById('guideModal');
