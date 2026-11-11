@@ -44,6 +44,7 @@ class JumpmanGame {
         // 점수 및 기록
         this.score = 0;
         this.distance = 0;
+        this.totalDistance = 0;
         this.coins = 0;
         this.quizzesSolved = 0;
         this.survivalTime = 0; // 초
@@ -168,6 +169,7 @@ class JumpmanGame {
         this.isPaused = false;
         this.score = 0;
         this.distance = 0;
+        this.totalDistance = 0;
         this.coins = 0;
         this.quizzesSolved = 0;
         this.survivalTime = 0;
@@ -192,6 +194,45 @@ class JumpmanGame {
         this.updateHUD();
         if (window.JumpmanAudio) {
             window.JumpmanAudio.init();
+            window.JumpmanAudio.startBgm();
+        }
+
+        this.lastTime = performance.now();
+        if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
+        this.loop = this.loop.bind(this);
+        this.animFrameId = requestAnimationFrame(this.loop);
+    }
+
+    // 다음 스테이지로 진입 (점수, 코인, 총 거리, 퀴즈 풀이 등 누적 합산 유지)
+    startNextStage() {
+        this.currentStage++;
+        this.stageGoalDistance = 400 + this.currentStage * 200;
+        this.distance = 0; // 해당 스테이지 내 진행 거리 초기화
+        this.gameSpeed = 5.0 + (this.currentStage - 1) * 0.4;
+        this.chances = 3; // 다음 스테이지를 위해 찬스 3회 충전!
+
+        this.isRunning = true;
+        this.isPaused = false;
+
+        // 점수(this.score), 총 누적거리(this.totalDistance), 코인(this.coins), 퀴즈풀이(this.quizzesSolved), 생존시간(this.survivalTime)은 누적 유지!
+
+        this.player.x = 160;
+        this.player.y = this.FLOOR_Y - this.player.height;
+        this.player.vx = 0;
+        this.player.vy = 0;
+        this.player.onGround = true;
+        this.player.jumpCount = 0;
+        this.player.invulnerableTimer = 75; // 스테이지 진입 직후 1.25초간 안전 보호막
+
+        this.obstacles = [];
+        this.collectibles = [];
+        this.particles = [];
+        this.spawnTimer = 40;
+        this.coinSpawnTimer = 30;
+        this.screenShake = 0;
+
+        this.updateHUD();
+        if (window.JumpmanAudio) {
             window.JumpmanAudio.startBgm();
         }
 
@@ -387,9 +428,11 @@ class JumpmanGame {
     update(dt) {
         if (!this.isRunning || this.isPaused) return;
 
-        // 생존 시간 및 거리 누적
+        // 생존 시간 및 거리 누적 (스테이지 및 전체 누적 합산)
         this.survivalTime += dt;
-        this.distance += Math.round(this.gameSpeed * 0.15);
+        const distStep = Math.round(this.gameSpeed * 0.15);
+        this.distance += distStep;
+        this.totalDistance = (this.totalDistance || 0) + distStep;
         this.score += Math.round(this.gameSpeed * 0.4);
 
         // 점진적 속도 증가 (무한 서바이벌 모드)
@@ -655,7 +698,7 @@ class JumpmanGame {
         if (window.showGameOverModal) {
             window.showGameOverModal({
                 score: this.score,
-                distance: this.distance,
+                distance: this.totalDistance || this.distance,
                 survivalTime: Math.floor(this.survivalTime),
                 coins: this.coins,
                 quizzesSolved: this.quizzesSolved,
@@ -674,14 +717,19 @@ class JumpmanGame {
             window.JumpmanAudio.playStageClear();
         }
 
+        // 스테이지 클리어 보너스 점수 즉시 합산
+        const clearBonus = 500 * this.currentStage;
+        this.score += clearBonus;
+
         if (window.showStageClearModal) {
             window.showStageClearModal({
                 stage: this.currentStage,
                 score: this.score,
+                clearBonus: clearBonus,
                 coins: this.coins,
                 quizzesSolved: this.quizzesSolved,
                 survivalTime: Math.floor(this.survivalTime),
-                distance: this.distance
+                distance: this.totalDistance || this.distance
             });
         }
     }
