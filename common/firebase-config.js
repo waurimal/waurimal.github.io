@@ -55,14 +55,14 @@
             appId: "1:401796751337:web:6f3ba64fde25adf1a8f578"
         },
 
-        // [타이핑] 단어 타이핑, 문장 타이핑
+        // [타이핑] 단어 타이핑 (최근 표준 통합 DB eng-activity 4,020+건 누적 성적 연동), 문장 타이핑
         "wordtyping": {
-            apiKey: "AIzaSyCer92ve-QWjTVKaoYbUJaoqqoTJKCz7yI",
-            authDomain: "sentence-typing-race.firebaseapp.com",
-            projectId: "sentence-typing-race",
-            storageBucket: "sentence-typing-race.firebasestorage.app",
-            messagingSenderId: "28750171446",
-            appId: "1:28750171446:web:8686d2c698bd5536cb3797"
+            apiKey: "AIzaSyDHCnRrVE2dVuJpf77P-1oftGpczR5WDd4",
+            authDomain: "eng-activity.firebaseapp.com",
+            projectId: "eng-activity",
+            storageBucket: "eng-activity.firebasestorage.app",
+            messagingSenderId: "528859753713",
+            appId: "1:528859753713:web:a1ed4a054380d181c10d50"
         },
         "sen_typing": {
             apiKey: "AIzaSyCer92ve-QWjTVKaoYbUJaoqqoTJKCz7yI",

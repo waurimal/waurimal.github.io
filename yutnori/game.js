@@ -2152,7 +2152,9 @@
             const isMyTurn = (roomData.currentTurnId === mySessionId);
             const isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
                            (roomData.hostId === mySessionId);
-            const isRemoteAction = Boolean(roomData.lastAction && roomData.lastAction.actorId !== mySessionId);
+            const senderId = roomData.lastAction ? (roomData.lastAction.proxyHostId || roomData.lastAction.hostId || roomData.lastAction.actorId) : null;
+            const isRemoteAction = Boolean(roomData.lastAction && senderId !== mySessionId);
+            const isProxyAction = Boolean(roomData.isHostProxyTurn || (roomData.lastAction && roomData.lastAction.proxyHostId));
 
             // 플레이어 명단 및 UID 실시간 동기화 (재접속/세션 마이그레이션 반영, 관전자 제외)
             if (roomData.players) {
@@ -2195,7 +2197,7 @@
             // 3) 상대방이 액션을 수행했을 때(isRemoteAction)
             // 4) 로컬에서 애니메이션/퀴즈/던지기/말선택 중이 아닐 때
             const isLocalBusy = (this.gameState === 'MOVING' || this.gameState === 'WAIT_QUIZ' || this.gameState === 'ROLLING' || this.gameState === 'WAIT_PIECE_SELECT');
-            const shouldSyncTeams = roomData.teamsState && (!isMyTurn || isInitial || isRemoteAction || !isLocalBusy);
+            const shouldSyncTeams = roomData.teamsState && (!isMyTurn || isInitial || isRemoteAction || isProxyAction || !isLocalBusy);
 
             if (shouldSyncTeams) {
                 if (roomData.teamsState[0] && Array.isArray(roomData.teamsState[0].pieces)) {
@@ -2226,14 +2228,16 @@
                     this.currentRoll = roomData.currentRoll;
                     this.displayRollResult(roomData.currentRoll);
                     this.updateStickVisuals(roomData.sticks || roomData.currentRoll.sticks);
-                    if (canControlTurn && (!isLocalBusy || isInitial)) {
+                    if (canControlTurn && (!isLocalBusy || isInitial) && !roomData.isHostProxyTurn) {
                         this.preparePieceSelection();
                     }
                 } else if (roomData.gameState === 'WAIT_ROLL') {
-                    if (!isLocalBusy || isInitial) {
+                    if (!isLocalBusy || isInitial || isProxyAction) {
                         this.setGameState('WAIT_ROLL');
                         this.currentRoll = null;
                         if (this.dom.resultBadge) this.dom.resultBadge.classList.add('hidden');
+                        if (this.dom.quizModal) this.dom.quizModal.classList.add('hidden');
+                        if (this.dom.feedbackModal) this.dom.feedbackModal.classList.add('hidden');
                         this.clearHighlights();
                     }
                 } else if (roomData.currentRoll) {
@@ -2262,12 +2266,20 @@
         handleRemoteAction(action, roomData) {
             this._lastHandledActionTimestamp = action.timestamp;
             const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
-            const isMe = (action.actorId === mySessionId);
+            const senderId = action.proxyHostId || action.hostId || action.actorId;
+            const isMe = (senderId === mySessionId);
 
             if (isMe) return; // 내가 전송한 액션은 이미 로컬에서 재생 완료
 
-            const actorPlayer = roomData.players ? roomData.players[action.actorId] : null;
-            const actorName = actorPlayer ? actorPlayer.name : (action.playerName || '상대방');
+            // 방장 비상제어/대행 액션 시 학생 기기의 이전 모달 강제 닫기
+            if (action.proxyHostId || action.type === 'HOST_PROXY_ROLL' || action.type === 'HOST_SKIP_TURN') {
+                if (this.dom.quizModal) this.dom.quizModal.classList.add('hidden');
+                if (this.dom.feedbackModal) this.dom.feedbackModal.classList.add('hidden');
+                this.clearHighlights();
+            }
+
+            const actorPlayer = roomData.players ? (roomData.players[action.actorId] || roomData.players[action.studentId]) : null;
+            const actorName = actorPlayer ? actorPlayer.name : (action.playerName || action.studentName || '상대방');
 
             if (action.type === 'PLAYER_REJOIN') {
                 Sound.playStep();
@@ -2407,8 +2419,11 @@
                 const isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
                                (this.currentRoomData && this.currentRoomData.hostId === mySessionId);
 
-                if (isMyTurn || isHost) {
-                    this.preparePieceSelection();
+                // 방장 대행 턴(isHostProxyTurn) 중인 경우 방장이 윷 던지기 직후 자동으로 말을 이동하므로 중복 preparePieceSelection 방지
+                if (!this.currentRoomData || !this.currentRoomData.isHostProxyTurn) {
+                    if (isMyTurn || isHost) {
+                        this.preparePieceSelection();
+                    }
                 }
             }, 700);
         }
@@ -2653,8 +2668,8 @@
             if (!this.isOnline || !isHost) return;
 
             const currentRoomState = (this.currentRoomData && this.currentRoomData.gameState) || this.gameState;
-            if (currentRoomState !== 'WAIT_ROLL') {
-                if (window.showToast) window.showToast("안내", "현재 윷을 던지는 단계가 아닙니다.", "ℹ️");
+            if (currentRoomState !== 'WAIT_ROLL' && currentRoomState !== 'WAIT_PIECE_SELECT') {
+                if (window.showToast) window.showToast("안내", "현재 말 이동이나 윷 던지기를 할 수 있는 단계가 아닙니다.", "ℹ️");
                 return;
             }
 
@@ -2663,7 +2678,20 @@
                 : null;
             const name = currentTurnPlayer ? currentTurnPlayer.name : '해당 학생';
 
-            if (!confirm(`[${name}] 학생 기기 랙 대응:\n방장 선생님이 대신 윷을 던져주시겠습니까?`)) {
+            // 1. 이미 윷이 던져져서 말 선택 대기(WAIT_PIECE_SELECT) 중인 경우: 기존 윷 결과로 최적 말 즉시 자동 이동!
+            if (currentRoomState === 'WAIT_PIECE_SELECT') {
+                const roll = this.currentRoll || (this.currentRoomData && this.currentRoomData.currentRoll);
+                if (roll && roll.result) {
+                    if (!confirm(`[${name}] 학생이 윷(${roll.name})을 던진 후 말이 멈춰있습니다.\n방장 선생님 권한으로 최적의 말을 자동 이동시키시겠습니까?`)) {
+                        return;
+                    }
+                    this.onHostAutoMoveClicked();
+                    return;
+                }
+            }
+
+            // 2. 윷 던지기 대기(WAIT_ROLL) 상태: 방장 대신 던지기 + 최적 말 자동 이동
+            if (!confirm(`[${name}] 학생 기기 랙 대응:\n방장 선생님이 대신 윷을 던지고 말을 이동시키시겠습니까?`)) {
                 return;
             }
 
@@ -2684,14 +2712,53 @@
                 await window.YutnoriMultiplayer.hostForceRoll(rollResult, rollResult.sticks, quizData);
                 this.logMessage(`🚨 [방장 비상제어] [${name}] 학생 대신 윷(${rollResult.name})을 던졌습니다.`);
                 if (window.showToast) {
-                    window.showToast("대신 윷 던지기 완료", `[${name}] 학생 대신 ${rollResult.name}(으)로 윷을 던졌습니다.`, "🎲");
+                    window.showToast("대신 윷 던지기 완료", `[${name}] 학생 대신 ${rollResult.name}(으)로 윷을 던지고 말을 자동 이동합니다.`, "🎲");
                 }
 
-                // 로컬 호스트 화면에서도 말 선택 모드로 즉시 진입 준비
+                // 로컬 호스트 화면 윷 결과 연출
                 this.currentRoll = rollResult;
-                this.displayRollResult(rollResult);
-                this.updateStickVisuals(rollResult.sticks);
-                this.preparePieceSelection();
+                this.pendingExtraTurn = Boolean(rollResult.extraTurn);
+                this.playRemoteRollAnimation(rollResult);
+
+                // 윷 연출 완료 직후(850ms) 최적 말 자동 탐색 및 이동 실행
+                setTimeout(() => {
+                    const turnPlayer = (this.currentRoomData && this.currentRoomData.players) 
+                        ? this.currentRoomData.players[this.currentRoomData.currentTurnId] 
+                        : null;
+                    const targetTeamKey = turnPlayer ? turnPlayer.team : (this.currentRoomData.currentTeam || 'blue');
+                    this.currentTeamIndex = (targetTeamKey === 'white') ? 1 : 0;
+                    const currentTeam = this.getCurrentTeam();
+                    if (!currentTeam || !currentTeam.pieces) return;
+
+                    const movablePieces = currentTeam.pieces.filter(p => {
+                        if (p.isGoal) return false;
+                        const pathInfo = calculateMovePath(p, rollResult.result);
+                        return pathInfo && pathInfo.valid;
+                    });
+
+                    if (movablePieces.length === 0) {
+                        this.logMessage(`⚠️ [${currentTeam.name}] 이동할 수 있는 말이 없습니다. (낙/무효) 턴을 종료합니다.`);
+                        setTimeout(() => this.endTurn(), 800);
+                        return;
+                    }
+
+                    const bestPiece = this.getAIBestPiece(movablePieces) || movablePieces[0];
+                    const movePath = calculateMovePath(bestPiece, rollResult.result);
+                    if (!movePath || !movePath.valid) {
+                        setTimeout(() => this.endTurn(), 800);
+                        return;
+                    }
+
+                    this.movablePieces = movablePieces;
+                    this.selectedPiece = bestPiece;
+                    this.highlightTargetNode(movePath);
+                    this.renderAllPieces();
+                    this.logMessage(`🐎 [방장 대행] 최적의 말(#${bestPiece.id + 1})을 자동 이동합니다.`);
+
+                    setTimeout(() => {
+                        this.executePieceMovement(bestPiece, movePath);
+                    }, 400);
+                }, 850);
             } catch (err) {
                 console.error("onHostForceRollClicked error:", err);
                 alert("대신 윷 던지기 실패: " + err.message);
@@ -2709,36 +2776,40 @@
                            (this.currentRoomData && this.currentRoomData.hostId === mySessionId);
             if (!this.isOnline || !isHost) return;
 
-            if (!this.movablePieces || this.movablePieces.length === 0) {
-                if (this.currentRoll) {
-                    const currentTeam = this.getCurrentTeam();
-                    this.movablePieces = currentTeam.pieces.filter(p => {
-                        if (p.isGoal) return false;
-                        const pathInfo = calculateMovePath(p, this.currentRoll.result);
-                        return pathInfo.valid;
-                    });
-                }
-            }
-
-            if (!this.movablePieces || this.movablePieces.length === 0) {
-                if (window.showToast) window.showToast("안내", "이동할 수 있는 말이 없습니다.", "ℹ️");
+            const roll = this.currentRoll || (this.currentRoomData && this.currentRoomData.currentRoll);
+            if (!roll || !roll.result) {
+                if (window.showToast) window.showToast("안내", "먼저 윷을 던져야 말을 이동할 수 있습니다.", "ℹ️");
                 return;
             }
 
-            const bestPiece = this.getAIBestPiece(this.movablePieces);
-            if (!bestPiece) return;
+            const turnPlayer = (this.currentRoomData && this.currentRoomData.players) 
+                ? this.currentRoomData.players[this.currentRoomData.currentTurnId] 
+                : null;
+            const targetTeamKey = turnPlayer ? turnPlayer.team : (this.currentRoomData.currentTeam || 'blue');
+            this.currentTeamIndex = (targetTeamKey === 'white') ? 1 : 0;
+            const currentTeam = this.getCurrentTeam();
+            if (!currentTeam || !currentTeam.pieces) return;
 
-            const movePath = calculateMovePath(bestPiece, this.currentRoll.result);
+            const movablePieces = currentTeam.pieces.filter(p => {
+                if (p.isGoal) return false;
+                const pathInfo = calculateMovePath(p, roll.result);
+                return pathInfo && pathInfo.valid;
+            });
+
+            if (movablePieces.length === 0) {
+                if (window.showToast) window.showToast("안내", "이동할 수 있는 말이 없습니다.", "ℹ️");
+                setTimeout(() => this.endTurn(), 600);
+                return;
+            }
+
+            const bestPiece = this.getAIBestPiece(movablePieces) || movablePieces[0];
+            const movePath = calculateMovePath(bestPiece, roll.result);
             if (!movePath || !movePath.valid) return;
 
+            this.movablePieces = movablePieces;
             this.selectedPiece = bestPiece;
             this.highlightTargetNode(movePath);
             this.renderAllPieces();
-
-            const currentGrade = (this.currentRoomData && this.currentRoomData.grade) || this.gradeFilter || 'all';
-            const q = (window.YutnoriQuestions && window.YutnoriQuestions.generateQuestion)
-                ? window.YutnoriQuestions.generateQuestion({ grade: currentGrade })
-                : { explanation: '방장 비상 자동 말 이동', answer: '' };
 
             this.logMessage(`🤖 [방장 비상제어] AI가 최적의 말(#${bestPiece.id + 1})을 자동 이동시킵니다.`);
             if (window.showToast) {
@@ -2746,7 +2817,7 @@
             }
 
             setTimeout(() => {
-                this.handleQuizResult(true, q, bestPiece, movePath);
+                this.executePieceMovement(bestPiece, movePath);
             }, 300);
         }
 
@@ -2779,9 +2850,12 @@
 
             if (pieceToMove) {
                 const movePath = calculateMovePath(pieceToMove, roll.result);
-                const q = this.currentQuestion || { explanation: '방장 권한 정답 인정 및 즉시 이동', answer: '' };
-                this.logMessage(`⚡ [방장 권한] 문제를 정답으로 인정하고 말(#${pieceToMove.id + 1})을 이동시킵니다.`);
-                this.handleQuizResult(true, q, pieceToMove, movePath);
+                this.logMessage(`⚡ [방장 권한] 문제를 정답으로 인정하고 말(#${pieceToMove.id + 1})을 즉시 이동시킵니다.`);
+                if (this.isOnline && window.YutnoriMultiplayer) {
+                    window.YutnoriMultiplayer.sendQuizResult(true, '방장 권한 정답 인정 및 즉시 이동', '');
+                }
+                Sound.playCorrect();
+                this.executePieceMovement(pieceToMove, movePath);
             }
         }
 
@@ -3202,13 +3276,21 @@
                 return;
             }
 
+            let isMyTurn = true;
+            let isHost = false;
+
             if (this.isOnline) {
                 const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
-                const isMyTurn = (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId);
-                const isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
-                               (this.currentRoomData && this.currentRoomData.hostId === mySessionId);
+                isMyTurn = (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId);
+                isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
+                         (this.currentRoomData && this.currentRoomData.hostId === mySessionId);
                 if (!isMyTurn && !isHost) {
                     this.logMessage(`⏳ 지금은 내 턴이 아닙니다.`);
+                    return;
+                }
+                // 방장 대행 중인 경우 학생 기기에서는 조작 방지
+                if (this.currentRoomData && this.currentRoomData.isHostProxyTurn && !isHost) {
+                    this.logMessage(`⏳ 방장 선생님이 대신 진행 중입니다.`);
                     return;
                 }
             }
@@ -3259,6 +3341,15 @@
 
             // 선택된 말 비주얼 갱신
             this.renderAllPieces();
+
+            // 방장 대행 턴인 경우: 영어 퀴즈 팝업 없이 즉시 해당 말 이동 실행
+            if (this.isOnline && !isMyTurn && isHost) {
+                this.logMessage(`🚨 [방장 대행] 말(#${piece.id + 1})을 직접 선택하여 즉시 이동합니다.`);
+                setTimeout(() => {
+                    this.executePieceMovement(piece, movePathResult);
+                }, 250);
+                return;
+            }
 
             // 영어 퀴즈 팝업 출제!
             setTimeout(() => {

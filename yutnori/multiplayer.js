@@ -848,7 +848,7 @@ class YutnoriMultiplayerManager {
                     isHostProxyTurn: false,
                     lastAction: {
                         type: 'GAME_OVER',
-                        actorId: this.roomData.currentTurnId,
+                        actorId: (!isTurnPlayer && isHost) ? this.mySessionId : this.roomData.currentTurnId,
                         winnerTeam: winnerTeam,
                         proxyHostId: (!isTurnPlayer && isHost) ? this.mySessionId : null,
                         timestamp: Date.now()
@@ -914,7 +914,7 @@ class YutnoriMultiplayerManager {
                     isHostProxyTurn: false,
                     lastAction: {
                         type: caughtEnemy ? 'CAUGHT_PIECE' : 'EXTRA_TURN',
-                        actorId: this.roomData.currentTurnId,
+                        actorId: (!isTurnPlayer && isHost) ? this.mySessionId : this.roomData.currentTurnId,
                         playerName: actorName,
                         nextTurnPlayerId: nextTurnId,
                         nextTurnPlayerName: nextPlayerName,
@@ -938,7 +938,7 @@ class YutnoriMultiplayerManager {
                     ...nextTurnInfo,
                     lastAction: {
                         type: 'END_TURN',
-                        actorId: this.roomData.currentTurnId,
+                        actorId: (!isTurnPlayer && isHost) ? this.mySessionId : this.roomData.currentTurnId,
                         playerName: actorName,
                         proxyHostId: (!isTurnPlayer && isHost) ? this.mySessionId : null,
                         timestamp: Date.now()
@@ -976,8 +976,9 @@ class YutnoriMultiplayerManager {
                 isHostProxyTurn: true,
                 lastAction: {
                     type: 'HOST_PROXY_ROLL',
-                    actorId: this.roomData.currentTurnId,
+                    actorId: this.mySessionId,
                     hostId: this.mySessionId,
+                    studentId: this.roomData.currentTurnId,
                     studentName: currentStudentName,
                     rollResult: rollResult,
                     timestamp: Date.now()
