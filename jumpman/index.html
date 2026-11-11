@@ -32,8 +32,8 @@
     <header class="game-header sticky top-0 z-40 px-3 py-2.5 flex flex-wrap items-center justify-between gap-2 border-b border-blue-500/30">
         <!-- 좌측: 홈 링크 & 로고 & 상태 뱃지 -->
         <div class="flex items-center gap-3">
-            <button type="button" id="btnHome" class="px-3 py-1.5 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-500/40 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shadow">
-                <i class="fa-solid fa-house"></i> 홈
+            <button type="button" id="btnHome" class="px-3 py-1.5 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-500/40 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shadow" title="게임 초기 화면으로 이동">
+                <i class="fa-solid fa-house"></i> 게임 홈
             </button>
             <div class="flex items-center gap-2">
                 <span class="text-2xl">🏃</span>
@@ -244,14 +244,17 @@
                 </div>
             </div>
 
-            <div class="flex flex-col sm:flex-row gap-2.5">
-                <button type="button" id="btnRetryGame" class="flex-1 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs transition cursor-pointer shadow">
-                    <i class="fa-solid fa-rotate-right mr-1"></i> 다시 도전하기
+            <div class="flex flex-col sm:flex-row gap-2.5 mb-2.5">
+                <button type="button" id="btnRetryGame" class="flex-1 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs transition cursor-pointer shadow flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-rotate-right"></i> 바로 다시 시작
                 </button>
-                <button type="button" id="btnHofFromGameOver" class="flex-1 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-bold text-xs transition cursor-pointer">
-                    <i class="fa-solid fa-trophy mr-1"></i> 명예의 전당
+                <button type="button" id="btnHomeFromGameOver" class="flex-1 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 font-bold text-xs transition cursor-pointer shadow flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-house text-amber-400"></i> 초기 화면으로
                 </button>
             </div>
+            <button type="button" id="btnHofFromGameOver" class="w-full py-2.5 px-4 rounded-xl bg-slate-950 hover:bg-slate-800 text-amber-300 border border-amber-500/30 font-bold text-xs transition cursor-pointer">
+                <i class="fa-solid fa-trophy mr-1"></i> 명예의 전당 보기
+            </button>
         </div>
     </div>
 
@@ -270,8 +273,8 @@
                 <button type="button" id="btnNextStage" class="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition cursor-pointer shadow">
                     다음 스테이지 도전 ➡️
                 </button>
-                <button type="button" id="btnMenuFromClear" class="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition cursor-pointer">
-                    메뉴로
+                <button type="button" id="btnMenuFromClear" class="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition cursor-pointer flex items-center gap-1.5">
+                    <i class="fa-solid fa-house text-amber-400"></i> 초기 화면으로
                 </button>
             </div>
         </div>
@@ -426,8 +429,16 @@
     </div>
 
     <!-- 하단 푸터 바 -->
-    <footer class="py-2 px-4 text-center text-[11px] text-slate-400 border-t border-slate-800/80">
-        와우리말 에듀테크 영어 놀이터 · 2026 Jumpman English Adventure
+    <footer class="py-2.5 px-4 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 border-t border-slate-800/80 bg-slate-950/80">
+        <div class="flex items-center gap-2">
+            <button type="button" id="btnBottomHome" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow" title="게임 초기 화면으로 이동">
+                <i class="fa-solid fa-house text-amber-400"></i> 홈 (게임 초기 화면)
+            </button>
+            <button type="button" id="btnPortalExit" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 text-xs font-medium transition flex items-center gap-1 cursor-pointer" title="와우리말 포털 메인으로 이동">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> 와우리말 포털
+            </button>
+        </div>
+        <span class="text-[11px] text-slate-400">와우리말 에듀테크 영어 놀이터 · 2026 Jumpman English Adventure</span>
     </footer>
 
     <!-- 게임 스크립트 연결 -->
@@ -451,8 +462,50 @@
             };
             updateStartProfileDisplay();
 
-            // 홈 버튼 클릭
-            document.getElementById('btnHome').addEventListener('click', () => {
+            // 게임 초기 화면(홈)으로 복귀하는 공통 함수
+            function returnToGameHome(requireConfirm = false) {
+                if (requireConfirm && game.isRunning && !game.isPaused) {
+                    if (!confirm("진행 중인 게임을 중단하고 게임 초기 화면으로 이동하시겠습니까?")) {
+                        return;
+                    }
+                }
+                game.isRunning = false;
+                game.isPaused = true;
+                if (window.JumpmanAudio) {
+                    window.JumpmanAudio.stopBgm();
+                }
+
+                // 열려있는 모든 모달 닫기
+                const modalIds = ['reviveModal', 'gameOverModal', 'stageClearModal', 'hofModal', 'guideModal', 'profileModal'];
+                modalIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.classList.add('hidden');
+                });
+
+                // 게임 캔버스 기본 위치로 재설정
+                game.player.x = 160;
+                game.player.y = game.FLOOR_Y - game.player.height;
+                game.player.vx = 0;
+                game.player.vy = 0;
+                game.player.onGround = true;
+                game.player.invulnerableTimer = 0;
+                game.obstacles = [];
+                game.collectibles = [];
+                game.particles = [];
+                game.render();
+
+                // 초기 대기 오버레이 표시
+                const overlay = document.getElementById('startOverlay');
+                if (overlay) overlay.classList.remove('hidden');
+                updateStartProfileDisplay();
+            }
+
+            // 상단 및 하단 홈 버튼 -> 게임 초기 화면으로 이동
+            document.getElementById('btnHome').addEventListener('click', () => returnToGameHome(true));
+            document.getElementById('btnBottomHome').addEventListener('click', () => returnToGameHome(true));
+
+            // 외부 와우리말 포털 링크
+            document.getElementById('btnPortalExit').addEventListener('click', () => {
                 if (window.location.protocol === 'file:') {
                     window.location.href = '../waurimal.github.io/index.html';
                 } else {
@@ -687,6 +740,11 @@
                 game.startNewGame(game.gameMode, game.currentStage);
             });
 
+            document.getElementById('btnHomeFromGameOver').addEventListener('click', () => {
+                gameOverModal.classList.add('hidden');
+                returnToGameHome(false);
+            });
+
             document.getElementById('btnHofFromGameOver').addEventListener('click', () => {
                 gameOverModal.classList.add('hidden');
                 renderHof();
@@ -709,7 +767,7 @@
 
             document.getElementById('btnMenuFromClear').addEventListener('click', () => {
                 stageClearModal.classList.add('hidden');
-                document.getElementById('startOverlay').classList.remove('hidden');
+                returnToGameHome(false);
             });
         });
     </script>
