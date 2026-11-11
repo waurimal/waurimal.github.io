@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>점프맨 영어 어드벤처: 런 & 점프 (Jumpman) - 와우리말 영어 놀이터</title>
+
+    <!-- Pretendard 최신 웹폰트 및 FontAwesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 와우리말 공통 에코시스템 -->
+    <link rel="stylesheet" href="../common/waurimal-theme.css">
+    <script src="../common/firebase-config.js"></script>
+    <script src="../common/curriculum.js"></script>
+    <script src="../common/waurimal-nav.js"></script>
+
+    <!-- Firebase SDK (v10 compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
+    <link rel="stylesheet" href="css/game.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏃</text></svg>">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between">
+
+    <!-- 1. 상단 HUD 헤더 -->
+    <header class="game-header sticky top-0 z-40 px-3 py-2.5 flex flex-wrap items-center justify-between gap-2 border-b border-blue-500/30">
+        <!-- 좌측: 홈 링크 & 로고 & 상태 뱃지 -->
+        <div class="flex items-center gap-3">
+            <button type="button" id="btnHome" class="px-3 py-1.5 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-500/40 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shadow">
+                <i class="fa-solid fa-house"></i> 홈
+            </button>
+            <div class="flex items-center gap-2">
+                <span class="text-2xl">🏃</span>
+                <span class="font-black text-base md:text-lg tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-400">
+                    JUMPMAN
+                </span>
+                <span id="hudStageBadge" class="px-2.5 py-0.5 rounded-full text-xs font-black bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                    무한 서바이벌
+                </span>
+            </div>
+        </div>
+
+        <!-- 중앙: 찬스, 거리, 시간, 코인, 점수 HUD -->
+        <div class="flex items-center gap-2 sm:gap-4 bg-slate-900/90 px-3 py-1.5 rounded-xl border border-slate-700/80 shadow-inner">
+            <!-- 3회 찬스 하트 표시 -->
+            <div class="flex items-center gap-1.5" title="남은 부활 찬스 (부딪혔을 때 영어 퀴즈를 풀면 부활!)">
+                <span class="text-xs text-rose-400 font-bold hidden sm:inline">찬스:</span>
+                <span id="hudChances" class="text-sm font-black text-rose-500 tracking-wider">❤️ ❤️ ❤️</span>
+            </div>
+            <div class="h-4 w-px bg-slate-700"></div>
+
+            <!-- 거리 -->
+            <div class="flex items-center gap-1" title="진행 거리">
+                <i class="fa-solid fa-flag text-amber-400 text-xs"></i>
+                <span id="hudDistance" class="font-bold text-xs sm:text-sm text-slate-200">0m</span>
+            </div>
+            <div class="h-4 w-px bg-slate-700"></div>
+
+            <!-- 생존 시간 -->
+            <div class="flex items-center gap-1" title="생존 시간">
+                <i class="fa-solid fa-stopwatch text-sky-400 text-xs"></i>
+                <span id="hudTime" class="font-bold text-xs sm:text-sm text-slate-200">0:00</span>
+            </div>
+            <div class="h-4 w-px bg-slate-700"></div>
+
+            <!-- 코인 -->
+            <div class="flex items-center gap-1" title="수집한 코인">
+                <span class="text-xs">🪙</span>
+                <span id="hudCoins" class="font-bold text-xs sm:text-sm text-amber-300">0</span>
+            </div>
+            <div class="h-4 w-px bg-slate-700"></div>
+
+            <!-- 점수 -->
+            <div class="flex items-center gap-1" title="현재 점수">
+                <i class="fa-solid fa-star text-yellow-400 text-xs"></i>
+                <span id="hudScore" class="font-black text-xs sm:text-sm text-yellow-300">0</span>
+            </div>
+        </div>
+
+        <!-- 우측: 제어 및 설정 버튼 -->
+        <div class="flex items-center gap-1.5 sm:gap-2">
+            <!-- 학년 필터 드롭다운 -->
+            <select id="selectGrade" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs font-bold text-blue-200 focus:outline-none focus:border-blue-500 cursor-pointer" title="부활 퀴즈 학년 선택">
+                <option value="all" selected>전체 학년</option>
+                <option value="3">3학년</option>
+                <option value="4">4학년</option>
+                <option value="5">5학년</option>
+                <option value="6">6학년</option>
+            </select>
+
+            <button type="button" id="btnHof" class="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition flex items-center gap-1 cursor-pointer" title="명예의 전당">
+                <i class="fa-solid fa-trophy text-amber-400"></i> <span class="hidden md:inline">명예의 전당</span>
+            </button>
+            <button type="button" id="btnGuide" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold transition flex items-center gap-1 cursor-pointer" title="게임 방법">
+                <i class="fa-solid fa-circle-question"></i> <span class="hidden md:inline">도움말</span>
+            </button>
+            <button type="button" id="btnAudioToggle" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold transition flex items-center gap-1 cursor-pointer" title="소리 켜기/끄기">
+                <i class="fa-solid fa-volume-high text-sky-400"></i>
+            </button>
+            <button type="button" id="btnFullscreen" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold transition cursor-pointer" title="전체화면">
+                <i class="fa-solid fa-expand"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- 2. 게임 메인 뷰 (캔버스 및 스타트 오버레이) -->
+    <main class="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 relative">
+        <div class="canvas-container relative">
+            <canvas id="gameCanvas" width="960" height="540"></canvas>
+
+            <!-- 시작 대기 화면 (Start Screen Overlay) -->
+            <div id="startOverlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-10">
+                <div class="text-5xl sm:text-6xl mb-2 animate-bounce">🏃💨</div>
+                <h1 class="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-400 mb-2">
+                    점프맨 영어 어드벤처
+                </h1>
+                <p class="text-slate-400 text-xs sm:text-sm max-w-md mb-6 leading-relaxed">
+                    날아오는 공, 가시, 몬스터 등의 장애물을 피해 점프하세요!<br>
+                    부딪혀도 <span class="text-rose-400 font-bold">3번의 찬스</span>가 주어지며, <span class="text-sky-300 font-bold">영어 퀴즈</span>를 맞히면 즉시 부활합니다!
+                </p>
+
+                <!-- 조작 안내 카드 -->
+                <div class="grid grid-cols-2 gap-3 max-w-sm w-full mb-6 text-xs text-slate-300">
+                    <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-2.5">
+                        <span class="text-lg">⌨️</span>
+                        <div class="text-left">
+                            <span class="text-slate-400 block text-[10px]">좌우 이동</span>
+                            <span class="font-black text-sky-300">A / D 또는 ← / →</span>
+                        </div>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-2.5">
+                        <span class="text-lg">🖱️</span>
+                        <div class="text-left">
+                            <span class="text-slate-400 block text-[10px]">점프 (2단 점프 가능)</span>
+                            <span class="font-black text-rose-300">Space 또는 마우스 클릭</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 플레이어 프로필 배지 -->
+                <div class="flex items-center gap-2.5 mb-6 bg-slate-900/90 px-4 py-2 rounded-xl border border-slate-800">
+                    <i class="fa-solid fa-user-graduate text-blue-400"></i>
+                    <span id="startProfileText" class="text-xs font-bold text-slate-200">6학년 1반 1번 학생</span>
+                    <button type="button" id="btnEditProfile" class="text-[11px] text-blue-400 hover:text-blue-300 underline font-semibold ml-2 cursor-pointer">변경</button>
+                </div>
+
+                <!-- 모드 선택 및 시작 버튼 -->
+                <div class="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+                    <button type="button" id="btnStartEndless" class="flex-1 py-3.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-sm transition transform hover:-translate-y-0.5 shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-play"></i> 무한 서바이벌 시작
+                    </button>
+                    <button type="button" id="btnStartStage" class="flex-1 py-3.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-map"></i> 스테이지 모드 (1~10)
+                    </button>
+                </div>
+            </div>
+
+            <!-- 모바일/터치용 가상 조작 버튼 -->
+            <div class="touch-controls">
+                <div class="flex gap-3">
+                    <button type="button" id="touchBtnLeft" class="touch-btn" aria-label="왼쪽 이동">◀</button>
+                    <button type="button" id="touchBtnRight" class="touch-btn" aria-label="오른쪽 이동">▶</button>
+                </div>
+                <div>
+                    <button type="button" id="touchBtnJump" class="touch-btn touch-btn-jump font-black" aria-label="점프">▲</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 3. 모달: 부활 영어 퀴즈 찬스 (핵심 기능!) -->
+    <div id="reviveModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="revive-modal-box max-w-md w-full bg-slate-900 border-2 border-rose-500/80 rounded-2xl p-6 shadow-2xl relative">
+            <!-- 상단 경고 & 찬스 안내 -->
+            <div class="text-center mb-5">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 text-xs font-black mb-2 animate-pulse">
+                    🚨 장애물 충돌! 부활 찬스!
+                </div>
+                <h2 class="text-xl font-black text-white flex items-center justify-center gap-2">
+                    영어 퀴즈 맞히고 살아나기!
+                </h2>
+                <!-- 남은 찬스 하트 카운터 -->
+                <div class="mt-2 text-sm text-slate-300">
+                    남은 부활 찬스: <span id="reviveHeartCounter" class="text-rose-500 font-black tracking-wider text-base">❤️ ❤️ ❤️</span>
+                </div>
+                <p class="text-xs text-sky-300 mt-1">
+                    정답을 맞히면 <span class="font-bold underline">2.8초간 무적 보호막</span>을 얻고 즉시 부활합니다!
+                </p>
+            </div>
+
+            <!-- 퀴즈 문제 영역 -->
+            <div class="bg-slate-950/90 rounded-xl p-4 border border-slate-800 mb-5 text-center">
+                <span id="revivePrompt" class="text-xs text-slate-400 block mb-1.5">다음 영어 단어의 알맞은 뜻을 고르세요!</span>
+                <div class="flex items-center justify-center gap-2">
+                    <span id="reviveQuestionText" class="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-yellow-400">
+                        curious
+                    </span>
+                    <button type="button" id="reviveTtsBtn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-sky-400 flex items-center justify-center transition cursor-pointer" title="발음 듣기">
+                        <i class="fa-solid fa-volume-high text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4지 선다 선택지 그리드 -->
+            <div id="reviveChoicesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3">
+                <!-- 동적으로 4개 버튼 삽입 -->
+            </div>
+
+            <!-- 결과 피드백 토스트 -->
+            <div id="reviveFeedback" class="text-center font-bold text-xs py-1.5 hidden rounded-lg"></div>
+        </div>
+    </div>
+
+    <!-- 4. 모달: 게임 오버 (최종 성적 및 재도전) -->
+    <div id="gameOverModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="max-w-md w-full bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl text-center">
+            <div class="text-4xl mb-2">💥</div>
+            <h2 class="text-2xl font-black text-rose-400 mb-1">GAME OVER</h2>
+            <p id="gameOverReason" class="text-xs text-slate-400 mb-4">장애물에 부딪혀 기회가 모두 소진되었습니다.</p>
+
+            <!-- 최종 성적 스탯 카드 -->
+            <div class="grid grid-cols-2 gap-2.5 bg-slate-950/80 p-4 rounded-xl border border-slate-800 mb-5 text-left text-xs">
+                <div>
+                    <span class="text-slate-400 block">최종 점수:</span>
+                    <span id="finalScore" class="text-lg font-black text-yellow-300">0</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block">달린 거리:</span>
+                    <span id="finalDistance" class="text-lg font-black text-slate-200">0m</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block">생존 시간:</span>
+                    <span id="finalTime" class="text-sm font-bold text-sky-300">0초</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block">부활 퀴즈 해결:</span>
+                    <span id="finalQuizzes" class="text-sm font-bold text-emerald-400">0회</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-2.5">
+                <button type="button" id="btnRetryGame" class="flex-1 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs transition cursor-pointer shadow">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> 다시 도전하기
+                </button>
+                <button type="button" id="btnHofFromGameOver" class="flex-1 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-bold text-xs transition cursor-pointer">
+                    <i class="fa-solid fa-trophy mr-1"></i> 명예의 전당
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. 모달: 스테이지 클리어 -->
+    <div id="stageClearModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="max-w-md w-full bg-slate-900 border-2 border-emerald-500/80 rounded-2xl p-6 shadow-2xl text-center">
+            <div class="text-4xl mb-2">🎉</div>
+            <h2 id="stageClearTitle" class="text-2xl font-black text-emerald-400 mb-1">STAGE 1 CLEAR!</h2>
+            <p class="text-xs text-slate-300 mb-4">목적지까지 무사히 도착했습니다! 훌륭합니다!</p>
+
+            <div class="flex justify-center gap-2 text-2xl text-amber-400 mb-5">
+                ★ ★ ★
+            </div>
+
+            <div class="flex gap-2.5">
+                <button type="button" id="btnNextStage" class="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition cursor-pointer shadow">
+                    다음 스테이지 도전 ➡️
+                </button>
+                <button type="button" id="btnMenuFromClear" class="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition cursor-pointer">
+                    메뉴로
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. 모달: 학생 프로필 설정 -->
+    <div id="profileModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="max-w-sm w-full bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl">
+            <h3 class="text-base font-black text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-id-card text-blue-400"></i> 학생 정보 설정
+            </h3>
+            <div class="space-y-3 text-xs mb-5">
+                <div>
+                    <label class="text-slate-400 block mb-1">학년</label>
+                    <select id="profileGrade" class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white font-bold">
+                        <option value="3">3학년</option>
+                        <option value="4">4학년</option>
+                        <option value="5">5학년</option>
+                        <option value="6" selected>6학년</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-slate-400 block mb-1">반</label>
+                        <input type="number" id="profileClass" min="1" max="20" value="1" class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white font-bold">
+                    </div>
+                    <div>
+                        <label class="text-slate-400 block mb-1">번호</label>
+                        <input type="number" id="profileNum" min="1" max="40" value="1" class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white font-bold">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-slate-400 block mb-1">이름 (실명 또는 닉네임)</label>
+                    <input type="text" id="profileName" placeholder="예: 홍길동" maxlength="10" class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white font-bold">
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button type="button" id="btnSaveProfile" class="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition cursor-pointer">
+                    저장 완료
+                </button>
+                <button type="button" id="btnCloseProfile" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition cursor-pointer">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. 모달: 명예의 전당 -->
+    <div id="hofModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="max-w-2xl w-full bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl flex flex-col max-h-[85vh]">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                <h3 class="text-base font-black text-amber-300 flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-amber-400"></i> 점프맨 명예의 전당 (Top 30)
+                </h3>
+                <button type="button" id="btnCloseHof" class="text-slate-400 hover:text-white text-sm cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- 필터 옵션 바 -->
+            <div class="flex flex-wrap items-center gap-2 mb-3 text-xs">
+                <select id="hofFilterPeriod" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200">
+                    <option value="all">전체 기간</option>
+                    <option value="month">이번 달</option>
+                    <option value="week">이번 주</option>
+                </select>
+                <select id="hofFilterGrade" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200">
+                    <option value="all">전체 학년</option>
+                    <option value="3">3학년</option>
+                    <option value="4">4학년</option>
+                    <option value="5">5학년</option>
+                    <option value="6">6학년</option>
+                </select>
+                <input type="text" id="hofSearchInput" placeholder="학생 이름 검색..." class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 placeholder-slate-500 flex-1">
+            </div>
+
+            <!-- 순위 리스트 -->
+            <div class="flex-1 overflow-y-auto pr-1">
+                <table class="hof-table text-xs text-left">
+                    <thead>
+                        <tr class="text-slate-400 border-b border-slate-800">
+                            <th class="py-2 px-2 text-center w-12">순위</th>
+                            <th class="py-2 px-2">학생</th>
+                            <th class="py-2 px-2 text-right">점수</th>
+                            <th class="py-2 px-2 text-right">거리</th>
+                            <th class="py-2 px-2 text-right">생존</th>
+                            <th class="py-2 px-2 text-right">퀴즈</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hofTableBody">
+                        <!-- 동적으로 렌더링 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 8. 모달: 게임 도움말 -->
+    <div id="guideModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="max-w-md w-full bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                <h3 class="text-base font-black text-white flex items-center gap-2">
+                    <i class="fa-solid fa-circle-question text-sky-400"></i> 점프맨 게임 방법
+                </h3>
+                <button type="button" id="btnCloseGuide" class="text-slate-400 hover:text-white text-sm cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-3 text-xs text-slate-300 leading-relaxed max-h-[60vh] overflow-y-auto pr-1">
+                <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                    <span class="font-bold text-sky-300 block mb-1">🎮 기본 조작</span>
+                    <ul class="list-disc pl-4 space-y-0.5 text-slate-400">
+                        <li>좌우 이동: <strong class="text-white">A / D 키</strong> 또는 <strong class="text-white">← / →</strong></li>
+                        <li>점프: <strong class="text-white">Space</strong> 또는 <strong class="text-white">마우스 좌클릭</strong></li>
+                        <li>공중에서 한 번 더 점프하면 <strong class="text-yellow-300">2단 점프</strong>가 발동합니다!</li>
+                    </ul>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                    <span class="font-bold text-rose-300 block mb-1">🚨 부활 찬스 3회 (핵심 룰)</span>
+                    <p class="text-slate-400">
+                        장애물에 부딪히면 멈추며 <strong class="text-rose-400">3번의 부활 찬스</strong>가 제공됩니다.<br>
+                        영어 퀴즈를 맞히면 <strong class="text-sky-300">2.8초간 무적 보호막</strong>과 함께 즉시 살아납니다!
+                    </p>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                    <span class="font-bold text-amber-300 block mb-1">⚠️ 주의해야 할 장애물</span>
+                    <ul class="list-disc pl-4 space-y-0.5 text-slate-400">
+                        <li>굴러오는 공 / 바위: 굴러오거나 통통 튀어옵니다.</li>
+                        <li>바닥 가시: 날카로운 삼각 가시를 점프로 뛰어넘으세요.</li>
+                        <li>날아오는 박쥐/몬스터: 머리 위나 몸통 높이로 비행합니다.</li>
+                        <li>위에서 떨어지는 낙석: 가까이 다가가면 떨어집니다.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 하단 푸터 바 -->
+    <footer class="py-2 px-4 text-center text-[11px] text-slate-400 border-t border-slate-800/80">
+        와우리말 에듀테크 영어 놀이터 · 2026 Jumpman English Adventure
+    </footer>
+
+    <!-- 게임 스크립트 연결 -->
+    <script src="js/audio.js"></script>
+    <script src="js/quiz.js"></script>
+    <script src="js/hof.js"></script>
+    <script src="js/game.js"></script>
+
+    <!-- 인터랙션 바인딩 스크립트 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const game = new JumpmanGame();
+            window.activeGame = game;
+
+            // 프로필 로드
+            const profile = window.JumpmanHOF.getProfile();
+            const updateStartProfileDisplay = () => {
+                const text = `${profile.grade}학년 ${profile.classNum}반 ${profile.studentNum}번 ${profile.name || '학생'}`;
+                const el = document.getElementById('startProfileText');
+                if (el) el.textContent = text;
+            };
+            updateStartProfileDisplay();
+
+            // 홈 버튼 클릭
+            document.getElementById('btnHome').addEventListener('click', () => {
+                if (window.location.protocol === 'file:') {
+                    window.location.href = '../waurimal.github.io/index.html';
+                } else {
+                    window.location.href = 'https://waurimal.github.io/';
+                }
+            });
+
+            // 게임 시작 (무한 서바이벌 모드)
+            document.getElementById('btnStartEndless').addEventListener('click', () => {
+                document.getElementById('startOverlay').classList.add('hidden');
+                game.startNewGame('endless', 1);
+            });
+
+            // 게임 시작 (스테이지 모드)
+            document.getElementById('btnStartStage').addEventListener('click', () => {
+                document.getElementById('startOverlay').classList.add('hidden');
+                game.startNewGame('stage', 1);
+            });
+
+            // 소리 토글 버튼
+            const btnAudio = document.getElementById('btnAudioToggle');
+            btnAudio.addEventListener('click', () => {
+                const muted = window.JumpmanAudio.toggleMute();
+                btnAudio.innerHTML = muted 
+                    ? '<i class="fa-solid fa-volume-xmark text-rose-400"></i>' 
+                    : '<i class="fa-solid fa-volume-high text-sky-400"></i>';
+            });
+
+            // 전체화면 토글
+            document.getElementById('btnFullscreen').addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                } else {
+                    document.exitFullscreen().catch(() => {});
+                }
+            });
+
+            // 학년 필터 변경
+            const selectGrade = document.getElementById('selectGrade');
+            selectGrade.addEventListener('change', (e) => {
+                window.JumpmanQuiz.setGrade(e.target.value);
+            });
+
+            // 도움말 모달
+            const guideModal = document.getElementById('guideModal');
+            document.getElementById('btnGuide').addEventListener('click', () => guideModal.classList.remove('hidden'));
+            document.getElementById('btnCloseGuide').addEventListener('click', () => guideModal.classList.add('hidden'));
+
+            // 프로필 설정 모달
+            const profileModal = document.getElementById('profileModal');
+            document.getElementById('btnEditProfile').addEventListener('click', () => {
+                document.getElementById('profileGrade').value = profile.grade || 6;
+                document.getElementById('profileClass').value = profile.classNum || 1;
+                document.getElementById('profileNum').value = profile.studentNum || 1;
+                document.getElementById('profileName').value = profile.name || '';
+                profileModal.classList.remove('hidden');
+            });
+            document.getElementById('btnCloseProfile').addEventListener('click', () => profileModal.classList.add('hidden'));
+            document.getElementById('btnSaveProfile').addEventListener('click', () => {
+                profile.grade = Number(document.getElementById('profileGrade').value) || 6;
+                profile.classNum = Number(document.getElementById('profileClass').value) || 1;
+                profile.studentNum = Number(document.getElementById('profileNum').value) || 1;
+                profile.name = document.getElementById('profileName').value.trim() || '학생';
+                window.JumpmanHOF.saveProfile(profile);
+                updateStartProfileDisplay();
+                profileModal.classList.add('hidden');
+            });
+
+            // 명예의 전당 모달
+            const hofModal = document.getElementById('hofModal');
+            const renderHof = () => {
+                const period = document.getElementById('hofFilterPeriod').value;
+                const grade = document.getElementById('hofFilterGrade').value;
+                const keyword = document.getElementById('hofSearchInput').value;
+                const records = window.JumpmanHOF.getFilteredRecords({ period, grade, keyword });
+                const tbody = document.getElementById('hofTableBody');
+                tbody.innerHTML = '';
+
+                if (records.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-slate-500">기록이 없습니다.</td></tr>';
+                    return;
+                }
+
+                records.slice(0, 30).forEach((r, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hof-row';
+                    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}`;
+                    tr.innerHTML = `
+                        <td class="py-2.5 px-2 text-center font-bold ${idx < 3 ? 'text-amber-300' : 'text-slate-400'}">${medal}</td>
+                        <td class="py-2.5 px-2 font-bold text-white">${r.grade}학년 ${r.classNum}반 ${r.name}</td>
+                        <td class="py-2.5 px-2 text-right font-black text-yellow-300">${(r.score || 0).toLocaleString()}</td>
+                        <td class="py-2.5 px-2 text-right text-slate-300">${r.distance || 0}m</td>
+                        <td class="py-2.5 px-2 text-right text-sky-300">${r.survivalTime || 0}s</td>
+                        <td class="py-2.5 px-2 text-right text-emerald-400">${r.quizzesSolved || 0}회</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            };
+
+            document.getElementById('btnHof').addEventListener('click', () => {
+                renderHof();
+                hofModal.classList.remove('hidden');
+            });
+            document.getElementById('btnCloseHof').addEventListener('click', () => hofModal.classList.add('hidden'));
+            document.getElementById('hofFilterPeriod').addEventListener('change', renderHof);
+            document.getElementById('hofFilterGrade').addEventListener('change', renderHof);
+            document.getElementById('hofSearchInput').addEventListener('input', renderHof);
+
+            // ==========================================
+            // 핵심: 부활 찬스 퀴즈 모달 핸들러
+            // ==========================================
+            const reviveModal = document.getElementById('reviveModal');
+            let currentReviveCallback = null;
+
+            window.openReviveModal = (remainingChances, callback) => {
+                currentReviveCallback = callback;
+
+                // 찬스 하트 카운터 표시
+                let hearts = '';
+                for (let i = 0; i < remainingChances; i++) hearts += '❤️ ';
+                document.getElementById('reviveHeartCounter').innerHTML = hearts.trim();
+
+                // 퀴즈 문제 생성
+                const q = window.JumpmanQuiz.generateQuestion();
+                document.getElementById('revivePrompt').textContent = q.prompt;
+                document.getElementById('reviveQuestionText').textContent = q.questionText;
+
+                // TTS 버튼 바인딩
+                const ttsBtn = document.getElementById('reviveTtsBtn');
+                ttsBtn.onclick = () => {
+                    if (window.JumpmanAudio && q.ttsText) {
+                        window.JumpmanAudio.speak(q.ttsText);
+                    }
+                };
+                // 문제 출제 시 자동으로 1회 발음 읽어줌
+                if (window.JumpmanAudio && q.ttsText) {
+                    window.JumpmanAudio.speak(q.ttsText);
+                }
+
+                // 4지 선다 선택지 버튼 렌더링
+                const grid = document.getElementById('reviveChoicesGrid');
+                grid.innerHTML = '';
+                const feedbackEl = document.getElementById('reviveFeedback');
+                feedbackEl.classList.add('hidden');
+
+                q.choices.forEach(choice => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'quiz-choice-btn py-3 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-100 font-bold text-xs sm:text-sm text-center cursor-pointer';
+                    btn.textContent = choice.text;
+
+                    btn.addEventListener('click', () => {
+                        // 모든 버튼 비활성화
+                        Array.from(grid.children).forEach(b => b.disabled = true);
+
+                        if (choice.isCorrect) {
+                            btn.classList.remove('bg-slate-800', 'border-slate-700');
+                            btn.classList.add('bg-emerald-600', 'border-emerald-400', 'text-white');
+                            feedbackEl.className = 'text-center font-bold text-xs py-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 rounded-lg block mt-2';
+                            feedbackEl.innerHTML = '🎉 딩동댕! 정답입니다! 2.8초간 무적 상태로 부활합니다!';
+
+                            setTimeout(() => {
+                                reviveModal.classList.add('hidden');
+                                if (currentReviveCallback) currentReviveCallback(true);
+                            }, 750);
+                        } else {
+                            btn.classList.remove('bg-slate-800', 'border-slate-700');
+                            btn.classList.add('bg-rose-600', 'border-rose-400', 'text-white');
+                            feedbackEl.className = 'text-center font-bold text-xs py-2 bg-rose-500/20 text-rose-300 border border-rose-500/40 rounded-lg block mt-2';
+                            feedbackEl.innerHTML = `❌ 아쉽습니다! 정답은 [${q.answer}] 입니다.`;
+
+                            setTimeout(() => {
+                                reviveModal.classList.add('hidden');
+                                if (currentReviveCallback) currentReviveCallback(false);
+                            }, 1400);
+                        }
+                    });
+
+                    grid.appendChild(btn);
+                });
+
+                reviveModal.classList.remove('hidden');
+            };
+
+            // ==========================================
+            // 게임 오버 모달 핸들러
+            // ==========================================
+            const gameOverModal = document.getElementById('gameOverModal');
+            window.showGameOverModal = (data) => {
+                document.getElementById('finalScore').textContent = (data.score || 0).toLocaleString();
+                document.getElementById('finalDistance').textContent = `${data.distance || 0}m`;
+                document.getElementById('finalTime').textContent = `${data.survivalTime || 0}초`;
+                document.getElementById('finalQuizzes').textContent = `${data.quizzesSolved || 0}회`;
+
+                const reasonEl = document.getElementById('gameOverReason');
+                if (data.reason === '부활 퀴즈 오답') {
+                    reasonEl.textContent = '부활 퀴즈에서 오답이 발생하여 탈락했습니다.';
+                } else {
+                    reasonEl.textContent = '3번의 부활 찬스를 모두 소진하여 게임이 종료되었습니다.';
+                }
+
+                // 점수 저장
+                window.JumpmanHOF.saveScore({
+                    ...profile,
+                    score: data.score,
+                    distance: data.distance,
+                    survivalTime: data.survivalTime,
+                    coins: data.coins,
+                    quizzesSolved: data.quizzesSolved
+                });
+
+                gameOverModal.classList.remove('hidden');
+            };
+
+            document.getElementById('btnRetryGame').addEventListener('click', () => {
+                gameOverModal.classList.add('hidden');
+                game.startNewGame(game.gameMode, game.currentStage);
+            });
+
+            document.getElementById('btnHofFromGameOver').addEventListener('click', () => {
+                gameOverModal.classList.add('hidden');
+                renderHof();
+                hofModal.classList.remove('hidden');
+            });
+
+            // ==========================================
+            // 스테이지 클리어 모달 핸들러
+            // ==========================================
+            const stageClearModal = document.getElementById('stageClearModal');
+            window.showStageClearModal = (data) => {
+                document.getElementById('stageClearTitle').textContent = `STAGE ${data.stage} CLEAR!`;
+                stageClearModal.classList.remove('hidden');
+            };
+
+            document.getElementById('btnNextStage').addEventListener('click', () => {
+                stageClearModal.classList.add('hidden');
+                game.startNewGame('stage', game.currentStage + 1);
+            });
+
+            document.getElementById('btnMenuFromClear').addEventListener('click', () => {
+                stageClearModal.classList.add('hidden');
+                document.getElementById('startOverlay').classList.remove('hidden');
+            });
+        });
+    </script>
+</body>
+</html>

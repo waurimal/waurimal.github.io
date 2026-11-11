@@ -29,7 +29,15 @@
             appId: "1:401796751337:web:6f3ba64fde25adf1a8f578"
         },
 
-        // [아케이드 & 슈팅] 스펠링 갤러그, 카드 뒤집기
+        // [아케이드 & 슈팅] 스펠링 갤러그, 점프맨 게임, 카드 뒤집기
+        "jumpman": {
+            apiKey: "AIzaSyAaRTZlJ_fQAKl8j0lCJfaOdJyx8wMP5Zo",
+            authDomain: "tournament-267ab.firebaseapp.com",
+            projectId: "tournament-267ab",
+            storageBucket: "tournament-267ab.firebasestorage.app",
+            messagingSenderId: "401796751337",
+            appId: "1:401796751337:web:6f3ba64fde25adf1a8f578"
+        },
         "spelling_galaga": {
             apiKey: "AIzaSyAaRTZlJ_fQAKl8j0lCJfaOdJyx8wMP5Zo",
             authDomain: "tournament-267ab.firebaseapp.com",
