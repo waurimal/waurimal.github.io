@@ -680,7 +680,8 @@ class JumpmanGame {
                 score: this.score,
                 coins: this.coins,
                 quizzesSolved: this.quizzesSolved,
-                survivalTime: Math.floor(this.survivalTime)
+                survivalTime: Math.floor(this.survivalTime),
+                distance: this.distance
             });
         }
     }

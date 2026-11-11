@@ -12,16 +12,16 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <!-- Firebase SDK (v10 compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
     <!-- 와우리말 공통 에코시스템 -->
     <link rel="stylesheet" href="../common/waurimal-theme.css">
     <script src="../common/firebase-config.js"></script>
     <script src="../common/curriculum.js"></script>
     <script src="../common/waurimal-nav.js"></script>
-
-    <!-- Firebase SDK (v10 compat) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
     <link rel="stylesheet" href="css/game.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏃</text></svg>">
@@ -454,9 +454,10 @@
             window.activeGame = game;
 
             // 프로필 로드
-            const profile = window.JumpmanHOF.getProfile();
             const updateStartProfileDisplay = () => {
-                const text = `${profile.grade}학년 ${profile.classNum}반 ${profile.studentNum}번 ${profile.name || '학생'}`;
+                const cur = window.JumpmanHOF.getProfile();
+                const displayName = cur.name ? cur.name : '이름 미설정 (클릭하여 설정)';
+                const text = `${cur.grade}학년 ${cur.classNum}반 ${cur.studentNum}번 ${displayName}`;
                 const el = document.getElementById('startProfileText');
                 if (el) el.textContent = text;
             };
@@ -557,19 +558,22 @@
             // 프로필 설정 모달
             const profileModal = document.getElementById('profileModal');
             document.getElementById('btnEditProfile').addEventListener('click', () => {
-                document.getElementById('profileGrade').value = profile.grade || 6;
-                document.getElementById('profileClass').value = profile.classNum || 1;
-                document.getElementById('profileNum').value = profile.studentNum || 1;
-                document.getElementById('profileName').value = profile.name || '';
+                const cur = window.JumpmanHOF.getProfile();
+                document.getElementById('profileGrade').value = cur.grade || 6;
+                document.getElementById('profileClass').value = cur.classNum || 1;
+                document.getElementById('profileNum').value = cur.studentNum || 1;
+                document.getElementById('profileName').value = cur.name || '';
                 profileModal.classList.remove('hidden');
             });
             document.getElementById('btnCloseProfile').addEventListener('click', () => profileModal.classList.add('hidden'));
             document.getElementById('btnSaveProfile').addEventListener('click', () => {
-                profile.grade = Number(document.getElementById('profileGrade').value) || 6;
-                profile.classNum = Number(document.getElementById('profileClass').value) || 1;
-                profile.studentNum = Number(document.getElementById('profileNum').value) || 1;
-                profile.name = document.getElementById('profileName').value.trim() || '학생';
-                window.JumpmanHOF.saveProfile(profile);
+                const updated = {
+                    grade: Number(document.getElementById('profileGrade').value) || 6,
+                    classNum: Number(document.getElementById('profileClass').value) || 1,
+                    studentNum: Number(document.getElementById('profileNum').value) || 1,
+                    name: document.getElementById('profileName').value.trim() || '학생'
+                };
+                window.JumpmanHOF.saveProfile(updated);
                 updateStartProfileDisplay();
                 profileModal.classList.add('hidden');
             });
@@ -586,7 +590,15 @@
                 tbody.innerHTML = '';
 
                 if (records.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-slate-500">선택하신 조건에 해당하는 기록이 없습니다.</td></tr>';
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center py-8 text-slate-400">
+                                <div class="text-3xl mb-2">🏃💨</div>
+                                <div class="font-bold text-sm text-slate-300">등록된 랭킹 기록이 없습니다.</div>
+                                <div class="text-xs text-slate-500 mt-1">지금 게임을 플레이하고 첫 번째 명예의 전당 주인공이 되어보세요! 🏆</div>
+                            </td>
+                        </tr>
+                    `;
                     return;
                 }
 
@@ -709,7 +721,7 @@
             // 게임 오버 모달 핸들러
             // ==========================================
             const gameOverModal = document.getElementById('gameOverModal');
-            window.showGameOverModal = (data) => {
+            window.showGameOverModal = async (data) => {
                 document.getElementById('finalScore').textContent = (data.score || 0).toLocaleString();
                 document.getElementById('finalDistance').textContent = `${data.distance || 0}m`;
                 document.getElementById('finalTime').textContent = `${data.survivalTime || 0}초`;
@@ -722,9 +734,10 @@
                     reasonEl.textContent = '3번의 부활 찬스를 모두 소진하여 게임이 종료되었습니다.';
                 }
 
-                // 점수 저장
-                window.JumpmanHOF.saveScore({
-                    ...profile,
+                // 점수 저장 (최신 학생 프로필 반영)
+                const curProf = window.JumpmanHOF.getProfile();
+                await window.JumpmanHOF.saveScore({
+                    ...curProf,
                     score: data.score,
                     distance: data.distance,
                     survivalTime: data.survivalTime,
@@ -755,8 +768,20 @@
             // 스테이지 클리어 모달 핸들러
             // ==========================================
             const stageClearModal = document.getElementById('stageClearModal');
-            window.showStageClearModal = (data) => {
+            window.showStageClearModal = async (data) => {
                 document.getElementById('stageClearTitle').textContent = `STAGE ${data.stage} CLEAR!`;
+
+                // 스테이지 클리어 점수도 명예의 전당에 저장 (최신 학생 프로필 반영)
+                const curProf = window.JumpmanHOF.getProfile();
+                await window.JumpmanHOF.saveScore({
+                    ...curProf,
+                    score: data.score,
+                    distance: data.distance || 0,
+                    survivalTime: data.survivalTime || 0,
+                    coins: data.coins || 0,
+                    quizzesSolved: data.quizzesSolved || 0
+                });
+
                 stageClearModal.classList.remove('hidden');
             };
 
