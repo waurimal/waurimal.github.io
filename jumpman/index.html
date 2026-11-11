@@ -333,18 +333,34 @@
 
             <!-- 필터 옵션 바 -->
             <div class="flex flex-wrap items-center gap-2 mb-3 text-xs">
-                <select id="hofFilterPeriod" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200">
+                <select id="hofFilterPeriod" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 cursor-pointer">
                     <option value="all">전체 기간</option>
                     <option value="month">이번 달</option>
                     <option value="week">이번 주</option>
                 </select>
-                <select id="hofFilterGrade" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200">
+                <select id="hofFilterGrade" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 cursor-pointer">
                     <option value="all">전체 학년</option>
                     <option value="3">3학년</option>
                     <option value="4">4학년</option>
                     <option value="5">5학년</option>
                     <option value="6">6학년</option>
                 </select>
+                <select id="hofFilterClass" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 cursor-pointer">
+                    <option value="all">전체 반</option>
+                    <option value="1">1반</option>
+                    <option value="2">2반</option>
+                    <option value="3">3반</option>
+                    <option value="4">4반</option>
+                    <option value="5">5반</option>
+                    <option value="6">6반</option>
+                    <option value="7">7반</option>
+                    <option value="8">8반</option>
+                    <option value="9">9반</option>
+                    <option value="10">10반</option>
+                </select>
+                <button type="button" id="btnMyClassHof" class="px-2.5 py-1.5 rounded-lg bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-500/40 font-bold transition flex items-center gap-1 cursor-pointer" title="내 학년 및 반으로 즉시 필터링">
+                    <i class="fa-solid fa-users"></i> 내 반 보기
+                </button>
                 <input type="text" id="hofSearchInput" placeholder="학생 이름 검색..." class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 placeholder-slate-500 flex-1">
             </div>
 
@@ -507,16 +523,17 @@
 
             // 명예의 전당 모달
             const hofModal = document.getElementById('hofModal');
-            const renderHof = () => {
+            const renderHof = async () => {
                 const period = document.getElementById('hofFilterPeriod').value;
                 const grade = document.getElementById('hofFilterGrade').value;
+                const classNum = document.getElementById('hofFilterClass').value;
                 const keyword = document.getElementById('hofSearchInput').value;
-                const records = window.JumpmanHOF.getFilteredRecords({ period, grade, keyword });
+                const records = window.JumpmanHOF.getFilteredRecords({ period, grade, classNum, keyword });
                 const tbody = document.getElementById('hofTableBody');
                 tbody.innerHTML = '';
 
                 if (records.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-slate-500">기록이 없습니다.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-slate-500">선택하신 조건에 해당하는 기록이 없습니다.</td></tr>';
                     return;
                 }
 
@@ -524,9 +541,10 @@
                     const tr = document.createElement('tr');
                     tr.className = 'hof-row';
                     const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}`;
+                    const numText = r.studentNum ? `${r.studentNum}번 ` : '';
                     tr.innerHTML = `
                         <td class="py-2.5 px-2 text-center font-bold ${idx < 3 ? 'text-amber-300' : 'text-slate-400'}">${medal}</td>
-                        <td class="py-2.5 px-2 font-bold text-white">${r.grade}학년 ${r.classNum}반 ${r.name}</td>
+                        <td class="py-2.5 px-2 font-bold text-white">${r.grade}학년 ${r.classNum}반 ${numText}${r.name}</td>
                         <td class="py-2.5 px-2 text-right font-black text-yellow-300">${(r.score || 0).toLocaleString()}</td>
                         <td class="py-2.5 px-2 text-right text-slate-300">${r.distance || 0}m</td>
                         <td class="py-2.5 px-2 text-right text-sky-300">${r.survivalTime || 0}s</td>
@@ -536,14 +554,27 @@
                 });
             };
 
-            document.getElementById('btnHof').addEventListener('click', () => {
+            document.getElementById('btnHof').addEventListener('click', async () => {
                 renderHof();
                 hofModal.classList.remove('hidden');
+                if (window.JumpmanHOF.fetchCloudRecords) {
+                    await window.JumpmanHOF.fetchCloudRecords();
+                    renderHof();
+                }
             });
             document.getElementById('btnCloseHof').addEventListener('click', () => hofModal.classList.add('hidden'));
             document.getElementById('hofFilterPeriod').addEventListener('change', renderHof);
             document.getElementById('hofFilterGrade').addEventListener('change', renderHof);
+            document.getElementById('hofFilterClass').addEventListener('change', renderHof);
             document.getElementById('hofSearchInput').addEventListener('input', renderHof);
+
+            document.getElementById('btnMyClassHof').addEventListener('click', () => {
+                const curProf = window.JumpmanHOF.getProfile();
+                document.getElementById('hofFilterGrade').value = String(curProf.grade || 'all');
+                document.getElementById('hofFilterClass').value = String(curProf.classNum || 'all');
+                document.getElementById('hofSearchInput').value = '';
+                renderHof();
+            });
 
             // ==========================================
             // 핵심: 부활 찬스 퀴즈 모달 핸들러

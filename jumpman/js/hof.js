@@ -100,6 +100,53 @@ class JumpmanHallOfFame {
         }
     }
 
+    async fetchCloudRecords() {
+        try {
+            if (typeof firebase !== 'undefined') {
+                let db = null;
+                if (window.FirebaseConfig && window.FirebaseConfig.getFirebaseConfig) {
+                    const cfg = window.FirebaseConfig.getFirebaseConfig('jumpman');
+                    if (!firebase.apps.length) {
+                        firebase.initializeApp(cfg);
+                    }
+                    db = firebase.firestore();
+                } else if (firebase.apps.length > 0) {
+                    db = firebase.firestore();
+                }
+                if (db) {
+                    const snap = await db.collection('games').doc('jumpman').collection('scores')
+                        .orderBy('score', 'desc')
+                        .limit(50)
+                        .get();
+                    if (snap && !snap.empty) {
+                        const cloudRecords = [];
+                        snap.forEach(doc => {
+                            const d = doc.data();
+                            cloudRecords.push({ id: doc.id, ...d });
+                        });
+                        const local = this.getLocalRecords();
+                        const mergedMap = new Map();
+                        [...cloudRecords, ...local].forEach(item => {
+                            const key = `${item.grade}_${item.classNum}_${item.name}_${item.score}`;
+                            if (!mergedMap.has(key)) {
+                                mergedMap.set(key, item);
+                            }
+                        });
+                        const mergedList = Array.from(mergedMap.values());
+                        mergedList.sort((a, b) => b.score - a.score);
+                        try {
+                            localStorage.setItem(this.storageKey, JSON.stringify(mergedList.slice(0, 100)));
+                        } catch (e) {}
+                        return mergedList;
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn("[HOF] fetchCloudRecords fallback:", e);
+        }
+        return this.getLocalRecords();
+    }
+
     // 명예의 전당 필터링 목록
     getFilteredRecords({ period = 'all', grade = 'all', classNum = 'all', keyword = '' } = {}) {
         let records = this.getLocalRecords();
