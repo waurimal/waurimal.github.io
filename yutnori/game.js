@@ -1580,6 +1580,7 @@
 
                 // 퀴즈 모달
                 quizModal: document.getElementById('quizModal'),
+                quizGradeBadge: document.getElementById('quizGradeBadge'),
                 quizCategoryBadge: document.getElementById('quizCategoryBadge'),
                 quizPrompt: document.getElementById('quizPrompt'),
                 quizQuestionText: document.getElementById('quizQuestionText'),
@@ -1924,7 +1925,7 @@
 
             // 팀 구성 (컴퓨터 대전 시 학생 실명 및 학적 반영)
             const realName = config.playerName || '나(플레이어)';
-            const studentGrade = Number(config.gradeNum || config.grade) || 6;
+            const studentGrade = Number(config.gradeNum) || (Number(config.grade) >= 1 ? Number(config.grade) : 6);
             const studentClass = Number(config.classNum) || 1;
             const studentNum = Number(config.studentNum) || 1;
 
@@ -3417,7 +3418,8 @@
         // ==========================================
         presentQuiz(piece, movePath) {
             this.setGameState('WAIT_QUIZ');
-            const q = window.YutnoriQuestions.generateQuestion({ grade: this.gradeFilter || 'all' });
+            const currentGrade = (this.currentRoomData && this.currentRoomData.grade) || this.gradeFilter || 'all';
+            const q = window.YutnoriQuestions.generateQuestion({ grade: currentGrade });
             this.currentQuestion = q;
 
             if (!this.dom.quizModal) return;
@@ -3429,7 +3431,19 @@
                 return;
             }
 
-            // 모달 UI 세팅
+            // 모달 UI 세팅: 출제 학년 수준 및 퀴즈 카테고리 표시
+            if (this.dom.quizGradeBadge) {
+                const gradeVal = q.grade || (currentGrade !== 'all' ? currentGrade : null);
+                if (gradeVal && String(gradeVal) !== 'all') {
+                    this.dom.quizGradeBadge.textContent = `${gradeVal}학년 수준`;
+                    this.dom.quizGradeBadge.className = 'px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 font-black text-xs border border-indigo-300';
+                    this.dom.quizGradeBadge.classList.remove('hidden');
+                } else {
+                    this.dom.quizGradeBadge.textContent = '초등 종합';
+                    this.dom.quizGradeBadge.className = 'px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-black text-xs border border-slate-300';
+                    this.dom.quizGradeBadge.classList.remove('hidden');
+                }
+            }
             this.dom.quizCategoryBadge.textContent = q.category;
             this.dom.quizPrompt.textContent = q.prompt;
             this.dom.quizQuestionText.textContent = q.questionText;

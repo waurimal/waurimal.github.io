@@ -301,9 +301,13 @@
                             <div>
                                 <label for="gradeSelect" class="block text-xs font-bold text-slate-400 mb-1.5">영어 문제 출제 범위</label>
                                 <select id="gradeSelect" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-500 font-bold">
-                                    <option value="all" selected>전체 종합 (초등 3~6 필수)</option>
-                                    <option value="3-4">초등 3~4학년 기초</option>
-                                    <option value="5-6">초등 5~6학년 심화</option>
+                                    <option value="all">전체 종합 (초등 3~6 필수)</option>
+                                    <option value="3">초등 3학년 수준 (기초 단어·알파벳·인사)</option>
+                                    <option value="4">초등 4학년 수준 (일상생활·시간·날씨·길안내)</option>
+                                    <option value="5">초등 5학년 수준 (교과·생일·과거시제·건강)</option>
+                                    <option value="6" selected>초등 6학년 수준 (진로·비교급·환경·심화회화)</option>
+                                    <option value="3-4">초등 3~4학년군 군별 종합</option>
+                                    <option value="5-6">초등 5~6학년군 군별 종합</option>
                                 </select>
                             </div>
                         </div>
@@ -828,11 +832,14 @@
         <div class="quiz-card max-w-lg w-full p-6 text-slate-900 shadow-2xl relative border-4 border-amber-400/80">
             <!-- 퀴즈 헤더 -->
             <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <span id="quizGradeBadge" class="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 font-black text-xs border border-indigo-300">
+                        6학년 수준
+                    </span>
                     <span id="quizCategoryBadge" class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 font-black text-xs border border-amber-300">
                         단어 퀴즈
                     </span>
-                    <span class="text-xs text-slate-500 font-bold">문제를 맞혀야 전진합니다!</span>
+                    <span class="text-xs text-slate-500 font-bold hidden sm:inline">문제를 맞혀야 전진합니다!</span>
                 </div>
                 <!-- TTS 음성 재생 버튼 -->
                 <button id="quizTtsBtn" class="w-9 h-9 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 flex items-center justify-center transition shadow-sm cursor-pointer" title="원어민 발음 듣기">
@@ -1024,6 +1031,27 @@
                     <p>• <strong>승리 보너스</strong>: 승리 팀 +500점</p>
                     <p>• <strong>기여도 점수</strong>: 정답 1개당 +50점, 말 완주 +150점, 상대 말 잡기 +100점, 아군 말 업기 +40점, 윷/모 +30점</p>
                     <p>• <strong>승수와 기여도 총점</strong>을 종합하여 영예의 명예의 전당 랭킹이 결정됩니다.</p>
+                </div>
+
+                <div class="p-3.5 rounded-2xl bg-indigo-950/60 border border-indigo-500/40">
+                    <h4 class="font-bold text-indigo-300 text-sm mb-1.5 flex items-center gap-1.5">
+                        <i class="fa-solid fa-graduation-cap text-indigo-400"></i> 6. 학년별 문제 수준 & 교육과정 연계
+                    </h4>
+                    <p class="text-slate-300 mb-2">학생 수준과 단원에 맞추어 <strong>3학년·4학년·5학년·6학년</strong> 수준을 자유롭게 선택할 수 있습니다:</p>
+                    <div class="space-y-1.5 text-[11px]">
+                        <div class="p-2 rounded-xl bg-slate-900/80 border border-slate-800">
+                            <span class="font-bold text-amber-300">🌱 3학년 수준</span>: 파닉스 기초, 색깔, 숫자(1~10), 학용품, 가족, 동물, 신체, 기초 인사 및 능력 묻기 (What is this?, Can you swim?, Do you have a pencil?)
+                        </div>
+                        <div class="p-2 rounded-xl bg-slate-900/80 border border-slate-800">
+                            <span class="font-bold text-amber-300">🌿 4학년 수준</span>: 시간, 날씨, 계절, 장소 및 길 안내, 일과, 음식, 스포츠, 규칙/금지 (What time is it?, How's the weather?, Where is the library?, Don't run!)
+                        </div>
+                        <div class="p-2 rounded-xl bg-slate-900/80 border border-slate-800">
+                            <span class="font-bold text-amber-300">🌲 5학년 수준</span>: 교과목, 월/서수, 생일/날짜, 과거 경험, 건강/증상, 여가 빈도 (What is your favorite subject?, When is your birthday?, I visited my grandparents.)
+                        </div>
+                        <div class="p-2 rounded-xl bg-slate-900/80 border border-slate-800">
+                            <span class="font-bold text-amber-300">🌟 6학년 수준</span>: 미래 진로/직업, 감정 이유, 비교급, 환경/지구 보호, 세계 문화, 부탁/제안 (What do you want to be?, Because..., I am taller than..., We should protect our earth.)
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1619,10 +1647,26 @@
 
             // 초기 학생 정보 자동 반영
             const initProf = getInitialStudentProfile();
-            if (studentGradeSelect && initProf.grade) studentGradeSelect.value = initProf.grade;
+            const gradeSelectEl = document.getElementById('gradeSelect');
+            if (studentGradeSelect && initProf.grade) {
+                studentGradeSelect.value = initProf.grade;
+                if (gradeSelectEl && ['3', '4', '5', '6'].includes(String(initProf.grade))) {
+                    gradeSelectEl.value = String(initProf.grade);
+                }
+            }
             if (studentClassSelect && initProf.classNum) studentClassSelect.value = initProf.classNum;
             if (studentNumInput && initProf.studentNum) studentNumInput.value = initProf.studentNum;
             if (globalStudentNameInput && initProf.name) globalStudentNameInput.value = initProf.name;
+
+            // 학생 학년 선택 변경 시 문제 출제 범위도 해당 학년으로 자연스럽게 추천 동기화
+            if (studentGradeSelect && gradeSelectEl) {
+                studentGradeSelect.addEventListener('change', (e) => {
+                    const selectedG = e.target.value;
+                    if (['3', '4', '5', '6'].includes(selectedG)) {
+                        gradeSelectEl.value = selectedG;
+                    }
+                });
+            }
 
             // 온라인 방 생성 & 참여 폼
             const createOnlineRoomBtn = document.getElementById('createOnlineRoomBtn');
