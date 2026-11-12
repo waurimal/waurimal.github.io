@@ -202,11 +202,11 @@
                                 </div>
                                 <p class="text-[11px] text-slate-400 mb-3">4자리 코드를 발급받아 친구들에게 공유하여 함께 플레이합니다. (팀전 시 인원 제한 없이 학급 전체 참여 가능)</p>
                                 
-                                <div class="grid grid-cols-2 gap-2 mb-3">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
                                     <div>
                                         <span class="text-[10px] text-slate-400 font-bold block mb-1">대전 유형</span>
                                         <select id="onlineCreateModeSelect" class="w-full px-2.5 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white">
-                                            <option value="team" selected>팀전 (청팀 vs 백팀 · 학급 전체 무제한)</option>
+                                            <option value="team" selected>팀전 (청 vs 백 무제한)</option>
                                             <option value="1v1">1:1 대전 (2인)</option>
                                         </select>
                                     </div>
@@ -215,6 +215,18 @@
                                         <select id="onlineCreatePieceCountSelect" class="w-full px-2.5 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-white">
                                             <option value="3">3개 (스피드)</option>
                                             <option value="4" selected>4개 (표준)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <span class="text-[10px] text-amber-300 font-bold block mb-1">영어 문제 출제 범위</span>
+                                        <select id="onlineCreateGradeSelect" class="w-full px-2.5 py-2 rounded-lg bg-slate-800 border border-amber-500/50 text-xs text-amber-300 font-bold">
+                                            <option value="all">전체 종합 (초등 3~6)</option>
+                                            <option value="3">초등 3학년 수준</option>
+                                            <option value="4">초등 4학년 수준</option>
+                                            <option value="5">초등 5학년 수준</option>
+                                            <option value="6" selected>초등 6학년 수준</option>
+                                            <option value="3-4">3~4학년군 종합</option>
+                                            <option value="5-6">5~6학년군 종합</option>
                                         </select>
                                     </div>
                                 </div>
@@ -415,11 +427,14 @@
             <!-- 상단 인게임 컨트롤 & 상태 바 -->
             <div class="w-full mb-4 p-3.5 rounded-2xl bg-slate-800/90 border border-slate-700/80 shadow-lg flex flex-wrap items-center justify-between gap-3">
                 <!-- 좌측: 현재 게임 상태 표시 배너 -->
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 flex-wrap">
                     <span id="gameModeStatusBadge" class="px-3 py-1 rounded-xl bg-amber-500/20 text-amber-300 font-black text-xs border border-amber-500/40 flex items-center gap-1.5">
                         <i class="fa-solid fa-gamepad"></i> 컴퓨터 대전 모드
                     </span>
-                    <span id="gamePlayerInfoText" class="text-xs text-slate-300 font-bold">
+                    <span id="gameGradeStatusBadge" class="px-2.5 py-1 rounded-xl bg-indigo-500/20 text-indigo-300 font-black text-xs border border-indigo-500/40 flex items-center gap-1">
+                        <i class="fa-solid fa-graduation-cap text-indigo-400"></i> 6학년 수준
+                    </span>
+                    <span id="gamePlayerInfoText" class="text-xs text-slate-300 font-bold ml-1">
                         참여 학생: <span id="inGameStudentNameBadge" class="text-amber-400 font-black">-</span>
                     </span>
                 </div>
@@ -708,6 +723,19 @@
                 <p id="lobbyCodeCopyToast" class="text-[11px] text-emerald-400 font-bold mt-1.5 hidden animate-bounce">
                     <i class="fa-solid fa-check"></i> 코드가 클립보드에 복사되었습니다!
                 </p>
+
+                <!-- 방 설정 요약 배지들: 출제 범위 & 모드 -->
+                <div class="flex items-center justify-center gap-2 mt-2.5 flex-wrap">
+                    <span id="lobbyGradeBadge" class="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-[11px] font-black flex items-center gap-1">
+                        <i class="fa-solid fa-graduation-cap text-indigo-400"></i> 문제 범위: 6학년 수준
+                    </span>
+                    <span id="lobbyModeBadge" class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold">
+                        팀전 (청 vs 백)
+                    </span>
+                    <span id="lobbyPieceCountBadge" class="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 text-[11px] font-bold">
+                        말 4개
+                    </span>
+                </div>
             </div>
 
             <!-- 팀전 전용: 방장 역할 전환 (직접 플레이어 ↔ 진행·관전) -->
@@ -1516,13 +1544,27 @@
     </button>
 
     <!-- 스크립트 연결 (캐시 무효화 버전 쿼리 파라미터 적용) -->
-    <script src="questions.js?v=20261111_same_team_skip"></script>
-    <script src="game.js?v=20261111_same_team_skip"></script>
-    <script type="module" src="multiplayer.js?v=20261111_same_team_skip"></script>
+    <script src="questions.js?v=20261112_grade3456_v3"></script>
+    <script src="game.js?v=20261112_grade3456_v3"></script>
+    <script type="module" src="multiplayer.js?v=20261112_grade3456_v3"></script>
 
     <!-- UI 화면 전환 및 온라인 멀티 제어 스크립트 -->
     <script type="module">
-        import { multiplayerManager } from './multiplayer.js?v=20261111_same_team_skip';
+        import { multiplayerManager } from './multiplayer.js?v=20261112_grade3456_v3';
+
+        // 학년 레이블 변환 전역 함수
+        window.getGradeLabel = function(g) {
+            switch(String(g)) {
+                case '3': return '3학년 수준';
+                case '4': return '4학년 수준';
+                case '5': return '5학년 수준';
+                case '6': return '6학년 수준';
+                case '3-4': return '3~4학년군 종합';
+                case '5-6': return '5~6학년군 종합';
+                case 'all':
+                default: return '전체 종합 (초등 3~6)';
+            }
+        };
 
         // 전역 화면 전환 함수 (home: 첫화면 설정/명예의전당, game: 몰입형 게임화면)
         window.showScreen = function(screenId) {
@@ -1648,10 +1690,12 @@
             // 초기 학생 정보 자동 반영
             const initProf = getInitialStudentProfile();
             const gradeSelectEl = document.getElementById('gradeSelect');
+            const onlineCreateGradeSelectEl = document.getElementById('onlineCreateGradeSelect');
             if (studentGradeSelect && initProf.grade) {
                 studentGradeSelect.value = initProf.grade;
-                if (gradeSelectEl && ['3', '4', '5', '6'].includes(String(initProf.grade))) {
-                    gradeSelectEl.value = String(initProf.grade);
+                if (['3', '4', '5', '6'].includes(String(initProf.grade))) {
+                    if (gradeSelectEl) gradeSelectEl.value = String(initProf.grade);
+                    if (onlineCreateGradeSelectEl) onlineCreateGradeSelectEl.value = String(initProf.grade);
                 }
             }
             if (studentClassSelect && initProf.classNum) studentClassSelect.value = initProf.classNum;
@@ -1659,12 +1703,23 @@
             if (globalStudentNameInput && initProf.name) globalStudentNameInput.value = initProf.name;
 
             // 학생 학년 선택 변경 시 문제 출제 범위도 해당 학년으로 자연스럽게 추천 동기화
-            if (studentGradeSelect && gradeSelectEl) {
+            if (studentGradeSelect) {
                 studentGradeSelect.addEventListener('change', (e) => {
                     const selectedG = e.target.value;
                     if (['3', '4', '5', '6'].includes(selectedG)) {
-                        gradeSelectEl.value = selectedG;
+                        if (gradeSelectEl) gradeSelectEl.value = selectedG;
+                        if (onlineCreateGradeSelectEl) onlineCreateGradeSelectEl.value = selectedG;
                     }
+                });
+            }
+
+            // 첫 화면 공통 출제범위와 온라인 방 만들기 출제범위 양방향 동기화
+            if (gradeSelectEl && onlineCreateGradeSelectEl) {
+                gradeSelectEl.addEventListener('change', () => {
+                    onlineCreateGradeSelectEl.value = gradeSelectEl.value;
+                });
+                onlineCreateGradeSelectEl.addEventListener('change', () => {
+                    gradeSelectEl.value = onlineCreateGradeSelectEl.value;
                 });
             }
 
@@ -1824,6 +1879,10 @@
                 window.showScreen('game');
                 if (inGameStudentNameBadge) inGameStudentNameBadge.textContent = `${realName} (${gradeVal}-${classVal})`;
                 if (gameModeStatusBadge) gameModeStatusBadge.innerHTML = '<i class="fa-solid fa-robot"></i> 컴퓨터 AI 대전';
+                const gameGradeStatusBadge = document.getElementById('gameGradeStatusBadge');
+                if (gameGradeStatusBadge) {
+                    gameGradeStatusBadge.innerHTML = `<i class="fa-solid fa-graduation-cap text-indigo-400"></i> ${window.getGradeLabel(gradeFilter)}`;
+                }
 
                 window.YutnoriGameInstance.startNewGame(config);
             }
@@ -2002,7 +2061,9 @@
 
                     const mode = onlineCreateModeSelect.value;
                     const pieceCount = parseInt(onlineCreatePieceCountSelect.value, 10);
-                    const grade = document.getElementById('gradeSelect').value;
+                    const grade = (onlineCreateGradeSelectEl && onlineCreateGradeSelectEl.value) 
+                        ? onlineCreateGradeSelectEl.value 
+                        : (gradeSelectEl ? gradeSelectEl.value : 'all');
                     const hostParticipates = (mode === 'team') ? (onlineHostParticipateCheck ? onlineHostParticipateCheck.checked : true) : true;
                     const throwerMode = (mode === 'team' && onlineCreateThrowerModeSelect) ? onlineCreateThrowerModeSelect.value : 'all_once';
 
@@ -2215,6 +2276,20 @@
                     onlineLobbyModal.classList.remove('hidden');
                     lobbyRoomCodeDisplay.textContent = data.roomId;
 
+                    // 방 설정 요약 배지 업데이트 (출제 범위·모드·말 개수)
+                    const lobbyGradeBadge = document.getElementById('lobbyGradeBadge');
+                    const lobbyModeBadge = document.getElementById('lobbyModeBadge');
+                    const lobbyPieceCountBadge = document.getElementById('lobbyPieceCountBadge');
+                    if (lobbyGradeBadge) {
+                        lobbyGradeBadge.innerHTML = `<i class="fa-solid fa-graduation-cap text-indigo-400"></i> 출제: ${window.getGradeLabel(data.grade)}`;
+                    }
+                    if (lobbyModeBadge) {
+                        lobbyModeBadge.textContent = (data.mode === 'team') ? '팀전 (청 vs 백)' : '1:1 대전';
+                    }
+                    if (lobbyPieceCountBadge) {
+                        lobbyPieceCountBadge.textContent = `말 ${data.pieceCount || 4}개`;
+                    }
+
                     const players = Object.values(data.players || {});
                     const nonSpectatorPlayers = players.filter(p => !p.isSpectator);
                     const bluePlayers = players.filter(p => !p.isSpectator && p.team === 'blue');
@@ -2401,6 +2476,19 @@
                 else if (data.status === 'playing' || data.status === 'finished') {
                     onlineLobbyModal.classList.add('hidden');
                     window.showScreen('game');
+
+                    if (gameModeStatusBadge) {
+                        gameModeStatusBadge.innerHTML = `<i class="fa-solid fa-tower-broadcast text-emerald-400"></i> 실시간 멀티 (${data.mode === 'team' ? '팀전' : '1:1'})`;
+                    }
+                    const gameGradeStatusBadge = document.getElementById('gameGradeStatusBadge');
+                    if (gameGradeStatusBadge) {
+                        gameGradeStatusBadge.innerHTML = `<i class="fa-solid fa-graduation-cap text-indigo-400"></i> ${window.getGradeLabel(data.grade)}`;
+                    }
+                    const myInfo = data.players ? data.players[multiplayerManager.mySessionId] : null;
+                    if (inGameStudentNameBadge && myInfo) {
+                        const teamText = myInfo.isSpectator ? '진행/관전' : (myInfo.team === 'blue' ? '청팀' : '백팀');
+                        inGameStudentNameBadge.textContent = `${myInfo.name} (${myInfo.grade || '6'}-${myInfo.classNum || '1'} · ${teamText})`;
+                    }
 
                     if (!window.YutnoriGameInstance.isOnline) {
                         window.YutnoriGameInstance.startOnlineGame(data);

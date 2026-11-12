@@ -3434,15 +3434,10 @@
             // 모달 UI 세팅: 출제 학년 수준 및 퀴즈 카테고리 표시
             if (this.dom.quizGradeBadge) {
                 const gradeVal = q.grade || (currentGrade !== 'all' ? currentGrade : null);
-                if (gradeVal && String(gradeVal) !== 'all') {
-                    this.dom.quizGradeBadge.textContent = `${gradeVal}학년 수준`;
-                    this.dom.quizGradeBadge.className = 'px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 font-black text-xs border border-indigo-300';
-                    this.dom.quizGradeBadge.classList.remove('hidden');
-                } else {
-                    this.dom.quizGradeBadge.textContent = '초등 종합';
-                    this.dom.quizGradeBadge.className = 'px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-black text-xs border border-slate-300';
-                    this.dom.quizGradeBadge.classList.remove('hidden');
-                }
+                const displayLabel = q.gradeLabel || (window.getGradeLabel ? window.getGradeLabel(gradeVal) : (gradeVal && String(gradeVal) !== 'all' ? `${gradeVal}학년 수준` : '초등 종합'));
+                this.dom.quizGradeBadge.textContent = displayLabel;
+                this.dom.quizGradeBadge.className = 'px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 font-black text-xs border border-indigo-300';
+                this.dom.quizGradeBadge.classList.remove('hidden');
             }
             this.dom.quizCategoryBadge.textContent = q.category;
             this.dom.quizPrompt.textContent = q.prompt;
