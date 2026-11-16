@@ -1582,6 +1582,8 @@
                 quizModal: document.getElementById('quizModal'),
                 quizGradeBadge: document.getElementById('quizGradeBadge'),
                 quizCategoryBadge: document.getElementById('quizCategoryBadge'),
+                quizTurnRoleBadge: document.getElementById('quizTurnRoleBadge'),
+                quizFooterNotice: document.getElementById('quizFooterNotice'),
                 quizPrompt: document.getElementById('quizPrompt'),
                 quizQuestionText: document.getElementById('quizQuestionText'),
                 quizSubText: document.getElementById('quizSubText'),
@@ -2232,6 +2234,30 @@
                     if (canControlTurn && (!isLocalBusy || isInitial) && !roomData.isHostProxyTurn) {
                         this.preparePieceSelection();
                     }
+                } else if (roomData.gameState === 'WAIT_QUIZ' && roomData.activeQuiz && roomData.activeQuiz.quiz) {
+                    // 퀴즈 진행 상태 동기화: 문제를 모든 사람에게 공개하되 윷 던진 사람만 풀 수 있도록 설정
+                    const isActor = (roomData.activeQuiz.actorId === mySessionId) || isMyTurn;
+                    const actorPlayer = roomData.players ? roomData.players[roomData.activeQuiz.actorId] : null;
+                    const actorName = actorPlayer ? actorPlayer.name : (roomData.activeQuiz.actorName || '상대방');
+
+                    let targetPiece = null;
+                    let targetMovePath = roomData.activeQuiz.movePath;
+                    if (roomData.activeQuiz.pieceId !== undefined) {
+                        const teamId = (roomData.activeQuiz.pieceTeamId !== undefined) ? roomData.activeQuiz.pieceTeamId : (roomData.currentTeam === 'white' ? 1 : 0);
+                        const teamObj = this.teams.find(t => t.id === teamId);
+                        if (teamObj && teamObj.pieces) {
+                            targetPiece = teamObj.pieces.find(p => p.id === roomData.activeQuiz.pieceId) || teamObj.pieces[0];
+                        }
+                    }
+
+                    if (isActor) {
+                        if (!isLocalBusy || isInitial) {
+                            this.setGameState('WAIT_QUIZ');
+                            this.renderQuizModalUI(roomData.activeQuiz.quiz, targetPiece, targetMovePath, false, actorName);
+                        }
+                    } else {
+                        this.renderQuizModalUI(roomData.activeQuiz.quiz, targetPiece, targetMovePath, true, actorName);
+                    }
                 } else if (roomData.gameState === 'WAIT_ROLL') {
                     if (!isLocalBusy || isInitial || isProxyAction) {
                         this.setGameState('WAIT_ROLL');
@@ -2243,6 +2269,14 @@
                     }
                 } else if (roomData.currentRoll) {
                     this.updateStickVisuals(roomData.sticks || roomData.currentRoll.sticks);
+                }
+
+                // 퀴즈 상태가 끝났을 때 열려있던 관전자 퀴즈 모달 닫기
+                if (roomData.gameState !== 'WAIT_QUIZ' && !roomData.activeQuiz) {
+                    if (this.dom.quizModal && !this.dom.quizModal.classList.contains('hidden') && !isMyTurn) {
+                        this.dom.quizModal.classList.add('hidden');
+                        if (this.dom.hostQuizEmergencyBar) this.dom.hostQuizEmergencyBar.classList.add('hidden');
+                    }
                 }
             }
 
@@ -2301,6 +2335,25 @@
                 if (this.dom.remoteTurnNotice) {
                     this.dom.remoteTurnNotice.classList.remove('hidden');
                     if (this.dom.remoteTurnNoticeText) {
+                        this.dom.remoteTurnNoticeText.textContent = `${actorName}님이 윷을 던지고 말을 선택하는 중입니다... 🎲`;
+                    }
+                }
+            } else if (action.type === 'SHOW_QUIZ') {
+                // 상대방이 문제를 출제했을 때 전체 참가자 화면에 퀴즈 모달 표시 (관전 모드)
+                if (roomData.activeQuiz && roomData.activeQuiz.quiz) {
+                    let targetPiece = null;
+                    if (roomData.activeQuiz.pieceId !== undefined) {
+                        const teamId = (roomData.activeQuiz.pieceTeamId !== undefined) ? roomData.activeQuiz.pieceTeamId : (roomData.currentTeam === 'white' ? 1 : 0);
+                        const teamObj = this.teams.find(t => t.id === teamId);
+                        if (teamObj && teamObj.pieces) {
+                            targetPiece = teamObj.pieces.find(p => p.id === roomData.activeQuiz.pieceId) || teamObj.pieces[0];
+                        }
+                    }
+                    this.renderQuizModalUI(roomData.activeQuiz.quiz, targetPiece, roomData.activeQuiz.movePath, true, actorName);
+                }
+                if (this.dom.remoteTurnNotice) {
+                    this.dom.remoteTurnNotice.classList.remove('hidden');
+                    if (this.dom.remoteTurnNoticeText) {
                         this.dom.remoteTurnNoticeText.textContent = `${actorName}님이 영어 퀴즈를 풀고 있습니다... 🤔`;
                     }
                 }
@@ -2311,6 +2364,8 @@
                 if (this.dom.remoteTurnNoticeText) {
                     this.dom.remoteTurnNoticeText.textContent = `${actorName}님이 정답을 맞혀 말을 전진시키고 있습니다! 🐎`;
                 }
+                if (this.dom.quizModal) this.dom.quizModal.classList.add('hidden');
+                if (this.dom.hostQuizEmergencyBar) this.dom.hostQuizEmergencyBar.classList.add('hidden');
             } else if (action.type === 'QUIZ_WRONG') {
                 Sound.playWrong();
                 this.recordStat(actorName, 'wrongCount', 1);
@@ -2318,6 +2373,8 @@
                 if (this.dom.remoteTurnNoticeText) {
                     this.dom.remoteTurnNoticeText.textContent = `${actorName}님이 문제를 틀려 턴이 넘어옵니다.`;
                 }
+                if (this.dom.quizModal) this.dom.quizModal.classList.add('hidden');
+                if (this.dom.hostQuizEmergencyBar) this.dom.hostQuizEmergencyBar.classList.add('hidden');
             } else if (action.type === 'CAUGHT_PIECE') {
                 Sound.playCatch();
                 this.recordStat(actorName, 'catchCount', action.caughtCount || 1);
@@ -3431,7 +3488,40 @@
                 return;
             }
 
-            // 모달 UI 세팅: 출제 학년 수준 및 퀴즈 카테고리 표시
+            // 실시간 온라인 모드일 때 Firestore 동기화 (모든 참가자/관전자에게 문제 공개)
+            if (this.isOnline && window.YutnoriMultiplayer) {
+                const mySessionId = window.YutnoriMultiplayer.mySessionId;
+                const isMyTurn = (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId);
+                const isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
+                               (this.currentRoomData && this.currentRoomData.hostId === mySessionId);
+
+                if (isMyTurn || isHost) {
+                    const quizData = {
+                        quiz: q,
+                        pieceId: piece ? piece.id : 0,
+                        pieceTeamId: (piece && piece.teamId !== undefined) ? piece.teamId : (currentTeam ? currentTeam.id : 0),
+                        movePath: movePath,
+                        actorId: this.currentRoomData ? this.currentRoomData.currentTurnId : mySessionId,
+                        actorName: this.getCurrentPlayerName()
+                    };
+                    window.YutnoriMultiplayer.sendActiveQuiz(quizData);
+                }
+            }
+
+            // 본인 화면에 퀴즈 모달 렌더링 (윷 던진 사람: 풀이 가능 모드)
+            this.renderQuizModalUI(q, piece, movePath, false, this.getCurrentPlayerName());
+        }
+
+        /**
+         * 퀴즈 모달 UI 렌더링 (공통: 문제 전체 공개, 윷 던진 사람만 풀기 활성화)
+         */
+        renderQuizModalUI(q, piece, movePath, isSpectator = false, actorName = '') {
+            this.currentQuestion = q;
+            if (!this.dom.quizModal) return;
+
+            const currentGrade = (this.currentRoomData && this.currentRoomData.grade) || this.gradeFilter || 'all';
+
+            // 1. 모달 UI 세팅: 출제 학년 수준 및 퀴즈 카테고리 표시
             if (this.dom.quizGradeBadge) {
                 const gradeVal = q.grade || (currentGrade !== 'all' ? currentGrade : null);
                 const displayLabel = q.gradeLabel || (window.getGradeLabel ? window.getGradeLabel(gradeVal) : (gradeVal && String(gradeVal) !== 'all' ? `${gradeVal}학년 수준` : '초등 종합'));
@@ -3439,29 +3529,57 @@
                 this.dom.quizGradeBadge.className = 'px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 font-black text-xs border border-indigo-300';
                 this.dom.quizGradeBadge.classList.remove('hidden');
             }
-            this.dom.quizCategoryBadge.textContent = q.category;
-            this.dom.quizPrompt.textContent = q.prompt;
-            this.dom.quizQuestionText.textContent = q.questionText;
-            this.dom.quizSubText.textContent = q.subText || '';
-
-            // TTS 자동 재생 (원어민 발음)
-            if (q.ttsText) {
-                setTimeout(() => Sound.speakText(q.ttsText), 200);
+            if (this.dom.quizCategoryBadge) {
+                this.dom.quizCategoryBadge.textContent = q.category;
             }
 
+            // 2. 문제 풀이 권한 상태 뱃지
+            if (this.dom.quizTurnRoleBadge) {
+                if (isSpectator) {
+                    this.dom.quizTurnRoleBadge.innerHTML = `<span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 font-black text-xs border border-amber-400 flex items-center gap-1 animate-pulse"><i class="fa-solid fa-lock text-amber-600"></i> [${actorName || '상대방'}]님이 푸는 중 (윷 던진 사람만 풀기 가능)</span>`;
+                } else {
+                    this.dom.quizTurnRoleBadge.innerHTML = `<span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 font-black text-xs border border-blue-300 flex items-center gap-1"><i class="fa-solid fa-pen-nib text-blue-600"></i> 내 차례 (정답을 선택하세요)</span>`;
+                }
+                this.dom.quizTurnRoleBadge.classList.remove('hidden');
+            }
+
+            // 3. 문제 프롬프트 및 메인 질문 텍스트
+            if (this.dom.quizPrompt) this.dom.quizPrompt.textContent = q.prompt;
+            if (this.dom.quizQuestionText) this.dom.quizQuestionText.textContent = q.questionText;
+            if (this.dom.quizSubText) this.dom.quizSubText.textContent = q.subText || '';
+
+            // 4. 하단 풀이 권한 및 관전 안내 문구
+            if (this.dom.quizFooterNotice) {
+                if (isSpectator) {
+                    this.dom.quizFooterNotice.innerHTML = `
+                        <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-circle-info text-amber-500 text-sm"></i>
+                            <span><strong>[${actorName || '상대방'}]</strong>님이 윷을 던져 문제를 푸는 중입니다. 윷을 던진 사람만 정답을 맞힐 수 있습니다.</span>
+                        </div>
+                    `;
+                    this.dom.quizFooterNotice.classList.remove('hidden');
+                } else {
+                    this.dom.quizFooterNotice.innerHTML = `
+                        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-xs font-bold text-center">
+                            💡 문제를 맞히면 선택한 말이 전진합니다!
+                        </div>
+                    `;
+                    this.dom.quizFooterNotice.classList.remove('hidden');
+                }
+            }
+
+            // 5. 문제 유형별 보기 UI 렌더링
             if (q.type === 'sent_scramble') {
-                // 어순 배열 퀴즈 UI
                 this.dom.quizChoicesGrid.classList.add('hidden');
                 this.dom.quizScrambleArea.classList.remove('hidden');
-                this.setupScrambleQuizUI(q, piece, movePath);
+                this.setupScrambleQuizUI(q, piece, movePath, isSpectator, actorName);
             } else {
-                // 객관식 4지선다 퀴즈 UI
                 this.dom.quizScrambleArea.classList.add('hidden');
                 this.dom.quizChoicesGrid.classList.remove('hidden');
-                this.setupMultipleChoiceUI(q, piece, movePath);
+                this.setupMultipleChoiceUI(q, piece, movePath, isSpectator, actorName);
             }
 
-            // 방장 권한인 경우 비상 정답 인정 바 표시
+            // 6. 방장 권한인 경우 비상 정답 인정 바 표시
             if (this.dom.hostQuizEmergencyBar) {
                 const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
                 const isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
@@ -3473,51 +3591,93 @@
                 }
             }
 
+            // 7. TTS 자동 재생 (윷 던진 사람 기기에서만 자동 재생하여 교실 오디오 중복 방지, 관전자는 볼륨 버튼으로 청취)
+            if (q.ttsText && !isSpectator) {
+                setTimeout(() => Sound.speakText(q.ttsText), 200);
+            }
+
             this.dom.quizModal.classList.remove('hidden');
         }
 
-        setupMultipleChoiceUI(q, piece, movePath) {
+        setupMultipleChoiceUI(q, piece, movePath, isSpectator = false, actorName = '') {
             this.dom.quizChoicesGrid.innerHTML = '';
             q.choices.forEach((choiceText, idx) => {
-                const btn = document.createElement('button');
-                btn.className = 'w-full py-3.5 px-4 rounded-xl border-2 border-slate-200 bg-white text-slate-800 font-bold text-base hover:bg-amber-50 hover:border-amber-400 active:scale-98 transition-all flex items-center justify-between shadow-sm';
-                btn.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <span class="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-black border border-slate-300">${idx + 1}</span>
-                        <span>${choiceText}</span>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
-                `;
+                if (isSpectator) {
+                    // 관전자 / 상대방: 모든 보기가 선명하게 보이지만 클릭 불가 (읽기 전용 관전)
+                    const item = document.createElement('div');
+                    item.className = 'w-full py-3.5 px-4 rounded-xl border-2 border-slate-200 bg-slate-50/90 text-slate-700 font-bold text-base flex items-center justify-between shadow-sm cursor-default select-none';
+                    item.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="w-7 h-7 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-black border border-slate-300">${idx + 1}</span>
+                            <span>${choiceText}</span>
+                        </div>
+                        <span class="text-xs font-semibold text-slate-400 flex items-center gap-1">
+                            <i class="fa-solid fa-eye text-slate-400"></i> 관전 중
+                        </span>
+                    `;
+                    this.dom.quizChoicesGrid.appendChild(item);
+                } else {
+                    // 윷을 던진 사람: 풀이 가능한 인터랙티브 버튼
+                    const btn = document.createElement('button');
+                    btn.className = 'w-full py-3.5 px-4 rounded-xl border-2 border-slate-200 bg-white text-slate-800 font-bold text-base hover:bg-amber-50 hover:border-amber-400 active:scale-98 transition-all flex items-center justify-between shadow-sm cursor-pointer';
+                    btn.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-black border border-slate-300">${idx + 1}</span>
+                            <span>${choiceText}</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
+                    `;
 
-                btn.addEventListener('click', () => {
-                    this.onChoiceSelected(idx, choiceText, q, piece, movePath);
-                });
-                this.dom.quizChoicesGrid.appendChild(btn);
+                    btn.addEventListener('click', () => {
+                        this.onChoiceSelected(idx, choiceText, q, piece, movePath);
+                    });
+                    this.dom.quizChoicesGrid.appendChild(btn);
+                }
             });
         }
 
-        setupScrambleQuizUI(q, piece, movePath) {
+        setupScrambleQuizUI(q, piece, movePath, isSpectator = false, actorName = '') {
             this.scrambleState = {
                 tokens: [...q.tokens],
                 selected: [],
                 target: q,
                 piece: piece,
-                movePath: movePath
+                movePath: movePath,
+                isSpectator: isSpectator
             };
             this.renderScrambleTokens();
+
+            if (this.dom.quizScrambleResetBtn && this.dom.quizScrambleSubmitBtn) {
+                if (isSpectator) {
+                    this.dom.quizScrambleResetBtn.disabled = true;
+                    this.dom.quizScrambleResetBtn.classList.add('opacity-40', 'cursor-not-allowed', 'pointer-events-none');
+                    this.dom.quizScrambleSubmitBtn.disabled = true;
+                    this.dom.quizScrambleSubmitBtn.classList.add('opacity-40', 'cursor-not-allowed', 'pointer-events-none');
+                    this.dom.quizScrambleSubmitBtn.innerHTML = `<i class="fa-solid fa-lock mr-1.5"></i>[${actorName || '상대방'}] 풀이 중`;
+                } else {
+                    this.dom.quizScrambleResetBtn.disabled = false;
+                    this.dom.quizScrambleResetBtn.classList.remove('opacity-40', 'cursor-not-allowed', 'pointer-events-none');
+                    this.dom.quizScrambleSubmitBtn.disabled = false;
+                    this.dom.quizScrambleSubmitBtn.classList.remove('opacity-40', 'cursor-not-allowed', 'pointer-events-none');
+                    this.dom.quizScrambleSubmitBtn.innerHTML = `제출하기`;
+                }
+            }
         }
 
         renderScrambleTokens() {
             if (!this.dom.quizAnswerTokensContainer || !this.dom.quizSourceTokensContainer) return;
+            const isSpectator = Boolean(this.scrambleState && this.scrambleState.isSpectator);
 
             // 1. 조립된 단어들 (답안 영역)
             this.dom.quizAnswerTokensContainer.innerHTML = '';
-            if (this.scrambleState.selected.length === 0) {
+            if (isSpectator) {
+                this.dom.quizAnswerTokensContainer.innerHTML = '<span class="text-slate-400 text-sm flex items-center gap-1.5"><i class="fa-solid fa-hourglass-half text-amber-500"></i> 상대방이 단어를 알맞은 순서로 배열하고 있습니다...</span>';
+            } else if (this.scrambleState.selected.length === 0) {
                 this.dom.quizAnswerTokensContainer.innerHTML = '<span class="text-slate-400 text-sm">아래 단어들을 눌러 문장을 만드세요.</span>';
             } else {
                 this.scrambleState.selected.forEach((word, idx) => {
                     const chip = document.createElement('span');
-                    chip.className = 'scramble-chip px-3 py-1.5 rounded-lg bg-amber-500 text-white font-bold text-sm shadow hover:bg-amber-600 flex items-center gap-1.5';
+                    chip.className = 'scramble-chip px-3 py-1.5 rounded-lg bg-amber-500 text-white font-bold text-sm shadow hover:bg-amber-600 flex items-center gap-1.5 cursor-pointer';
                     chip.innerHTML = `${word} <i class="fa-solid fa-xmark text-xs opacity-75"></i>`;
                     chip.addEventListener('click', () => {
                         // 취소하고 다시 보기로 복원
@@ -3532,20 +3692,28 @@
             // 2. 선택 가능한 단어들 (보기 영역)
             this.dom.quizSourceTokensContainer.innerHTML = '';
             this.scrambleState.tokens.forEach((word, idx) => {
-                const chip = document.createElement('button');
-                chip.className = 'scramble-chip px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 font-bold text-sm shadow-sm';
-                chip.textContent = word;
-                chip.addEventListener('click', () => {
-                    this.scrambleState.selected.push(word);
-                    this.scrambleState.tokens.splice(idx, 1);
-                    this.renderScrambleTokens();
-                });
-                this.dom.quizSourceTokensContainer.appendChild(chip);
+                if (isSpectator) {
+                    const chip = document.createElement('span');
+                    chip.className = 'scramble-chip px-3.5 py-2 rounded-xl bg-slate-100 border border-slate-300 text-slate-700 font-bold text-sm shadow-sm cursor-default select-none';
+                    chip.textContent = word;
+                    this.dom.quizSourceTokensContainer.appendChild(chip);
+                } else {
+                    const chip = document.createElement('button');
+                    chip.className = 'scramble-chip px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 font-bold text-sm shadow-sm cursor-pointer';
+                    chip.textContent = word;
+                    chip.addEventListener('click', () => {
+                        this.scrambleState.selected.push(word);
+                        this.scrambleState.tokens.splice(idx, 1);
+                        this.renderScrambleTokens();
+                    });
+                    this.dom.quizSourceTokensContainer.appendChild(chip);
+                }
             });
         }
 
         resetScrambleQuiz() {
             if (!this.scrambleState) return;
+            if (this.scrambleState.isSpectator) return;
             this.scrambleState.tokens = [...this.scrambleState.target.tokens];
             this.scrambleState.selected = [];
             this.renderScrambleTokens();
@@ -3553,6 +3721,20 @@
 
         submitScrambleQuiz() {
             if (!this.scrambleState) return;
+            if (this.scrambleState.isSpectator) return;
+
+            // 실시간 온라인 모드일 때 권한 엄격 검증 (윷 던진 사람만 제출 가능)
+            if (this.isOnline) {
+                const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
+                const isMyTurn = (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId);
+                const isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
+                               (this.currentRoomData && this.currentRoomData.hostId === mySessionId);
+                if (!isMyTurn && !isHost) {
+                    console.warn("[Yutnori] Non-turn player cannot submit scramble quiz.");
+                    return;
+                }
+            }
+
             const userSentence = this.scrambleState.selected.join(' ').trim();
             const correctSentence = this.scrambleState.target.answerSentence.trim();
             const isCorrect = (userSentence === correctSentence);
@@ -3563,6 +3745,18 @@
         }
 
         onChoiceSelected(choiceIdx, choiceText, q, piece, movePath) {
+            // 실시간 온라인 모드일 때 권한 엄격 검증 (윷 던진 사람만 선택 가능)
+            if (this.isOnline) {
+                const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
+                const isMyTurn = (this.currentRoomData && this.currentRoomData.currentTurnId === mySessionId);
+                const isHost = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost) || 
+                               (this.currentRoomData && this.currentRoomData.hostId === mySessionId);
+                if (!isMyTurn && !isHost) {
+                    console.warn("[Yutnori] Non-turn player cannot select quiz choices.");
+                    return;
+                }
+            }
+
             this.dom.quizModal.classList.add('hidden');
             if (this.dom.hostQuizEmergencyBar) this.dom.hostQuizEmergencyBar.classList.add('hidden');
             const isCorrect = (choiceText === q.answer);

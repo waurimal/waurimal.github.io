@@ -767,6 +767,38 @@ class YutnoriMultiplayerManager {
     }
 
     /**
+     * 영어 퀴즈 출제 동기화 (모든 참가자/관전자에게 문제 공개)
+     */
+    async sendActiveQuiz(quizData) {
+        if (!this.currentRoomId) return;
+        const isTurnPlayer = this.isMyTurn();
+        const isHost = this.isHost || (this.roomData && this.roomData.hostId === this.mySessionId);
+        if (!isTurnPlayer && !isHost) return;
+
+        const currentTurnPlayer = (this.roomData && this.roomData.players) ? this.roomData.players[this.roomData.currentTurnId] : null;
+        const actorName = currentTurnPlayer ? currentTurnPlayer.name : '플레이어';
+        const roomRef = doc(db, ROOMS_COLLECTION, this.currentRoomId);
+
+        try {
+            await updateDoc(roomRef, {
+                gameState: 'WAIT_QUIZ',
+                activeQuiz: quizData || null,
+                quizResult: null,
+                lastAction: {
+                    type: 'SHOW_QUIZ',
+                    actorId: this.roomData.currentTurnId,
+                    playerName: actorName,
+                    proxyHostId: (!isTurnPlayer && isHost) ? this.mySessionId : null,
+                    timestamp: Date.now()
+                },
+                updatedAt: Date.now()
+            });
+        } catch (e) {
+            console.error("[Multiplayer] sendActiveQuiz Error:", e);
+        }
+    }
+
+    /**
      * 퀴즈 풀이 결과 동기화
      */
     async sendQuizResult(isCorrect, explanation, answer) {
@@ -784,6 +816,7 @@ class YutnoriMultiplayerManager {
                 // 정답: 말 이동 진행 대기
                 await updateDoc(roomRef, {
                     gameState: 'WAIT_MOVE',
+                    activeQuiz: null,
                     quizResult: {
                         isCorrect: true,
                         explanation: explanation || '',
@@ -802,6 +835,7 @@ class YutnoriMultiplayerManager {
                 // 오답: 피드백 표시 후 턴 종료 대기 (턴 넘김은 feedback 닫힘 및 endTurn 시 일괄 동기화)
                 await updateDoc(roomRef, {
                     gameState: 'WAIT_QUIZ_FEEDBACK',
+                    activeQuiz: null,
                     quizResult: {
                         isCorrect: false,
                         explanation: explanation || '',

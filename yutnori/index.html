@@ -867,7 +867,7 @@
                     <span id="quizCategoryBadge" class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 font-black text-xs border border-amber-300">
                         단어 퀴즈
                     </span>
-                    <span class="text-xs text-slate-500 font-bold hidden sm:inline">문제를 맞혀야 전진합니다!</span>
+                    <span id="quizTurnRoleBadge" class="text-xs text-slate-500 font-bold hidden sm:inline">문제를 맞혀야 전진합니다!</span>
                 </div>
                 <!-- TTS 음성 재생 버튼 -->
                 <button id="quizTtsBtn" class="w-9 h-9 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 flex items-center justify-center transition shadow-sm cursor-pointer" title="원어민 발음 듣기">
@@ -913,6 +913,9 @@
                     </button>
                 </div>
             </div>
+
+            <!-- 퀴즈 하단 풀이 권한 및 관전 안내 문구 -->
+            <div id="quizFooterNotice" class="mt-3 text-center text-xs font-bold text-slate-500 hidden"></div>
 
             <!-- 방장 긴급 제어: 정답 인정 및 즉시 이동 바 -->
             <div id="hostQuizEmergencyBar" class="hidden mt-3 pt-3 border-t border-slate-200 flex items-center justify-between">
@@ -1544,13 +1547,13 @@
     </button>
 
     <!-- 스크립트 연결 (캐시 무효화 버전 쿼리 파라미터 적용) -->
-    <script src="questions.js?v=20261112_grade3456_v3"></script>
-    <script src="game.js?v=20261112_grade3456_v3"></script>
-    <script type="module" src="multiplayer.js?v=20261112_grade3456_v3"></script>
+    <script src="questions.js?v=20261116_quiz_broadcast_v4"></script>
+    <script src="game.js?v=20261116_quiz_broadcast_v4"></script>
+    <script type="module" src="multiplayer.js?v=20261116_quiz_broadcast_v4"></script>
 
     <!-- UI 화면 전환 및 온라인 멀티 제어 스크립트 -->
     <script type="module">
-        import { multiplayerManager } from './multiplayer.js?v=20261112_grade3456_v3';
+        import { multiplayerManager } from './multiplayer.js?v=20261116_quiz_broadcast_v4';
 
         // 학년 레이블 변환 전역 함수
         window.getGradeLabel = function(g) {
