@@ -264,8 +264,21 @@ class JumpmanHallOfFame {
         return this.getLocalRecords();
     }
 
-    // 명예의 전당 필터링 목록
-    getFilteredRecords({ period = 'all', grade = 'all', classNum = 'all', keyword = '' } = {}) {
+    // 학생 이름 가운데 마스킹 (홍O동, 김O)
+    maskName(name) {
+        if (typeof window !== 'undefined' && typeof window.maskName === 'function') {
+            return window.maskName(name);
+        }
+        if (!name) return '학생';
+        const str = String(name).trim().replace(/\*/g, 'O');
+        if (str.length <= 1) return str;
+        if (str.length === 2) return str[0] + 'O';
+        if (str.length === 3) return str[0] + 'O' + str[2];
+        return str[0] + 'O'.repeat(str.length - 2) + str[str.length - 1];
+    }
+
+    // 명예의 전당 필터링 목록 (1인 1최고점수 유지)
+    getFilteredRecords({ period = 'all', grade = 'all', classNum = 'all', keyword = '', bestOnly = true } = {}) {
         let records = this.getLocalRecords();
         const now = new Date();
 
@@ -294,7 +307,26 @@ class JumpmanHallOfFame {
             records = records.filter(r => (r.name || '').toLowerCase().includes(kw));
         }
 
-        return records.sort((a, b) => b.score - a.score);
+        // 점수 기준 내림차순 정렬 (높은 점수 우선)
+        records.sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
+
+        // ★ 1인 1최고점수만 남기기 (학생 식별: 학년+반+번호+이름)
+        if (bestOnly) {
+            const bestMap = new Map();
+            for (const r of records) {
+                const cleanName = String(r.name || '학생').trim();
+                const studentKey = (r.studentNum && Number(r.studentNum) > 0)
+                    ? `${r.grade || ''}_${r.classNum || ''}_${r.studentNum}_${cleanName}`
+                    : `${r.grade || ''}_${r.classNum || ''}_${cleanName}`;
+
+                if (!bestMap.has(studentKey)) {
+                    bestMap.set(studentKey, r);
+                }
+            }
+            records = Array.from(bestMap.values());
+        }
+
+        return records.sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
     }
 }
 
