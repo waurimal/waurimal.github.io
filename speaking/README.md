@@ -44,19 +44,35 @@ AI 컴퓨터 원어민 파트너와 실시간으로 대화를 주고받는(핑�
   - 순위, 학생 이름, 학적, 학습 단원, **모드(일반/고급)**, 점수, 평균 정확도, 소요 시간, 일시가 포함된 종합 성적표 제공.
 - **학급 성적 일괄 삭제 기능**: 학년/반 단위 시험이나 연습 후 데이터 깔끔 정리 지원.
 
-### 5. 📚 기본 탑재 대화 단원 (12개 테마 세트)
-1. **Lesson 1. 인사와 안부 (Greetings & How are you?)**
-2. **Lesson 2. 통성명과 국적 (Names & Countries)**
-3. **Lesson 3. 날씨와 계절 (Weather & Seasons)**
-4. **Lesson 4. 시간과 하루 일과 (Time & Daily Routine)**
-5. **Lesson 5. 좋아하는 음식과 주문 (Food & Ordering)**
-6. **Lesson 6. 길 찾기와 위치 (Directions & Locations)**
-7. **Lesson 7. 기분과 감정 (Feelings & Emotions)**
-8. **Lesson 8. 주말 계획과 여가 (Weekend Plans & Hobbies)**
-9. **Lesson 9. 생일과 특별한 날 (Birthdays & Celebrations)**
-10. **Lesson 10. 가격 묻기와 쇼핑 (Shopping & Prices)**
-11. **Lesson 11. 도움 요청과 감사 (Asking for Help & Thanks)**
-12. **Lesson 12. 미래의 꿈과 장래희망 (Future Dreams & Jobs)**
+### 5. 📚 교과과정 연계 탑재 단원 목록 (총 24개 단원)
+
+#### 🏫 [천재교육 함순애 6학년 영어 교과서 1~12단원 전 단원 정합]
+1. **6학년 1단원: What Grade Are You In?** (학년과 서수, 이름 철자 묻고 답하기)
+2. **6학년 2단원: What Season Do You Like?** (좋아하는 계절과 이유, 날씨와 활동)
+3. **6학년 3단원: When Is Your Birthday?** (생일과 날짜, 기념일 행사, 기대 표현)
+4. **6학년 4단원: Why Are You Happy?** (기분/감정과 원인 이유 나누기, 위로하기)
+5. **6학년 5단원: Where Is the Library?** (길 묻고 안내하기, 건물 위치 표현)
+6. **6학년 6단원: What Does He Look Like?** (인물의 외모와 옷차림 묘사하기)
+7. **6학년 7단원: Can You Come to the Festival?** (축제/행사 초대하고 일정 정하기)
+8. **6학년 8단원: It's Taller Than the Tree** (비교급과 사물/동물 특징 비교하기)
+9. **6학년 9단원: What Are You Going to Do?** (방학 계획과 미래 활동 묻고 답하기)
+10. **6학년 10단원: How Often Do You Eat Vegetables?** (식습관과 생활 빈도 묻기, 건강 조언)
+11. **6학년 11단원: Do You Know Anything About Tuho?** (전통 놀이와 세계 문화 소개)
+12. **6학년 12단원: We Made a Class Album** (1년의 추억과 과거 경험 회상하기)
+
+#### 💬 [실생활 일상 회화 테마 1~12단원]
+13. 테마 1. New Friends (새 친구와 첫 인사)
+14. 테마 2. Favorite Seasons (좋아하는 계절 이야기)
+15. 테마 3. Birthday & Dates (생일 파티와 선물)
+16. 테마 4. How Are You Feeling? (오늘의 기분과 위로)
+17. 테마 5. Finding the Way (거리에서 길 찾기)
+18. 테마 6. Weekend Plans (주말 계획 묻고 답하기)
+19. 테마 7. Ordering Food (식당에서 음식 주문하기)
+20. 테마 8. Daily Habits & Sports (운동과 일상 습관)
+21. 테마 9. Asking for Favors (도움과 부탁하기)
+22. 테마 10. School Subjects (좋아하는 과목과 이유)
+23. 테마 11. Shopping for Clothes (옷 가게에서 쇼핑하기)
+24. 테마 12. Future Dreams (미래의 꿈과 장래희망)
 
 ---
 
