@@ -142,6 +142,90 @@ body {
     background: rgba(239, 68, 68, 0.95);
 }
 
+/* 홈 화면 분할 그리드 (영어 읽기/쓰기 표준 50:50 레이아웃) */
+.home-split-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+    align-items: stretch;
+    width: 100%;
+}
+
+@media (max-width: 960px) {
+    .home-split-grid {
+        grid-template-columns: 1fr;
+        gap: 1.2rem;
+    }
+}
+
+.home-left, .home-right {
+    width: 100%;
+    min-width: 0;
+}
+
+/* 카드 컴포넌트 */
+.jumpman-card {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(12px);
+    transition: all 0.2s ease;
+}
+
+/* 명예의 전당 헤더 및 뱃지 */
+.hof-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.hof-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #f8fafc;
+}
+
+.hof-live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 0.15rem 0.55rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(52, 211, 153, 0.4);
+    letter-spacing: 0.04em;
+}
+
+.pulse-dot {
+    width: 6px;
+    height: 6px;
+    background: #10b981;
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulseGreen 1.5s infinite;
+}
+
+@keyframes pulseGreen {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.hof-subtitle {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
 /* 명예의 전당 테이블 */
 .hof-table {
     width: 100%;
@@ -160,17 +244,21 @@ body {
 }
 
 /* 커스텀 스크롤바 */
+.custom-scrollbar::-webkit-scrollbar,
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
+.custom-scrollbar::-webkit-scrollbar-track,
 ::-webkit-scrollbar-track {
     background: #0f172a;
 }
+.custom-scrollbar::-webkit-scrollbar-thumb,
 ::-webkit-scrollbar-thumb {
     background: #334155;
     border-radius: 3px;
 }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
 ::-webkit-scrollbar-thumb:hover {
     background: #475569;
 }
