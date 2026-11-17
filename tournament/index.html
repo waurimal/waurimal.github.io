@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>스마트 토너먼트 대진표 배정기 - 와우리말 에듀테크</title>
+
+    <!-- Pretendard 웹폰트 -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+    <!-- Tailwind CSS (Play CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- canvas-confetti (우승 축하 폭죽) -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+    <!-- html2canvas (대진표 이미지 다운로드) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- 와우리말 공통 테마 -->
+    <link rel="stylesheet" href="../common/waurimal-theme.css">
+
+    <style>
+        * {
+            font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #F8FAFC;
+            color: #0F172A;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: auto;
+        }
+
+        /* 스크롤바 커스텀 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F1F5F9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
+        }
+
+        /* 매치 카드 스타일 */
+        .match-card {
+            background: #FFFFFF;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 14px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .match-card:hover {
+            border-color: #38BDF8;
+            box-shadow: 0 10px 15px -3px rgba(2, 132, 199, 0.12), 0 4px 6px -4px rgba(2, 132, 199, 0.08);
+        }
+
+        .participant-slot {
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+        .participant-slot:hover {
+            background-color: #F0F9FF;
+        }
+        .participant-slot.winner {
+            background-color: #ECFDF5;
+            color: #065F46;
+            font-weight: 800;
+        }
+        .participant-slot.winner .winner-badge {
+            display: inline-flex;
+        }
+        .participant-slot.loser {
+            color: #94A3B8;
+            background-color: #F8FAFC;
+        }
+
+        .participant-slot.swap-selected {
+            outline: 2px dashed #F59E0B;
+            background-color: #FEF3C7 !important;
+            animation: pulse-swap 1.2s infinite;
+        }
+
+        @keyframes pulse-swap {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        /* 브래킷 연결선 (Connector Lines) */
+        .connector-line {
+            position: absolute;
+            right: -24px;
+            width: 24px;
+            border-right: 2px solid #CBD5E1;
+            pointer-events: none;
+        }
+        .connector-line-h {
+            position: absolute;
+            left: -24px;
+            width: 24px;
+            top: 50%;
+            height: 2px;
+            background-color: #CBD5E1;
+            pointer-events: none;
+        }
+
+        /* 인쇄 전용 스타일 */
+        @media print {
+            body {
+                background: white !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-area {
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .match-card {
+                border: 1.5px solid #000000 !important;
+                box-shadow: none !important;
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- 와우리말 공통 GNB 네비게이션 스크립트 -->
+    <script src="../common/waurimal-nav.js"></script>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 상단 툴바 및 컨트롤 헤더 -->
+    <!-- ─────────────────────────────────────────── -->
+    <header class="no-print bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <!-- 좌측 타이틀 & 배지 -->
+            <div class="flex items-center gap-3">
+                <div id="tournamentIconBadge" class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-xl shadow-xs">
+                    🏆
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 id="headerTournamentTitle" class="text-base md:text-lg font-black text-slate-900 tracking-tight">
+                            우리 반 챔피언십 토너먼트
+                        </h1>
+                        <span id="headerRoundCountBadge" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                            8강 토너먼트
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500">
+                        클릭 한 번으로 승자를 진출시키고 실시간 대진표를 관리하세요.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 우측 액션 버튼 모음 -->
+            <div class="flex items-center flex-wrap gap-2">
+                <button type="button" onclick="openSetupModal()" class="px-3.5 py-2 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-users-gear"></i>
+                    <span>명단 및 대진 생성</span>
+                </button>
+
+                <button type="button" id="btnToggleSwap" onclick="toggleSwapMode()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                    <span id="swapBtnText">자리 맞교환</span>
+                </button>
+
+                <button type="button" onclick="downloadBracketImage()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1.5" title="이미지로 저장">
+                    <i class="fa-solid fa-camera"></i>
+                    <span class="hidden sm:inline">이미지 저장</span>
+                </button>
+
+                <button type="button" onclick="window.print()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1.5" title="인쇄하기">
+                    <i class="fa-solid fa-print"></i>
+                    <span class="hidden sm:inline">인쇄</span>
+                </button>
+
+                <button type="button" onclick="toggleFullscreen()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition" title="전체화면">
+                    <i id="fullscreenIcon" class="fa-solid fa-expand"></i>
+                </button>
+
+                <button type="button" onclick="confirmResetTournament()" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold rounded-xl border border-rose-200 transition" title="대진표 초기화">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 메인 대진표 브래킷 캔버스 영역 -->
+    <!-- ─────────────────────────────────────────── -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 print-area overflow-x-auto">
+        <!-- 맞교환 모드 안내 배너 (활성화 시 표시) -->
+        <div id="swapModeBanner" class="hidden no-print mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-center text-xs font-bold text-amber-800 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-circle-info text-amber-600"></i>
+            <span>[자리 맞교환 모드 작동 중] 1라운드에서 자리를 바꿀 두 선수를 차례대로 클릭하세요.</span>
+            <button type="button" onclick="toggleSwapMode()" class="ml-3 px-2 py-0.5 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded font-black">완료</button>
+        </div>
+
+        <!-- 대진표 타이틀 및 경기 요약 바 (인쇄 및 캡처 시에도 노출) -->
+        <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-200 pb-4">
+            <div>
+                <h2 id="tournamentTitleDisplay" class="text-xl md:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+                    <span id="tournamentIconDisplay">🏆</span>
+                    <span id="tournamentNameText">우리 반 챔피언십 토너먼트</span>
+                </h2>
+                <div id="tournamentSubtitle" class="text-xs text-slate-500 mt-1 font-medium">
+                    총 8명 참가 • 4강 토너먼트 대진표
+                </div>
+            </div>
+
+            <!-- 현재 상태 인디케이터 -->
+            <div id="progressStatusBadge" class="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-full flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span id="progressStatusText">경기가 진행 중입니다</span>
+            </div>
+        </div>
+
+        <!-- 브래킷 렌더링 컨테이너 -->
+        <div id="bracketCaptureArea" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs min-w-[760px]">
+            <div id="bracketRoundsContainer" class="flex gap-8 justify-between items-stretch">
+                <!-- JavaScript renderBracket()에 의해 라운드별 컬럼이 동적 생성됩니다 -->
+            </div>
+
+            <!-- 3·4위전 (동메달 결정전) 영역 -->
+            <div id="bronzeMatchSection" class="mt-8 pt-6 border-t border-slate-200 flex flex-col items-center">
+                <div class="text-xs font-black text-amber-800 bg-amber-50 px-3 py-1 rounded-full border border-amber-200 mb-3 flex items-center gap-1.5">
+                    <span>🥉</span>
+                    <span>3·4위전 (동메달 결정전)</span>
+                </div>
+                <div id="bronzeMatchCardWrap" class="w-64">
+                    <!-- JavaScript renderBronzeMatch()에 의해 렌더링됩니다 -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 1. 명단 입력 및 대진 생성 설정 모달 -->
+    <!-- ─────────────────────────────────────────── -->
+    <div id="setupModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col my-auto">
+            <!-- 헤더 -->
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-sky-500 text-white flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-black text-slate-900">토너먼트 대진표 설정</h3>
+                        <p class="text-xs text-slate-500">참가자 명단을 입력하고 배정 방식을 선택하세요.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeSetupModal()" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- 바디 (스크롤 가능) -->
+            <div class="flex-1 overflow-y-auto py-4 space-y-5 pr-1">
+                <!-- 대회 제목 및 종목 아이콘 -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700">대회 명칭 & 종목 아이콘</label>
+                    <div class="flex gap-2">
+                        <select id="inputTournamentIcon" class="w-16 px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-center text-lg font-bold">
+                            <option value="🏆">🏆</option>
+                            <option value="🏸">🏸</option>
+                            <option value="⚽">⚽</option>
+                            <option value="🏀">🏀</option>
+                            <option value="🎮">🎮</option>
+                            <option value="🪵">🪵</option>
+                            <option value="🧠">🧠</option>
+                            <option value="🏓">🏓</option>
+                            <option value="🥋">🥋</option>
+                            <option value="♟️">♟️</option>
+                            <option value="🎯">🎯</option>
+                            <option value="🥊">🥊</option>
+                        </select>
+                        <input type="text" id="inputTournamentTitle" placeholder="예: 6학년 1반 배드민턴 토너먼트" value="우리 반 챔피언십 토너먼트" class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:bg-white focus:border-sky-500 outline-hidden">
+                    </div>
+                </div>
+
+                <!-- 참가자 명단 입력 영역 -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold text-slate-700">
+                            참가자 명단 입력 <span id="participantCountLabel" class="text-sky-600 font-extrabold">(0명)</span>
+                        </label>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" onclick="clearParticipantsInput()" class="text-[11px] font-bold text-slate-500 hover:text-rose-600 px-2 py-0.5 rounded hover:bg-slate-100 transition">
+                                비우기
+                            </button>
+                        </div>
+                    </div>
+
+                    <textarea id="inputParticipantsText" rows="6" oninput="updateParticipantCountDisplay()" placeholder="참가자 이름을 한 줄에 한 명씩 입력하거나 쉼표(,)로 구분해 입력하세요.&#10;예:&#10;김철수&#10;이영희&#10;박민수&#10;정지원" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:border-sky-500 outline-hidden leading-relaxed"></textarea>
+
+                    <!-- 원클릭 빠른 인원 프리셋 버튼 -->
+                    <div class="space-y-1">
+                        <div class="text-[11px] font-bold text-slate-500">빠른 인원 프리셋:</div>
+                        <div class="flex flex-wrap gap-1.5">
+                            <button type="button" onclick="applyPresetNumbers(4)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition">4명</button>
+                            <button type="button" onclick="applyPresetNumbers(6)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition">6명 (부전승 2)</button>
+                            <button type="button" onclick="applyPresetNumbers(8)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition">8명 (8강)</button>
+                            <button type="button" onclick="applyPresetNumbers(12)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition">12명</button>
+                            <button type="button" onclick="applyPresetNumbers(16)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition">16명 (16강)</button>
+                            <button type="button" onclick="applyPresetNumbers(24)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition">24명</button>
+                            <button type="button" onclick="applyPresetNumbers(25)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition">25명 (1학급)</button>
+                            <button type="button" onclick="applyPresetNumbers(26)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition">26명</button>
+                            <button type="button" onclick="applyPresetTeams(6)" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[11px] font-bold rounded-lg transition">6모둠(팀)</button>
+                            <button type="button" onclick="applyPresetTeams(8)" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[11px] font-bold rounded-lg transition">8모둠(팀)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 배정 방식 선택 -->
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-700">대진표 배정 방식</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 border-sky-500 bg-sky-50/50 cursor-pointer text-center">
+                            <input type="radio" name="drawMethod" value="animated" checked class="text-sky-600 focus:ring-sky-500">
+                            <span class="text-lg">🎲</span>
+                            <span class="text-xs font-black text-sky-950">두구두구 추첨</span>
+                            <span class="text-[10px] text-slate-500">슬롯머신 연출</span>
+                        </label>
+
+                        <label class="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white cursor-pointer text-center">
+                            <input type="radio" name="drawMethod" value="instant" class="text-sky-600 focus:ring-sky-500">
+                            <span class="text-lg">⚡</span>
+                            <span class="text-xs font-black text-slate-800">즉시 셔플</span>
+                            <span class="text-[10px] text-slate-500">대기 없이 배정</span>
+                        </label>
+
+                        <label class="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white cursor-pointer text-center">
+                            <input type="radio" name="drawMethod" value="order" class="text-sky-600 focus:ring-sky-500">
+                            <span class="text-lg">🔢</span>
+                            <span class="text-xs font-black text-slate-800">입력 순서대로</span>
+                            <span class="text-[10px] text-slate-500">시드/순위 배치</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 부가 옵션 -->
+                <div class="space-y-2 pt-2 border-t border-slate-100">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="checkBronzeMatch" checked class="w-4 h-4 rounded text-sky-600 focus:ring-sky-500">
+                        <span class="text-xs font-bold text-slate-800">🥉 3·4위전 (동메달 결정전) 포함하기</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="checkSoundEffects" checked class="w-4 h-4 rounded text-sky-600 focus:ring-sky-500">
+                        <span class="text-xs font-bold text-slate-800">🔊 효과음 (추첨 사운드, 승자 딩동, 팡파레) 활성화</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 하단 확인 버튼 -->
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeSetupModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">
+                    취소
+                </button>
+                <button type="button" onclick="generateTournamentFromModal()" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black rounded-xl shadow-xs transition flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>토너먼트 대진표 완성하기</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 2. 점수 입력 모달 -->
+    <!-- ─────────────────────────────────────────── -->
+    <div id="scoreModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100">
+            <h3 id="scoreModalTitle" class="text-sm font-black text-slate-900 text-center mb-1">경기 결과 입력</h3>
+            <p id="scoreModalMatchDesc" class="text-xs text-slate-500 text-center mb-4">점수를 입력하고 승자를 선택하세요.</p>
+
+            <div class="space-y-3">
+                <!-- 참가자 1 -->
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-200">
+                    <span id="scoreModalP1Name" class="text-xs font-black text-slate-800 truncate max-w-[150px]">선수 1</span>
+                    <input type="number" id="scoreModalP1Score" min="0" max="99" value="0" class="w-16 px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-center text-sm font-black focus:border-sky-500 outline-hidden">
+                </div>
+
+                <div class="text-center font-black text-xs text-slate-400">VS</div>
+
+                <!-- 참가자 2 -->
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-200">
+                    <span id="scoreModalP2Name" class="text-xs font-black text-slate-800 truncate max-w-[150px]">선수 2</span>
+                    <input type="number" id="scoreModalP2Score" min="0" max="99" value="0" class="w-16 px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-center text-sm font-black focus:border-sky-500 outline-hidden">
+                </div>
+            </div>
+
+            <div class="mt-5 flex gap-2">
+                <button type="button" onclick="closeScoreModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">
+                    취소
+                </button>
+                <button type="button" onclick="saveScoreModal()" class="flex-1 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-black rounded-xl shadow-xs transition">
+                    결과 저장
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 3. 우승자 시상식 & 포디움 축하 모달 -->
+    <!-- ─────────────────────────────────────────── -->
+    <div id="championModal" class="hidden fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 text-center shadow-2xl border-4 border-amber-300 relative overflow-hidden">
+            <!-- 배경 리본 장식 -->
+            <div class="absolute -top-12 -right-12 w-32 h-32 bg-amber-100 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="absolute -bottom-12 -left-12 w-32 h-32 bg-sky-100 rounded-full blur-2xl pointer-events-none"></div>
+
+            <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 text-white flex items-center justify-center text-4xl shadow-lg mb-3 animate-bounce">
+                🏆
+            </div>
+
+            <span class="text-xs font-black px-3 py-1 bg-amber-100 text-amber-800 rounded-full border border-amber-300">
+                CHAMPIONSHIP VICTORY
+            </span>
+
+            <h3 id="championModalTitle" class="text-xl md:text-2xl font-black text-slate-900 mt-2 mb-1">
+                토너먼트 우승을 축하합니다!
+            </h3>
+            <p id="championModalDesc" class="text-xs text-slate-500 mb-6">치열한 대결 끝에 영광의 챔피언이 탄생했습니다.</p>
+
+            <!-- 포디움 시상대 -->
+            <div class="grid grid-cols-3 gap-2 items-end mb-6 pt-4">
+                <!-- 2위 은메달 -->
+                <div class="flex flex-col items-center">
+                    <span class="text-xl mb-1">🥈</span>
+                    <div id="podium2ndName" class="text-xs font-black text-slate-700 truncate max-w-full px-1 mb-1">준우승</div>
+                    <div class="w-full h-20 bg-gradient-to-t from-slate-300 to-slate-200 rounded-t-xl flex items-center justify-center font-black text-sm text-slate-600 shadow-inner">
+                        2위
+                    </div>
+                </div>
+
+                <!-- 1위 금메달 (우승) -->
+                <div class="flex flex-col items-center">
+                    <span class="text-3xl mb-1">👑</span>
+                    <div id="podium1stName" class="text-sm font-black text-amber-600 truncate max-w-full px-1 mb-1">우승자</div>
+                    <div class="w-full h-28 bg-gradient-to-t from-amber-400 to-yellow-300 rounded-t-xl flex items-center justify-center font-black text-base text-amber-950 shadow-md">
+                        우승 🏆
+                    </div>
+                </div>
+
+                <!-- 3위 동메달 -->
+                <div class="flex flex-col items-center">
+                    <span class="text-xl mb-1">🥉</span>
+                    <div id="podium3rdName" class="text-xs font-black text-amber-900 truncate max-w-full px-1 mb-1">3위</div>
+                    <div class="w-full h-14 bg-gradient-to-t from-amber-700/30 to-amber-600/20 rounded-t-xl flex items-center justify-center font-black text-xs text-amber-900 shadow-inner">
+                        3위
+                    </div>
+                </div>
+            </div>
+
+            <!-- 모달 버튼 -->
+            <div class="flex gap-2">
+                <button type="button" onclick="closeChampionModal()" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">
+                    대진표 계속 보기
+                </button>
+                <button type="button" onclick="downloadBracketImage()" class="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black rounded-xl shadow-xs transition flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-camera"></i>
+                    <span>결과 이미지 저장</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 4. 추첨 애니메이션 오버레이 -->
+    <!-- ─────────────────────────────────────────── -->
+    <div id="drawAnimationOverlay" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-white text-center">
+        <div class="text-5xl md:text-6xl mb-4 animate-spin">
+            🎲
+        </div>
+        <h3 class="text-xl md:text-2xl font-black mb-2 tracking-tight">
+            대진을 랜덤 추첨하고 있습니다!
+        </h3>
+        <p class="text-xs text-sky-200 mb-6">
+            두구두구두구... 과연 첫 경기 상대는 누구일까요?
+        </p>
+        <div class="w-64 h-3 bg-slate-700 rounded-full overflow-hidden">
+            <div id="drawProgressBar" class="h-full bg-gradient-to-r from-sky-400 to-amber-400 w-0 transition-all duration-300"></div>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 자바스크립트 로직 모듈 -->
+    <!-- ─────────────────────────────────────────── -->
+    <script>
+        // ── 전역 상태 ──
+        let tournamentData = {
+            title: "우리 반 챔피언십 토너먼트",
+            icon: "🏆",
+            hasBronzeMatch: true,
+            soundEnabled: true,
+            participants: [],
+            bracketSize: 8,
+            rounds: [], // [ { roundIndex, roundName, matches: [ { id, p1, p2, winner, p1Score, p2Score, isBye } ] } ]
+            bronzeMatch: null, // { id: "bronze", p1, p2, winner, p1Score, p2Score }
+            champion: null,
+            runnerUp: null,
+            thirdPlace: null
+        };
+
+        let isSwapMode = false;
+        let swapSelectedSlot = null; // { roundIndex: 0, matchIndex, participantIndex: 1|2 }
+        let currentScoreTarget = null; // { roundIndex, matchIndex, isBronze }
+
+        // ── Web Audio API 사운드 합성기 ──
+        const AudioEngine = {
+            ctx: null,
+            init() {
+                if (!this.ctx && (window.AudioContext || window.webkitAudioContext)) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            playTick() {
+                if (!tournamentData.soundEnabled) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.05);
+                } catch(e){}
+            },
+            playWin() {
+                if (!tournamentData.soundEnabled) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+                    notes.forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
+                        gain.gain.setValueAtTime(0.12, this.ctx.currentTime + idx * 0.08);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.08 + 0.2);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(this.ctx.currentTime + idx * 0.08);
+                        osc.stop(this.ctx.currentTime + idx * 0.08 + 0.2);
+                    });
+                } catch(e){}
+            },
+            playFanfare() {
+                if (!tournamentData.soundEnabled) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const fanfare = [
+                        { f: 523.25, d: 0.12 }, // C5
+                        { f: 523.25, d: 0.12 }, // C5
+                        { f: 523.25, d: 0.12 }, // C5
+                        { f: 659.25, d: 0.25 }, // E5
+                        { f: 523.25, d: 0.12 }, // C5
+                        { f: 783.99, d: 0.5 }   // G5
+                    ];
+                    let curTime = this.ctx.currentTime;
+                    fanfare.forEach(item => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(item.f, curTime);
+                        gain.gain.setValueAtTime(0.15, curTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, curTime + item.d);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(curTime);
+                        osc.stop(curTime + item.d);
+                        curTime += item.d + 0.03;
+                    });
+                } catch(e){}
+            }
+        };
+
+        // ── 초기화 실행 ──
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSavedTournament();
+        });
+
+        // ── 로컬 스토리지 복원 또는 기본 생성 ──
+        function loadSavedTournament() {
+            try {
+                const saved = localStorage.getItem('waurimal_tournament_state');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && parsed.rounds && parsed.rounds.length > 0) {
+                        tournamentData = parsed;
+                        renderTournament();
+                        return;
+                    }
+                }
+            } catch(e){}
+
+            // 기본 8강 토너먼트 생성
+            const defaultNames = ["1번 김민수", "2번 이지우", "3번 박서준", "4번 최유진", "5번 정예준", "6번 강하은", "7번 윤도현", "8번 한소율"];
+            buildTournamentBracket(defaultNames, "instant");
+        }
+
+        function saveTournamentState() {
+            try {
+                localStorage.setItem('waurimal_tournament_state', JSON.stringify(tournamentData));
+            } catch(e){}
+        }
+
+        // ── 브래킷 생성 알고리즘 ──
+        function buildTournamentBracket(participantNames, drawMethod = "instant") {
+            // 이름 정리
+            const cleaned = participantNames.map(n => n.trim()).filter(n => n.length > 0);
+            if (cleaned.length < 2) {
+                alert("토너먼트를 진행하려면 최소 2명 이상의 참가자가 필요합니다.");
+                return;
+            }
+
+            // 셔플 방식 적용
+            let ordered = [...cleaned];
+            if (drawMethod === 'animated' || drawMethod === 'instant') {
+                for (let i = ordered.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [ordered[i], ordered[j]] = [ordered[j], ordered[i]];
+                }
+            }
+
+            // 가장 가까운 2의 거듭제곱 크기 결정 (4, 8, 16, 32, 64)
+            let bracketSize = 2;
+            while (bracketSize < ordered.length) {
+                bracketSize *= 2;
+            }
+            if (bracketSize < 4) bracketSize = 4;
+
+            const byeCount = bracketSize - ordered.length;
+
+            // 시드 배치 (부전승을 고르게 분배)
+            // 슬롯 생성 (null은 BYE)
+            let slots = new Array(bracketSize).fill(null);
+            
+            // 시드 배치 패턴: BYE를 짝수 슬롯(상대방)에 우선 배치
+            let playerIndex = 0;
+            // 각 매치는 (slot[2*i], slot[2*i+1])
+            const matchCount = bracketSize / 2;
+            let matchPairs = [];
+            for (let i = 0; i < matchCount; i++) {
+                matchPairs.push({ p1: null, p2: null });
+            }
+
+            // 선수를 먼저 배치
+            for (let i = 0; i < matchCount; i++) {
+                if (playerIndex < ordered.length) {
+                    matchPairs[i].p1 = ordered[playerIndex++];
+                }
+            }
+            for (let i = 0; i < matchCount; i++) {
+                if (playerIndex < ordered.length) {
+                    matchPairs[i].p2 = ordered[playerIndex++];
+                } else {
+                    matchPairs[i].p2 = null; // BYE (부전승)
+                }
+            }
+
+            // 라운드 구조 생성
+            let rounds = [];
+            let totalRounds = Math.log2(bracketSize);
+
+            // 라운드 이름 헬퍼
+            function getRoundName(currentSize) {
+                if (currentSize === 2) return "결승전 (Final)";
+                if (currentSize === 4) return "4강 (준결승)";
+                if (currentSize === 8) return "8강 (준준결승)";
+                return `${currentSize}강`;
+            }
+
+            // Round 0 (1라운드)
+            let r0Matches = [];
+            for (let i = 0; i < matchCount; i++) {
+                const p1 = matchPairs[i].p1;
+                const p2 = matchPairs[i].p2;
+                const isBye = (p2 === null);
+                r0Matches.push({
+                    id: `r0_m${i}`,
+                    p1: p1,
+                    p2: isBye ? "(부전승)" : p2,
+                    p1Score: null,
+                    p2Score: null,
+                    winner: isBye ? p1 : null,
+                    isBye: isBye
+                });
+            }
+            rounds.push({
+                roundIndex: 0,
+                roundName: getRoundName(bracketSize),
+                matches: r0Matches
+            });
+
+            // 후속 라운드 생성 (빈 슬롯)
+            let currentSize = bracketSize / 2;
+            for (let r = 1; r < totalRounds; r++) {
+                const count = currentSize / 2;
+                let rMatches = [];
+                for (let i = 0; i < count; i++) {
+                    rMatches.push({
+                        id: `r${r}_m${i}`,
+                        p1: null,
+                        p2: null,
+                        p1Score: null,
+                        p2Score: null,
+                        winner: null,
+                        isBye: false
+                    });
+                }
+                rounds.push({
+                    roundIndex: r,
+                    roundName: getRoundName(currentSize),
+                    matches: rMatches
+                });
+                currentSize /= 2;
+            }
+
+            // 1라운드 부전승 승자들을 자동으로 2라운드에 진출 동기화
+            for (let i = 0; i < matchCount; i++) {
+                if (r0Matches[i].winner && totalRounds > 1) {
+                    const nextMatchIdx = Math.floor(i / 2);
+                    const slot = (i % 2 === 0) ? 'p1' : 'p2';
+                    rounds[1].matches[nextMatchIdx][slot] = r0Matches[i].winner;
+                }
+            }
+
+            tournamentData.participants = ordered;
+            tournamentData.bracketSize = bracketSize;
+            tournamentData.rounds = rounds;
+            tournamentData.bronzeMatch = tournamentData.hasBronzeMatch ? {
+                id: "bronze",
+                p1: null,
+                p2: null,
+                p1Score: null,
+                p2Score: null,
+                winner: null
+            } : null;
+            tournamentData.champion = null;
+            tournamentData.runnerUp = null;
+            tournamentData.thirdPlace = null;
+
+            saveTournamentState();
+            renderTournament();
+        }
+
+        // ── 렌더링 함수 ──
+        function renderTournament() {
+            // 헤더 UI 업데이트
+            document.getElementById('headerTournamentTitle').innerText = tournamentData.title;
+            document.getElementById('tournamentNameText').innerText = tournamentData.title;
+            document.getElementById('tournamentIconBadge').innerText = tournamentData.icon;
+            document.getElementById('tournamentIconDisplay').innerText = tournamentData.icon;
+
+            const sizeText = `${tournamentData.bracketSize}강`;
+            const countText = `총 ${tournamentData.participants.length}명 참가 • ${sizeText} 토너먼트 대진표`;
+            document.getElementById('headerRoundCountBadge').innerText = sizeText;
+            document.getElementById('tournamentSubtitle').innerText = countText;
+
+            // 상태 배지
+            const statusEl = document.getElementById('progressStatusText');
+            if (tournamentData.champion) {
+                statusEl.innerText = `🏆 우승: ${tournamentData.champion}`;
+                document.getElementById('progressStatusBadge').className = "px-3.5 py-1 bg-amber-100 border border-amber-300 text-amber-900 text-xs font-black rounded-full flex items-center gap-2";
+            } else {
+                statusEl.innerText = "경기가 진행 중입니다";
+                document.getElementById('progressStatusBadge').className = "px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-full flex items-center gap-2";
+            }
+
+            // 브래킷 컬럼 렌더링
+            const container = document.getElementById('bracketRoundsContainer');
+            container.innerHTML = '';
+
+            const totalRounds = tournamentData.rounds.length;
+
+            tournamentData.rounds.forEach((round, rIdx) => {
+                const roundCol = document.createElement('div');
+                roundCol.className = "flex-1 flex flex-col justify-around min-w-[200px]";
+
+                // 라운드 헤더
+                const header = document.createElement('div');
+                header.className = "text-center mb-4";
+                header.innerHTML = `
+                    <div class="inline-block px-3 py-1 rounded-full text-xs font-black bg-slate-100 text-slate-800 border border-slate-200">
+                        ${round.roundName}
+                    </div>
+                `;
+                roundCol.appendChild(header);
+
+                // 매치 컨테이너
+                const matchesWrap = document.createElement('div');
+                matchesWrap.className = "flex-1 flex flex-col justify-around gap-6";
+
+                round.matches.forEach((match, mIdx) => {
+                    const matchCard = document.createElement('div');
+                    matchCard.className = "match-card p-3";
+
+                    // 매치 라벨
+                    const isFinal = (rIdx === totalRounds - 1);
+                    const matchTitle = isFinal ? "🏆 결승전" : `${round.roundName} ${mIdx + 1}경기`;
+
+                    const p1Won = match.winner && match.winner === match.p1;
+                    const p2Won = match.winner && match.winner === match.p2;
+
+                    // 스왑 하이라이트 확인
+                    const isP1SwapSelected = (isSwapMode && swapSelectedSlot && swapSelectedSlot.roundIndex === rIdx && swapSelectedSlot.matchIndex === mIdx && swapSelectedSlot.participantIndex === 1);
+                    const isP2SwapSelected = (isSwapMode && swapSelectedSlot && swapSelectedSlot.roundIndex === rIdx && swapSelectedSlot.matchIndex === mIdx && swapSelectedSlot.participantIndex === 2);
+
+                    matchCard.innerHTML = `
+                        <div class="flex items-center justify-between text-[11px] font-black text-slate-400 mb-2 pb-1.5 border-b border-slate-100">
+                            <span>${matchTitle}</span>
+                            ${(!match.isBye && match.p1 && match.p2) ? `
+                                <button type="button" onclick="openScoreModal(${rIdx}, ${mIdx})" class="hover:text-sky-600 transition" title="점수 기록">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+
+                        <!-- 참가자 1 -->
+                        <div onclick="handleParticipantClick(${rIdx}, ${mIdx}, 1)" class="participant-slot flex items-center justify-between p-2 rounded-xl text-xs font-bold ${p1Won ? 'winner' : (p2Won ? 'loser' : 'text-slate-800')} ${isP1SwapSelected ? 'swap-selected' : ''}">
+                            <div class="flex items-center gap-2 truncate">
+                                <span class="w-5 h-5 rounded-md bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-black">1</span>
+                                <span class="truncate">${match.p1 || '<span class="text-slate-300 font-normal">대기 중</span>'}</span>
+                                <span class="winner-badge hidden text-emerald-600 text-xs">✓</span>
+                            </div>
+                            <span class="font-black text-xs text-slate-600 ml-2">${match.p1Score !== null ? match.p1Score : ''}</span>
+                        </div>
+
+                        <!-- VS 디바이더 -->
+                        <div class="text-[10px] font-black text-slate-300 text-center my-0.5">VS</div>
+
+                        <!-- 참가자 2 -->
+                        <div onclick="handleParticipantClick(${rIdx}, ${mIdx}, 2)" class="participant-slot flex items-center justify-between p-2 rounded-xl text-xs font-bold ${p2Won ? 'winner' : (p1Won ? 'loser' : (match.isBye ? 'text-slate-400 italic' : 'text-slate-800'))} ${isP2SwapSelected ? 'swap-selected' : ''}">
+                            <div class="flex items-center gap-2 truncate">
+                                <span class="w-5 h-5 rounded-md bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-black">2</span>
+                                <span class="truncate">${match.p2 || '<span class="text-slate-300 font-normal">대기 중</span>'}</span>
+                                <span class="winner-badge hidden text-emerald-600 text-xs">✓</span>
+                            </div>
+                            <span class="font-black text-xs text-slate-600 ml-2">${match.p2Score !== null ? match.p2Score : ''}</span>
+                        </div>
+                    `;
+
+                    matchesWrap.appendChild(matchCard);
+                });
+
+                roundCol.appendChild(matchesWrap);
+                container.appendChild(roundCol);
+            });
+
+            // 3·4위전 렌더링
+            renderBronzeSection();
+        }
+
+        function renderBronzeSection() {
+            const bronzeSec = document.getElementById('bronzeMatchSection');
+            if (!tournamentData.hasBronzeMatch) {
+                bronzeSec.classList.add('hidden');
+                return;
+            }
+            bronzeSec.classList.remove('hidden');
+
+            const wrap = document.getElementById('bronzeMatchCardWrap');
+            const bm = tournamentData.bronzeMatch;
+            if (!bm) return;
+
+            const p1Won = bm.winner && bm.winner === bm.p1;
+            const p2Won = bm.winner && bm.winner === bm.p2;
+
+            wrap.innerHTML = `
+                <div class="match-card p-3 border-amber-200">
+                    <div class="flex items-center justify-between text-[11px] font-black text-amber-700 mb-2 pb-1.5 border-b border-amber-100">
+                        <span>🥉 3위 결정전</span>
+                        ${(bm.p1 && bm.p2) ? `
+                            <button type="button" onclick="openScoreModal(-1, -1)" class="hover:text-amber-800 transition" title="점수 기록">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <div onclick="handleBronzeParticipantClick(1)" class="participant-slot flex items-center justify-between p-2 rounded-xl text-xs font-bold ${p1Won ? 'winner' : (p2Won ? 'loser' : 'text-slate-800')}">
+                        <div class="flex items-center gap-2 truncate">
+                            <span class="w-5 h-5 rounded-md bg-amber-100 text-amber-800 flex items-center justify-center text-[10px] font-black">A</span>
+                            <span class="truncate">${bm.p1 || '<span class="text-slate-300 font-normal">준결승 패자 1</span>'}</span>
+                            <span class="winner-badge hidden text-emerald-600 text-xs">✓</span>
+                        </div>
+                        <span class="font-black text-xs text-slate-600 ml-2">${bm.p1Score !== null ? bm.p1Score : ''}</span>
+                    </div>
+
+                    <div class="text-[10px] font-black text-slate-300 text-center my-0.5">VS</div>
+
+                    <div onclick="handleBronzeParticipantClick(2)" class="participant-slot flex items-center justify-between p-2 rounded-xl text-xs font-bold ${p2Won ? 'winner' : (p1Won ? 'loser' : 'text-slate-800')}">
+                        <div class="flex items-center gap-2 truncate">
+                            <span class="w-5 h-5 rounded-md bg-amber-100 text-amber-800 flex items-center justify-center text-[10px] font-black">B</span>
+                            <span class="truncate">${bm.p2 || '<span class="text-slate-300 font-normal">준결승 패자 2</span>'}</span>
+                            <span class="winner-badge hidden text-emerald-600 text-xs">✓</span>
+                        </div>
+                        <span class="font-black text-xs text-slate-600 ml-2">${bm.p2Score !== null ? bm.p2Score : ''}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ── 승자 진출 인터랙션 ──
+        window.handleParticipantClick = (roundIdx, matchIdx, participantSlot) => {
+            // 맞교환 모드인 경우
+            if (isSwapMode) {
+                handleSwapSlotClick(roundIdx, matchIdx, participantSlot);
+                return;
+            }
+
+            const round = tournamentData.rounds[roundIdx];
+            if (!round) return;
+            const match = round.matches[matchIdx];
+            if (!match) return;
+
+            // 부전승인 경우 클릭 무시
+            if (match.isBye) return;
+
+            const selectedParticipant = (participantSlot === 1) ? match.p1 : match.p2;
+            const opponentParticipant = (participantSlot === 1) ? match.p2 : match.p1;
+
+            if (!selectedParticipant) return; // 미배정
+
+            // 이미 승자인데 다시 클릭한 경우 -> 승자 취소 (토글)
+            if (match.winner === selectedParticipant) {
+                match.winner = null;
+                // 후속 라운드 진출 취소
+                clearSubsequentRounds(roundIdx, matchIdx);
+                AudioEngine.playTick();
+            } else {
+                match.winner = selectedParticipant;
+                AudioEngine.playWin();
+
+                // 결승전인 경우 -> 우승자 결정!
+                const isFinal = (roundIdx === tournamentData.rounds.length - 1);
+                if (isFinal) {
+                    tournamentData.champion = selectedParticipant;
+                    tournamentData.runnerUp = opponentParticipant;
+                    showChampionCelebration();
+                } else {
+                    // 다음 라운드로 진출 동기화
+                    const nextRound = tournamentData.rounds[roundIdx + 1];
+                    const nextMatchIdx = Math.floor(matchIdx / 2);
+                    const slot = (matchIdx % 2 === 0) ? 'p1' : 'p2';
+
+                    if (nextRound && nextRound.matches[nextMatchIdx]) {
+                        nextRound.matches[nextMatchIdx][slot] = selectedParticipant;
+                    }
+
+                    // 준결승(4강)인 경우 -> 패자를 3·4위전으로 보냄!
+                    const isSemiFinal = (roundIdx === tournamentData.rounds.length - 2);
+                    if (isSemiFinal && tournamentData.hasBronzeMatch && tournamentData.bronzeMatch) {
+                        const bronzeSlot = (matchIdx === 0) ? 'p1' : 'p2';
+                        tournamentData.bronzeMatch[bronzeSlot] = opponentParticipant;
+                    }
+                }
+            }
+
+            saveTournamentState();
+            renderTournament();
+        };
+
+        // 3·4위전 참가자 클릭
+        window.handleBronzeParticipantClick = (slotIndex) => {
+            const bm = tournamentData.bronzeMatch;
+            if (!bm) return;
+            const selected = (slotIndex === 1) ? bm.p1 : bm.p2;
+            if (!selected) return;
+
+            if (bm.winner === selected) {
+                bm.winner = null;
+                tournamentData.thirdPlace = null;
+                AudioEngine.playTick();
+            } else {
+                bm.winner = selected;
+                tournamentData.thirdPlace = selected;
+                AudioEngine.playWin();
+            }
+
+            saveTournamentState();
+            renderTournament();
+        };
+
+        function clearSubsequentRounds(roundIdx, matchIdx) {
+            const isFinal = (roundIdx === tournamentData.rounds.length - 1);
+            if (isFinal) {
+                tournamentData.champion = null;
+                tournamentData.runnerUp = null;
+                return;
+            }
+
+            const nextRound = tournamentData.rounds[roundIdx + 1];
+            if (!nextRound) return;
+            const nextMatchIdx = Math.floor(matchIdx / 2);
+            const slot = (matchIdx % 2 === 0) ? 'p1' : 'p2';
+
+            const match = nextRound.matches[nextMatchIdx];
+            if (match) {
+                const prevWinner = match[slot];
+                match[slot] = null;
+                if (match.winner === prevWinner) {
+                    match.winner = null;
+                    clearSubsequentRounds(roundIdx + 1, nextMatchIdx);
+                }
+            }
+        }
+
+        // ── 맞교환 (Swap) 기능 ──
+        window.toggleSwapMode = () => {
+            isSwapMode = !isSwapMode;
+            swapSelectedSlot = null;
+
+            const banner = document.getElementById('swapModeBanner');
+            const btnText = document.getElementById('swapBtnText');
+
+            if (isSwapMode) {
+                banner.classList.remove('hidden');
+                btnText.innerText = "맞교환 종료";
+            } else {
+                banner.classList.add('hidden');
+                btnText.innerText = "자리 맞교환";
+            }
+            renderTournament();
+        };
+
+        function handleSwapSlotClick(roundIdx, matchIdx, participantSlot) {
+            if (roundIdx !== 0) {
+                alert("자리 맞교환은 1라운드 선수들 사이에서만 가능합니다.");
+                return;
+            }
+
+            const match = tournamentData.rounds[0].matches[matchIdx];
+            const pName = (participantSlot === 1) ? match.p1 : match.p2;
+            if (match.isBye && participantSlot === 2) {
+                alert("부전승 슬롯은 교환할 수 없습니다.");
+                return;
+            }
+
+            if (!swapSelectedSlot) {
+                // 첫 번째 선택
+                swapSelectedSlot = { roundIndex: 0, matchIndex: matchIdx, participantIndex: participantSlot };
+                AudioEngine.playTick();
+                renderTournament();
+            } else {
+                // 두 번째 선택 -> 교환 실행!
+                const s1 = swapSelectedSlot;
+                const m1 = tournamentData.rounds[0].matches[s1.matchIndex];
+                const p1Key = (s1.participantIndex === 1) ? 'p1' : 'p2';
+                const p2Key = (participantSlot === 1) ? 'p1' : 'p2';
+
+                const temp = m1[p1Key];
+                m1[p1Key] = match[p2Key];
+                match[p2Key] = temp;
+
+                // 기존 결과 초기화
+                m1.winner = null;
+                match.winner = null;
+                clearSubsequentRounds(0, s1.matchIndex);
+                clearSubsequentRounds(0, matchIdx);
+
+                AudioEngine.playWin();
+                swapSelectedSlot = null;
+                saveTournamentState();
+                renderTournament();
+            }
+        }
+
+        // ── 점수 모달 ──
+        window.openScoreModal = (rIdx, mIdx) => {
+            currentScoreTarget = { roundIndex: rIdx, matchIndex: mIdx, isBronze: (rIdx === -1) };
+            let p1Name = "", p2Name = "", p1Score = 0, p2Score = 0, title = "";
+
+            if (currentScoreTarget.isBronze) {
+                const bm = tournamentData.bronzeMatch;
+                p1Name = bm.p1 || "준결승 패자 1";
+                p2Name = bm.p2 || "준결승 패자 2";
+                p1Score = bm.p1Score || 0;
+                p2Score = bm.p2Score || 0;
+                title = "🥉 3·4위전 점수 입력";
+            } else {
+                const match = tournamentData.rounds[rIdx].matches[mIdx];
+                p1Name = match.p1 || "선수 1";
+                p2Name = match.p2 || "선수 2";
+                p1Score = match.p1Score || 0;
+                p2Score = match.p2Score || 0;
+                title = `${tournamentData.rounds[rIdx].roundName} ${mIdx + 1}경기 점수`;
+            }
+
+            document.getElementById('scoreModalTitle').innerText = title;
+            document.getElementById('scoreModalP1Name').innerText = p1Name;
+            document.getElementById('scoreModalP2Name').innerText = p2Name;
+            document.getElementById('scoreModalP1Score').value = p1Score;
+            document.getElementById('scoreModalP2Score').value = p2Score;
+
+            document.getElementById('scoreModal').classList.remove('hidden');
+        };
+
+        window.closeScoreModal = () => {
+            document.getElementById('scoreModal').classList.add('hidden');
+            currentScoreTarget = null;
+        };
+
+        window.saveScoreModal = () => {
+            if (!currentScoreTarget) return;
+            const p1s = parseInt(document.getElementById('scoreModalP1Score').value, 10) || 0;
+            const p2s = parseInt(document.getElementById('scoreModalP2Score').value, 10) || 0;
+
+            if (currentScoreTarget.isBronze) {
+                const bm = tournamentData.bronzeMatch;
+                bm.p1Score = p1s;
+                bm.p2Score = p2s;
+                if (p1s > p2s) bm.winner = bm.p1;
+                else if (p2s > p1s) bm.winner = bm.p2;
+                tournamentData.thirdPlace = bm.winner;
+            } else {
+                const match = tournamentData.rounds[currentScoreTarget.roundIndex].matches[currentScoreTarget.matchIndex];
+                match.p1Score = p1s;
+                match.p2Score = p2s;
+                if (p1s > p2s && match.p1) {
+                    handleParticipantClick(currentScoreTarget.roundIndex, currentScoreTarget.matchIndex, 1);
+                } else if (p2s > p1s && match.p2) {
+                    handleParticipantClick(currentScoreTarget.roundIndex, currentScoreTarget.matchIndex, 2);
+                }
+            }
+
+            closeScoreModal();
+            saveTournamentState();
+            renderTournament();
+        };
+
+        // ── 우승자 축하 시상식 ──
+        function showChampionCelebration() {
+            AudioEngine.playFanfare();
+
+            // 콘페티 폭죽 팡팡!
+            try {
+                if (typeof confetti === 'function') {
+                    confetti({
+                        particleCount: 120,
+                        spread: 80,
+                        origin: { y: 0.6 }
+                    });
+                    setTimeout(() => {
+                        confetti({
+                            particleCount: 150,
+                            angle: 60,
+                            spread: 60,
+                            origin: { x: 0.2, y: 0.6 }
+                        });
+                        confetti({
+                            particleCount: 150,
+                            angle: 120,
+                            spread: 60,
+                            origin: { x: 0.8, y: 0.6 }
+                        });
+                    }, 350);
+                }
+            } catch(e){}
+
+            // 포디움 이름 설정
+            document.getElementById('podium1stName').innerText = tournamentData.champion || "우승자";
+            document.getElementById('podium2ndName').innerText = tournamentData.runnerUp || "준우승";
+            document.getElementById('podium3rdName').innerText = tournamentData.thirdPlace || (tournamentData.hasBronzeMatch ? "3위전 진행중" : "-");
+
+            setTimeout(() => {
+                document.getElementById('championModal').classList.remove('hidden');
+            }, 600);
+        }
+
+        window.closeChampionModal = () => {
+            document.getElementById('championModal').classList.add('hidden');
+        };
+
+        // ── 설정 모달 & 명단 입력 ──
+        window.openSetupModal = () => {
+            document.getElementById('inputTournamentTitle').value = tournamentData.title;
+            document.getElementById('inputTournamentIcon').value = tournamentData.icon;
+            document.getElementById('inputParticipantsText').value = tournamentData.participants.join('\n');
+            document.getElementById('checkBronzeMatch').checked = tournamentData.hasBronzeMatch;
+            document.getElementById('checkSoundEffects').checked = tournamentData.soundEnabled;
+
+            updateParticipantCountDisplay();
+            document.getElementById('setupModal').classList.remove('hidden');
+        };
+
+        window.closeSetupModal = () => {
+            document.getElementById('setupModal').classList.add('hidden');
+        };
+
+        window.updateParticipantCountDisplay = () => {
+            const lines = document.getElementById('inputParticipantsText').value
+                .split(/[\n,]/)
+                .map(n => n.trim())
+                .filter(n => n.length > 0);
+            document.getElementById('participantCountLabel').innerText = `(${lines.length}명)`;
+        };
+
+        window.clearParticipantsInput = () => {
+            document.getElementById('inputParticipantsText').value = '';
+            updateParticipantCountDisplay();
+        };
+
+        window.applyPresetNumbers = (count) => {
+            let names = [];
+            for (let i = 1; i <= count; i++) {
+                names.push(`${i}번 학생`);
+            }
+            document.getElementById('inputParticipantsText').value = names.join('\n');
+            updateParticipantCountDisplay();
+        };
+
+        window.applyPresetTeams = (teamCount) => {
+            let teams = [];
+            for (let i = 1; i <= teamCount; i++) {
+                teams.push(`${i}모둠`);
+            }
+            document.getElementById('inputParticipantsText').value = teams.join('\n');
+            updateParticipantCountDisplay();
+        };
+
+        window.generateTournamentFromModal = () => {
+            const title = document.getElementById('inputTournamentTitle').value.trim() || "우리 반 챔피언십 토너먼트";
+            const icon = document.getElementById('inputTournamentIcon').value;
+            const hasBronze = document.getElementById('checkBronzeMatch').checked;
+            const soundEnabled = document.getElementById('checkSoundEffects').checked;
+
+            const names = document.getElementById('inputParticipantsText').value
+                .split(/[\n,]/)
+                .map(n => n.trim())
+                .filter(n => n.length > 0);
+
+            if (names.length < 2) {
+                alert("토너먼트를 진행하려면 최소 2명 이상의 참가자가 필요합니다.");
+                return;
+            }
+
+            const drawMethod = document.querySelector('input[name="drawMethod"]:checked')?.value || "instant";
+
+            tournamentData.title = title;
+            tournamentData.icon = icon;
+            tournamentData.hasBronzeMatch = hasBronze;
+            tournamentData.soundEnabled = soundEnabled;
+
+            closeSetupModal();
+
+            if (drawMethod === 'animated') {
+                runDrawAnimation(names, drawMethod);
+            } else {
+                buildTournamentBracket(names, drawMethod);
+            }
+        };
+
+        function runDrawAnimation(names, drawMethod) {
+            const overlay = document.getElementById('drawAnimationOverlay');
+            const bar = document.getElementById('drawProgressBar');
+            overlay.classList.remove('hidden');
+            bar.style.width = '0%';
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 20;
+                bar.style.width = `${progress}%`;
+                AudioEngine.playTick();
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        overlay.classList.add('hidden');
+                        buildTournamentBracket(names, drawMethod);
+                        AudioEngine.playWin();
+                    }, 300);
+                }
+            }, 250);
+        }
+
+        // ── 기타 유틸리티 (인쇄, 이미지 저장, 전체화면) ──
+        window.confirmResetTournament = () => {
+            if (confirm("대진표와 모든 경기 진행 상황을 초기화하시겠습니까?")) {
+                localStorage.removeItem('waurimal_tournament_state');
+                loadSavedTournament();
+            }
+        };
+
+        window.toggleFullscreen = () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {});
+                document.getElementById('fullscreenIcon').className = "fa-solid fa-compress";
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                    document.getElementById('fullscreenIcon').className = "fa-solid fa-expand";
+                }
+            }
+        };
+
+        window.downloadBracketImage = async () => {
+            try {
+                const target = document.getElementById('bracketCaptureArea');
+                if (!target || typeof html2canvas === 'undefined') {
+                    alert("이미지 저장 엔진을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.");
+                    return;
+                }
+
+                const canvas = await html2canvas(target, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#FFFFFF'
+                });
+
+                const link = document.createElement('a');
+                link.download = `${tournamentData.title}_대진표.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch(e) {
+                alert("이미지 저장 중 오류가 발생했습니다: " + e.message);
+            }
+        };
+
+    </script>
+</body>
+</html>
