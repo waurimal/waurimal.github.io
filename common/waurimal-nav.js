@@ -425,6 +425,10 @@
                 if (typeof window.login === 'function') {
                     window.login();
                 }
+            } else if (appId === 'speaking') {
+                if (typeof window.startSpeakingDialogue === 'function') {
+                    window.startSpeakingDialogue();
+                }
             } else if (appId === 'where') {
                 const mainBtn = document.querySelector('#lobby-state-main button');
                 const nextBtn = document.getElementById('btn-next-step');
@@ -662,6 +666,12 @@
         "hangman": { title: "행맨 게임", icon: "🎮", teacher: "단어의 철자 구조와 파닉스를 복습하기 좋은 실시간 멀티플레이어 행맨 게임입니다.", student: "알파벳을 하나씩 추리하여 숨겨진 단어를 완성해 보세요!" },
         "alchemist": { title: "단어 연금술사", icon: "🧪", teacher: "단어들을 조합하여 새로운 합성어를 만들어내는 창의적 어휘 학습 도구입니다.", student: "기본 단어들을 합치고 연구하여 숨겨진 신비로운 단어들을 모두 찾아보세요!" },
         "reading": { title: "영어 읽기", icon: "🏃‍♂️", teacher: "TTS 음성을 지원하며 단계별 문장 독해 및 발음 따라 읽기 훈련에 적합합니다.", student: "원어민 발음을 듣고 문장을 큰 소리로 따라 읽으며 빠르게 완주해 보세요!" },
+        "speaking": { 
+            title: "영어 말하기", 
+            icon: "🗣️", 
+            teacher: "1. 컴퓨터 AI 캐릭터(버디, 에밀리, 케빈)와 실시간으로 주고받는 핑퐁 대화 롤플레잉 프로그램입니다.\n2. 일반 모드(영문+해석 노출)와 고급 모드(해석만 보고 영어 발화, 점수 2배)를 지원합니다.\n3. Web Speech STT 기반 정확도·소요시간·완주도를 실시간 평가하며 명예의 전당 및 교사 모드(대화문 편집, 성적 CSV 다운로드)를 제공합니다.", 
+            student: "1. 컴퓨터 파트너의 영어 음성을 잘 듣고 말풍선을 확인하세요.\n2. 내 차례가 오면 마이크를 켜고 큰 소리로 알맞은 영어 대답을 말하세요.\n3. 🔥 고급 모드에서는 한국어 뜻만 보고 영어로 답하면 2배의 점수를 획득할 수 있습니다!" 
+        },
         "sen_typing": { title: "영어 문장", icon: "⚡", teacher: "핵심 문장 구조를 타이핑하며 문장 작성 감각을 체화하도록 돕습니다.", student: "정확한 띄어쓰기와 구두점에 유의하여 문장을 빠르게 입력하세요!" },
         "sparkle": { 
             title: "Sparkle DIE", 
