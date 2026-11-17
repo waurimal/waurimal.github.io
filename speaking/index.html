@@ -1,0 +1,2259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>영어 말하기 (Speaking Dialogue) - 와우리말 에듀테크</title>
+
+    <!-- Pretendard 웹폰트 -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <!-- FontAwesome 아이콘 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- 와우리말 공통 테마 -->
+    <link rel="stylesheet" href="../common/waurimal-theme.css">
+
+    <style>
+        :root {
+            --app-font: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            --primary-sky: #0284C7;
+            --primary-sky-hover: #0369A1;
+            --card-bg: #FFFFFF;
+            --border-color: #E0F2FE;
+            --shadow-soft: 0 10px 25px -5px rgba(2, 132, 199, 0.08), 0 8px 10px -6px rgba(2, 132, 199, 0.04);
+        }
+
+        body {
+            font-family: var(--app-font);
+            background-color: #F8FAFC;
+            color: #1E293B;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .home-split-grid.hidden {
+            display: none !important;
+        }
+
+        .home-left, .home-right {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .home-split-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.5rem;
+            align-items: stretch;
+            width: 100%;
+        }
+
+        @media (max-width: 960px) {
+            .home-split-grid {
+                grid-template-columns: 1fr;
+                gap: 1.2rem;
+            }
+        }
+
+        /* 공통 카드 컴포넌트 */
+        .speaking-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-soft);
+            transition: all 0.2s ease;
+        }
+
+        /* 히어로 버튼 */
+        .hero-btn {
+            background: linear-gradient(135deg, #0284C7 0%, #0EA5E9 50%, #38BDF8 100%);
+            color: #FFFFFF;
+            border-radius: 16px;
+            padding: 1.25rem 1.5rem;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 800;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 8px 20px -4px rgba(2, 132, 199, 0.35);
+            transition: all 0.2s ease;
+        }
+        .hero-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px -4px rgba(2, 132, 199, 0.45);
+        }
+        .hero-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* 모드 선택 버튼 */
+        .mode-btn {
+            cursor: pointer;
+            outline: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .mode-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* 캐릭터 카드 */
+        .char-btn {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .char-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        /* 채팅 말풍선 스타일 */
+        .chat-bubble-ai {
+            background: #FFFFFF;
+            border: 1.5px solid #BAE6FD;
+            border-radius: 18px 18px 18px 4px;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.06);
+        }
+        .chat-bubble-user {
+            background: linear-gradient(135deg, #0284C7 0%, #0EA5E9 100%);
+            color: #FFFFFF;
+            border-radius: 18px 18px 4px 18px;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
+        }
+
+        /* 음성 인식 펄스 애니메이션 */
+        .mic-pulsing {
+            animation: pulse-ring 1.4s infinite cubic-bezier(0.4, 0, 0.6, 1);
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.98); box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.6); }
+            70% { transform: scale(1.03); box-shadow: 0 0 0 14px rgba(225, 29, 72, 0); }
+            100% { transform: scale(0.98); box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
+        }
+
+        /* 스크롤바 커스텀 */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #F1F5F9;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
+        }
+
+        /* 하단 교사 모드 진입 링크 */
+        .teacher-link-wrap {
+            margin-top: 1.4rem;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--border-color);
+            text-align: center;
+        }
+        .btn-teacher-link {
+            background: none;
+            border: none;
+            color: #64748B;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .btn-teacher-link:hover {
+            color: var(--primary-sky);
+            background: #F0F9FF;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+    <!-- 상단 와우리말 통합 GNB 네비게이션 -->
+    <script src="../common/waurimal-nav.js"></script>
+
+    <!-- 메인 컨테이너 -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-4 md:py-6 flex flex-col gap-4">
+
+        <!-- 헤더 영역: 게임 타이틀 & 시인성 서브타이틀 박스 -->
+        <div class="hdr">
+            <h1>영어 말하기 (Speaking Dialogue)</h1>
+            <p class="hdr-sub" id="hsub">컴퓨터 AI와 실전 롤플레잉 영어 대화! 마이크로 말하고 발음 실력을 키우세요.</p>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- 1. 홈 화면 (screen-home: 50% vs 50% 분할) -->
+        <!-- ─────────────────────────────────────────── -->
+        <div id="screen-home" class="home-split-grid">
+            <!-- [좌측 50%]: 대화 설정 & 단원 선택 -->
+            <div class="home-left flex flex-col gap-4">
+                <div class="speaking-card space-y-4">
+
+                    <!-- 단원 선택 영역 -->
+                    <div class="p-4 bg-sky-50/70 border border-sky-200 rounded-2xl space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black text-sky-950">💬 대화 단원 / 롤플레잉 주제 선택</span>
+                            <span id="unitTurnCountBadge" class="text-[10px] font-bold text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full">
+                                대화 로딩중...
+                            </span>
+                        </div>
+                        <select id="unitSelect" onchange="updateSelectedUnitInfo()" class="w-full p-3 bg-white border border-sky-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-sky-500">
+                            <!-- 단원 동적 로드 -->
+                        </select>
+
+                        <!-- 🎯 도전 모드 선택 (🌱 일반 모드 vs 🔥 고급 모드 더블 스코어) -->
+                        <div class="space-y-1.5 pt-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-black text-sky-950">🎯 도전 난이도 / 모드 선택</span>
+                                <span id="modeBonusBadge" class="text-[10px] font-black text-sky-700 bg-sky-100 px-2.5 py-0.5 rounded-full">
+                                    🌱 일반 모드 (기본 1x)
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" id="btn-mode-normal" onclick="setPracticeMode('normal')" class="mode-btn p-3 rounded-xl border-2 border-sky-600 bg-sky-50/50 text-left transition relative flex flex-col justify-between shadow-xs ring-2 ring-sky-200">
+                                    <div class="flex items-center justify-between w-full mb-1">
+                                        <span class="text-xs font-black text-sky-950">🌱 일반 모드</span>
+                                        <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">1x 점수</span>
+                                    </div>
+                                    <span class="text-[11px] text-slate-500 font-medium">영문 대사 보며 대화하기</span>
+                                </button>
+                                <button type="button" id="btn-mode-advanced" onclick="setPracticeMode('advanced')" class="mode-btn p-3 rounded-xl border-2 border-slate-200 bg-white hover:bg-rose-50/50 text-left transition relative flex flex-col justify-between">
+                                    <div class="flex items-center justify-between w-full mb-1">
+                                        <span class="text-xs font-black text-rose-600 flex items-center gap-1">
+                                            <i class="fa-solid fa-fire text-rose-500"></i>
+                                            <span>고급 모드</span>
+                                        </span>
+                                        <span class="text-[10px] font-black text-rose-600 bg-rose-100 px-1.5 py-0.5 rounded animate-pulse">2x 더블!</span>
+                                    </div>
+                                    <span class="text-[11px] text-slate-500 font-medium">해석만 보고 영어로 답하기</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 🤖 AI 대화 파트너 캐릭터 선택 -->
+                        <div class="space-y-1.5 pt-1">
+                            <label class="text-xs font-black text-sky-950 block">🤖 대화 상대 (AI 파트너) 선택</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button type="button" onclick="selectPartner('buddy')" id="btn-partner-buddy" class="char-btn p-2 rounded-xl border-2 border-sky-500 bg-sky-50 text-center transition">
+                                    <div class="text-2xl mb-1">🤖</div>
+                                    <div class="text-xs font-black text-sky-950">버디</div>
+                                    <div class="text-[10px] text-slate-500">로봇 친구</div>
+                                </button>
+                                <button type="button" onclick="selectPartner('emily')" id="btn-partner-emily" class="char-btn p-2 rounded-xl border-2 border-slate-200 bg-white hover:bg-slate-50 text-center transition">
+                                    <div class="text-2xl mb-1">👧</div>
+                                    <div class="text-xs font-black text-slate-800">에밀리</div>
+                                    <div class="text-[10px] text-slate-500">활기찬 친구</div>
+                                </button>
+                                <button type="button" onclick="selectPartner('kevin')" id="btn-partner-kevin" class="char-btn p-2 rounded-xl border-2 border-slate-200 bg-white hover:bg-slate-50 text-center transition">
+                                    <div class="text-2xl mb-1">👨‍🏫</div>
+                                    <div class="text-xs font-black text-slate-800">케빈</div>
+                                    <div class="text-[10px] text-slate-500">친절한 선생님</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <p class="text-[11px] text-slate-500 font-medium leading-relaxed pt-1">
+                            컴퓨터가 먼저 영어로 말을 건네면, 마이크에 대고 나의 대사를 자신있게 말해보세요!
+                        </p>
+
+                        <!-- 시작 버튼 -->
+                        <button type="button" onclick="startSpeakingDialogue()" class="hero-btn">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl flex-shrink-0">
+                                    💬
+                                </div>
+                                <div class="text-left">
+                                    <div class="font-black text-base">영어 말하기 대화 시작하기</div>
+                                    <div class="text-[11px] text-sky-100 font-medium">컴퓨터와 실시간 롤플레잉 & 명예의 전당 도전!</div>
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-arrow-right text-lg text-sky-200"></i>
+                        </button>
+                    </div>
+
+                    <!-- 말하기 꿀팁 카드 -->
+                    <div class="p-4 bg-gradient-to-br from-white to-sky-50/40 border border-sky-100 rounded-2xl space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-base">💡</span>
+                            <h3 class="font-black text-slate-800 text-xs">영어 말하기 고득점 꿀팁</h3>
+                        </div>
+                        <ul class="text-[11px] text-slate-600 space-y-1.5 leading-relaxed">
+                            <li>• <strong class="text-rose-600">🔥 고급 모드 점수 더블(2x)</strong>: 한국어 해석만 보고 머릿속으로 영작해 말하면 <strong>최종 점수가 2배</strong>로 계산됩니다!</li>
+                            <li>• <strong>컴퓨터 대사 잘 듣기</strong>: 컴퓨터 AI가 먼저 말하는 원어민 억양과 발음을 집중해서 귀로 익히세요.</li>
+                            <li>• <strong>자신감 있는 목소리</strong>: 마이크 버튼을 누르고 문장 끝까지 또박또박 자연스럽게 말하세요.</li>
+                            <li>• <strong>스피드 보너스</strong>: 망설이지 않고 매끄럽게 발화하면 추가 보너스 점수가 부여됩니다.</li>
+                        </ul>
+                    </div>
+
+                    <!-- 교사 모드 진입 링크 -->
+                    <div class="teacher-link-wrap">
+                        <button type="button" onclick="openTeacherAuthModal()" class="btn-teacher-link">
+                            <i class="fas fa-cog"></i> 교사 설정 모드 (대화 단원 목록 및 클라우드 DB 관리)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [우측 50%]: 실시간 명예의 전당 (HOF) -->
+            <div class="home-right flex flex-col gap-4">
+                <div class="speaking-card flex flex-col h-full">
+                    <div class="flex items-center justify-between pb-3 border-b border-sky-100 mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">🏆</span>
+                            <div>
+                                <h2 class="text-base font-black text-slate-800">실시간 명예의 전당</h2>
+                                <p class="text-[11px] text-slate-400 font-semibold">단원별 높은 대화 점수를 획득해 랭킹 1위에 도전하세요!</p>
+                            </div>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-sky-100 text-sky-800 animate-pulse">LIVE</span>
+                    </div>
+
+                    <!-- 1. 기간 탭 -->
+                    <div class="flex bg-slate-100 p-1 rounded-xl text-xs font-bold mb-2">
+                        <button type="button" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-sky-800 shadow-2xs" id="hof-tab-all" onclick="setHofPeriod('all')">
+                            전체 기간
+                        </button>
+                        <button type="button" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800" id="hof-tab-month" onclick="setHofPeriod('month')">
+                            이번 달
+                        </button>
+                        <button type="button" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800" id="hof-tab-week" onclick="setHofPeriod('week')">
+                            이번 주
+                        </button>
+                    </div>
+
+                    <!-- 2. 단원 및 난이도 필터 -->
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <select id="hof-filter-unit" onchange="filterHofList()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-sky-500">
+                            <option value="ALL">전체 단원</option>
+                        </select>
+                        <select id="hof-filter-mode" onchange="filterHofList()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-sky-500">
+                            <option value="ALL">전체 난이도</option>
+                            <option value="normal">🌱 일반 모드</option>
+                            <option value="advanced">🔥 고급 모드 (2x)</option>
+                        </select>
+                    </div>
+
+                    <!-- 3. 학년 및 반 필터 -->
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <select id="hof-filter-grade" onchange="filterHofList()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-sky-500">
+                            <option value="ALL">전체 학년</option>
+                            <option value="3">3학년</option>
+                            <option value="4">4학년</option>
+                            <option value="5">5학년</option>
+                            <option value="6">6학년</option>
+                        </select>
+                        <select id="hof-filter-class" onchange="filterHofList()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-sky-500">
+                            <option value="ALL">전체 반</option>
+                            <option value="1">1반</option><option value="2">2반</option>
+                            <option value="3">3반</option><option value="4">4반</option>
+                            <option value="5">5반</option><option value="6">6반</option>
+                            <option value="7">7반</option><option value="8">8반</option>
+                            <option value="9">9반</option><option value="10">10반</option>
+                        </select>
+                    </div>
+
+                    <!-- 실시간 랭킹 목록 컨테이너 -->
+                    <div id="hof-records-container" class="flex-1 overflow-y-auto custom-scrollbar max-h-[460px] space-y-2 pr-1">
+                        <div class="text-center py-16 text-slate-400 text-xs font-bold">
+                            <i class="fa-solid fa-spinner fa-spin text-sky-600 text-base mb-2 block"></i>
+                            명예의 전당 기록을 불러오는 중입니다...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- 2. 실시간 대화 롤플레잉 화면 (screen-dialogue) -->
+        <!-- ─────────────────────────────────────────── -->
+        <div id="screen-dialogue" class="hidden max-w-3xl mx-auto w-full">
+            <div class="speaking-card space-y-4">
+                <!-- 상단 헤더: 단원명, 모드 뱃지, 턴 카운터, 소요시간 -->
+                <div class="flex items-center justify-between pb-3 border-b border-sky-100">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span id="currentUnitTitle" class="text-sm font-black text-sky-900 block">Lesson 1</span>
+                            <span id="currentModeBadge" class="text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-100 text-sky-700">🌱 일반 모드</span>
+                        </div>
+                        <span id="turnCounter" class="text-xs font-bold text-slate-400">대화 1/6</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span id="timerDisplay" class="text-xs font-black text-slate-700 bg-slate-100 px-2.5 py-1 rounded-xl">
+                            ⏱️ 0.0초
+                        </span>
+                        <button type="button" onclick="confirmExitDialogue()" class="text-xs text-slate-400 hover:text-red-500 font-bold px-2 py-1 transition">
+                            대화 중단
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 메신저 스타일 대화창 (주고받은 말풍선 스크롤 영역) -->
+                <div id="chatScrollArea" class="p-4 bg-slate-50 border border-slate-200 rounded-2xl min-h-[220px] max-h-[300px] overflow-y-auto custom-scrollbar space-y-3">
+                    <!-- 대화 말풍선이 동적으로 추가됩니다 -->
+                </div>
+
+                <!-- 현재 학생 차례 (내 턴) 발화 액션 카드 -->
+                <div id="studentTurnCard" class="p-5 bg-sky-50/70 border-2 border-sky-200 rounded-2xl text-center space-y-3 transition-all">
+                    <div class="flex items-center justify-between">
+                        <span id="studentTurnLabel" class="text-[11px] font-black text-sky-900 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-sky-600 animate-ping"></span>
+                            <span>👤 내 차례입니다! 컴퓨터에게 영어로 답해보세요</span>
+                        </span>
+                        <span id="partnerStatusText" class="text-[10px] font-bold text-slate-400">
+                            🤖 버디가 듣고 있어요
+                        </span>
+                    </div>
+
+                    <!-- 1. 고급 모드 전용: 한국어 해석 박스 (메인으로 강조) -->
+                    <div id="advMeaningBox" class="hidden p-4 bg-white/95 border-2 border-rose-300 rounded-xl shadow-xs space-y-1">
+                        <span class="text-[10px] font-black text-rose-600 uppercase tracking-wider flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-fire text-rose-500"></i> 해석을 보고 영어로 답하세요! (점수 2배 더블)
+                        </span>
+                        <div id="targetKoreanText" class="text-xl md:text-2xl font-black text-slate-900 leading-snug">
+                            <!-- 한국어 해석 동적 출력 -->
+                        </div>
+                    </div>
+
+                    <!-- 2. 영어 목표 문장 박스 (일반 모드는 항상 노출, 고급 모드는 발화 후 정답 공개) -->
+                    <div id="targetEnglishWrap" class="relative">
+                        <div id="targetEnglishText" class="text-xl md:text-2xl font-black text-slate-800 leading-snug tracking-wide">
+                            Nice to meet you, too.
+                        </div>
+                        <!-- 고급 모드 블라인드 마스크 -->
+                        <div id="targetEnglishBlind" class="hidden py-4 px-3 bg-slate-100/90 border-2 border-dashed border-rose-200 rounded-xl text-center">
+                            <div class="flex items-center justify-center gap-2 text-rose-700 text-xs font-black">
+                                <i class="fa-solid fa-lock text-rose-500 text-sm"></i>
+                                <span>영어 문장 가림 (마이크로 말하면 정답이 공개되고 2배 점수가 부여됩니다!)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. 일반 모드 보조 해석 표시 -->
+                    <div id="normalSubMeaning" class="hidden text-xs font-bold text-slate-500">
+                        <!-- 뜻: ... -->
+                    </div>
+
+                    <!-- 4. 원어민 발음 듣기 버튼 -->
+                    <div id="ttsBtnWrap">
+                        <button type="button" id="playTTSBtn" onclick="playTargetTTS()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-sky-50 border border-sky-200 text-sky-800 rounded-xl text-xs font-bold shadow-2xs transition">
+                            <i class="fa-solid fa-volume-high"></i>
+                            <span id="ttsBtnText">내 대사 원어민 발음 듣기</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 마이크 녹음 버튼 영역 -->
+                <div class="flex flex-col items-center gap-3">
+                    <button type="button" id="recordBtn" onclick="toggleRecording()" class="w-full max-w-sm py-4 bg-sky-600 hover:bg-sky-700 text-white font-black text-base rounded-2xl shadow-md transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-microphone text-lg"></i>
+                        <span>마이크 켜고 대답하기</span>
+                    </button>
+                    <div class="flex items-center gap-2 text-[11px] text-slate-400">
+                        <span>버튼을 누르고 영어로 또박또박 대답하세요.</span>
+                        <span>•</span>
+                        <button type="button" onclick="showMicGuideModal()" class="text-sky-600 hover:underline font-bold">마이크 권한 안내 💡</button>
+                    </div>
+                </div>
+
+                <!-- AI 음성 인식 결과 및 피드백 박스 -->
+                <div id="feedbackArea" class="min-h-[70px] p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center flex flex-col items-center justify-center text-xs font-medium text-slate-500">
+                    마이크를 켜고 컴퓨터에게 영어로 말하면 AI가 발음과 정확도를 분석합니다.
+                </div>
+
+                <!-- 다음 대화 네비게이션 버튼 -->
+                <div id="dialogueNavButtons" class="hidden flex gap-2">
+                    <button type="button" onclick="retryCurrentTurn()" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+                        🔄 다시 말하기
+                    </button>
+                    <button type="button" id="nextTurnBtn" onclick="goToNextTurn()" class="flex-2 py-3 bg-sky-600 hover:bg-sky-700 text-white font-black text-xs rounded-xl shadow-xs transition">
+                        다음 대화로 ➡️
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- 3. 결과 화면 (screen-result) -->
+        <!-- ─────────────────────────────────────────── -->
+        <div id="screen-result" class="hidden max-w-md mx-auto w-full">
+            <div class="speaking-card text-center space-y-6 py-8">
+                <div class="text-5xl animate-bounce">🎉</div>
+                <div>
+                    <h2 class="text-2xl font-black text-sky-900 mb-1">대화 롤플레잉 완주 성공!</h2>
+                    <div id="finalResultUnitTitle" class="text-xs text-slate-500 font-bold space-y-1">
+                        <div>Lesson 1 대화 완료</div>
+                    </div>
+                </div>
+
+                <div id="finalScoreCard" class="p-5 bg-sky-50 border border-sky-200 rounded-2xl relative">
+                    <span id="finalScoreLabel" class="text-xs text-sky-700 font-bold block mb-1">최종 획득 점수</span>
+                    <span id="finalScoreDisplay" class="text-4xl font-black text-sky-700 tracking-wider">105</span>
+                    <span class="text-sm font-bold text-sky-700 ml-1">점</span>
+                </div>
+
+                <p id="saveStatus" class="text-xs font-bold text-sky-600">⏳ 대화 점수를 클라우드 명예의 전당에 기록 중입니다...</p>
+
+                <button type="button" onclick="backToHome()" class="w-full py-3.5 bg-sky-600 hover:bg-sky-700 text-white font-black text-sm rounded-xl shadow-md transition">
+                    메인 홈으로 나가기
+                </button>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- 4. 교사 관리자 모드 (screen-teacher) -->
+        <!-- ─────────────────────────────────────────── -->
+        <div id="screen-teacher" class="hidden max-w-4xl mx-auto w-full">
+            <div class="speaking-card space-y-4">
+                <div class="flex justify-between items-center pb-3 border-b border-sky-100">
+                    <div>
+                        <h2 class="text-xl font-black text-slate-800">영어 말하기(대화) 교사 관리자</h2>
+                        <p class="text-xs text-slate-500 font-semibold">대화문 단원 관리, 학생 성적표 CSV 다운로드, 학급 일괄 삭제</p>
+                    </div>
+                    <button type="button" onclick="backToHome()" class="text-xs font-bold text-slate-500 hover:bg-slate-200 bg-slate-100 px-3 py-1.5 rounded-lg transition">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> 메인으로
+                    </button>
+                </div>
+
+                <!-- 탭 메뉴 -->
+                <div class="flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                    <button type="button" id="t-tab-btn-units" onclick="switchTeacherTab('units')" class="flex-1 py-2 rounded-lg bg-white text-sky-700 shadow-2xs">
+                        📖 대화 단원 편집
+                    </button>
+                    <button type="button" id="t-tab-btn-scores" onclick="switchTeacherTab('scores')" class="flex-1 py-2 rounded-lg text-slate-500 hover:text-slate-800">
+                        📊 성적표 & CSV 다운로드
+                    </button>
+                    <button type="button" id="t-tab-btn-security" onclick="switchTeacherTab('security')" class="flex-1 py-2 rounded-lg text-slate-500 hover:text-slate-800">
+                        🔒 보안 & 학급 삭제
+                    </button>
+                </div>
+
+                <!-- 탭 1: 단원/대화문 관리 -->
+                <div id="t-tab-units" class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <label class="text-xs font-black text-slate-700">대화 단원 선택 및 편집</label>
+                        <div class="flex gap-1.5">
+                            <button type="button" onclick="addNewUnitPrompt()" class="text-xs bg-sky-600 hover:bg-sky-700 text-white font-bold px-3 py-1.5 rounded-lg shadow-2xs transition">
+                                <i class="fa-solid fa-plus mr-1"></i> 새 대화 추가
+                            </button>
+                            <button type="button" onclick="deleteCurrentUnit()" class="text-xs bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-1.5 rounded-lg shadow-2xs transition">
+                                단원 삭제
+                            </button>
+                        </div>
+                    </div>
+
+                    <select id="teacherUnitSelect" onchange="loadTeacherUnitData()" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none">
+                        <!-- 단원 목록 동적 로드 -->
+                    </select>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-[11px] font-bold text-slate-600">대화 스크립트 (A: 컴퓨터, B: 학생):</label>
+                            <span id="teacherTurnCount" class="text-[10px] text-slate-400 font-bold">0개 턴</span>
+                        </div>
+                        <p class="text-[11px] text-sky-800 bg-sky-50/70 p-2.5 rounded-xl font-medium mb-2 border border-sky-100 leading-relaxed">
+                            💡 <strong>대화문 작성 팁</strong>: <code class="bg-white px-1.5 py-0.5 rounded border border-sky-200 text-sky-800 font-bold">A: 컴퓨터 영어 대사 : 한국어 해석</code>, <code class="bg-white px-1.5 py-0.5 rounded border border-sky-200 text-sky-800 font-bold">B: 학생 영어 대사 : 한국어 해석</code> 형태로 입력하시면 컴퓨터와 주고받는 롤플레잉 대화가 완벽하게 구성됩니다.<br>
+                            (예: <span class="text-slate-800 font-semibold">A: Hello, nice to meet you! : 안녕, 만나서 반가워!</span> / <span class="text-slate-800 font-semibold">B: Nice to meet you, too. : 나도 반가워.</span>)
+                        </p>
+                        <textarea id="teacherUnitTextarea" rows="10" placeholder="A: Hello! : 안녕!&#10;B: Hi, nice to meet you. : 안녕, 만나서 반가워.&#10;A: What grade are you in? : 너 몇 학년이니?&#10;B: I'm in the sixth grade. : 나는 6학년이야." class="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-medium outline-none leading-relaxed custom-scrollbar font-mono"></textarea>
+                    </div>
+
+                    <button type="button" onclick="saveTeacherUnit()" class="w-full py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-black text-xs rounded-xl shadow transition">
+                        <i class="fa-solid fa-check mr-1"></i> 현재 대화 단원 저장하기
+                    </button>
+                </div>
+
+                <!-- 탭 2: 학생 성적표 & CSV -->
+                <div id="t-tab-scores" class="hidden space-y-3">
+                    <div class="flex flex-wrap justify-between items-center gap-2">
+                        <span class="text-xs font-bold text-slate-600">전체 학생 영어 말하기 성적표</span>
+                        <div class="flex items-center gap-2">
+                            <span id="teacherScoresCountBadge" class="text-[11px] font-bold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-lg">조회: 0건</span>
+                            <button type="button" onclick="downloadSpeakingScoresCSV()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg shadow-2xs transition">
+                                <i class="fa-solid fa-file-excel mr-1"></i> 엑셀/CSV 다운로드
+                            </button>
+                        </div>
+                    </div>
+                    <!-- 교사용 성적표 필터 & 정렬 바 -->
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                        <select id="teacher-filter-grade" onchange="renderSpeakingScoresTable()" class="p-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-sky-500">
+                            <option value="ALL">전체 학년</option>
+                            <option value="3">3학년</option>
+                            <option value="4">4학년</option>
+                            <option value="5">5학년</option>
+                            <option value="6">6학년</option>
+                        </select>
+                        <select id="teacher-filter-class" onchange="renderSpeakingScoresTable()" class="p-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-sky-500">
+                            <option value="ALL">전체 반</option>
+                            <option value="1">1반</option><option value="2">2반</option>
+                            <option value="3">3반</option><option value="4">4반</option>
+                            <option value="5">5반</option><option value="6">6반</option>
+                        </select>
+                        <select id="teacher-filter-unit" onchange="renderSpeakingScoresTable()" class="p-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-sky-500">
+                            <option value="ALL">전체 단원/주제</option>
+                        </select>
+                        <select id="teacher-filter-mode" onchange="renderSpeakingScoresTable()" class="p-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-sky-500">
+                            <option value="ALL">전체 난이도</option>
+                            <option value="normal">🌱 일반 모드</option>
+                            <option value="advanced">🔥 고급 모드 (2x)</option>
+                        </select>
+                        <select id="teacher-sort-by" onchange="renderSpeakingScoresTable()" class="p-2 bg-white border border-sky-200 rounded-lg text-xs font-bold text-sky-800 outline-none focus:ring-2 focus:ring-sky-500">
+                            <option value="recent">최신 기록순 ⏱️</option>
+                            <option value="score">높은 점수순 🏆</option>
+                        </select>
+                    </div>
+                    <div class="max-h-[380px] overflow-y-auto custom-scrollbar border border-slate-200 rounded-xl bg-white">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200 sticky top-0">
+                                <tr>
+                                    <th class="p-2.5">순위</th>
+                                    <th class="p-2.5">이름</th>
+                                    <th class="p-2.5">학적</th>
+                                    <th class="p-2.5">단원</th>
+                                    <th class="p-2.5">난이도</th>
+                                    <th class="p-2.5">점수</th>
+                                    <th class="p-2.5">정확도</th>
+                                    <th class="p-2.5">시간</th>
+                                    <th class="p-2.5">달성일시</th>
+                                </tr>
+                            </thead>
+                            <tbody id="speakingScoresTbody" class="divide-y divide-slate-100">
+                                <!-- 테이블 목록 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 탭 3: 보안 & 학급 삭제 -->
+                <div id="t-tab-security" class="hidden space-y-5">
+                    <!-- 비밀번호 변경 -->
+                    <div class="p-4 bg-sky-50/50 border border-sky-100 rounded-2xl">
+                        <h4 class="text-xs font-black text-slate-800 mb-2">교사 관리자 비밀번호 변경</h4>
+                        <div class="flex gap-2">
+                            <input type="password" id="newTeacherPwInput" placeholder="새 비밀번호 입력" class="flex-1 p-2 bg-white border border-sky-200 rounded-xl text-xs font-bold outline-none">
+                            <button type="button" onclick="updateTeacherPassword()" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold shadow-2xs transition">
+                                비밀번호 변경
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 학급 랭킹 일괄 삭제 -->
+                    <div class="p-4 bg-red-50/50 border border-red-100 rounded-2xl">
+                        <h4 class="text-xs font-black text-red-800 mb-2">학급별 말하기 성적 기록 일괄 삭제</h4>
+                        <p class="text-[11px] text-red-600 mb-3">선택한 학년/반의 모든 말하기 기록을 클라우드 DB에서 영구 삭제합니다.</p>
+                        <div class="flex gap-2">
+                            <select id="delete-target-grade" class="p-2 bg-white border border-red-200 rounded-lg text-xs font-bold text-slate-700">
+                                <option value="ALL">전체 학년</option>
+                                <option value="3">3학년</option>
+                                <option value="4">4학년</option>
+                                <option value="5">5학년</option>
+                                <option value="6">6학년</option>
+                            </select>
+                            <select id="delete-target-class" class="p-2 bg-white border border-red-200 rounded-lg text-xs font-bold text-slate-700">
+                                <option value="ALL">전체 반</option>
+                                <option value="1">1반</option><option value="2">2반</option>
+                                <option value="3">3반</option><option value="4">4반</option>
+                                <option value="5">5반</option><option value="6">6반</option>
+                            </select>
+                            <button type="button" onclick="deleteClassSpeakingScores()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-2xs transition">
+                                일괄 삭제 실행
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 모달: 마이크 권한 안내 모달 -->
+    <!-- ─────────────────────────────────────────── -->
+    <div id="modal-mic-guide" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+        <div class="bg-white max-w-md w-full p-6 rounded-2xl shadow-2xl space-y-4 text-left">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🎙️</span>
+                    <h3 class="text-base font-black text-slate-800">마이크 권한 허용 안내</h3>
+                </div>
+                <button type="button" onclick="closeMicGuideModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            </div>
+            
+            <div class="space-y-3 text-xs leading-relaxed text-slate-600">
+                <div class="p-3.5 bg-sky-50 border border-sky-200 rounded-xl space-y-1.5">
+                    <strong class="text-sky-950 font-bold block text-xs">🌐 1. 웹 브라우저(Chrome/Edge) 권한 설정</strong>
+                    <p class="text-slate-600">
+                        1) 주소창 왼쪽의 <strong>자물쇠(또는 조율기 🔒) 아이콘</strong>을 클릭합니다.<br>
+                        2) <strong>마이크</strong> 항목을 <strong>'허용(Allow)'</strong>으로 설정합니다.<br>
+                        3) 이후에는 다시 묻지 않고 클릭 즉시 AI 음성 인식이 시작됩니다!
+                    </p>
+                </div>
+            </div>
+
+            <button type="button" onclick="closeMicGuideModal()" class="w-full py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl shadow transition">
+                확인했습니다
+            </button>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 모달: 교사 인증 모달 -->
+    <!-- ─────────────────────────────────────────── -->
+    <div id="modal-teacher-auth" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 border border-sky-100 shadow-xl space-y-4">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">🔒</span>
+                <h3 class="text-base font-black text-slate-800">교사 인증</h3>
+            </div>
+            <p class="text-xs text-slate-500 font-medium">교사 전용 비밀번호를 입력해주세요.</p>
+            <input type="password" id="teacherPwInput" placeholder="비밀번호 입력" class="w-full p-2.5 bg-sky-50 border border-sky-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-sky-500">
+            <div class="flex gap-2">
+                <button type="button" onclick="closeTeacherAuthModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl transition">취소</button>
+                <button type="button" onclick="verifyTeacher()" class="flex-1 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 커스텀 알림 모달 -->
+    <!-- ─────────────────────────────────────────── -->
+    <div id="custom-alert" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 border border-sky-100 shadow-xl text-center space-y-3">
+            <div class="text-3xl">⚠️</div>
+            <h4 class="text-sm font-black text-slate-800">알림</h4>
+            <p id="alert-msg" class="text-xs text-slate-600 font-medium leading-relaxed"></p>
+            <button type="button" onclick="closeAlert()" class="w-full py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition">
+                확인
+            </button>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- FIREBASE & 말하기 다이얼로그 엔진 (ES Module) -->
+    <!-- ─────────────────────────────────────────── -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { 
+            getFirestore, collection, doc, setDoc, getDoc, deleteDoc, onSnapshot, 
+            getDocs, addDoc, query, orderBy, limit, serverTimestamp 
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: atob("QUl6YVN5QmpkdVVCMXFFQXBkdWpaNmtxQXdvQmlzQWpBTE5YVjI4"),
+            authDomain: "reading-c0510.firebaseapp.com",
+            projectId: "reading-c0510",
+            storageBucket: "reading-c0510.firebasestorage.app",
+            messagingSenderId: "140234107393",
+            appId: "1:140234107393:web:6ede13e43bf353a8b5ee00",
+            measurementId: "G-5X277KTD9R"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // ── 전역 상태 ──
+        let loadedDialogues = {
+        "Lesson 1. New Friends (새 친구와 인사)": [
+                "A: Hello, nice to meet you! : 안녕, 만나서 반가워!",
+                "B: Nice to meet you, too. What's your name? : 나도 반가워. 네 이름은 뭐니?",
+                "A: My name is Kevin. What grade are you in? : 내 이름은 케빈이야. 너는 몇 학년이니?",
+                "B: I'm in the sixth grade. : 나는 6학년이야.",
+                "A: Awesome! We are in the same grade. : 멋지다! 우리 같은 학년이네.",
+                "B: Let's be good friends. : 우리 친하게 지내자."
+        ],
+        "Lesson 2. Favorite Seasons (좋아하는 계절)": [
+                "A: What season do you like most? : 너는 어떤 계절을 가장 좋아하니?",
+                "B: I like spring because beautiful flowers bloom. : 나는 아름다운 꽃들이 피어서 봄을 좋아해.",
+                "A: Spring is nice! I like summer because I can swim. : 봄도 좋지! 나는 수영할 수 있어서 여름을 좋아해.",
+                "B: Summer is great, too. Can you swim well? : 여름도 참 좋아. 너 수영 잘하니?",
+                "A: Yes, I can swim like a fish! : 응, 나는 물고기처럼 수영할 수 있어!",
+                "B: Wow, that's really cool! : 와, 정말 멋지다!"
+        ],
+        "Lesson 3. Birthday & Dates (생일과 기념일)": [
+                "A: When is your birthday? : 너의 생일은 언제니?",
+                "B: It's on May 15th. When is yours? : 내 생일은 5월 15일이야. 네 생일은 언제니?",
+                "A: Mine is on December 25th, Christmas Day! : 내 생일은 12월 25일, 크리스마스야!",
+                "B: Really? You have a special birthday! : 정말? 너 정말 특별한 생일을 가졌구나!",
+                "A: Thank you. What do you want for your birthday? : 고마워. 너는 생일 선물로 무엇을 받고 싶니?",
+                "B: I want a new storybook. : 나는 새 동화책을 받고 싶어."
+        ],
+        "Lesson 4. How Are You Feeling? (기분과 감정 나누기)": [
+                "A: Hi! You look so happy today. : 안녕! 너 오늘 정말 행복해 보여.",
+                "B: I am happy because I got a new puppy. : 새 강아지가 생겨서 행복해.",
+                "A: A puppy? That's wonderful! What does it look like? : 강아지라고? 정말 멋지다! 어떻게 생겼니?",
+                "B: It has brown eyes and soft white fur. : 갈색 눈과 부드러운 흰 털을 가졌어.",
+                "A: It sounds so cute! Take good care of it. : 정말 귀엽겠다! 잘 돌봐주렴.",
+                "B: I will walk my puppy every day. : 매일 강아지를 산책시킬 거야."
+        ],
+        "Lesson 5. Finding the Way (길 묻고 안내하기)": [
+                "A: Excuse me, where is the library? : 실례합니다, 도서관이 어디에 있나요?",
+                "B: Go straight two blocks and turn right at the bank. : 두 블록 곧장 가서 은행에서 오른쪽으로 도세요.",
+                "A: Is it next to the bank? : 은행 바로 옆에 있나요?",
+                "B: Yes, it's next to the bank and across from the park. : 네, 은행 옆이자 공원 맞은편에 있어요.",
+                "A: Thank you so much for your help! : 도와주셔서 정말 감사합니다!",
+                "B: You're welcome. Have a nice day! : 천만에요. 좋은 하루 보내세요!"
+        ],
+        "Lesson 6. Weekend Plans (주말 계획 묻기)": [
+                "A: What are you going to do this weekend? : 이번 주말에 무엇을 할 거니?",
+                "B: I'm going to visit my grandparents in the countryside. : 나는 시골에 계신 조부모님 댁에 방문할 거야.",
+                "A: That sounds peaceful! What will you do there? : 평화롭고 좋겠다! 거기서 무엇을 할 거니?",
+                "B: I will pick fresh apples with my grandfather. : 할아버지와 함께 신선한 사과를 딸 거야.",
+                "A: Wow, delicious apples! Have a wonderful trip. : 와, 맛있는 사과네! 즐거운 여행 되렴.",
+                "B: Thanks! What about you? : 고마워! 너는 어때?"
+        ],
+        "Lesson 7. Ordering Food (식당에서 주문하기)": [
+                "A: Welcome! May I take your order? : 어서 오세요! 주문하시겠어요?",
+                "B: Yes, please. What do you recommend? : 네. 무엇을 추천하시나요?",
+                "A: Our tomato pasta and cheese pizza are very popular. : 저희 토마토 파스타와 치즈 피자가 아주 인기 있어요.",
+                "B: I'd like a cheese pizza and an orange juice, please. : 치즈 피자 하나와 오렌지 주스 한 잔 주세요.",
+                "A: Sure thing. Will that be all for you? : 알겠습니다. 그것으로 다 되셨나요?",
+                "B: Yes, that's all. Thank you. : 네, 그게 다예요. 감사합니다."
+        ],
+        "Lesson 8. Daily Habits & Sports (운동과 일상 습관)": [
+                "A: How often do you exercise? : 너는 얼마나 자주 운동하니?",
+                "B: I play soccer three times a week. : 나는 일주일에 세 번 축구를 해.",
+                "A: Good for you! Who do you play soccer with? : 대단하다! 누구와 함께 축구를 하니?",
+                "B: I play with my classmates after school. : 방과 후에 반 친구들과 함께 해.",
+                "A: Exercising regularly makes you strong and healthy. : 규칙적으로 운동하면 튼튼하고 건강해지지.",
+                "B: That's right. It makes me feel refreshed. : 맞아. 기분이 상쾌해져."
+        ],
+        "Lesson 9. Asking for Favors (도움과 부탁하기)": [
+                "A: Can you help me with this heavy box? : 이 무거운 상자 옮기는 것 좀 도와줄 수 있니?",
+                "B: Sure, I can help you! Where should we put it? : 물론이지, 도와줄게! 어디에 둘까?",
+                "A: Please put it on the table over there. : 저기 있는 테이블 위에 놓아줘.",
+                "B: Here you go. Is there anything else? : 여기 두었어. 다른 건 없니?",
+                "A: No, that's enough. You are so kind! : 아니, 그걸로 충분해. 너 정말 친절하구나!",
+                "B: Don't mention it. Friends help each other. : 별말을 다 해. 친구끼리 돕는 거지."
+        ],
+        "Lesson 10. School Subjects (좋아하는 과목과 이유)": [
+                "A: What is your favorite subject in school? : 학교에서 네가 가장 좋아하는 과목은 뭐니?",
+                "B: I like science best because doing experiments is exciting. : 실험하는 게 신나서 과학을 제일 좋아해.",
+                "A: Science is very interesting! I like art best. : 과학은 아주 흥미롭지! 나는 미술을 제일 좋아해.",
+                "B: You draw pictures very well, don't you? : 너 그림 정말 잘 그리지, 그렇지?",
+                "A: Yes, I love drawing animals and landscapes. : 응, 나는 동물과 풍경 그리는 걸 정말 좋아해.",
+                "B: I want to see your artwork sometime! : 언젠가 네 작품을 보고 싶어!"
+        ],
+        "Lesson 11. Shopping for Clothes (옷 가게에서 쇼핑하기)": [
+                "A: Can I help you find something? : 무엇을 찾는 것 좀 도와드릴까요?",
+                "B: Yes, I'm looking for a warm winter jacket. : 네, 따뜻한 겨울 재킷을 찾고 있어요.",
+                "A: How about this blue jacket? It is very warm. : 이 파란색 재킷은 어떠세요? 아주 따뜻해요.",
+                "B: Can I try this jacket on? : 이 재킷 한번 입어봐도 될까요?",
+                "A: Of course, the fitting room is right over there. : 물론이죠, 탈의실은 바로 저쪽에 있습니다.",
+                "B: It fits me perfectly. I will take it! : 제게 딱 맞네요. 이것으로 살게요!"
+        ],
+        "Lesson 12. Future Dreams (미래의 꿈 이야기)": [
+                "A: What do you want to be when you grow up? : 너는 커서 어떤 사람이 되고 싶니?",
+                "B: I want to be a doctor to help sick people. : 나는 아픈 사람들을 돕는 의사가 되고 싶어.",
+                "A: That is a truly wonderful and meaningful dream! : 정말 멋지고 뜻깊은 꿈이구나!",
+                "B: Thank you. What is your dream job? : 고마워. 너의 장래 희망은 뭐니?",
+                "A: I want to be an astronaut and explore space. : 나는 우주 비행사가 되어 우주를 탐험하고 싶어.",
+                "B: Wow, space exploration! I believe in your dream! : 와, 우주 탐험이라니! 네 꿈을 응원해!"
+        ]
+};
+        let globalTeacherPw = "4657";
+        let globalSchoolName = "이의초등학교";
+
+        let currentPracticeUnit = "";
+        let currentPracticeMode = "normal"; // "normal" | "advanced"
+        let currentPartner = "buddy"; // "buddy" | "emily" | "kevin"
+        
+        let currentDialogueTurns = []; // 파싱된 전체 턴 목록 [ { speaker: 'A'|'B', english: '...', korean: '...' } ]
+        let currentTurnIndex = 0;      // 전체 턴 중 현재 턴 인덱스
+        let studentTurnCount = 0;      // 학생 발화 턴 수
+        let studentTurnCompleted = 0;  // 완료된 학생 턴 수
+
+        let isRecording = false;
+        let recognition = null;
+        let startTime = null;
+        let timerInterval = null;
+        let dialogueTotalScore = 0;
+        let dialogueTotalAccuracy = 0;
+        let dialogueTotalTime = 0;
+
+        let hofAllScores = [];
+        let hofCurrentPeriod = 'all';
+        let unsubscribeHofTop = null;
+        let unsubscribeHofRecent = null;
+        const scoresMap = new Map();
+
+        // 파트너별 음성 설정
+        const PARTNER_PROFILES = {
+            buddy: { name: "버디", role: "AI 로봇 친구", icon: "🤖", pitch: 1.15, rate: 0.90 },
+            emily: { name: "에밀리", role: "활기찬 친구", icon: "👧", pitch: 1.25, rate: 0.95 },
+            kevin: { name: "케빈", role: "원어민 선생님", icon: "👨‍🏫", pitch: 0.95, rate: 0.85 }
+        };
+
+        // ── 유틸: 이름 마스킹 (홍O동 표준) ──
+        function maskStudentName(nameStr) {
+            if (!nameStr) return '학생';
+            let str = String(nameStr).trim();
+            str = str.replace(/\\*/g, 'O');
+            if (str.includes('선생님') || str.includes('관리자')) return str;
+
+            const parts = str.split(/\\s+/);
+            if (parts.length > 1) {
+                const rawName = parts[parts.length - 1];
+                if (!rawName.endsWith('반') && !rawName.endsWith('번') && !rawName.endsWith('학년')) {
+                    const prefix = parts.slice(0, -1).join(' ');
+                    return prefix + ' ' + maskSingleName(rawName);
+                }
+            }
+            return maskSingleName(str);
+        }
+
+        function maskSingleName(name) {
+            if (!name) return '';
+            const s = name.trim();
+            if (s.length <= 1) return s;
+            if (s.length === 2) return s[0] + 'O';
+            if (s.length === 3) return s[0] + 'O' + s[2];
+            return s[0] + 'O'.repeat(s.length - 2) + s[s.length - 1];
+        }
+
+        function getStudentInfo() {
+            if (window.WaurimalStudent && typeof window.WaurimalStudent.get === 'function') {
+                const sso = window.WaurimalStudent.get();
+                if (sso) {
+                    return {
+                        grade: String(sso.grade || ''),
+                        classNum: String(sso.classNum || ''),
+                        studentNum: String(sso.studentNum || ''),
+                        name: sso.name || '학생',
+                        school: sso.school || ''
+                    };
+                }
+            }
+            let info = { grade: '', classNum: '', studentNum: '', name: '학생', school: '' };
+            try {
+                const saved = localStorage.getItem('waurimal_student_profile');
+                if (saved) {
+                    const p = JSON.parse(saved);
+                    info = {
+                        grade: String(p.grade || ''),
+                        classNum: String(p.classNum || p.class || ''),
+                        studentNum: String(p.studentNum || p.number || p.num || ''),
+                        name: p.name || p.studentName || '학생',
+                        school: p.school || ''
+                    };
+                }
+            } catch(e) {}
+            return info;
+        }
+
+        // 화면 전환 유틸
+        window.showScreen = (screenId) => {
+            if (screenId === 'screen-teacher' && (!window.WaurimalAuth || !window.WaurimalAuth.isAuthenticated())) {
+                if (typeof window.openTeacherAuthModal === 'function') {
+                    window.openTeacherAuthModal();
+                } else {
+                    alert('교사 인증이 필요합니다.');
+                }
+                return;
+            }
+            const screens = ['screen-home', 'screen-dialogue', 'screen-result', 'screen-teacher'];
+            screens.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.classList.add('hidden');
+                    el.style.setProperty('display', 'none', 'important');
+                }
+            });
+            const target = document.getElementById(screenId);
+            if (target) {
+                target.classList.remove('hidden');
+                if (screenId === 'screen-home') {
+                    target.style.setProperty('display', 'grid', 'important');
+                } else {
+                    target.style.setProperty('display', 'block', 'important');
+                }
+            }
+
+            const hdr = document.querySelector('.hdr');
+            if (hdr) {
+                if (screenId === 'screen-home' || screenId === 'screen-teacher') {
+                    hdr.style.removeProperty('display');
+                } else {
+                    hdr.style.setProperty('display', 'none', 'important');
+                }
+            }
+            window.scrollTo({ top: 0, behavior: 'instant' });
+        };
+
+        window.showAlert = (msg) => {
+            document.getElementById('alert-msg').innerHTML = String(msg).replace(/\\n/g, '<br>');
+            document.getElementById('custom-alert').classList.remove('hidden');
+        };
+        window.closeAlert = () => {
+            document.getElementById('custom-alert').classList.add('hidden');
+        };
+
+        window.backToHome = () => {
+            if (recognition && isRecording) {
+                try { recognition.stop(); } catch(e){}
+            }
+            if (timerInterval) clearInterval(timerInterval);
+            isRecording = false;
+            window.showScreen('screen-home');
+            filterHofList();
+        };
+
+        // 파트너 선택
+        window.selectPartner = (p) => {
+            currentPartner = p;
+            ['buddy', 'emily', 'kevin'].forEach(k => {
+                const btn = document.getElementById('btn-partner-' + k);
+                if (btn) {
+                    if (k === p) {
+                        btn.className = "char-btn p-2 rounded-xl border-2 border-sky-500 bg-sky-50 text-center transition shadow-xs ring-2 ring-sky-200";
+                    } else {
+                        btn.className = "char-btn p-2 rounded-xl border-2 border-slate-200 bg-white hover:bg-slate-50 text-center transition";
+                    }
+                }
+            });
+        };
+
+        // 모드 전환
+        window.setPracticeMode = (mode) => {
+            currentPracticeMode = mode;
+            const btnNormal = document.getElementById('btn-mode-normal');
+            const btnAdv = document.getElementById('btn-mode-advanced');
+            const badge = document.getElementById('modeBonusBadge');
+
+            if (mode === 'advanced') {
+                if (btnAdv) {
+                    btnAdv.className = "mode-btn p-3 rounded-xl border-2 border-rose-500 bg-rose-50/70 text-left transition relative flex flex-col justify-between shadow-xs ring-2 ring-rose-300";
+                }
+                if (btnNormal) {
+                    btnNormal.className = "mode-btn p-3 rounded-xl border-2 border-slate-200 bg-white hover:bg-slate-50 text-left transition relative flex flex-col justify-between";
+                }
+                if (badge) {
+                    badge.className = "text-[10px] font-black text-rose-700 bg-rose-100 px-2.5 py-0.5 rounded-full animate-pulse border border-rose-200";
+                    badge.innerHTML = '🔥 고급 모드 (점수 2배 더블!)';
+                }
+            } else {
+                if (btnNormal) {
+                    btnNormal.className = "mode-btn p-3 rounded-xl border-2 border-sky-600 bg-sky-50/50 text-left transition relative flex flex-col justify-between shadow-xs ring-2 ring-sky-200";
+                }
+                if (btnAdv) {
+                    btnAdv.className = "mode-btn p-3 rounded-xl border-2 border-slate-200 bg-white hover:bg-rose-50/50 text-left transition relative flex flex-col justify-between";
+                }
+                if (badge) {
+                    badge.className = "text-[10px] font-black text-sky-700 bg-sky-100 px-2.5 py-0.5 rounded-full";
+                    badge.innerHTML = '🌱 일반 모드 (기본 1x)';
+                }
+            }
+        };
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── 1. DB 단원 데이터 로드 및 초기화 ──
+        // ════════════════════════════════════════════════════════════════════
+        async function initApp() {
+            // 설정 로드
+            try {
+                const snap = await getDoc(doc(db, "settings", "global"));
+                if (snap.exists()) {
+                    const d = snap.data();
+                    if (d.teacherPw) globalTeacherPw = String(d.teacherPw);
+                    if (d.schoolName) globalSchoolName = String(d.schoolName);
+                }
+            } catch(e) {
+                console.warn("Settings load error:", e);
+            }
+
+            // 로컬 캐시 복원
+            try {
+                const cached = localStorage.getItem('waurimal_speaking_dialogues_cache');
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (parsed && Object.keys(parsed).length > 0) {
+                        loadedDialogues = parsed;
+                        renderUnitSelects();
+                    }
+                }
+            } catch(e){}
+
+            // Firestore speaking_units 로드
+            try {
+                const querySnapshot = await getDocs(collection(db, "speaking_units"));
+                let fbUnits = {};
+                querySnapshot.forEach(d => {
+                    const data = d.data();
+                    if (data.dialogue && Array.isArray(data.dialogue)) {
+                        fbUnits[d.id] = data.dialogue;
+                    } else if (data.texts && Array.isArray(data.texts)) {
+                        fbUnits[d.id] = data.texts;
+                    }
+                });
+
+                if (Object.keys(fbUnits).length > 0) {
+                    loadedDialogues = fbUnits;
+                    try { localStorage.setItem('waurimal_speaking_dialogues_cache', JSON.stringify(fbUnits)); } catch(e){}
+                }
+            } catch(e) {
+                console.warn("speaking_units load error:", e);
+            }
+
+            renderUnitSelects();
+            listenToHallOfFame();
+        }
+
+        function renderUnitSelects() {
+            const unitKeys = Object.keys(loadedDialogues);
+            if (unitKeys.length === 0) return;
+
+            // 1. 홈 화면 단원 셀렉트
+            const homeSelect = document.getElementById('unitSelect');
+            if (homeSelect) {
+                const cur = homeSelect.value;
+                homeSelect.innerHTML = '';
+                unitKeys.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = `${name} (${loadedDialogues[name].length}턴 대화)`;
+                    homeSelect.appendChild(opt);
+                });
+                if (cur && loadedDialogues[cur]) homeSelect.value = cur;
+                updateSelectedUnitInfo();
+            }
+
+            // 2. 명예의 전당 단원 필터
+            const hofSelect = document.getElementById('hof-filter-unit');
+            if (hofSelect) {
+                const curHof = hofSelect.value;
+                hofSelect.innerHTML = '<option value="ALL">전체 단원/주제</option>';
+                unitKeys.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = name;
+                    hofSelect.appendChild(opt);
+                });
+                if (curHof) hofSelect.value = curHof;
+            }
+
+            // 3. 교사 관리 단원 셀렉트
+            const teacherSelect = document.getElementById('teacherUnitSelect');
+            if (teacherSelect) {
+                teacherSelect.innerHTML = '';
+                unitKeys.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = `${name} (${loadedDialogues[name].length}턴)`;
+                    teacherSelect.appendChild(opt);
+                });
+                loadTeacherUnitData();
+            }
+
+            // 4. 교사용 성적표 단원 필터
+            const tFilterUnit = document.getElementById('teacher-filter-unit');
+            if (tFilterUnit) {
+                const curTFilter = tFilterUnit.value;
+                tFilterUnit.innerHTML = '<option value="ALL">전체 단원/주제</option>';
+                unitKeys.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = name;
+                    tFilterUnit.appendChild(opt);
+                });
+                if (curTFilter) tFilterUnit.value = curTFilter;
+            }
+        }
+
+        window.updateSelectedUnitInfo = () => {
+            const sel = document.getElementById('unitSelect');
+            const badge = document.getElementById('unitTurnCountBadge');
+            if (sel && badge && loadedDialogues[sel.value]) {
+                badge.innerText = `총 ${loadedDialogues[sel.value].length}턴 대화 롤플레잉`;
+            }
+        };
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── 2. 대화문 파싱 유틸 ──
+        // ════════════════════════════════════════════════════════════════════
+        function parseDialogueLine(line) {
+            let str = String(line || '').trim();
+            let speaker = 'A'; // 기본 A(컴퓨터)
+            if (str.startsWith('A:') || str.startsWith('a:')) {
+                speaker = 'A';
+                str = str.substring(2).trim();
+            } else if (str.startsWith('B:') || str.startsWith('b:')) {
+                speaker = 'B';
+                str = str.substring(2).trim();
+            }
+
+            let english = str;
+            let korean = '';
+            if (str.includes(':')) {
+                const idx = str.indexOf(':');
+                english = str.substring(0, idx).trim();
+                korean = str.substring(idx + 1).trim();
+            }
+
+            return { speaker, english, korean };
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── 3. 영어 말하기 대화 엔진 (TTS & STT & 대화 흐름) ──
+        // ════════════════════════════════════════════════════════════════════
+        window.startSpeakingDialogue = () => {
+            const sel = document.getElementById('unitSelect');
+            if (!sel || !loadedDialogues[sel.value] || loadedDialogues[sel.value].length === 0) {
+                showAlert("선택한 단원에 대화 내용이 없습니다.");
+                return;
+            }
+
+            currentPracticeUnit = sel.value;
+            const rawLines = loadedDialogues[currentPracticeUnit] || [];
+            currentDialogueTurns = rawLines.map(parseDialogueLine);
+
+            currentTurnIndex = 0;
+            dialogueTotalScore = 0;
+            dialogueTotalAccuracy = 0;
+            dialogueTotalTime = 0;
+            studentTurnCompleted = 0;
+            studentTurnCount = currentDialogueTurns.filter(t => t.speaker === 'B').length || 1;
+
+            // 채팅창 초기화
+            const chatArea = document.getElementById('chatScrollArea');
+            if (chatArea) chatArea.innerHTML = '';
+
+            window.showScreen('screen-dialogue');
+            document.getElementById('currentUnitTitle').innerText = currentPracticeUnit;
+
+            // 모드 뱃지 설정
+            const modeBadge = document.getElementById('currentModeBadge');
+            if (modeBadge) {
+                if (currentPracticeMode === 'advanced') {
+                    modeBadge.className = "text-[10px] font-black px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200 animate-pulse";
+                    modeBadge.innerText = "🔥 고급 모드 (2x)";
+                } else {
+                    modeBadge.className = "text-[10px] font-black px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-700";
+                    modeBadge.innerText = "🌱 일반 모드 (1x)";
+                }
+            }
+
+            // 첫 턴 진행
+            processTurn();
+        };
+
+        function processTurn() {
+            if (currentTurnIndex >= currentDialogueTurns.length) {
+                finishDialogue();
+                return;
+            }
+
+            const turn = currentDialogueTurns[currentTurnIndex];
+            document.getElementById('turnCounter').innerText = `대화 ${currentTurnIndex + 1}/${currentDialogueTurns.length}`;
+
+            if (turn.speaker === 'A') {
+                // 🤖 컴퓨터 턴: AI 말풍선 추가 및 원어민 음성 재생 후 학생 턴으로 자동 전환
+                handleAiTurn(turn);
+            } else {
+                // 👤 학생 턴: 학생 발화 카드 준비 및 마이크 대기
+                handleStudentTurn(turn);
+            }
+        }
+
+        // AI 턴 처리
+        function handleAiTurn(turn) {
+            const partner = PARTNER_PROFILES[currentPartner] || PARTNER_PROFILES.buddy;
+            const chatArea = document.getElementById('chatScrollArea');
+            
+            // AI 말풍선 추가
+            const bubbleEl = document.createElement('div');
+            bubbleEl.className = "flex items-start gap-2.5 text-left";
+            bubbleEl.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-sky-100 border border-sky-300 flex items-center justify-center text-lg flex-shrink-0 shadow-2xs">
+                    ${partner.icon}
+                </div>
+                <div class="space-y-1 max-w-[85%]">
+                    <div class="text-[11px] font-black text-sky-950 flex items-center gap-1.5">
+                        <span>${partner.name}</span>
+                        <span class="text-[9px] text-sky-600 bg-sky-50 px-1.5 py-0.2 rounded font-bold">${partner.role}</span>
+                    </div>
+                    <div class="chat-bubble-ai p-3 space-y-1">
+                        <div class="text-sm md:text-base font-black text-slate-800 leading-snug">
+                            ${turn.english}
+                        </div>
+                        ${turn.korean ? `<div class="text-[11px] font-medium text-slate-500">${turn.korean}</div>` : ''}
+                    </div>
+                </div>
+            `;
+            chatArea.appendChild(bubbleEl);
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            // 학생 액션 카드는 잠시 대기 모드로
+            const studentCard = document.getElementById('studentTurnCard');
+            studentCard.classList.add('opacity-50', 'pointer-events-none');
+            document.getElementById('partnerStatusText').innerText = `${partner.name}가 말하는 중... 🔊`;
+            document.getElementById('feedbackArea').className = "min-h-[70px] p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center flex flex-col items-center justify-center text-xs font-medium text-slate-500";
+            document.getElementById('feedbackArea').innerHTML = `
+                <div class="flex items-center gap-2 text-sky-700 font-bold">
+                    <i class="fa-solid fa-volume-high fa-bounce text-base"></i>
+                    <span>${partner.name}의 원어민 음성을 귀 기울여 들어보세요.</span>
+                </div>
+            `;
+            document.getElementById('dialogueNavButtons').classList.add('hidden');
+
+            // 음성 발화 (TTS)
+            speakEnglish(turn.english, partner.pitch, partner.rate, () => {
+                // 발화 완료 후 0.4초 뒤 다음(학생) 턴으로 전환
+                setTimeout(() => {
+                    currentTurnIndex++;
+                    processTurn();
+                }, 400);
+            });
+        }
+
+        // 학생 턴 처리
+        function handleStudentTurn(turn) {
+            const partner = PARTNER_PROFILES[currentPartner] || PARTNER_PROFILES.buddy;
+            const studentCard = document.getElementById('studentTurnCard');
+            studentCard.classList.remove('opacity-50', 'pointer-events-none');
+            document.getElementById('partnerStatusText').innerText = `${partner.name}가 대답을 기다려요 👂`;
+
+            const targetEnglishText = document.getElementById('targetEnglishText');
+            const targetEnglishBlind = document.getElementById('targetEnglishBlind');
+            const advMeaningBox = document.getElementById('advMeaningBox');
+            const targetKoreanText = document.getElementById('targetKoreanText');
+            const normalSubMeaning = document.getElementById('normalSubMeaning');
+            const ttsBtnWrap = document.getElementById('ttsBtnWrap');
+            const ttsBtnText = document.getElementById('ttsBtnText');
+
+            targetEnglishText.innerText = turn.english;
+
+            if (currentPracticeMode === 'advanced') {
+                // 🔥 고급 모드: 한국어 해석만 크게 표시, 영문은 블라인드
+                document.getElementById('studentTurnLabel').innerHTML = '<i class="fa-solid fa-fire text-rose-500"></i> <strong class="text-rose-600">고급 도전: 아래 해석을 보고 영어로 답하세요! (점수 2배)</strong>';
+                if (advMeaningBox) advMeaningBox.classList.remove('hidden');
+                if (targetKoreanText) targetKoreanText.innerText = turn.korean || "(해석을 준비 중인 문장입니다)";
+                targetEnglishText.classList.add('hidden');
+                if (targetEnglishBlind) targetEnglishBlind.classList.remove('hidden');
+                if (normalSubMeaning) normalSubMeaning.classList.add('hidden');
+                if (ttsBtnWrap) ttsBtnWrap.classList.add('hidden');
+            } else {
+                // 🌱 일반 모드: 영문 표시 + 보조 해석
+                document.getElementById('studentTurnLabel').innerHTML = '<span>👤 내 차례입니다! 컴퓨터에게 영어로 답해보세요</span>';
+                if (advMeaningBox) advMeaningBox.classList.add('hidden');
+                targetEnglishText.classList.remove('hidden');
+                if (targetEnglishBlind) targetEnglishBlind.classList.add('hidden');
+                if (normalSubMeaning) {
+                    if (turn.korean) {
+                        normalSubMeaning.innerText = `뜻: ${turn.korean}`;
+                        normalSubMeaning.classList.remove('hidden');
+                    } else {
+                        normalSubMeaning.classList.add('hidden');
+                    }
+                }
+                if (ttsBtnWrap) {
+                    ttsBtnWrap.classList.remove('hidden');
+                    if (ttsBtnText) ttsBtnText.innerText = "내 대사 원어민 발음 듣기";
+                }
+            }
+
+            const recBtn = document.getElementById('recordBtn');
+            recBtn.className = "w-full max-w-sm py-4 bg-sky-600 hover:bg-sky-700 text-white font-black text-base rounded-2xl shadow-md transition flex items-center justify-center gap-2";
+            recBtn.innerHTML = '<i class="fa-solid fa-microphone text-lg"></i><span>마이크 켜고 대답하기</span>';
+
+            const feedbackArea = document.getElementById('feedbackArea');
+            if (currentPracticeMode === 'advanced') {
+                feedbackArea.className = "min-h-[70px] p-4 bg-rose-50/50 border border-rose-200 rounded-2xl text-center flex flex-col items-center justify-center text-xs font-semibold text-rose-600";
+                feedbackArea.innerHTML = '<div class="flex items-center gap-1.5"><i class="fa-solid fa-microphone-lines text-base"></i><span>마이크를 켜고 위 해석에 맞는 영어 답변을 자신있게 말하세요!</span></div>';
+            } else {
+                feedbackArea.className = "min-h-[70px] p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center flex flex-col items-center justify-center text-xs font-medium text-slate-500";
+                feedbackArea.innerHTML = "마이크를 켜고 위 영어 문장을 큰 소리로 대답해 주세요.";
+            }
+
+            document.getElementById('dialogueNavButtons').classList.add('hidden');
+            if (timerInterval) clearInterval(timerInterval);
+            startTime = null;
+        }
+
+        // TTS 발화 함수
+        function speakEnglish(text, pitch = 1.0, rate = 0.9, onEndCallback = null) {
+            if (!('speechSynthesis' in window)) {
+                if (onEndCallback) onEndCallback();
+                return;
+            }
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'en-US';
+            utter.pitch = pitch;
+            utter.rate = rate;
+
+            const voices = window.speechSynthesis.getVoices();
+            const enVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Online')));
+            if (enVoice) utter.voice = enVoice;
+
+            utter.onend = () => {
+                if (typeof onEndCallback === 'function') onEndCallback();
+            };
+            utter.onerror = () => {
+                if (typeof onEndCallback === 'function') onEndCallback();
+            };
+
+            window.speechSynthesis.speak(utter);
+        }
+
+        window.playTargetTTS = () => {
+            const turn = currentDialogueTurns[currentTurnIndex];
+            if (!turn) return;
+            speakEnglish(turn.english, 1.0, 0.9);
+        };
+
+        // STT 음성인식
+        function initSpeechRecognition() {
+            window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!window.SpeechRecognition) {
+                showAlert("사용 중인 브라우저에서 마이크 음성 인식을 지원하지 않습니다.\\n크롬(Chrome) 또는 엣지(Edge) 브라우저를 이용해 주세요.");
+                return null;
+            }
+            const rc = new SpeechRecognition();
+            rc.lang = 'en-US';
+            rc.interimResults = false;
+            rc.maxAlternatives = 1;
+            rc.continuous = false;
+            return rc;
+        }
+
+        window.toggleRecording = () => {
+            if (isRecording) {
+                if (recognition) recognition.stop();
+                return;
+            }
+
+            recognition = initSpeechRecognition();
+            if (!recognition) return;
+
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                const elapsed = (Date.now() - startTime) / 1000;
+                document.getElementById('timerDisplay').innerText = `⏱️ ${elapsed.toFixed(1)}초`;
+            }, 100);
+
+            recognition.onstart = () => {
+                isRecording = true;
+                const recBtn = document.getElementById('recordBtn');
+                recBtn.className = "w-full max-w-sm py-4 bg-rose-600 hover:bg-rose-700 text-white font-black text-base rounded-2xl shadow-lg transition flex items-center justify-center gap-2 mic-pulsing";
+                recBtn.innerHTML = '<i class="fa-solid fa-microphone text-lg animate-bounce"></i><span>🔴 듣고 있어요... 말씀하세요</span>';
+
+                document.getElementById('feedbackArea').className = "min-h-[70px] p-4 bg-sky-50 border border-sky-200 rounded-2xl text-center flex flex-col items-center justify-center text-xs font-semibold text-sky-800 animate-pulse";
+                document.getElementById('feedbackArea').innerText = "음성을 인식하고 있습니다. 또박또박 말씀해 주세요...";
+            };
+
+            recognition.onresult = (event) => {
+                clearInterval(timerInterval);
+                isRecording = false;
+
+                const recBtn = document.getElementById('recordBtn');
+                recBtn.className = "w-full max-w-sm py-4 bg-sky-600 hover:bg-sky-700 text-white font-black text-base rounded-2xl shadow-md transition flex items-center justify-center gap-2";
+                recBtn.innerHTML = '<i class="fa-solid fa-microphone text-lg"></i><span>🎙️ 다시 녹음하기</span>';
+
+                const recognizedText = event.results[0][0].transcript;
+                const timeTaken = (Date.now() - startTime) / 1000;
+
+                const turn = currentDialogueTurns[currentTurnIndex];
+                evaluateStudentSpeech(turn, recognizedText, timeTaken);
+            };
+
+            recognition.onerror = (event) => {
+                clearInterval(timerInterval);
+                isRecording = false;
+                const recBtn = document.getElementById('recordBtn');
+                recBtn.className = "w-full max-w-sm py-4 bg-sky-600 hover:bg-sky-700 text-white font-black text-base rounded-2xl shadow-md transition flex items-center justify-center gap-2";
+                recBtn.innerHTML = '<i class="fa-solid fa-microphone text-lg"></i><span>🎙️ 다시 시도</span>';
+
+                if (event.error === 'not-allowed') {
+                    showAlert("마이크 사용 권한이 차단되어 있습니다.\\n브라우저 주소창 좌측 자물쇠(조율기) 아이콘을 눌러 마이크를 '허용'해 주세요.");
+                } else if (event.error === 'no-speech') {
+                    document.getElementById('feedbackArea').innerHTML = "<span class='text-amber-600 font-bold'>⚠️ 음성이 감지되지 않았습니다. 마이크에 대고 다시 말씀해 주세요.</span>";
+                }
+            };
+
+            recognition.onend = () => {
+                if (isRecording) {
+                    clearInterval(timerInterval);
+                    isRecording = false;
+                    const recBtn = document.getElementById('recordBtn');
+                    recBtn.className = "w-full max-w-sm py-4 bg-sky-600 hover:bg-sky-700 text-white font-black text-base rounded-2xl shadow-md transition flex items-center justify-center gap-2";
+                    recBtn.innerHTML = '<i class="fa-solid fa-microphone text-lg"></i><span>🎙️ 다시 시도</span>';
+                }
+            };
+
+            recognition.start();
+        };
+
+        // 레벤슈타인 편집 거리
+        function getLevenshteinDistance(a, b) {
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) { matrix[i] = [i]; }
+            for (let j = 0; j <= a.length; j++) { matrix[0][j] = j; }
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1));
+                    }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
+        function evaluateStudentSpeech(turn, recognized, timeTaken) {
+            const cleanTarget = turn.english.toLowerCase().replace(/[.,!?]/g, "").trim();
+            const cleanRecognized = recognized.toLowerCase().replace(/[.,!?]/g, "").trim();
+
+            const dist = getLevenshteinDistance(cleanTarget, cleanRecognized);
+            const maxLen = Math.max(cleanTarget.length, cleanRecognized.length);
+            let accuracy = maxLen > 0 ? ((maxLen - dist) / maxLen) * 100 : 0;
+            accuracy = Math.max(0, Math.round(accuracy));
+
+            const wordCount = Math.max(1, cleanTarget.split(/\\s+/).length);
+            const targetTime = wordCount * 1.0 + 1.5;
+            let speedBonus = 0;
+            if (accuracy >= 65 && timeTaken < targetTime) {
+                speedBonus = Math.min(20, Math.max(0, Math.round((targetTime - timeTaken) * 4)));
+            }
+
+            const baseScore = Math.min(120, Math.round(accuracy + speedBonus));
+            const multiplier = (currentPracticeMode === 'advanced') ? 2 : 1;
+            const turnScore = baseScore * multiplier;
+
+            dialogueTotalAccuracy += accuracy;
+            dialogueTotalTime += timeTaken;
+            dialogueTotalScore += turnScore;
+            studentTurnCompleted++;
+
+            // 고급 모드일 때 정답 공개
+            if (currentPracticeMode === 'advanced') {
+                const targetEnglishText = document.getElementById('targetEnglishText');
+                const targetEnglishBlind = document.getElementById('targetEnglishBlind');
+                const ttsBtnWrap = document.getElementById('ttsBtnWrap');
+                const ttsBtnText = document.getElementById('ttsBtnText');
+
+                if (targetEnglishText) targetEnglishText.classList.remove('hidden');
+                if (targetEnglishBlind) targetEnglishBlind.classList.add('hidden');
+                if (ttsBtnWrap) {
+                    ttsBtnWrap.classList.remove('hidden');
+                    if (ttsBtnText) ttsBtnText.innerText = "🔊 정답 원어민 발음 듣기";
+                }
+            }
+
+            // 학생 말풍선을 대화창에 추가
+            const chatArea = document.getElementById('chatScrollArea');
+            const userBubble = document.createElement('div');
+            userBubble.className = "flex items-start justify-end gap-2.5 text-right";
+            userBubble.innerHTML = `
+                <div class="space-y-1 max-w-[85%]">
+                    <div class="text-[11px] font-black text-slate-600 flex items-center justify-end gap-1.5">
+                        <span class="text-[9px] ${accuracy >= 80 ? 'text-emerald-700 bg-emerald-100' : 'text-amber-700 bg-amber-100'} px-1.5 py-0.2 rounded font-black">${accuracy}% 일치</span>
+                        <span>나 (학생)</span>
+                    </div>
+                    <div class="chat-bubble-user p-3 text-left space-y-1">
+                        <div class="text-sm md:text-base font-black leading-snug">
+                            ${turn.english}
+                        </div>
+                        <div class="text-[10px] text-sky-100 font-semibold">인식: "${recognized}"</div>
+                    </div>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-sky-600 text-white flex items-center justify-center text-sm font-black flex-shrink-0 shadow-2xs">
+                    👤
+                </div>
+            `;
+            chatArea.appendChild(userBubble);
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            const feedbackArea = document.getElementById('feedbackArea');
+            let colorClass = "text-emerald-600";
+            let badge = "🎉 훌륭합니다!";
+            if (accuracy < 60) {
+                colorClass = "text-amber-600";
+                badge = "💪 조금 더 또박또박 대답해 보세요!";
+            } else if (accuracy < 80) {
+                colorClass = "text-blue-600";
+                badge = "👍 자연스러운 대화예요!";
+            }
+
+            const doubleScoreBadge = (currentPracticeMode === 'advanced')
+                ? `<span class="inline-flex items-center gap-1 bg-rose-600 text-white font-black text-[11px] px-2 py-0.5 rounded-full shadow-xs animate-pulse">🔥 더블 점수 2x (+${turnScore}점)</span>`
+                : `<span class="font-bold text-sky-800 bg-sky-50 px-2 py-0.5 rounded-full text-[11px]">+${turnScore}점</span>`;
+
+            feedbackArea.className = "min-h-[70px] p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center flex flex-col items-center justify-center text-xs font-medium text-slate-500";
+            feedbackArea.innerHTML = `
+                <div class="space-y-2 w-full">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-black ${colorClass}">${badge}</span>
+                        <div class="flex items-center gap-1.5">
+                            ${doubleScoreBadge}
+                            <span class="font-bold text-slate-500">정확도: <strong class="text-sky-700">${accuracy}%</strong> • ${timeTaken.toFixed(1)}초${speedBonus > 0 ? ' (스피드+' + speedBonus + ')' : ''}</span>
+                        </div>
+                    </div>
+                    <div class="p-2.5 bg-white border border-slate-200 rounded-xl text-left text-xs font-semibold text-slate-700 space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] text-slate-400 font-bold">내가 말한 답변:</span>
+                            <span class="text-[10px] ${accuracy >= 80 ? 'text-emerald-600' : 'text-amber-600'} font-bold">${accuracy}% 일치</span>
+                        </div>
+                        <div class="text-slate-800 font-bold">"${recognized || '(음성 인식 실패)'}"</div>
+                        ${currentPracticeMode === 'advanced' ? `
+                            <div class="pt-1.5 mt-1 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                                <span class="text-rose-600 font-bold">🎯 정답 답변 문장:</span>
+                                <span class="text-slate-800 font-black">${turn.english}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('dialogueNavButtons').classList.remove('hidden');
+        }
+
+        window.retryCurrentTurn = () => {
+            const turn = currentDialogueTurns[currentTurnIndex];
+            if (turn) handleStudentTurn(turn);
+        };
+
+        window.goToNextTurn = () => {
+            currentTurnIndex++;
+            processTurn();
+        };
+
+        window.confirmExitDialogue = () => {
+            if (confirm("대화를 중단하고 메인 홈으로 나가시겠습니까?")) {
+                backToHome();
+            }
+        };
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── 4. 대화 완주 및 점수 저장 ──
+        // ════════════════════════════════════════════════════════════════════
+        async function finishDialogue() {
+            const count = studentTurnCompleted || 1;
+            const avgAccuracy = Math.round(dialogueTotalAccuracy / count);
+
+            const multiplier = (currentPracticeMode === 'advanced') ? 2 : 1;
+            const baseAvgScore = Math.max(50, Math.min(120, Math.round((dialogueTotalScore / multiplier) / count)));
+            const totalScore = baseAvgScore * multiplier;
+
+            const modeLabel = (currentPracticeMode === 'advanced') ? '🔥 고급 (2x 더블)' : '🌱 일반';
+            document.getElementById('finalResultUnitTitle').innerHTML = `
+                <div class="text-sm font-black text-sky-950">[${currentPracticeUnit}] ${currentDialogueTurns.length}턴 완주</div>
+                <div class="mt-1 inline-block px-2.5 py-0.5 rounded-full text-[11px] font-black ${currentPracticeMode === 'advanced' ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-sky-100 text-sky-800'}">
+                    ${modeLabel} 모드 완주
+                </div>
+            `;
+            document.getElementById('finalScoreDisplay').innerText = totalScore;
+
+            const finalScoreCard = document.getElementById('finalScoreCard');
+            const finalScoreLabel = document.getElementById('finalScoreLabel');
+            if (finalScoreCard) {
+                if (currentPracticeMode === 'advanced') {
+                    finalScoreCard.className = "p-5 bg-gradient-to-br from-rose-50 to-orange-50 border-2 border-rose-300 rounded-2xl shadow-sm relative";
+                    if (finalScoreLabel) {
+                        finalScoreLabel.className = "text-xs text-rose-700 font-black block mb-1";
+                        finalScoreLabel.innerHTML = "🔥 고급 모드 더블 스코어(2x) 획득 점수";
+                    }
+                } else {
+                    finalScoreCard.className = "p-5 bg-sky-50 border border-sky-200 rounded-2xl";
+                    if (finalScoreLabel) {
+                        finalScoreLabel.className = "text-xs text-sky-700 font-bold block mb-1";
+                        finalScoreLabel.innerText = "최종 획득 점수";
+                    }
+                }
+            }
+
+            const statusEl = document.getElementById('saveStatus');
+            if (statusEl) {
+                statusEl.className = "text-xs font-bold text-sky-600 animate-pulse";
+                statusEl.innerText = "⏳ 대화 점수를 클라우드 명예의 전당에 기록 중입니다...";
+            }
+
+            window.showScreen('screen-result');
+
+            // 점수 저장
+            await saveScoreToDB(currentPracticeUnit, totalScore, dialogueTotalTime, avgAccuracy, currentPracticeMode);
+        }
+
+        function normalizeScoreDoc(id, data) {
+            let rawName = data.name || data.studentName || '학생';
+            let cleanName = String(rawName).replace(/\\*/g, 'O');
+
+            let ts = data.timestamp;
+            if (ts && typeof ts.toMillis === 'function') {
+                ts = ts.toMillis();
+            } else if (typeof ts === 'string') {
+                ts = new Date(ts).getTime();
+            } else if (typeof ts === 'number') {
+                if (ts < 10000000000) ts = ts * 1000;
+            } else if (ts && typeof ts.seconds === 'number') {
+                ts = ts.seconds * 1000;
+            } else if (!ts) {
+                ts = Date.now();
+            }
+
+            const gradeStr = String(data.grade || '');
+            const classStr = String(data.classNum || data.class || '');
+            const numStr = String(data.studentNum || data.number || '');
+            const mode = data.mode || (String(data.unit || '').includes('[고급]') ? 'advanced' : 'normal');
+            const modeLabel = data.modeLabel || (mode === 'advanced' ? '고급' : '일반');
+
+            return {
+                id: id,
+                name: rawName,
+                maskedName: maskStudentName(cleanName),
+                schoolInfo: (gradeStr && classStr) ? `${gradeStr}학년 ${classStr}반` : '',
+                grade: gradeStr,
+                classNum: classStr,
+                studentNum: numStr,
+                unit: data.baseUnit || data.unit || '기본 단원',
+                mode: mode,
+                modeLabel: modeLabel,
+                score: parseInt(data.score, 10) || 0,
+                accuracy: data.accuracy || 0,
+                time: data.time || 0,
+                timestamp: ts
+            };
+        }
+
+        function updateHofFromMap() {
+            hofAllScores = Array.from(scoresMap.values());
+            filterHofList();
+            const teacherScreen = document.getElementById('screen-teacher');
+            if (teacherScreen && !teacherScreen.classList.contains('hidden')) {
+                renderSpeakingScoresTable();
+            }
+        }
+
+        async function saveScoreToDB(unitName, score, timeTaken, accuracy, mode = 'normal') {
+            const studentInfo = getStudentInfo();
+            const sName = studentInfo.name || '학생';
+            const sGrade = studentInfo.grade || '6';
+            const sClass = studentInfo.classNum || studentInfo.class || '1';
+            const sNum = studentInfo.studentNum || studentInfo.number || '1';
+
+            const scoreData = {
+                unit: unitName,
+                baseUnit: unitName,
+                mode: mode,
+                modeLabel: mode === 'advanced' ? '고급' : '일반',
+                grade: String(sGrade),
+                classNum: String(sClass),
+                studentNum: String(sNum),
+                name: sName,
+                maskedName: maskStudentName(sName),
+                score: score,
+                accuracy: accuracy,
+                time: Math.round(timeTaken * 10) / 10,
+                timestamp: serverTimestamp()
+            };
+
+            const statusEl = document.getElementById('saveStatus');
+
+            try {
+                const docRef = await addDoc(collection(db, "speaking_scores"), scoreData);
+                const localItem = {
+                    id: docRef.id,
+                    name: sName,
+                    maskedName: maskStudentName(sName),
+                    schoolInfo: `${sGrade}학년 ${sClass}반`,
+                    grade: String(sGrade),
+                    classNum: String(sClass),
+                    studentNum: String(sNum),
+                    unit: unitName,
+                    mode: mode,
+                    modeLabel: mode === 'advanced' ? '고급' : '일반',
+                    score: score,
+                    accuracy: accuracy,
+                    time: Math.round(timeTaken * 10) / 10,
+                    timestamp: Date.now()
+                };
+                scoresMap.set(docRef.id, localItem);
+                updateHofFromMap();
+                if (statusEl) {
+                    statusEl.className = "text-xs font-bold text-emerald-600";
+                    statusEl.innerText = "✅ 클라우드 명예의 전당과 교사용 성적표에 점수가 성공적으로 기록되었습니다!";
+                }
+            } catch(e) {
+                console.warn("Score save error", e);
+                const tempId = 'local_' + Date.now();
+                const localItem = {
+                    id: tempId,
+                    name: sName,
+                    maskedName: maskStudentName(sName),
+                    schoolInfo: `${sGrade}학년 ${sClass}반`,
+                    grade: String(sGrade),
+                    classNum: String(sClass),
+                    studentNum: String(sNum),
+                    unit: unitName,
+                    mode: mode,
+                    modeLabel: mode === 'advanced' ? '고급' : '일반',
+                    score: score,
+                    accuracy: accuracy,
+                    time: Math.round(timeTaken * 10) / 10,
+                    timestamp: Date.now()
+                };
+                scoresMap.set(tempId, localItem);
+                updateHofFromMap();
+                if (statusEl) {
+                    statusEl.className = "text-xs font-bold text-amber-600";
+                    statusEl.innerText = "💾 로컬에 점수가 임시 저장되었습니다.";
+                }
+            }
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── 5. 실시간 명예의 전당 (HOF) 리스너 & 필터 ──
+        // ════════════════════════════════════════════════════════════════════
+        function listenToHallOfFame() {
+            if (unsubscribeHofTop) unsubscribeHofTop();
+            if (unsubscribeHofRecent) unsubscribeHofRecent();
+
+            const qRecent = query(collection(db, "speaking_scores"), orderBy("timestamp", "desc"), limit(300));
+            unsubscribeHofRecent = onSnapshot(qRecent, (snap) => {
+                snap.forEach(d => {
+                    scoresMap.set(d.id, normalizeScoreDoc(d.id, d.data()));
+                });
+                updateHofFromMap();
+            }, (err) => {
+                console.warn("HOF recent query notice:", err);
+                updateHofFromMap();
+            });
+
+            const qTop = query(collection(db, "speaking_scores"), orderBy("score", "desc"), limit(150));
+            unsubscribeHofTop = onSnapshot(qTop, (snap) => {
+                snap.forEach(d => {
+                    scoresMap.set(d.id, normalizeScoreDoc(d.id, d.data()));
+                });
+                updateHofFromMap();
+            }, (err) => {
+                console.warn("HOF top query notice:", err);
+                updateHofFromMap();
+            });
+        }
+
+        window.setHofPeriod = (period) => {
+            hofCurrentPeriod = period;
+            ['all', 'month', 'week'].forEach(p => {
+                const btn = document.getElementById('hof-tab-' + p);
+                if (btn) {
+                    if (p === period) {
+                        btn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-sky-800 shadow-2xs";
+                    } else {
+                        btn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800";
+                    }
+                }
+            });
+            filterHofList();
+        };
+
+        window.filterHofList = () => {
+            const container = document.getElementById('hof-records-container');
+            if (!container) return;
+
+            const g = document.getElementById('hof-filter-grade') ? document.getElementById('hof-filter-grade').value : 'ALL';
+            const c = document.getElementById('hof-filter-class') ? document.getElementById('hof-filter-class').value : 'ALL';
+            const u = document.getElementById('hof-filter-unit') ? document.getElementById('hof-filter-unit').value : 'ALL';
+            const m = document.getElementById('hof-filter-mode') ? document.getElementById('hof-filter-mode').value : 'ALL';
+
+            const now = new Date();
+            const curYear = now.getFullYear();
+            const curMonth = now.getMonth();
+            const oneWeekAgoMs = now.getTime() - 7 * 24 * 60 * 60 * 1000;
+
+            let filtered = hofAllScores.filter(item => {
+                if (g !== 'ALL' && item.grade !== g) return false;
+                if (c !== 'ALL' && item.classNum !== c) return false;
+                if (u !== 'ALL' && item.unit !== u) return false;
+                if (m !== 'ALL' && item.mode !== m) return false;
+
+                if (hofCurrentPeriod !== 'all' && item.timestamp) {
+                    const t = new Date(item.timestamp);
+                    if (hofCurrentPeriod === 'month') {
+                        if (t.getFullYear() !== curYear || t.getMonth() !== curMonth) return false;
+                    } else if (hofCurrentPeriod === 'week') {
+                        if (t.getTime() < oneWeekAgoMs) return false;
+                    }
+                }
+                return true;
+            });
+
+            // 1인 1최고점수
+            const uniqueMap = new Map();
+            filtered.forEach(item => {
+                const isGenericName = (!item.name || item.name === '학생');
+                const modeKey = (m === 'ALL') ? `_${item.mode || 'normal'}` : '';
+                const key = isGenericName
+                    ? item.id
+                    : (item.studentNum 
+                        ? `${item.grade}_${item.classNum}_${item.studentNum}_${item.name}_${u === 'ALL' ? '' : item.unit}${modeKey}`
+                        : `${item.schoolInfo}_${item.name}_${u === 'ALL' ? '' : item.unit}${modeKey}`);
+
+                if (!uniqueMap.has(key) || uniqueMap.get(key).score < item.score) {
+                    uniqueMap.set(key, item);
+                }
+            });
+
+            const displayList = Array.from(uniqueMap.values()).sort((a,b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return (b.timestamp || 0) - (a.timestamp || 0);
+            }).slice(0, 30);
+
+            if (displayList.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16 text-slate-400 text-xs font-bold">
+                        선택한 조건에 해당하는 명예의 전당 기록이 없습니다.<br>
+                        새로운 영어 말하기 대화를 완주하여 첫 랭킹에 도전해 보세요!
+                    </div>
+                `;
+                return;
+            }
+
+            const sanitize = window.WaurimalSanitize || (s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
+            container.innerHTML = displayList.map((item, index, arr) => {
+                const rank = arr.findIndex(x => Number(x.score || 0) <= Number(item.score || 0)) + 1;
+                let rankBadge = `<span class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 font-black text-xs">${rank}</span>`;
+                if (rank === 1) rankBadge = '<span class="text-xl">🥇</span>';
+                else if (rank === 2) rankBadge = '<span class="text-xl">🥈</span>';
+                else if (rank === 3) rankBadge = '<span class="text-xl">🥉</span>';
+
+                const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleDateString('ko-KR', { year: '2-digit', month: 'numeric', day: 'numeric' }) : '-';
+                const safeName = sanitize(item.maskedName || maskStudentName(item.name || '학생'));
+                const safeUnit = sanitize(item.unit);
+                const safeSchool = item.schoolInfo ? sanitize(item.schoolInfo) + ' • ' : '';
+
+                const modeTag = (item.mode === 'advanced' || item.modeLabel === '고급')
+                    ? '<span class="text-[9px] font-black bg-rose-50 text-rose-700 border border-rose-200 px-1.5 py-0.2 rounded-full">🔥 고급 2x</span>'
+                    : '<span class="text-[9px] font-bold bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded-full">🌱 일반</span>';
+
+                return `
+                    <div class="flex items-center justify-between p-2.5 bg-white border border-sky-100 rounded-xl hover:border-sky-300 transition shadow-2xs">
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center justify-center w-8 text-center flex-shrink-0">
+                                ${rankBadge}
+                            </div>
+                            <div>
+                                <div class="font-black text-slate-800 text-xs flex items-center gap-1.5">
+                                    <span>${safeName}</span>
+                                    <span class="text-[10px] bg-sky-50 text-sky-800 px-1.5 py-0.5 rounded font-bold">${safeUnit}</span>
+                                    ${modeTag}
+                                </div>
+                                <div class="text-[10px] text-slate-400 font-medium">
+                                    ${safeSchool}${dateStr}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm font-black ${item.mode === 'advanced' ? 'text-rose-600' : 'text-sky-700'}">${item.score.toLocaleString()}</span>
+                            <span class="text-[10px] text-slate-500 font-bold ml-0.5">점</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        };
+
+        window.showMicGuideModal = () => {
+            const modal = document.getElementById('modal-mic-guide');
+            if (modal) modal.classList.remove('hidden');
+        };
+        window.closeMicGuideModal = () => {
+            const modal = document.getElementById('modal-mic-guide');
+            if (modal) modal.classList.add('hidden');
+        };
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── 6. 교사 관리자 모드 ──
+        // ════════════════════════════════════════════════════════════════════
+        window.openTeacherAuthModal = () => {
+            if (window.WaurimalAuth && window.WaurimalAuth.isAuthenticated()) {
+                window.showScreen('screen-teacher');
+                switchTeacherTab('units');
+                return;
+            }
+            document.getElementById('teacherPwInput').value = '';
+            document.getElementById('modal-teacher-auth').classList.remove('hidden');
+        };
+        window.closeTeacherAuthModal = () => {
+            document.getElementById('modal-teacher-auth').classList.add('hidden');
+        };
+
+        window.verifyTeacher = () => {
+            const input = document.getElementById('teacherPwInput').value.trim();
+            const isValid = window.WaurimalAuth ? window.WaurimalAuth.authenticate(input) : (input === (localStorage.getItem('waurimal_admin_pw') || globalTeacherPw || '4657'));
+            if (isValid) {
+                closeTeacherAuthModal();
+                window.showScreen('screen-teacher');
+                switchTeacherTab('units');
+            } else {
+                showAlert("비밀번호가 일치하지 않습니다.");
+            }
+        };
+
+        window.switchTeacherTab = (tab) => {
+            ['units', 'scores', 'security'].forEach(t => {
+                const el = document.getElementById('t-tab-' + t);
+                const btn = document.getElementById('t-tab-btn-' + t);
+                if (t === tab) {
+                    el.classList.remove('hidden');
+                    btn.className = "flex-1 py-2 rounded-lg bg-white text-sky-700 shadow-2xs font-bold";
+                } else {
+                    el.classList.add('hidden');
+                    btn.className = "flex-1 py-2 rounded-lg text-slate-500 hover:text-slate-800 font-bold";
+                }
+            });
+            if (tab === 'scores') renderSpeakingScoresTable();
+        };
+
+        window.loadTeacherUnitData = () => {
+            const sel = document.getElementById('teacherUnitSelect');
+            if (!sel || !sel.value || !loadedDialogues[sel.value]) return;
+
+            const lines = loadedDialogues[sel.value] || [];
+            document.getElementById('teacherUnitTextarea').value = lines.join('\\n');
+            document.getElementById('teacherTurnCount').innerText = `총 ${lines.length}턴 대화`;
+        };
+
+        window.saveTeacherUnit = async () => {
+            const sel = document.getElementById('teacherUnitSelect');
+            if (!sel || !sel.value) return;
+
+            const unitName = sel.value;
+            const raw = document.getElementById('teacherUnitTextarea').value;
+            const lines = raw.split('\\n').map(s => s.trim()).filter(s => s.length > 0);
+
+            if (lines.length === 0) {
+                showAlert("단원에 대화 내용을 1개 이상 입력해주세요.");
+                return;
+            }
+
+            loadedDialogues[unitName] = lines;
+
+            try {
+                await setDoc(doc(db, "speaking_units", unitName), { dialogue: lines });
+                showAlert(`[${unitName}] 대화 단원의 ${lines.length}턴이 성공적으로 저장되었습니다!`);
+                try { localStorage.setItem('waurimal_speaking_dialogues_cache', JSON.stringify(loadedDialogues)); } catch(e){}
+                renderUnitSelects();
+                document.getElementById('teacherUnitSelect').value = unitName;
+                loadTeacherUnitData();
+            } catch(e) {
+                showAlert("저장 실패: " + e.message);
+            }
+        };
+
+        window.addNewUnitPrompt = () => {
+            const name = prompt("새로운 대화 단원명을 입력하세요: (예: Lesson 13. My Weekend)");
+            if (!name || !name.trim()) return;
+            const trimmed = name.trim();
+            if (loadedDialogues[trimmed]) {
+                showAlert("이미 존재하는 단원명입니다.");
+                return;
+            }
+
+            loadedDialogues[trimmed] = [
+                "A: Hello! : 안녕!",
+                "B: Nice to meet you. : 만나서 반가워."
+            ];
+            try { localStorage.setItem('waurimal_speaking_dialogues_cache', JSON.stringify(loadedDialogues)); } catch(e){}
+            renderUnitSelects();
+            document.getElementById('teacherUnitSelect').value = trimmed;
+            loadTeacherUnitData();
+        };
+
+        window.deleteCurrentUnit = async () => {
+            const sel = document.getElementById('teacherUnitSelect');
+            if (!sel || !sel.value) return;
+            const unitName = sel.value;
+
+            if (Object.keys(loadedDialogues).length <= 1) {
+                showAlert("최소 1개의 대화 단원은 남겨두어야 합니다.");
+                return;
+            }
+
+            if (!confirm(`정말로 [${unitName}] 대화 단원을 삭제하시겠습니까?`)) return;
+
+            delete loadedDialogues[unitName];
+            try {
+                await deleteDoc(doc(db, "speaking_units", unitName));
+                showAlert("단원이 성공적으로 삭제되었습니다.");
+                try { localStorage.setItem('waurimal_speaking_dialogues_cache', JSON.stringify(loadedDialogues)); } catch(e){}
+                renderUnitSelects();
+            } catch(e) {
+                showAlert("삭제 실패: " + e.message);
+            }
+        };
+
+        window.renderSpeakingScoresTable = function() {
+            const tbody = document.getElementById('speakingScoresTbody');
+            if (!tbody) return;
+
+            const g = document.getElementById('teacher-filter-grade') ? document.getElementById('teacher-filter-grade').value : 'ALL';
+            const c = document.getElementById('teacher-filter-class') ? document.getElementById('teacher-filter-class').value : 'ALL';
+            const u = document.getElementById('teacher-filter-unit') ? document.getElementById('teacher-filter-unit').value : 'ALL';
+            const m = document.getElementById('teacher-filter-mode') ? document.getElementById('teacher-filter-mode').value : 'ALL';
+            const sortBy = document.getElementById('teacher-sort-by') ? document.getElementById('teacher-sort-by').value : 'recent';
+
+            let filtered = hofAllScores.filter(item => {
+                if (g !== 'ALL' && item.grade !== g) return false;
+                if (c !== 'ALL' && item.classNum !== c) return false;
+                if (u !== 'ALL' && item.unit !== u) return false;
+                if (m !== 'ALL' && item.mode !== m) return false;
+                return true;
+            });
+
+            if (sortBy === 'recent') {
+                filtered.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+            } else {
+                filtered.sort((a,b) => {
+                    if (b.score !== a.score) return b.score - a.score;
+                    return (b.timestamp || 0) - (a.timestamp || 0);
+                });
+            }
+
+            const badge = document.getElementById('teacherScoresCountBadge');
+            if (badge) badge.innerText = `조회: ${filtered.length}건`;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="p-6 text-center text-slate-400 text-xs font-bold">선택한 조건에 해당하는 성적 데이터가 없습니다.</td></tr>';
+                return;
+            }
+
+            const sanitize = window.WaurimalSanitize || (v => String(v || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
+            tbody.innerHTML = filtered.map((s, idx) => {
+                const rank = (sortBy === 'score') ? (filtered.findIndex(x => Number(x.score || 0) <= Number(s.score || 0)) + 1) : (idx + 1);
+                const modeBadge = (s.mode === 'advanced' || s.modeLabel === '고급')
+                    ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-700 border border-rose-200">🔥 고급 (2x)</span>'
+                    : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">🌱 일반</span>';
+
+                return `
+                <tr class="hover:bg-sky-50/50 transition">
+                    <td class="p-2.5 font-bold">${rank}</td>
+                    <td class="p-2.5 font-black text-slate-800">${sanitize(s.maskedName)}</td>
+                    <td class="p-2.5 font-semibold text-slate-600">${s.schoolInfo ? sanitize(s.schoolInfo) : '-'}</td>
+                    <td class="p-2.5 font-semibold text-sky-800">${sanitize(s.unit)}</td>
+                    <td class="p-2.5">${modeBadge}</td>
+                    <td class="p-2.5 font-black ${s.mode === 'advanced' ? 'text-rose-600' : 'text-sky-700'}">${Number(s.score || 0).toLocaleString()}점</td>
+                    <td class="p-2.5 font-bold text-slate-600">${s.accuracy}%</td>
+                    <td class="p-2.5 font-medium text-slate-500">${s.time}초</td>
+                    <td class="p-2.5 text-slate-400 text-[11px]">${s.timestamp ? new Date(s.timestamp).toLocaleDateString('ko-KR') : '-'}</td>
+                </tr>
+                `;
+            }).join('');
+        };
+
+        window.downloadSpeakingScoresCSV = () => {
+            const g = document.getElementById('teacher-filter-grade') ? document.getElementById('teacher-filter-grade').value : 'ALL';
+            const c = document.getElementById('teacher-filter-class') ? document.getElementById('teacher-filter-class').value : 'ALL';
+            const u = document.getElementById('teacher-filter-unit') ? document.getElementById('teacher-filter-unit').value : 'ALL';
+            const m = document.getElementById('teacher-filter-mode') ? document.getElementById('teacher-filter-mode').value : 'ALL';
+            const sortBy = document.getElementById('teacher-sort-by') ? document.getElementById('teacher-sort-by').value : 'recent';
+
+            let filtered = hofAllScores.filter(item => {
+                if (g !== 'ALL' && item.grade !== g) return false;
+                if (c !== 'ALL' && item.classNum !== c) return false;
+                if (u !== 'ALL' && item.unit !== u) return false;
+                if (m !== 'ALL' && item.mode !== m) return false;
+                return true;
+            });
+
+            if (sortBy === 'recent') {
+                filtered.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+            } else {
+                filtered.sort((a,b) => {
+                    if (b.score !== a.score) return b.score - a.score;
+                    return (b.timestamp || 0) - (a.timestamp || 0);
+                });
+            }
+
+            if (filtered.length === 0) {
+                showAlert("다운로드할 데이터가 없습니다.");
+                return;
+            }
+
+            let csv = "\\uFEFF순위,이름,학적,단원,난이도,점수,정확도(%),소요시간(초),달성일시\\n";
+            filtered.forEach((item, idx) => {
+                const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleString('ko-KR') : '';
+                const studentDisplayName = item.name || item.maskedName || '학생';
+                const modeStr = (item.mode === 'advanced' || item.modeLabel === '고급') ? '고급 (2x)' : '일반';
+                csv += `"${idx + 1}","${studentDisplayName}","${item.schoolInfo || ''}","${item.unit || ''}","${modeStr}","${item.score}","${item.accuracy}","${item.time}","${dateStr}"\\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `영어말하기_성적표_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        window.updateTeacherPassword = async () => {
+            const input = document.getElementById('newTeacherPwInput').value.trim();
+            if (input.length < 4) {
+                showAlert("비밀번호는 최소 4자리 이상이어야 합니다.");
+                return;
+            }
+            try {
+                if (window.WaurimalAuth) {
+                    window.WaurimalAuth.setPw(input);
+                } else {
+                    localStorage.setItem('waurimal_admin_pw', input);
+                }
+                await setDoc(doc(db, "settings", "global"), { teacherPw: input }, { merge: true });
+                globalTeacherPw = input;
+                document.getElementById('newTeacherPwInput').value = '';
+                showAlert("교사 비밀번호가 성공적으로 변경되었습니다.");
+            } catch(e) {
+                showAlert("비밀번호 변경 실패: " + e.message);
+            }
+        };
+
+        window.deleteClassSpeakingScores = async () => {
+            const g = document.getElementById('delete-target-grade').value;
+            const c = document.getElementById('delete-target-class').value;
+
+            if (!confirm(`정말로 [${g === 'ALL' ? '전체 학년' : g + '학년'} ${c === 'ALL' ? '전체 반' : c + '반'}]의 말하기 기록을 일괄 삭제하시겠습니까?`)) {
+                return;
+            }
+
+            try {
+                let count = 0;
+                for (const item of hofAllScores) {
+                    if (g !== 'ALL' && item.grade !== g) continue;
+                    if (c !== 'ALL' && item.classNum !== c) continue;
+                    await deleteDoc(doc(db, "speaking_scores", item.id));
+                    scoresMap.delete(item.id);
+                    count++;
+                }
+                showAlert(`총 ${count}건의 학급 성적 기록이 삭제되었습니다.`);
+                updateHofFromMap();
+            } catch(e) {
+                showAlert("삭제 중 오류가 발생했습니다: " + e.message);
+            }
+        };
+
+        // 앱 초기화 실행
+        initApp();
+
+    </script>
+</body>
+</html>
