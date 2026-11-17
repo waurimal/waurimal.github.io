@@ -776,196 +776,292 @@
         // ── 전역 상태 ──
         const DEFAULT_DIALOGUES = {
         "6학년 1단원: What Grade Are You In? (학년과 이름 묻기)": [
-                "A: Hello! What grade are you in? : 안녕! 너는 몇 학년이니?",
+                "A: Hello! Welcome to our school. What grade are you in? : 안녕! 우리 학교에 온 걸 환영해. 너는 몇 학년이니?",
                 "B: I'm in the sixth grade. What's your name? : 나는 6학년이야. 너의 이름은 무엇이니?",
-                "A: My name is Kevin. How do you spell your name? : 내 이름은 케빈이야. 너의 이름은 철자가 어떻게 되니?",
-                "B: J-I-S-U, Jisu. Can I join the dance club? : J-I-S-U, 지수야. 나 댄스 동아리에 가입해도 될까?",
+                "A: My name is Kevin. We are in the same grade! : 내 이름은 케빈이야. 우리 같은 학년이네!",
+                "B: That's great! Where is our classroom? : 그거 잘됐다! 우리 교실은 어디에 있니?",
+                "A: Our classroom is on the third floor. How do you spell your name? : 우리 교실은 3층에 있어. 네 이름은 철자가 어떻게 되니?",
+                "B: J-I-S-U, Jisu. Do you have any club activities? : J-I-S-U, 지수야. 너는 동아리 활동하니?",
+                "A: Yes, I'm in the guitar club. Can you play an instrument? : 응, 나는 기타 동아리에 있어. 너 악기 연주할 수 있니?",
+                "B: I play the violin, but I like dancing more. Can I join the dance club? : 나는 바이올린을 켜지만 춤추는 걸 더 좋아해. 나 댄스 동아리에 가입해도 될까?",
                 "A: Sure, please come in! You are a good dancer. : 물론이지, 들어오렴! 너는 춤을 잘 추는구나.",
-                "B: Thank you. I practice dancing every day. : 고마워. 나는 매일 춤을 연습해."
+                "B: Thank you so much! Let's practice together after school. : 정말 고마워! 방과 후에 같이 연습하자."
         ],
         "6학년 2단원: What Season Do You Like? (좋아하는 계절과 날씨)": [
-                "A: What season do you like most? : 너는 어떤 계절을 가장 좋아하니?",
-                "B: I like spring because I can see beautiful flowers. : 나는 아름다운 꽃들을 볼 수 있어서 봄을 좋아해.",
-                "A: Spring is great! Do you like winter, too? : 봄은 정말 좋지! 너는 겨울도 좋아하니?",
-                "B: No, I don't like winter. It's too cold. : 아니, 나는 겨울을 좋아하지 않아. 너무 춥거든.",
-                "A: I like summer because I can swim in the sea. : 나는 바다에서 수영할 수 있어서 여름을 좋아해.",
-                "B: That sounds fun! We can eat delicious watermelon, too. : 재미있겠다! 우리는 맛있는 수박도 먹을 수 있잖아."
+                "A: The weather is so nice today! What season do you like most? : 오늘 날씨가 참 좋다! 너는 어떤 계절을 가장 좋아하니?",
+                "B: I like spring because I can see beautiful flowers bloom. : 나는 아름다운 꽃들이 피는 것을 볼 수 있어서 봄을 좋아해.",
+                "A: Spring is lovely! But it is often dusty. Do you like winter, too? : 봄은 사랑스럽지! 하지만 먼지가 자주 껴. 너는 겨울도 좋아하니?",
+                "B: No, I don't like winter. It's too cold and snowy. : 아니, 나는 겨울을 좋아하지 않아. 너무 춥고 눈이 많이 오거든.",
+                "A: Really? I can make a big snowman in winter. : 정말? 나는 겨울에 커다란 눈사람을 만들 수 있는데.",
+                "B: What about summer? Do you like summer? : 여름은 어때? 너는 여름을 좋아하니?",
+                "A: Yes, I like summer because I can swim in the cool sea. : 응, 나는 시원한 바다에서 수영할 수 있어서 여름을 좋아해.",
+                "B: That sounds exciting! We can also go on camping trips in summer. : 신나겠다! 우리는 여름에 캠핑 여행도 갈 수 있잖아.",
+                "A: You're right! We can eat sweet watermelon, too. : 맞아! 우리는 달콤한 수박도 먹을 수 있어.",
+                "B: Every season has something special. I love spending time outdoors! : 모든 계절마다 특별한 점이 있어. 나는 야외에서 시간 보내는 게 정말 좋아!"
         ],
         "6학년 3단원: When Is Your Birthday? (생일과 기념일, 날짜)": [
-                "A: When is your birthday? : 너의 생일은 언제니?",
-                "B: It's on May 1st. When is yours? : 내 생일은 5월 1일이야. 네 생일은 언제니?",
+                "A: When is your birthday? Is it in spring? : 너의 생일은 언제니? 봄에 있니?",
+                "B: Yes, it's on May 1st. When is yours? : 응, 내 생일은 5월 1일이야. 네 생일은 언제니?",
                 "A: Mine is on April 22nd. It's Earth Day! : 내 생일은 4월 22일이야. 지구의 날이지!",
-                "B: Really? What can we do on Earth Day? : 정말? 지구의 날에는 우리가 무엇을 할 수 있니?",
-                "A: We can save water and pick up trash. : 우리는 물을 절약하고 쓰레기를 주울 수 있어.",
-                "B: That's wonderful! I can't wait for the festival. : 멋지다! 축제가 정말 기대돼."
+                "B: Wow, you have a meaningful birthday! What can we do on Earth Day? : 와, 너는 뜻깊은 생일을 가졌구나! 지구의 날에는 우리가 무엇을 할 수 있니?",
+                "A: We can save water and pick up trash in our neighborhood. : 우리는 물을 절약하고 우리 동네의 쓰레기를 주울 수 있어.",
+                "B: That's a wonderful idea. Are you planning a party for your birthday? : 정말 좋은 생각이야. 너 생일에 파티 계획하고 있니?",
+                "A: Yes, I'm going to invite my friends. Can you come to my party? : 응, 친구들을 초대할 거야. 내 파티에 올 수 있니?",
+                "B: Of course, I'd love to! What do you want for your birthday? : 물론이지, 꼭 갈게! 너 생일 선물로 무엇을 받고 싶니?",
+                "A: I want an interesting science storybook. : 나는 흥미로운 과학 동화책을 받고 싶어.",
+                "B: Okay, I will find a great book for you. I can't wait for your party! : 좋아, 내가 멋진 책을 찾아볼게. 네 파티가 정말 기대돼!"
         ],
         "6학년 4단원: Why Are You Happy? (감정과 이유 나누기)": [
-                "A: You look so happy today! Why are you happy? : 너 오늘 정말 행복해 보인다! 왜 행복하니?",
-                "B: Because today is my birthday. : 오늘이 내 생일이기 때문이야.",
-                "A: Wow, happy birthday! But why is Minsoo worried? : 와, 생일 축하해! 그런데 민수는 왜 걱정하고 있니?",
-                "B: Because he is not good at making things. : 왜냐하면 그는 물건 만드는 것을 잘 못하기 때문이야.",
-                "A: Let's help him together. Don't worry, Minsoo! : 우리 함께 그를 도와주자. 걱정하지 마, 민수야!",
-                "B: Good idea! You're really kind. : 좋은 생각이야! 너는 정말 친절하구나."
+                "A: You have a big smile today! Why are you so happy? : 너 오늘 활짝 웃고 있네! 왜 그렇게 행복하니?",
+                "B: Because I won first place in the English speech contest! : 내가 영어 말하기 대회에서 1등을 했기 때문이야!",
+                "A: Wow, congratulations! You practiced really hard. : 와, 축하해! 너 정말 열심히 연습했잖아.",
+                "B: Thank you! But look at Minsoo over there. Why does he look so worried? : 고마워! 그런데 저기 있는 민수를 봐. 왜 저렇게 걱정스러워 보일까?",
+                "A: Because he is not good at making things for science class. : 왜냐하면 과학 시간에 물건 만드는 것을 잘 못하기 때문이야.",
+                "B: Oh, really? We should go and encourage him. : 아, 정말? 우리가 가서 그를 격려해 줘야겠어.",
+                "A: Good idea. What should we say to him? : 좋은 생각이야. 그에게 뭐라고 말해줄까?",
+                "B: Let's tell him, \"Don't worry. You're really good at drawing!\" : 그에게 \"걱정하지 마. 너는 그림을 정말 잘 그리잖아!\"라고 말해주자.",
+                "A: That will cheer him up! Let's help him build his science model together. : 그 말이 그에게 힘이 될 거야! 함께 그의 과학 모형 만드는 것을 돕자.",
+                "B: Teamwork makes everything easier and happier. Let's go! : 팀워크가 모든 것을 더 쉽고 즐겁게 만들어. 어서 가자!"
         ],
         "6학년 5단원: Where Is the Library? (길 묻고 안내하기)": [
-                "A: Excuse me. Where is the library? : 실례합니다. 도서관이 어디에 있나요?",
+                "A: Excuse me. I'm looking for the city library. Where is the library? : 실례합니다. 제가 시립 도서관을 찾고 있어요. 도서관이 어디에 있나요?",
                 "B: Go straight one block and turn right at the bank. : 한 블록 곧장 가서 은행에서 오른쪽으로 도세요.",
                 "A: Turn right at the bank? Where is it next to? : 은행에서 오른쪽이요? 어디 옆에 있나요?",
-                "B: It's next to the bus stop. You can't miss it. : 버스 정류장 옆에 있어요. 쉽게 찾으실 수 있을 거예요.",
-                "A: Thank you so much! Where is the restaurant? : 정말 감사합니다! 식당은 어디에 있나요?",
-                "B: Go straight two blocks. It's next to the school. : 두 블록 곧장 가세요. 학교 옆에 있어요."
+                "B: It's next to the green bus stop. You can't miss it. : 초록색 버스 정류장 옆에 있어요. 쉽게 찾으실 수 있을 거예요.",
+                "A: Thank you! And is there a good restaurant nearby? : 감사합니다! 그리고 근처에 맛있는 식당도 있나요?",
+                "B: Yes, there is a delicious bakery and a restaurant down the street. : 네, 길 따라 내려가시면 맛있는 빵집과 식당이 있어요.",
+                "A: How do I get to the restaurant from the library? : 도서관에서 그 식당으로는 어떻게 가나요?",
+                "B: Go straight two blocks and turn left. It's across from the post office. : 두 블록 곧장 가서 왼쪽으로 도세요. 우체국 맞은편에 있어요.",
+                "A: That sounds easy to find. Thank you for your kind directions! : 찾기 쉽겠네요. 친절하게 길을 안내해 주셔서 감사합니다!",
+                "B: You're very welcome! Have a wonderful day in our town. : 천만에요! 우리 동네에서 즐거운 하루 보내세요."
         ],
         "6학년 6단원: What Does He Look Like? (인물의 외모와 옷차림 묘사)": [
-                "A: Look at the new student over there. What does he look like? : 저기 있는 전학생을 봐. 그는 어떻게 생겼니?",
-                "B: He is very tall and has blue eyes. : 그는 키가 매우 크고 파란 눈을 가지고 있어.",
+                "A: Look at the new student standing near the gym. What does he look like? : 체육관 근처에 서 있는 전학생을 봐. 그는 어떻게 생겼니?",
+                "B: He is very tall and has curly brown hair and blue eyes. : 그는 키가 매우 크고 곱슬거리는 갈색 머리에 파란 눈을 가지고 있어.",
                 "A: What is he wearing today? : 그는 오늘 무엇을 입고 있니?",
-                "B: He is wearing a yellow shirt and blue pants. : 그는 노란 셔츠와 파란 바지를 입고 있어.",
-                "A: And what does his sister look like? : 그리고 그의 여동생은 어떻게 생겼니?",
-                "B: She has short curly hair and wears black glasses. : 그녀는 짧은 곱슬머리에 검은 안경을 쓰고 있어."
+                "B: He is wearing a yellow shirt and dark blue pants. : 그는 노란 셔츠와 진한 파란색 바지를 입고 있어.",
+                "A: Oh, I see him! Does he wear glasses? : 아, 저기 보이네! 그 학생 안경 썼니?",
+                "B: No, he doesn't wear glasses, but he is carrying a red backpack. : 아니, 안경은 안 썼지만 빨간 배낭을 메고 있어.",
+                "A: And who is the girl next to him? What does she look like? : 그리고 그 옆에 있는 여학생은 누구니? 그녀는 어떻게 생겼어?",
+                "B: She has long straight hair and wears black round glasses. : 그녀는 긴 생머리에 검은 둥근 안경을 쓰고 있어.",
+                "A: She is wearing a green hoodie and white sneakers. : 그녀는 초록색 후드티와 하얀 운동화를 신고 있네.",
+                "B: They both look very friendly. Let's go over and say hello! : 둘 다 정말 다정해 보여. 우리 가서 인사하자!"
         ],
         "6학년 7단원: Can You Come to the Festival? (축제 초대와 일정)": [
-                "A: Can you come to the movie festival this Saturday? : 이번 주 토요일에 영화 축제에 올 수 있니?",
-                "B: Of course! What is your movie about? : 물론이지! 너의 영화는 무엇에 관한 것이니?",
-                "A: It's about our school life. Come to the park at 10. : 우리 학교생활에 관한 거야. 10시에 공원으로 와.",
-                "B: It looks so fun! Can you come to the laser show, too? : 정말 재미있겠다! 너 레이저 쇼에도 올 수 있니?",
-                "A: Sorry, but I can't. I have a soccer game. : 미안하지만, 갈 수 없어. 나 축구 경기가 있거든.",
-                "B: That's okay. Good luck on your soccer game! : 괜찮아. 축구 경기 행운을 빌어!"
+                "A: Our school is having a big festival this Saturday! Can you come to the movie festival? : 이번 주 토요일에 우리 학교에서 큰 축제가 열려! 영화 축제에 올 수 있니?",
+                "B: Of course! I'd love to come. What is your movie about? : 물론이지! 꼭 갈게. 너희 영화는 무엇에 관한 것이니?",
+                "A: Our movie is about four friends solving a mysterious puzzle. : 우리 영화는 네 명의 친구가 신비로운 수수께끼를 푸는 이야기야.",
+                "B: Wow, that sounds thrilling! What time does the movie start? : 와, 정말 스릴 있겠다! 영화는 몇 시에 시작하니?",
+                "A: Come to the sports park auditorium at 10. : 10시에 체육공원 강당으로 오면 돼.",
+                "B: Got it! Can you come to the laser show in the evening, too? : 알겠어! 너는 저녁에 열리는 레이저 쇼에도 올 수 있니?",
+                "A: Sorry, but I can't. I have an important soccer game at 6. : 미안하지만, 갈 수 없어. 6시에 중요한 축구 경기가 있거든.",
+                "B: That's okay. I hope you score lots of goals in your soccer game! : 괜찮아. 축구 경기에서 골을 많이 넣길 바랄게!",
+                "A: Thank you! After the festival, let's grab some delicious ice cream. : 고마워! 축제 끝나고 맛있는 아이스크림 먹으러 가자.",
+                "B: Sounds like a perfect plan! See you on Saturday at 10! : 완벽한 계획이야! 토요일 10시에 보자!"
         ],
         "6학년 8단원: It's Taller Than the Tree (비교급과 사물/동물 비교)": [
-                "A: Look at the animals in the zoo! The lion is faster than the cat. : 동물원에 있는 동물들을 봐! 사자가 고양이보다 더 빨라.",
-                "B: Yes, and the bear is heavier than the dog. : 맞아, 그리고 곰은 개보다 더 무거워.",
-                "A: Look at the giraffe over there! It's taller than the tree. : 저기 있는 기린을 봐! 나무보다 키가 더 커.",
-                "B: Wow, it really is! Can we feed carrots to her? : 와, 정말 그렇네! 우리 기린에게 당근을 줘도 될까?",
-                "A: Sure, give some carrots to her gently. : 그럼, 그녀에게 당근을 조심스럽게 주렴.",
-                "B: The elephant is bigger than the giraffe, too. : 코끼리는 기린보다 몸집이 더 크기도 해."
+                "A: Welcome to the Safari Adventure! The cheetah is faster than the lion. : 사파리 어드벤처에 온 걸 환영해! 치타는 사자보다 더 빨라.",
+                "B: Yes, and the bear is much heavier than the wolf. : 맞아, 그리고 곰은 늑대보다 훨씬 더 무거워.",
+                "A: Look over there! Look at the giraffe near the tall acacia tree. : 저기를 봐! 키 큰 아카시아 나무 근처에 있는 기린을 봐.",
+                "B: Wow, it's amazing! It is taller than the tree! : 와, 놀라워라! 나무보다 키가 더 커!",
+                "A: That's right. Now, look to the right side. Do you see the elephant? : 맞아. 이제 오른쪽을 봐. 코끼리가 보이니?",
+                "B: Yes, the elephant is bigger than the giraffe and heavier than the rhino. : 응, 코끼리는 기린보다 몸집이 더 크고 코뿔소보다 더 무거워.",
+                "A: Can we feed some crunchy carrots to the gentle giraffe? : 우리 온순한 기린에게 아삭한 당근을 줘도 될까?",
+                "B: Sure, give some carrots to her gently. She loves fresh carrots! : 그럼, 기린에게 조심스럽게 당근을 주렴. 신선한 당근을 아주 좋아해!",
+                "A: The baby elephant is so cute. Is it smaller than the mother elephant? : 아기 코끼리 정말 귀엽다. 엄마 코끼리보다 훨씬 작지?",
+                "B: Yes, it is much smaller, but it is still bigger than us! Animals are so fascinating. : 응, 훨씬 작지만 그래도 우리보단 크지! 동물들은 정말 매력적이야."
         ],
         "6학년 9단원: What Are You Going to Do? (방학 계획과 미래 활동)": [
-                "A: Summer vacation is coming! What are you going to do? : 여름방학이 다가오고 있어! 너는 무엇을 할 계획이니?",
-                "B: I'm going to visit my grandparents in the countryside. : 나는 시골에 계신 조부모님 댁을 방문할 거야.",
-                "A: That sounds wonderful! What will you do there? : 정말 멋지겠다! 거기서 무엇을 할 거니?",
-                "B: I'm going to pick sweet apples and make apple pizza. : 나는 달콤한 사과를 따고 사과 피자를 만들 거야.",
-                "A: Apple pizza? That sounds so delicious! : 사과 피자라고? 정말 맛있겠다!",
-                "B: What about you? What are you going to do this weekend? : 너는 어때? 이번 주말에 무엇을 할 계획이니?"
+                "A: Summer vacation is just around the corner! What are you going to do this vacation? : 여름방학이 코앞으로 다가왔어! 이번 방학에 무엇을 할 계획이니?",
+                "B: I'm going to visit my grandparents in the countryside for two weeks. : 나는 2주 동안 시골에 계신 조부모님 댁을 방문할 거야.",
+                "A: That sounds wonderful! What will you do on their farm? : 정말 멋지겠다! 조부모님 농장에서 무엇을 할 거니?",
+                "B: I'm going to pick sweet red apples and feed the farm animals. : 나는 달콤한 빨간 사과를 따고 농장 동물들에게 먹이를 줄 거야.",
+                "A: Are you going to cook anything special with the apples? : 사과로 특별한 요리도 만들어 볼 거니?",
+                "B: Yes, my grandmother and I are going to bake warm apple pizza! : 응, 할머니와 함께 따뜻한 사과 피자를 구울 거야!",
+                "A: Apple pizza? That sounds so delicious and unique! : 사과 피자라고? 정말 맛있고 특별하겠다!",
+                "B: What about you? What are you going to do this weekend and vacation? : 너는 어때? 이번 주말과 방학에 무엇을 할 계획이니?",
+                "A: I'm going to take a swimming camp and read ten exciting books. : 나는 수영 캠프에 참가하고 신나는 책 10권을 읽을 거야.",
+                "B: That sounds like a productive and healthy vacation! Let's share photos when school starts. : 보람차고 건강한 방학이 되겠네! 개학하면 사진 서로 공유하자."
         ],
         "6학년 10단원: How Often Do You Eat Vegetables? (식습관과 건강 빈도)": [
-                "A: I'm so hungry. What's for lunch today? : 나 너무 배고파. 오늘 점심 메뉴는 뭐야?",
-                "B: We have bibimbap and fresh fruit salad today. : 오늘 비빔밥과 신선한 과일 샐러드가 나와.",
-                "A: Great! How often do you eat vegetables? : 좋다! 너는 얼마나 자주 채소를 먹니?",
-                "B: I eat fresh vegetables three times a day. : 나는 하루에 세 번 신선한 채소를 먹어.",
-                "A: Good for you! How often do you exercise? : 정말 훌륭하다! 너는 얼마나 자주 운동하니?",
-                "B: I play soccer three times a week with my friends. : 나는 일주일에 세 번 친구들과 축구를 해."
+                "A: I worked out at the gym and now I'm starving. What's for school lunch today? : 체육관에서 운동했더니 배가 너무 고파. 오늘 학교 급식 메뉴는 뭐야?",
+                "B: We have healthy bibimbap, tofu soup, and fresh fruit salad today. : 오늘 건강한 비빔밥, 두부국, 그리고 신선한 과일 샐러드가 나와.",
+                "A: That sounds nutritious! Do you like vegetables? : 영양 만점이겠다! 너 채소 좋아하니?",
+                "B: Yes, I love fresh carrots and broccoli. How often do you eat vegetables? : 응, 나는 신선한 당근과 브로콜리를 아주 좋아해. 너는 얼마나 자주 채소를 먹니?",
+                "A: To be honest, only once a week. I usually prefer meat and pizza. : 솔직히 일주일에 한 번만 먹어. 보통 고기랑 피자를 더 좋아하거든.",
+                "B: You should eat more vegetables for breakfast and dinner to stay healthy. : 건강을 유지하려면 아침과 저녁에 채소를 더 많이 먹어야 해.",
+                "A: You're right. I will try eating salad every day. How often do you exercise? : 네 말이 맞아. 매일 샐러드를 먹도록 노력할게. 너는 얼마나 자주 운동하니?",
+                "B: I play soccer three times a week and stretch every morning. : 나는 일주일에 세 번 축구를 하고 매일 아침 스트레칭을 해.",
+                "A: Good for you! Regular exercise keeps your mind sharp and body strong. : 정말 훌륭하다! 규칙적인 운동은 정신을 맑게 하고 몸을 튼튼하게 해줘.",
+                "B: Let's run around the track together after finishing our healthy lunch! : 건강한 점심 다 먹고 나서 운동장 트랙을 같이 뛰자!"
         ],
         "6학년 11단원: Do You Know Anything About Tuho? (전통 놀이와 문화)": [
-                "A: Look at those people over there! Do you know anything about Tuho? : 저기 있는 사람들을 봐! 너 투호에 대해 알고 있니?",
-                "B: Yes, I do. It's a traditional Korean game. : 응, 알고 있어. 그것은 한국의 전통 놀이야.",
-                "A: Wow, that looks fun. How do you play it? : 와, 재미있어 보인다. 어떻게 하는 놀이니?",
-                "B: You throw arrows into the jar. Can I try it? : 화살을 항아리 안으로 던져 넣는 거야. 내가 한번 해봐도 될까?",
-                "A: Go ahead! Do you know anything about jegichagi, too? : 어서 해봐! 너 제기차기에 대해서도 알고 있니?",
-                "B: Yes, kick the jegi into the air without dropping it. : 응, 제기를 떨어뜨리지 않고 공중으로 차 올리는 거야."
+                "A: Look at the crowd over there in the courtyard! Do you know anything about Tuho? : 마당에 모여 있는 저 사람들을 봐! 너 투호에 대해 알고 있니?",
+                "B: Yes, I do. It is a traditional Korean pitching game. : 응, 알고 있어. 그것은 한국의 전통 투호 던지기 놀이야.",
+                "A: Wow, that looks interesting! How do people play it? : 와, 흥미로워 보인다! 사람들이 어떻게 하는 놀이니?",
+                "B: You hold wooden arrows and throw them into a narrow jar. Can I try it? : 나무 화살을 잡고 좁은 항아리 안으로 던져 넣는 거야. 내가 한번 해봐도 될까?",
+                "A: Of course, go ahead! Focus your eyes on the jar and throw smoothly. : 그럼, 어서 해봐! 항아리에 시선을 집중하고 부드럽게 던져.",
+                "B: Yes! I got three arrows in the jar! Do you know anything about jegichagi, too? : 들어갔다! 세 개의 화살을 항아리에 넣었어! 너 제기차기에 대해서도 알고 있니?",
+                "A: I've heard the name, but I have no idea how to play it. How do you play jegichagi? : 이름은 들어봤는데 어떻게 하는지 전혀 모르겠어. 제기차기는 어떻게 해?",
+                "B: Kick the jegi into the air with your foot without letting it drop to the ground. : 발로 제기를 땅에 떨어뜨리지 않고 공중으로 차 올리는 거야.",
+                "A: It looks like juggling with feet! Traditional Korean games are so active and fun. : 발로 저글링하는 것 같네! 한국의 전통 놀이들은 정말 활동적이고 재밌어.",
+                "B: Let's challenge each other to a jegichagi match this afternoon! : 오늘 오후에 우리 제기차기 대결 한번 해보자!"
         ],
         "6학년 12단원: We Made a Class Album (1년의 추억과 과거 경험 회상)": [
-                "A: Did you paint the wall with Uju yesterday? : 너 어제 우주와 함께 벽화를 칠했니?",
-                "B: Yes, I did! We painted colorful flowers on the wall. : 응, 칠했어! 우리는 벽에 알록달록한 꽃들을 그렸어.",
-                "A: It looks amazing! Did you take these pictures for the album? : 정말 멋져 보인다! 앨범에 넣을 이 사진들 네가 찍었니?",
-                "B: Yes, I took them. We made a special class album. : 응, 내가 찍었어. 우리는 특별한 학급 앨범을 만들었어.",
-                "A: We made so many wonderful memories this year! : 우리는 올해 정말 많은 멋진 추억을 만들었어!",
-                "B: You're right. I will miss our class so much. : 네 말이 맞아. 우리 반이 정말 많이 그리울 거야."
+                "A: Did you paint the mural on the school wall with Uju yesterday? : 너 어제 우주와 함께 학교 벽화를 칠했니?",
+                "B: Yes, I did! We painted colorful rainbow flowers and happy students on the wall. : 응, 칠했어! 우리는 벽에 알록달록한 무지개 꽃과 행복한 학생들을 그렸어.",
+                "A: It looks absolutely amazing! Did you take all these pictures on the board? : 정말 놀랍도록 멋지다! 게시판에 있는 이 사진들 다 네가 찍었니?",
+                "B: Yes, I took them during our field trip and sports day. We made a special class album. : 응, 현장체험학습이랑 운동회 때 내가 찍었어. 우리는 특별한 학급 앨범을 만들었어.",
+                "A: Hana won the English quiz last semester, right? Here is her picture! : 지난 학기에 하나가 영어 퀴즈에서 우승했었지? 여기 하나 사진이 있네!",
+                "B: That was such an exciting day! We cheered so loudly for her. : 그날 정말 신났었지! 우리가 하나를 위해 정말 큰 소리로 응원했잖아.",
+                "A: We created so many unforgettable memories together this past year. : 우리는 지난 1년 동안 정말 많은 잊지 못할 추억을 함께 만들었어.",
+                "B: You're right. Everyone was so kind, and our teacher helped us grow so much. : 네 말이 맞아. 모두가 정말 친절했고, 선생님께서 우리가 많이 성장하도록 도와주셨어.",
+                "A: Graduation is coming soon, but our friendship will last forever. : 곧 졸업이 다가오지만, 우리의 우정은 영원히 계속될 거야.",
+                "B: I will cherish our class album and memories forever. Thank you for being my friend! : 우리 학급 앨범과 추억들을 영원히 간직할게. 내 친구가 되어줘서 고마워!"
         ],
         "테마 1. New Friends (새 친구와 첫 인사)": [
-                "A: Hello, nice to meet you! : 안녕, 만나서 반가워!",
-                "B: Nice to meet you, too. What's your name? : 나도 반가워. 네 이름은 뭐니?",
+                "A: Hello! I think you are new here. Nice to meet you! : 안녕! 너 여기 새로 온 것 같아. 만나서 반가워!",
+                "B: Nice to meet you, too. My name is Minsoo. What's your name? : 나도 반가워. 내 이름은 민수야. 네 이름은 뭐니?",
                 "A: My name is Kevin. What grade are you in? : 내 이름은 케빈이야. 너는 몇 학년이니?",
-                "B: I'm in the sixth grade. : 나는 6학년이야.",
-                "A: Awesome! We are in the same grade. : 멋지다! 우리 같은 학년이네.",
-                "B: Let's be good friends. : 우리 친하게 지내자."
+                "B: I'm in the sixth grade. Are you in the sixth grade, too? : 나는 6학년이야. 너도 6학년이니?",
+                "A: Yes, we are in the same grade! Which class are you in? : 응, 우리 같은 학년이야! 너는 몇 반이니?",
+                "B: I am in Class 3 on the third floor. : 나는 3층에 있는 3반이야.",
+                "A: That's right next to my class! Let's eat lunch together today. : 바로 우리 반 옆이네! 오늘 점심 같이 먹자.",
+                "B: That sounds wonderful. I was worried about making new friends. : 정말 좋다. 새로운 친구 사귀는 것에 대해 걱정하고 있었거든.",
+                "A: Don't worry at all. Everyone in our school is very friendly! : 전혀 걱정하지 마. 우리 학교 친구들 모두 정말 친절해!",
+                "B: Thank you, Kevin. I'm so glad I met you today! : 고마워, 케빈. 오늘 너를 만나서 정말 기뻐!"
         ],
         "테마 2. Favorite Seasons (좋아하는 계절 이야기)": [
-                "A: What season do you like most? : 너는 어떤 계절을 가장 좋아하니?",
-                "B: I like spring because beautiful flowers bloom. : 나는 아름다운 꽃들이 피어서 봄을 좋아해.",
-                "A: Spring is nice! I like summer because I can swim. : 봄도 좋지! 나는 수영할 수 있어서 여름을 좋아해.",
-                "B: Summer is great, too. Can you swim well? : 여름도 참 좋아. 너 수영 잘하니?",
-                "A: Yes, I can swim like a fish! : 응, 나는 물고기처럼 수영할 수 있어!",
-                "B: Wow, that's really cool! : 와, 정말 멋지다!"
+                "A: The wind is blowing gently today. What season do you like most? : 오늘 바람이 산들산들 부네. 너는 어떤 계절을 가장 좋아하니?",
+                "B: I like spring best because beautiful cherry blossoms bloom everywhere. : 나는 아름다운 벚꽃이 곳곳에 피어서 봄을 가장 좋아해.",
+                "A: Spring is so pretty! But pollen makes me sneeze. Do you like autumn? : 봄은 정말 예쁘지! 하지만 꽃가루 때문에 재채기가 나. 너는 가을 좋아하니?",
+                "B: Yes, autumn is cool and the colorful fallen leaves are wonderful. : 응, 가을은 시원하고 알록달록한 낙엽이 정말 멋져.",
+                "A: What activities do you enjoy during autumn? : 가을에는 어떤 활동을 즐겨 하니?",
+                "B: I enjoy riding my bicycle along the river and going on picnics. : 나는 강가를 따라 자전거를 타고 소풍 가는 걸 즐겨.",
+                "A: What about winter? Can you ski or skate well? : 겨울은 어때? 너 스키나 스케이트 잘 타니?",
+                "B: I love ice skating, but I dislike freezing cold winds. : 나는 아이스스케이팅을 좋아하지만 꽁꽁 얼어붙는 찬 바람은 싫어.",
+                "A: Every single season has its own unique charm and fun. : 모든 계절마다 저마다의 독특한 매력과 재미가 있어.",
+                "B: I agree completely! I want to travel across nature in every season. : 전적으로 동의해! 모든 계절마다 자연 속으로 여행을 떠나고 싶어."
         ],
         "테마 3. Birthday & Dates (생일 파티와 선물)": [
-                "A: When is your birthday? : 너의 생일은 언제니?",
-                "B: It's on May 15th. When is yours? : 내 생일은 5월 15일이야. 네 생일은 언제니?",
-                "A: Mine is on December 25th, Christmas Day! : 내 생일은 12월 25일, 크리스마스야!",
-                "B: Really? You have a special birthday! : 정말? 너 정말 특별한 생일을 가졌구나!",
-                "A: Thank you. What do you want for your birthday? : 고마워. 너는 생일 선물로 무엇을 받고 싶니?",
-                "B: I want a new storybook. : 나는 새 동화책을 받고 싶어."
+                "A: When is your birthday? Is it coming up soon? : 너의 생일은 언제니? 곧 다가오니?",
+                "B: It's on May 15th, Teacher's Day! When is yours? : 내 생일은 5월 15일, 스승의 날이야! 네 생일은 언제니?",
+                "A: Mine is on December 25th, Christmas Day! : 내 생일은 12월 25일, 바로 크리스마스야!",
+                "B: Wow, having a birthday on Christmas must feel doubly festive! : 와, 크리스마스가 생일이라니 두 배로 축제 분위기겠는걸!",
+                "A: It truly is! What kind of gift do you want for your birthday? : 정말 그래! 너는 이번 생일에 어떤 선물을 받고 싶니?",
+                "B: I want a pair of comfortable running shoes or a new mystery book. : 나는 편안한 운동화나 새로운 추리소설 책을 받고 싶어.",
+                "A: Running shoes sound great! Are you throwing a birthday party this year? : 운동화 좋지! 올해 생일 파티 열 계획이니?",
+                "B: Yes, I'm inviting my close friends to my house for pizza and cake. : 응, 친한 친구들을 집에 초대해서 피자랑 케이크를 먹을 거야.",
+                "A: That sounds so much fun! Can I come to your birthday party? : 정말 재밌겠다! 나도 너의 생일 파티에 가도 될까?",
+                "B: Of course! You are my best friend. I'll send you an invitation card! : 당연하지! 너는 내 단짝 친구잖아. 초대장 카드 꼭 보내줄게!"
         ],
         "테마 4. How Are You Feeling? (오늘의 기분과 위로)": [
-                "A: How are you feeling today? : 오늘 기분이 어떠니?",
-                "B: I feel great because tomorrow is the weekend! : 내일이 주말이라 기분이 정말 좋아!",
-                "A: That's wonderful! But why does Peter look sad? : 정말 좋겠다! 그런데 피터는 왜 슬퍼 보이니?",
-                "B: Because he lost his favorite pencil case. : 가장 좋아하는 필통을 잃어버렸기 때문이야.",
-                "A: Oh no, let's help him look for it. : 이런, 우리가 함께 찾아주자.",
-                "B: You are so kind. Thank you! : 너 정말 친절하구나. 고마워!"
+                "A: Good morning! How are you feeling today? : 좋은 아침이야! 오늘 기분이 어떠니?",
+                "B: I feel energetic and happy because tomorrow is Saturday! : 내일이 토요일이라서 기운이 넘치고 정말 행복해!",
+                "A: That's great! But look at Peter over there. Why does he look so sad? : 잘됐다! 그런데 저기 피터를 봐. 왜 저렇게 슬퍼 보일까?",
+                "B: Because he lost his favorite notebook on his way to school. : 학교 오는 길에 제일 아끼는 공책을 잃어버렸기 때문이야.",
+                "A: Oh no, that's terrible. We should definitely help him look for it. : 이런, 안타깝다. 우리가 꼭 함께 찾아줘야겠어.",
+                "B: I already asked the teachers at the lost and found center. : 내가 이미 분실물 센터 선생님들께 여쭤보았어.",
+                "A: You are so thoughtful! Did anyone turn in a notebook? : 너 정말 사려 깊구나! 누가 공책을 맡겨두었대?",
+                "B: Yes, the security guard found it near the school gate! : 응, 경비 아저씨께서 교문 근처에서 찾으셨대!",
+                "A: That is wonderful news! Let's go tell Peter right away. : 정말 다행스러운 소식이다! 피터에게 바로 알려주러 가자.",
+                "B: He will be so relieved and happy! Helping friends feels so rewarding. : 피터가 정말 안도하고 기뻐할 거야! 친구를 돕는 건 참 보람차."
         ],
         "테마 5. Finding the Way (거리에서 길 찾기)": [
-                "A: Excuse me, where is the post office? : 실례합니다, 우체국이 어디에 있나요?",
-                "B: Go straight two blocks and turn left. : 두 블록 곧장 가서 왼쪽으로 도세요.",
-                "A: Turn left? Is it across from the park? : 왼쪽이요? 공원 맞은편에 있나요?",
-                "B: Yes, it's next to the bakery across from the park. : 네, 공원 맞은편 빵집 옆에 있어요.",
-                "A: Thank you very much! Have a great day. : 정말 감사합니다! 좋은 하루 보내세요.",
-                "B: You're welcome. Take care! : 천만에요. 조심히 가세요!"
+                "A: Excuse me, sir. Could you help me find the central train station? : 실례합니다. 중앙 기차역을 찾는 것을 도와주시겠어요?",
+                "B: Sure! Go straight two blocks and turn left at the bakery. : 그럼요! 두 블록 곧장 가서 빵집에서 왼쪽으로 도세요.",
+                "A: Turn left at the bakery? Is it across from the city park? : 빵집에서 왼쪽이요? 시립 공원 맞은편에 있나요?",
+                "B: Yes, you will see a big clock tower right across from the park. : 네, 공원 바로 맞은편에 커다란 시계탑이 보이실 거예요.",
+                "A: That clock tower is the station building, right? : 그 시계탑이 기차역 건물이 맞나요?",
+                "B: Exactly! Walk past the clock tower and the entrance is right there. : 맞습니다! 시계탑을 지나치면 입구가 바로 나옵니다.",
+                "A: How long does it take to walk there from here? : 여기서부터 거기까지 걸어서 얼마나 걸리나요?",
+                "B: It takes only about five to seven minutes on foot. : 걸어서 5분에서 7분 정도밖에 걸리지 않아요.",
+                "A: Thank you so much for your kind and clear explanation! : 친절하고 명확하게 설명해 주셔서 정말 감사합니다!",
+                "B: You're very welcome. Watch your step and have a safe trip! : 천만에요. 발밑 조심하시고 안전한 여행 되세요!"
         ],
         "테마 6. Weekend Plans (주말 계획 묻고 답하기)": [
-                "A: What are you going to do this weekend? : 이번 주말에 뭐 할 계획이니?",
-                "B: I'm going to ride my bicycle in the park. : 나는 공원에서 자전거를 탈 거야.",
-                "A: That sounds energetic! Who are you going with? : 활기차고 좋네! 누구랑 같이 가니?",
-                "B: I'm going with my older brother. What about you? : 형이랑 같이 갈 거야. 너는 어때?",
-                "A: I'm going to watch an exciting animation movie. : 나는 신나는 애니메이션 영화를 볼 거야.",
-                "B: Sounds fun! Enjoy your movie! : 재밌겠다! 영화 재밌게 봐!"
+                "A: The weekend is finally here! What are you going to do this weekend? : 드디어 주말이 왔어! 이번 주말에 뭐 할 계획이니?",
+                "B: I'm going to ride my bicycle along the riverside park with my brother. : 나는 남동생과 함께 강변 공원을 따라 자전거를 탈 거야.",
+                "A: That sounds so refreshing! How long will you ride? : 정말 상쾌하겠다! 얼마나 오래 탈 거니?",
+                "B: We will ride for about two hours and have sandwiches for lunch. : 2시간 정도 타고 점심으로 샌드위치를 먹을 거야.",
+                "A: What about Sunday? Do you have any plans for Sunday? : 일요일은 어때? 일요일에도 무슨 계획이 있니?",
+                "B: On Sunday, I'm going to visit the science museum to see dinosaur fossils. : 일요일에는 공룡 화석을 보러 국립과학관에 갈 거야.",
+                "A: Wow, that sounds like an exciting and educational weekend! : 와, 정말 흥미진진하고 유익한 주말이 되겠네!",
+                "B: What about you, Kevin? What are you going to do? : 너는 어때, 케빈? 너는 무엇을 할 거니?",
+                "A: I'm going to practice baking chocolate chip cookies with my mom. : 나는 엄마와 함께 초콜릿 칩 쿠키 굽는 걸 연습할 거야.",
+                "B: Yummy! Please bring some fresh cookies to school on Monday! : 맛있겠다! 월요일에 학교 올 때 갓 구운 쿠키 좀 가져와줘!"
         ],
         "테마 7. Ordering Food (식당에서 음식 주문하기)": [
-                "A: Welcome to Tasty Burger! May I take your order? : 테이스티 버거에 오신 것을 환영합니다! 주문하시겠어요?",
-                "B: Yes, please. I'd like a cheese burger, please. : 네. 치즈버거 하나 주세요.",
-                "A: Would you like fries and a drink with that? : 감자튀김과 음료도 함께 하시겠어요?",
-                "B: Yes, I'd like orange juice and french fries. : 네, 오렌지 주스와 감자튀김으로 할게요.",
-                "A: For here or to go? : 여기서 드시나요, 포장이신가요?",
-                "B: For here, please. How much is it? : 여기서 먹을게요. 얼마인가요?"
+                "A: Welcome to Tasty Burger! May I take your order today? : 테이스티 버거에 오신 것을 환영합니다! 오늘 주문하시겠어요?",
+                "B: Yes, please. I would like one double cheese burger, please. : 네. 더블 치즈버거 하나 주세요.",
+                "A: Would you like to make it a combo meal with fries and a drink? : 감자튀김과 음료가 포함된 세트 메뉴로 하시겠어요?",
+                "B: Yes, please. What kinds of drinks do you have? : 네, 그렇게 해주세요. 어떤 종류의 음료가 있나요?",
+                "A: We have cola, lemon soda, orange juice, and iced green tea. : 콜라, 레몬 탄산수, 오렌지 주스, 그리고 아이스 녹차가 있습니다.",
+                "B: I would like a cold orange juice, please. : 시원한 오렌지 주스로 부탁드립니다.",
+                "A: Sure thing! For here or to go? : 알겠습니다! 매장에서 드시나요, 포장이신가요?",
+                "B: For here, please. How much is the total amount? : 여기서 먹을게요. 총 금액이 얼마인가요?",
+                "A: The total comes to six thousand five hundred won. : 총 금액은 6,500원입니다.",
+                "B: Here is my card. Thank you very much! : 여기 카드 드릴게요. 정말 감사합니다!"
         ],
         "테마 8. Daily Habits & Sports (운동과 일상 습관)": [
-                "A: What sports do you like to play? : 너는 어떤 운동하는 것을 좋아하니?",
-                "B: I like playing badminton with my family. : 나는 가족들과 배드민턴 치는 것을 좋아해.",
-                "A: How often do you play badminton? : 배드민턴을 얼마나 자주 치니?",
-                "B: I play twice a week, usually on weekends. : 보통 주말에 일주일에 두 번 쳐.",
-                "A: Badminton is so much fun! Can I join you next time? : 배드민턴 정말 재밌지! 다음에 나도 같이 쳐도 될까?",
-                "B: Of course, let's play together next Saturday! : 물론이지, 다음 주 토요일에 같이 치자!"
+                "A: You look very fit and healthy! What sports do you like to play? : 너 정말 건강하고 탄탄해 보인다! 어떤 운동을 즐겨 하니?",
+                "B: I love playing badminton and swimming with my family. : 나는 가족들과 배드민턴 치는 것과 수영하는 걸 아주 좋아해.",
+                "A: How often do you play badminton each week? : 매주 배드민턴은 얼마나 자주 치니?",
+                "B: I usually play three times a week at the community sports center. : 보통 동네 주민체육센터에서 일주일에 세 번 쳐.",
+                "A: That's awesome! Do you do any other workouts in the morning? : 멋지다! 아침에 다른 운동도 하니?",
+                "B: Yes, I do light stretching and drink a big glass of water right after waking up. : 응, 아침에 일어나자마자 가벼운 스트레칭을 하고 물 한 잔을 마셔.",
+                "A: Healthy morning habits make a big difference! Can I play badminton with you? : 건강한 아침 습관이 큰 차이를 만들지! 나도 너랑 같이 배드민턴 쳐도 될까?",
+                "B: Of course! We have an extra racket. Come join us this Saturday. : 물론이지! 여분의 라켓이 있어. 이번 주 토요일에 우리와 함께해.",
+                "A: That sounds fantastic. What time should we meet at the gym? : 정말 신난다. 체육관에서 몇 시에 만날까?",
+                "B: Let's meet at ten in the morning. Don't forget your indoor sneakers! : 오전 10시에 만나자. 실내용 운동화 잊지 말고 챙겨와!"
         ],
         "테마 9. Asking for Favors (도움과 부탁하기)": [
-                "A: Can you help me with this heavy science box? : 이 무거운 과학 상자 옮기는 것 좀 도와줄래?",
-                "B: Sure, no problem. Where are we going? : 그럼, 문제없지. 어디로 가는 거니?",
-                "A: To the science lab on the third floor. : 3층에 있는 과학실로 갈 거야.",
-                "B: Okay, let's take the elevator over there. : 좋아, 저기 있는 엘리베이터를 타자.",
-                "A: Thanks a lot! You're a true lifesaver. : 정말 고마워! 너는 정말 큰 도움이 되었어.",
-                "B: Don't mention it. Friends always help each other! : 별말을 다 해. 친구끼리는 늘 돕는 거지!"
+                "A: Excuse me, Minsoo. Could you give me a hand for a moment? : 실례지만 민수야, 잠깐 나 좀 도와줄 수 있니?",
+                "B: Sure, Kevin! What do you need help with? : 물론이지, 케빈! 무엇을 도와줄까?",
+                "A: These science lab project boxes are quite heavy. Could you carry this one? : 이 과학실 프로젝트 상자들이 꽤 무거워. 이 상자 하나만 들어줄 수 있니?",
+                "B: No problem at all! Where should we deliver these boxes? : 문제없어! 이 상자들을 어디로 배달해야 하니?",
+                "A: We need to take them to the science lab on the third floor. : 3층에 있는 과학실로 가져가야 해.",
+                "B: Okay, let's take the elevator near the library so we don't drop them. : 좋아, 상자를 떨어뜨리지 않게 도서관 근처 엘리베이터를 타자.",
+                "A: Good thinking! That is much safer and faster. : 좋은 생각이야! 그게 훨씬 안전하고 빠르겠다.",
+                "B: Here we are at the science lab. Where should I put this box down? : 과학실에 도착했어. 이 상자를 어디에 내려놓을까?",
+                "A: Please place it gently on the center experiment table. Thanks a million! : 가운데 실험대 위에 조심스럽게 놓아줘. 정말 너무 고마워!",
+                "B: Don't mention it! Good friends always support and help each other. : 별말을 다 해! 좋은 친구끼리는 늘 서로 지지하고 돕는 법이지."
         ],
         "테마 10. School Subjects (좋아하는 과목과 이유)": [
-                "A: What is your favorite subject in school? : 학교에서 가장 좋아하는 과목이 뭐니?",
-                "B: My favorite subject is science because I love experiments. : 실험하는 것을 좋아해서 과학을 가장 좋아해.",
-                "A: Science is fascinating! What about English? : 과학은 정말 매력적이지! 영어는 어때?",
-                "B: English is exciting when we practice speaking together. : 다 같이 말하기 연습할 때 영어도 정말 신나.",
-                "A: I agree! Speaking in English boosts my confidence. : 나도 동의해! 영어로 말하면 자신감이 생겨.",
-                "B: Let's practice speaking English together every day! : 매일 같이 영어 말하기를 연습하자!"
+                "A: What is your favorite subject in school these days? : 요즘 학교에서 가장 좋아하는 과목이 무엇이니?",
+                "B: My favorite subject is science because doing hands-on experiments is exciting! : 실험을 직접 해보는 게 신나서 과학을 가장 좋아해!",
+                "A: Science experiments are truly magical! What about English class? : 과학 실험은 정말 마법 같지! 영어 수업은 어때?",
+                "B: I enjoy English class when we practice speaking dialogues in pairs. : 짝과 함께 대화문 말하기를 연습할 때 영어 수업이 참 즐거워.",
+                "A: Do you find English difficult sometimes? : 가끔 영어가 어렵게 느껴지지는 않니?",
+                "B: Memorizing spelling words is challenging, but speaking aloud builds my confidence. : 철자 단어를 외우는 건 까다롭지만, 소리 내어 말하면 자신감이 생겨.",
+                "A: I feel the exact same way! Which subject do you like least? : 나도 완전히 똑같이 느껴! 어떤 과목을 제일 덜 좋아하니?",
+                "B: Math word problems are a bit tricky, but solving them feels rewarding. : 수학 문장제 문제가 조금 까다롭지만, 풀어내면 보람이 있어.",
+                "A: If you need help with math, we can study together after school! : 수학에 도움이 필요하면 방과 후에 같이 공부하자!",
+                "B: That is so kind of you! Let's help each other in our favorite subjects. : 그렇게 말해줘서 정말 고마워! 각자 좋아하는 과목을 서로 가르쳐주자."
         ],
         "테마 11. Shopping for Clothes (옷 가게에서 쇼핑하기)": [
-                "A: Hello! Can I help you find something? : 안녕하세요! 찾으시는 물건을 도와드릴까요?",
-                "B: Yes, I am looking for a warm blue jacket. : 네, 따뜻한 파란색 재킷을 찾고 있어요.",
-                "A: How about this blue jacket? It is very popular. : 이 파란색 재킷은 어떠세요? 매우 인기가 많아요.",
-                "B: Wow, I love the color! Can I try it on? : 와, 색상이 마음에 들어요! 입어봐도 될까요?",
-                "A: Sure, the fitting room is right over there. : 그럼요, 탈의실은 바로 저쪽에 있습니다.",
-                "B: It fits me perfectly. I'll take it! : 제게 딱 맞네요. 이걸로 살게요!"
+                "A: Hello, young customer! Welcome to City Fashion Store. How can I help you? : 안녕하세요! 시티 패션 스토어에 오신 걸 환영합니다. 무엇을 도와드릴까요?",
+                "B: Hello! I'm looking for a warm hooded jacket for the cold season. : 안녕하세요! 추운 계절에 입을 따뜻한 후드 재킷을 찾고 있어요.",
+                "A: What color or style do you have in mind? : 어떤 색상이나 스타일을 생각하고 계신가요?",
+                "B: I prefer dark navy or beige, with deep warm pockets. : 어두운 네이비나 베이지 색상에 따뜻하고 깊은 주머니가 있으면 좋겠어요.",
+                "A: How about this navy down jacket? It is very lightweight yet extra warm. : 이 네이비 다운재킷은 어떠세요? 매우 가벼우면서도 아주 따뜻합니다.",
+                "B: Wow, the fabric feels so soft! May I try it on in the fitting room? : 와, 원단이 정말 부드럽네요! 피팅룸에서 입어봐도 될까요?",
+                "A: Certainly! The fitting room is located right next to the mirror. : 그럼요! 피팅룸은 거울 바로 옆에 위치해 있습니다.",
+                "B: The sleeves and shoulders fit me perfectly! How much is it on sale? : 소매랑 어깨가 제게 딱 맞네요! 세일해서 얼마인가요?",
+                "A: It is currently thirty percent off, so it is thirty-five thousand won. : 현재 30% 할인 중이라서 35,000원입니다.",
+                "B: That is a reasonable price! I will take this warm jacket, please. : 합리적인 가격이네요! 이 따뜻한 재킷으로 구매할게요."
         ],
         "테마 12. Future Dreams (미래의 꿈과 장래희망)": [
-                "A: What do you want to be in the future? : 너는 커서 미래에 무엇이 되고 싶니?",
-                "B: I want to be an AI game developer! : 나는 AI 게임 개발자가 되고 싶어!",
-                "A: Wow, that's an awesome dream! Why do you want to be that? : 와, 정말 멋진 꿈이다! 왜 그것이 되고 싶니?",
-                "B: Because I want to make fun educational games for students. : 학생들을 위한 재미있는 교육용 게임을 만들고 싶기 때문이야.",
-                "A: That sounds wonderful! You will be a great developer. : 정말 멋진 생각이다! 훌륭한 개발자가 될 거야.",
-                "B: Thank you! I will study hard and do my best. : 고마워! 열심히 공부해서 최선을 다할게."
+                "A: We wrote our future dream essays today. What do you want to be when you grow up? : 오늘 장래희망 글쓰기를 했잖아. 너는 자라서 무엇이 되고 싶니?",
+                "B: I want to become an AI educational game software developer! : 나는 AI 교육용 게임 소프트웨어 개발자가 되고 싶어!",
+                "A: Wow, that is an ambitious and amazing dream! Why did you choose that job? : 와, 정말 야심 차고 멋진 꿈이다! 왜 그 직업을 선택했니?",
+                "B: Because I want to build fun digital games that help children learn happily. : 아이들이 즐겁고 행복하게 공부할 수 있는 재미있는 디지털 게임을 만들고 싶거든.",
+                "A: What are you doing right now to achieve that dream? : 그 꿈을 이루기 위해 지금 어떤 노력을 하고 있니?",
+                "B: I study block coding every weekend and read lots of books on technology. : 매주 주말마다 블록 코딩을 공부하고 기술 관련 책을 많이 읽고 있어.",
+                "A: Your dedication is so impressive! What about you, Kevin? What is your dream? : 너의 열정이 정말 인상 깊다! 케빈 너는 어때? 너의 꿈은 뭐니?",
+                "B: Wait, you are asking me? I want to design eco-friendly green energy cities. : 어, 나한테 묻는 거야? 나는 친환경 그린 에너지 도시를 설계하고 싶어.",
+                "A: Wow, creating green cities will protect our precious planet! : 와, 친환경 도시를 만드는 건 우리의 소중한 지구를 지키는 일이잖아!",
+                "B: Let's both pursue our dreams with passion and make the world a better place! : 우리 둘 다 열정을 품고 꿈을 좇아서 세상을 더 살기 좋은 곳으로 만들자!"
         ]
 };
         let loadedDialogues = JSON.parse(JSON.stringify(DEFAULT_DIALOGUES));
@@ -1182,7 +1278,7 @@
 
             // 로컬 캐시 복원
             try {
-                const cached = localStorage.getItem('waurimal_speaking_dialogues_cache_v2_v2');
+                const cached = localStorage.getItem('waurimal_speaking_dialogues_cache_v3_v2');
                 if (cached) {
                     const parsed = JSON.parse(cached);
                     if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
@@ -1207,7 +1303,7 @@
 
                 if (Object.keys(fbUnits).length > 0) {
                     loadedDialogues = { ...DEFAULT_DIALOGUES, ...fbUnits };
-                    try { localStorage.setItem('waurimal_speaking_dialogues_cache_v2_v2', JSON.stringify(loadedDialogues)); } catch(e){}
+                    try { localStorage.setItem('waurimal_speaking_dialogues_cache_v3_v2', JSON.stringify(loadedDialogues)); } catch(e){}
                 }
             } catch(e) {
                 console.warn("speaking_units load error:", e);
@@ -2149,7 +2245,7 @@
             try {
                 await setDoc(doc(db, "speaking_units", unitName), { dialogue: lines });
                 showAlert(`[${unitName}] 대화 단원의 ${lines.length}턴이 성공적으로 저장되었습니다!`);
-                try { localStorage.setItem('waurimal_speaking_dialogues_cache_v2', JSON.stringify(loadedDialogues)); } catch(e){}
+                try { localStorage.setItem('waurimal_speaking_dialogues_cache_v3', JSON.stringify(loadedDialogues)); } catch(e){}
                 renderUnitSelects();
                 document.getElementById('teacherUnitSelect').value = unitName;
                 loadTeacherUnitData();
@@ -2171,7 +2267,7 @@
                 "A: Hello! : 안녕!",
                 "B: Nice to meet you. : 만나서 반가워."
             ];
-            try { localStorage.setItem('waurimal_speaking_dialogues_cache_v2', JSON.stringify(loadedDialogues)); } catch(e){}
+            try { localStorage.setItem('waurimal_speaking_dialogues_cache_v3', JSON.stringify(loadedDialogues)); } catch(e){}
             renderUnitSelects();
             document.getElementById('teacherUnitSelect').value = trimmed;
             loadTeacherUnitData();
@@ -2193,7 +2289,7 @@
             try {
                 await deleteDoc(doc(db, "speaking_units", unitName));
                 showAlert("단원이 성공적으로 삭제되었습니다.");
-                try { localStorage.setItem('waurimal_speaking_dialogues_cache_v2', JSON.stringify(loadedDialogues)); } catch(e){}
+                try { localStorage.setItem('waurimal_speaking_dialogues_cache_v3', JSON.stringify(loadedDialogues)); } catch(e){}
                 renderUnitSelects();
             } catch(e) {
                 showAlert("삭제 실패: " + e.message);
