@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>우주 단어 수호대: 스펠링 갤러그 (Spelling Galaga) - 와우리말 영어 놀이터</title>
+  <title>우주 단어 수호대: 스펠링 갤럭시 (Spelling Galaxy) - 와우리말 영어 놀이터</title>
   
   <!-- Pretendard 최신 웹폰트 및 아이콘 -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
@@ -25,110 +25,297 @@
 </head>
 <body>
 
-  <!-- 상단 HUD 바 (뜻 전광판, 지금 쏠 글자, 스펠링 슬롯, 목숨, 점수, 제어 버튼) -->
-  <header class="game-header">
-    <div class="hud-left">
-      <div class="logo-area">
-        <button type="button" class="hud-btn" style="background:#0284c7; border-color:#38bdf8;" onclick="location.href = (window.location.protocol === 'file:') ? '../waurimal.github.io/index.html' : 'https://waurimal.github.io/'" title="와우리말 포털 홈으로 이동">🏠 홈</button>
-        <span class="logo-icon">🚀</span>
-        <span class="logo-text">SPELLING GALAGA</span>
+  <!-- ─────────────────────────────────────────── -->
+  <!-- 0. 첫 화면 (Home / Lobby: 50% vs 50% 분할 레이아웃 & 실시간 명예의 전당) -->
+  <!-- ─────────────────────────────────────────── -->
+  <main id="screen-home" class="screen-home-container">
+    <!-- 상단 헤더: 게임 타이틀 & 배너 -->
+    <div class="home-title-header">
+      <div class="home-badge-row">
+        <div class="home-badge">
+          <span>🚀</span> <span>와우리말 우주 단어 수호대</span>
+        </div>
+        <a href="javascript:void(0)" onclick="location.href = (window.location.protocol === 'file:') ? '../waurimal.github.io/index.html' : 'https://waurimal.github.io/'" class="hud-btn" style="font-size:0.75rem; padding: 2px 10px; background: rgba(2, 132, 199, 0.25); border-color: rgba(56, 189, 248, 0.4);" title="와우리말 놀이터 홈으로 이동">🏠 와우리말 홈</a>
       </div>
-
-      <!-- 목표 단어 뜻 전광판 -->
-      <div class="target-display">
-        <span class="meaning-label">목표 뜻:</span>
-        <span id="hudMeaning" class="meaning-text">게임을 시작하세요!</span>
-      </div>
-
-      <!-- 🎯 지금 쏴야 하는 글자 안내 뱃지 -->
-      <div class="next-letter-display" title="지금 편대에서 격추해야 할 알파벳">
-        <span class="next-label">🎯 쏠 글자:</span>
-        <span id="hudNextLetter" class="next-letter-box">?</span>
-      </div>
-
-      <!-- 스펠링 슬롯 -->
-      <div id="spellingSlots" class="spelling-slots-container">
-        <!-- 동적으로 letter-slot 생성됨 -->
-      </div>
+      <h1 class="home-title">
+        스펠링 갤럭시 (Spelling Galaxy)
+      </h1>
+      <p class="home-subtitle">
+        외계인 편대를 조준 격추하고 스펠링을 완성하여 은하계 명예의 전당 1위에 도전하세요!
+      </p>
     </div>
 
-    <div class="hud-right">
-      <div class="stats-group">
-        <!-- 스테이지 -->
-        <div class="stat-item">
-          <span class="stat-label">STAGE</span>
-          <span id="hudStage" class="stat-value">STAGE 1</span>
+    <!-- 50% vs 50% 분할 레이아웃 -->
+    <div class="home-split-grid">
+      <!-- [좌측 50%]: 도전자 프로필, 게임 설정, 히어로 시작 버튼, 조작 가이드 -->
+      <div class="home-left">
+        <!-- 1. 도전자 정보 카드 (GNB SSO 자동 연동) -->
+        <div class="galaga-card">
+          <div class="card-header-row">
+            <span class="card-title-text"><i class="fas fa-user-astronaut" style="color:#38bdf8;"></i> 도전자 정보</span>
+            <span class="sso-badge">GNB 자동 연동</span>
+          </div>
+          <div class="profile-box">
+            <div class="profile-info-left">
+              <span class="profile-avatar">👨‍🚀</span>
+              <div>
+                <span class="profile-label">명예의 전당 등록 도전자</span>
+                <span id="homeProfileDisplay" class="profile-name-text">도전자 (게스트)</span>
+              </div>
+            </div>
+            <button type="button" id="btnHomeEditProfile" class="hud-btn profile-edit-btn" title="학생 프로필 변경">
+              <i class="fas fa-pen-to-square"></i> 프로필 변경
+            </button>
+          </div>
         </div>
 
-        <!-- 목숨 (하트 5개) -->
-        <div class="stat-item">
-          <span class="stat-label">LIVES</span>
-          <span id="hudLives" class="stat-value lives-value">❤️ ❤️ ❤️ ❤️ ❤️</span>
+        <!-- 2. 게임 모드 & 단어장 설정 카드 -->
+        <div class="galaga-card">
+          <div class="card-header-row">
+            <span class="card-title-text"><i class="fas fa-sliders-h" style="color:#ffd700;"></i> 게임 설정</span>
+          </div>
+
+          <!-- 학습 단어장 선택 -->
+          <div class="form-group">
+            <label class="form-label"><i class="fas fa-book" style="color:#38bdf8;"></i> 플레이할 단어장 (교과서 단원)</label>
+            <div class="category-select-row">
+              <select id="homeCategorySelect" class="galaga-select">
+                <!-- JS 동적 생성 -->
+              </select>
+              <button type="button" id="btnHomeCustomWord" class="hud-btn custom-word-btn" title="선생님 맞춤 단어 등록">
+                ✏️ 맞춤 단어
+              </button>
+            </div>
+          </div>
+
+          <!-- 난이도 선택 -->
+          <div class="form-group">
+            <label class="form-label"><i class="fas fa-tachometer-alt" style="color:#4ade80;"></i> 학습 난이도</label>
+            <select id="homeDifficultySelect" class="galaga-select">
+              <option value="easy" selected>🟢 초급 (오답 시 하트 -1 / 철자 힌트 표시)</option>
+              <option value="normal">🟡 중급 (오답 시 하트 -1 &amp; -80점 / 물음표 타깃)</option>
+              <option value="hard">🔴 고급 (오답 시 하트 -1 &amp; 듀얼 해제 / 빈칸 타깃)</option>
+            </select>
+          </div>
+
+          <!-- 🚀 히어로 시작 버튼 -->
+          <button type="button" id="btnHomeStartGame" class="btn-start-hero">
+            <div class="hero-content-left">
+              <span class="hero-rocket-icon">🚀</span>
+              <div class="hero-text-wrap">
+                <div class="hero-title">우주 수호대 출격! (게임 시작)</div>
+                <div class="hero-desc">외계인 편대를 격추하고 은하계 최고 기록에 도전하세요!</div>
+              </div>
+            </div>
+            <i class="fas fa-arrow-right hero-arrow"></i>
+          </button>
         </div>
 
-        <!-- 점수 -->
-        <div class="stat-item">
-          <span class="stat-label">SCORE</span>
-          <span id="hudScore" class="stat-value">0</span>
-        </div>
-
-        <!-- 최고 점수 -->
-        <div class="stat-item">
-          <span class="stat-label">HIGH</span>
-          <span id="hudHighScore" class="stat-value">0</span>
+        <!-- 3. 게임 조작법 및 공략 꿀팁 카드 -->
+        <div class="galaga-card">
+          <div class="card-header-row">
+            <span class="card-title-text"><i class="fas fa-lightbulb" style="color:#f59e0b;"></i> 조작 방법 &amp; 공략 꿀팁</span>
+          </div>
+          <ul class="guide-bullets">
+            <li>• <strong>좌우 이동</strong>: <code class="key-code">←</code> <code class="key-code">→</code> 또는 <code class="key-code">A</code> <code class="key-code">D</code> 키 (화면 좌우 직접 드래그)</li>
+            <li>• <strong>미사일 발사</strong>: <code class="key-code">Space</code> 또는 <code class="key-code">Enter</code> (누르고 있으면 자동 연사, 터치 FIRE 버튼)</li>
+            <li>• 🎯 <strong>단어 격추</strong>: 상단 전광판의 <strong>단어 뜻</strong>과 <strong>🎯 쏠 글자</strong>를 보고 올바른 철자의 외계인을 조준 격추!</li>
+            <li>• ⚡ <strong>듀얼 파이터</strong>: 보스 외계인에게 납치된 아군 기체를 구출하면 <strong>2연장 듀얼 파이터</strong>로 합체!</li>
+            <li>• 🎁 <strong>우주 아이템</strong>: ❤️ 하트 회복, ⚡ 듀얼 변신, 🛡️ 쉴드 방어막, 💣 오답 전멸 EMP, ⏱️ 슬로우</li>
+            <li>• 💯 <strong>점수 규칙</strong>: 정답 철자 격추 시 <strong>+100점</strong> (콤보 최대 2.5배) &amp; 단어 완성 <strong>+500점</strong>! 오답 시 감점 &amp; 기회 차감</li>
+          </ul>
         </div>
       </div>
 
-      <!-- 제어 버튼들 -->
-      <div class="control-buttons">
-        <!-- 난이도 선택: 기본값 초급(오답 시 하트 -1 / 철자 힌트 표시) -->
-        <select id="selectDifficulty" class="hud-select" title="학습 난이도 선택">
-          <option value="easy" selected>🟢 초급 (오답 시 하트 -1 / 철자 힌트 표시)</option>
-          <option value="normal">🟡 중급 (오답 시 하트 -1 & -80점 / 물음표 타깃)</option>
-          <option value="hard">🔴 고급 (오답 시 하트 -1 & 듀얼 상실 / 빈칸 타깃)</option>
-        </select>
+      <!-- [우측 50%]: 실시간 명예의 전당 카드 -->
+      <div class="home-right">
+        <div id="homeHofCard" class="galaga-card hof-card-container">
+          <!-- HOF 헤더 -->
+          <div class="hof-header-wrap">
+            <div class="hof-title-row">
+              <div class="hof-title-left">
+                <span class="trophy-icon">🏆</span>
+                <span class="hof-main-heading">실시간 명예의 전당</span>
+                <span class="hof-live-badge"><span class="pulse-dot"></span> LIVE</span>
+              </div>
+              <span class="single-score-badge">1인 1최고점수</span>
+            </div>
+            <div class="hof-subtitle-text">우주 단어 수호대 학생별 최고 득점 실시간 순위표 (TOP 30)</div>
+          </div>
 
-        <button type="button" id="btnHof" class="hud-btn hof-btn-glow" title="은하계 명예의 전당 (Top 30)"><i class="fas fa-trophy" style="color:#ffd700;"></i> 명예의 전당</button>
-        <button type="button" id="btnGuide" class="hud-btn" title="게임 방법"><i class="fas fa-question-circle"></i> 도움말</button>
-        <button type="button" id="btnCategory" class="hud-btn" title="단어장 및 교과서 단원 선택">📚 단어장</button>
-        <button type="button" id="btnCustomWord" class="hud-btn" title="선생님 맞춤 단어 등록">✏️ 맞춤 단어</button>
-        <button type="button" id="btnAudioToggle" class="hud-btn" title="음악 및 효과음 켜기/끄기">🔊 소리 ON</button>
-        <button type="button" id="btnFullscreen" class="hud-btn" title="전체화면">⛶ 전체화면</button>
+          <!-- 기간 선택 탭 -->
+          <div class="hof-period-tabs">
+            <button type="button" class="hof-tab-btn active" data-tab="all">
+              <i class="fas fa-trophy"></i> 전체 랭킹
+            </button>
+            <button type="button" class="hof-tab-btn" data-tab="today">
+              <i class="fas fa-calendar-day"></i> 오늘 랭킹
+            </button>
+            <button type="button" class="hof-tab-btn" data-tab="my">
+              <i class="fas fa-user-astronaut"></i> 내 기록
+            </button>
+          </div>
+
+          <!-- 세부 필터 (학년, 반, 내반보기, 검색, 새로고침) -->
+          <div class="hof-filter-bar">
+            <select id="homeHofFilterGrade" class="filter-select">
+              <option value="all">전체 학년</option>
+              <option value="3">3학년</option>
+              <option value="4">4학년</option>
+              <option value="5">5학년</option>
+              <option value="6">6학년</option>
+            </select>
+            <select id="homeHofFilterClass" class="filter-select">
+              <option value="all">전체 반</option>
+              <option value="1">1반</option><option value="2">2반</option>
+              <option value="3">3반</option><option value="4">4반</option>
+              <option value="5">5반</option><option value="6">6반</option>
+              <option value="7">7반</option><option value="8">8반</option>
+              <option value="9">9반</option><option value="10">10반</option>
+              <option value="11">11반</option><option value="12">12반</option>
+              <option value="13">13반</option><option value="14">14반</option>
+              <option value="15">15반</option>
+            </select>
+            <button type="button" id="btnHomeMyClassHof" class="hud-btn my-class-btn" title="내 학년 및 반으로 필터링">
+              <i class="fas fa-users"></i> 내 반 보기
+            </button>
+            <input type="text" id="homeHofSearchInput" placeholder="이름 검색..." class="hof-search-input">
+            <button type="button" id="btnHomeHofRefresh" class="hud-btn refresh-btn" title="실시간 기록 새로고침">
+              <i class="fas fa-sync-alt"></i>
+            </button>
+          </div>
+
+          <!-- 실시간 순위표 테이블 -->
+          <div class="hof-table-wrapper custom-scrollbar">
+            <table class="hof-table">
+              <thead>
+                <tr>
+                  <th style="width: 16%;">순위</th>
+                  <th style="width: 28%;">도전자</th>
+                  <th style="width: 22%;">점수</th>
+                  <th style="width: 16%;">명중률</th>
+                  <th style="width: 18%;">완성 단어</th>
+                </tr>
+              </thead>
+              <tbody id="homeHofTableBody">
+                <!-- JS 동적 렌더링 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-    </div>
-  </header>
-
-  <!-- 2. 가운데 게임 플레이 영역 (Playfield: 상단과 하단 사이 가운데에서만 게임 진행) -->
-  <main id="gameCenterViewport" class="game-center-viewport">
-    <div id="gameCanvasWrapper" class="game-canvas-wrapper">
-      <canvas id="gameCanvas" width="800" height="600"></canvas>
     </div>
   </main>
 
-  <!-- 3. 하단 컨트롤 & 조작 안내 바 (Fixed Bottom Bar) -->
-  <footer class="game-footer">
-    <div class="footer-left">
-      <button type="button" id="btnTouchLeft" class="bottom-ctrl-btn move-btn" aria-label="왼쪽 이동">
-        <i class="fas fa-chevron-left"></i> ◀ 좌로
-      </button>
-      <button type="button" id="btnTouchRight" class="bottom-ctrl-btn move-btn" aria-label="오른쪽 이동">
-        우로 ▶ <i class="fas fa-chevron-right"></i>
-      </button>
-    </div>
+  <!-- ─────────────────────────────────────────── -->
+  <!-- 1. 인게임 플레이 화면 (screen-game: 게임 진행 시 표시) -->
+  <!-- ─────────────────────────────────────────── -->
+  <div id="screen-game" class="screen-game-container hidden">
+    <!-- 상단 HUD 바 (뜻 전광판, 지금 쏠 글자, 스펠링 슬롯, 목숨, 점수, 제어 버튼) -->
+    <header class="game-header">
+      <div class="hud-left">
+        <div class="logo-area">
+          <button type="button" id="btnBackToHome" class="hud-btn" style="background:#0284c7; border-color:#38bdf8;" title="첫 화면(홈)으로 이동"><i class="fas fa-home"></i> 첫 화면</button>
+          <span class="logo-icon">🚀</span>
+          <span class="logo-text">SPELLING GALAXY</span>
+        </div>
 
-    <div class="footer-center">
-      <div class="footer-hint-row">
-        <span class="ctrl-hint-badge"><i class="fas fa-keyboard"></i> 키보드: [←] [→] 이동 &amp; [스페이스바] 발사</span>
-        <span class="ctrl-touch-badge"><i class="fas fa-hand-pointer"></i> 가운데 화면 직접 드래그로도 조작 가능</span>
+        <!-- 목표 단어 뜻 전광판 -->
+        <div class="target-display">
+          <span class="meaning-label">목표 뜻:</span>
+          <span id="hudMeaning" class="meaning-text">게임을 시작하세요!</span>
+        </div>
+
+        <!-- 🎯 지금 쏴야 하는 글자 안내 뱃지 -->
+        <div class="next-letter-display" title="지금 편대에서 격추해야 할 알파벳">
+          <span class="next-label">🎯 쏠 글자:</span>
+          <span id="hudNextLetter" class="next-letter-box">?</span>
+        </div>
+
+        <!-- 스펠링 슬롯 -->
+        <div id="spellingSlots" class="spelling-slots-container">
+          <!-- 동적으로 letter-slot 생성됨 -->
+        </div>
       </div>
-    </div>
 
-    <div class="footer-right">
-      <button type="button" id="touchFireBtn" class="bottom-ctrl-btn fire-btn" aria-label="미사일 발사">
-        <i class="fas fa-crosshairs"></i> FIRE (발사)
-      </button>
-    </div>
-  </footer>
+      <div class="hud-right">
+        <div class="stats-group">
+          <!-- 스테이지 -->
+          <div class="stat-item">
+            <span class="stat-label">STAGE</span>
+            <span id="hudStage" class="stat-value">STAGE 1</span>
+          </div>
+
+          <!-- 목숨 (하트 5개) -->
+          <div class="stat-item">
+            <span class="stat-label">LIVES</span>
+            <span id="hudLives" class="stat-value lives-value">❤️ ❤️ ❤️ ❤️ ❤️</span>
+          </div>
+
+          <!-- 점수 -->
+          <div class="stat-item">
+            <span class="stat-label">SCORE</span>
+            <span id="hudScore" class="stat-value">0</span>
+          </div>
+
+          <!-- 최고 점수 -->
+          <div class="stat-item">
+            <span class="stat-label">HIGH</span>
+            <span id="hudHighScore" class="stat-value">0</span>
+          </div>
+        </div>
+
+        <!-- 제어 버튼들 -->
+        <div class="control-buttons">
+          <!-- 난이도 선택: 기본값 초급(오답 시 하트 -1 / 철자 힌트 표시) -->
+          <select id="selectDifficulty" class="hud-select" title="학습 난이도 선택">
+            <option value="easy" selected>🟢 초급 (오답 시 하트 -1 / 철자 힌트 표시)</option>
+            <option value="normal">🟡 중급 (오답 시 하트 -1 &amp; -80점 / 물음표 타깃)</option>
+            <option value="hard">🔴 고급 (오답 시 하트 -1 &amp; 듀얼 상실 / 빈칸 타깃)</option>
+          </select>
+
+          <button type="button" id="btnHof" class="hud-btn hof-btn-glow" title="은하계 명예의 전당 (Top 30)"><i class="fas fa-trophy" style="color:#ffd700;"></i> 명예의 전당</button>
+          <button type="button" id="btnGuide" class="hud-btn" title="게임 방법"><i class="fas fa-question-circle"></i> 도움말</button>
+          <button type="button" id="btnCategory" class="hud-btn" title="단어장 및 교과서 단원 선택">📚 단어장</button>
+          <button type="button" id="btnCustomWord" class="hud-btn" title="선생님 맞춤 단어 등록">✏️ 맞춤 단어</button>
+          <button type="button" id="btnAudioToggle" class="hud-btn" title="음악 및 효과음 켜기/끄기">🔊 소리 ON</button>
+          <button type="button" id="btnFullscreen" class="hud-btn" title="전체화면">⛶ 전체화면</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 2. 가운데 게임 플레이 영역 (Playfield: 상단과 하단 사이 가운데에서만 게임 진행) -->
+    <main id="gameCenterViewport" class="game-center-viewport">
+      <div id="gameCanvasWrapper" class="game-canvas-wrapper">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+      </div>
+    </main>
+
+    <!-- 3. 하단 컨트롤 & 조작 안내 바 (Fixed Bottom Bar) -->
+    <footer class="game-footer">
+      <div class="footer-left">
+        <button type="button" id="btnTouchLeft" class="bottom-ctrl-btn move-btn" aria-label="왼쪽 이동">
+          <i class="fas fa-chevron-left"></i> ◀ 좌로
+        </button>
+        <button type="button" id="btnTouchRight" class="bottom-ctrl-btn move-btn" aria-label="오른쪽 이동">
+          우로 ▶ <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+
+      <div class="footer-center">
+        <div class="footer-hint-row">
+          <span class="ctrl-hint-badge"><i class="fas fa-keyboard"></i> 키보드: [←] [→] 이동 &amp; [스페이스바] 발사</span>
+          <span class="ctrl-touch-badge"><i class="fas fa-hand-pointer"></i> 가운데 화면 직접 드래그로도 조작 가능</span>
+        </div>
+      </div>
+
+      <div class="footer-right">
+        <button type="button" id="touchFireBtn" class="bottom-ctrl-btn fire-btn" aria-label="미사일 발사">
+          <i class="fas fa-crosshairs"></i> FIRE (발사)
+        </button>
+      </div>
+    </footer>
+  </div>
 
   <!-- 1. 게임 결과 및 학습 리포트 모달 (Native Dialog) -->
   <dialog id="resultModal">
@@ -170,6 +357,7 @@
       </div>
 
       <div class="modal-actions">
+        <button type="button" id="btnResultHome" class="hud-btn" style="background:#0284c7; border-color:#38bdf8;"><i class="fas fa-home"></i> 첫 화면으로</button>
         <button type="button" id="btnResultChangeCategory" class="hud-btn">📚 다른 단어장</button>
         <button type="button" id="btnResultHof" class="hud-btn hof-btn-glow"><i class="fas fa-trophy" style="color:#ffd700;"></i> 명예의 전당</button>
         <button type="button" id="btnResultRetry" class="hud-btn primary">🔄 다시 도전하기</button>
@@ -261,7 +449,7 @@
   <dialog id="guideModal">
     <div class="modal-card">
       <div class="modal-header">
-        <h2 class="modal-title">❓ 스펠링 갤러그 게임 가이드</h2>
+        <h2 class="modal-title">❓ 스펠링 갤럭시 게임 가이드</h2>
         <button type="button" class="modal-close-btn" onclick="document.getElementById('guideModal').close()">✕</button>
       </div>
 
@@ -541,17 +729,21 @@
         guideModal.showModal();
       });
 
-      // 9. 명예의 전당 (HOF) 모달 & 2중 캐시 데이터 파이프라인
+      // 9. 명예의 전당 (HOF) 모달 & 첫 페이지 2중 캐시 데이터 파이프라인
       const hofModal = document.getElementById('hofModal');
       const btnHof = document.getElementById('btnHof');
       const btnResultHof = document.getElementById('btnResultHof');
       const btnHofRefresh = document.getElementById('btnHofRefresh');
       const hofTableBody = document.getElementById('hofTableBody');
+      const homeHofTableBody = document.getElementById('homeHofTableBody');
       const hofTabBtns = document.querySelectorAll('.hof-tab-btn');
       const resultStudentNameDisplay = document.getElementById('resultStudentNameDisplay');
       const btnResultEditProfile = document.getElementById('btnResultEditProfile');
+      const btnHomeEditProfile = document.getElementById('btnHomeEditProfile');
+      const homeProfileDisplay = document.getElementById('homeProfileDisplay');
 
       let currentHofTab = 'all';
+      let allHofRawRecords = [];
 
       // 기본 시드 기록 (온라인 DB 비어있거나 오프라인 시에도 풍성하고 동기부여되는 랭킹 제공)
       const DEFAULT_HOF_RECORDS = [
@@ -632,10 +824,25 @@
         }
       }
 
+      function updateHomeStudentProfileDisplay() {
+        if (!homeProfileDisplay) return;
+        const prof = getStudentProfile();
+        if (prof.name && prof.name !== '도전자') {
+          const numStr = prof.studentNum ? `${prof.studentNum}번 ` : '';
+          homeProfileDisplay.textContent = `${prof.grade}학년 ${prof.classNum}반 ${numStr}${prof.name}`;
+          homeProfileDisplay.style.color = '#38bdf8';
+        } else {
+          homeProfileDisplay.textContent = '도전자 (게스트)';
+          homeProfileDisplay.style.color = '#f59e0b';
+        }
+      }
+      window.updateHomeStudentProfileDisplay = updateHomeStudentProfileDisplay;
+
       function applyStudentProfileUpdate(prof) {
         updateResultStudentDisplay();
+        updateHomeStudentProfileDisplay();
         const cleanName = prof.name;
-        const cleanGrade = Number(prof.grade) || 4;
+        const cleanGrade = Number(prof.grade) || 6;
         const cleanClass = Number(prof.classNum) || 1;
 
         // 로컬 최근 기록에 이름 소급 적용 (도전자 -> 학생 이름)
@@ -658,14 +865,21 @@
           window.gameInstance.lastSavedRecord.classNum = cleanClass;
         }
 
-        // 명예의 전당 모달이 열려있다면 즉시 재렌더링
-        if (hofModal && hofModal.open) {
-          loadHof(currentHofTab);
-        }
+        loadHof(currentHofTab);
       }
 
       if (btnResultEditProfile) {
         btnResultEditProfile.addEventListener('click', () => {
+          if (window.WaurimalStudent && typeof window.WaurimalStudent.openModal === 'function') {
+            window.WaurimalStudent.openModal();
+          } else {
+            promptChangeStudentName();
+          }
+        });
+      }
+
+      if (btnHomeEditProfile) {
+        btnHomeEditProfile.addEventListener('click', () => {
           if (window.WaurimalStudent && typeof window.WaurimalStudent.openModal === 'function') {
             window.WaurimalStudent.openModal();
           } else {
@@ -724,107 +938,149 @@
         return `${m}/${day} ${hours}:${minutes}`;
       }
 
-      function renderHofTable(rawList, tab = currentHofTab) {
-        let list = [...rawList];
+      function applyHofFilter() {
+        const grade = document.getElementById('homeHofFilterGrade')?.value || 'all';
+        const classNum = document.getElementById('homeHofFilterClass')?.value || 'all';
+        const keyword = (document.getElementById('homeHofSearchInput')?.value || '').trim().toLowerCase();
+
+        let list = [...allHofRawRecords];
         const studentInfo = getStudentProfile();
         const myName = studentInfo.name;
         const startOfToday = new Date().setHours(0, 0, 0, 0);
 
-        if (tab === 'today') {
-          // 1) 오늘 필터링 우선 적용
+        // 1. 기간/탭 필터링
+        if (currentHofTab === 'today') {
           list = list.filter(item => (item.timestamp || 0) >= startOfToday);
-          if (list.length === 0) {
-            hofTableBody.innerHTML = '<tr><td colspan="5" style="color:#94a3b8; padding:22px;">오늘 등록된 기록이 아직 없습니다. 오늘의 첫 1등이 되어보세요!</td></tr>';
-            return;
-          }
-          // 2) 오늘 기록 기준 학생별 최고 기록 1건 선별
-          const todayMap = new Map();
-          list.forEach(item => {
-            const key = item.name === '도전자' ? (item.id || String(item.timestamp)) : `${item.grade || 0}-${item.classNum || 0}-${item.name}`;
-            if (!todayMap.has(key) || (item.score || 0) > (todayMap.get(key).score || 0)) {
-              todayMap.set(key, item);
-            }
-          });
-          list = Array.from(todayMap.values());
-          list.sort((a, b) => (b.score || 0) - (a.score || 0));
-        } else if (tab === 'my') {
-          // 내 기록: 게스트일 경우 이 브라우저의 로컬 기록 전체 표시, 등록 학생일 경우 이름 매칭
+        } else if (currentHofTab === 'my') {
           if (myName && myName !== '도전자') {
             list = list.filter(item => item.name === myName);
           } else {
-            // 게스트: 로컬 스토리지에 저장된 플레이 기록 우선
             const localOnly = getLocalHofScores();
             list = localOnly.length > 0 ? localOnly : list.filter(item => item.name === '도전자');
           }
-          if (list.length === 0) {
-            hofTableBody.innerHTML = '<tr><td colspan="5" style="color:#94a3b8; padding:22px;">아직 나의 플레이 기록이 없습니다. 게임을 완료하여 이름을 올려보세요!</td></tr>';
-            return;
-          }
-          // 내 기록은 중복 제거 없이 최신순으로 정렬하여 게임 히스토리 전체 제공
-          list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-        } else {
-          // 전체 랭킹 (all): 학생별 최고 기록 1건 선별 (도배 방지)
+        }
+
+        // 2. 학년 필터
+        if (grade !== 'all') {
+          list = list.filter(item => String(item.grade) === String(grade));
+        }
+
+        // 3. 반 필터
+        if (classNum !== 'all') {
+          list = list.filter(item => String(item.classNum) === String(classNum));
+        }
+
+        // 4. 이름/카테고리 검색 필터
+        if (keyword) {
+          list = list.filter(item => 
+            (item.name || '').toLowerCase().includes(keyword) || 
+            (item.category || '').toLowerCase().includes(keyword)
+          );
+        }
+
+        // 5. 1인 1최고점수 정규화 (all & today 탭)
+        if (currentHofTab !== 'my') {
           const bestMap = new Map();
           list.forEach(item => {
-            const key = item.name === '도전자' ? (item.id || String(item.timestamp)) : `${item.grade || 0}-${item.classNum || 0}-${item.name}`;
+            const key = item.name === '도전자' 
+              ? (item.id || String(item.timestamp)) 
+              : `${item.grade || 0}-${item.classNum || 0}-${item.name}`;
             if (!bestMap.has(key) || (item.score || 0) > (bestMap.get(key).score || 0)) {
               bestMap.set(key, item);
             }
           });
           list = Array.from(bestMap.values());
           list.sort((a, b) => (b.score || 0) - (a.score || 0));
+        } else {
+          // 내 기록: 시간 최신순
+          list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        }
+
+        // 6. 표준 경쟁 순위(1224 순위제) 계산
+        if (currentHofTab !== 'my') {
+          let currentRank = 1;
+          list.forEach((item, idx) => {
+            if (idx > 0 && (item.score || 0) < (list[idx - 1].score || 0)) {
+              currentRank = idx + 1;
+            }
+            item.calculatedRank = currentRank;
+          });
         }
 
         const top30 = list.slice(0, 30);
-        hofTableBody.innerHTML = '';
+        const tbodies = [
+          document.getElementById('homeHofTableBody'),
+          document.getElementById('hofTableBody')
+        ].filter(Boolean);
 
-        top30.forEach((item, idx) => {
-          const rank = idx + 1;
-          const rankClass = rank === 1 ? 'hof-rank-1' : (rank === 2 ? 'hof-rank-2' : (rank === 3 ? 'hof-rank-3' : ''));
-          const rowClass = rank === 1 ? 'hof-row-1' : (rank === 2 ? 'hof-row-2' : (rank === 3 ? 'hof-row-3' : ''));
-          const medal = rank === 1 ? '🥇 ' : (rank === 2 ? '🥈 ' : (rank === 3 ? '🥉 ' : ''));
-
-          const rawName = item.name || '도전자';
-          // 내 기록 탭에서는 본인 이름 마스킹 없이 선명하게 표시, 전체 랭킹에서는 표준 마스킹
-          let displayName = rawName;
-          if (tab !== 'my') {
-            displayName = (window.WaurimalMask && window.WaurimalMask.maskName)
-              ? window.WaurimalMask.maskName(rawName)
-              : (rawName.length > 2 ? rawName[0] + 'O' + rawName.slice(2) : (rawName.length === 2 ? rawName[0] + 'O' : rawName));
+        tbodies.forEach(tbody => {
+          tbody.innerHTML = '';
+          if (top30.length === 0) {
+            let emptyMsg = "등록된 명예의 전당 기록이 없습니다.";
+            if (currentHofTab === 'today') emptyMsg = "오늘 등록된 기록이 없습니다. 오늘의 첫 1등이 되어보세요!";
+            else if (currentHofTab === 'my') emptyMsg = "아직 나의 플레이 기록이 없습니다. 게임을 완료하여 이름을 올려보세요!";
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="5" style="color:#94a3b8; padding:32px 16px; text-align:center;">
+                  <div style="font-size:2rem; margin-bottom:8px;">🚀</div>
+                  <div style="font-weight:bold; color:#f8fafc; font-size:0.95rem; margin-bottom:4px;">${emptyMsg}</div>
+                  <div style="font-size:0.8rem; color:#64748b;">게임을 플레이하여 은하계 명예의 전당 주인공이 되어보세요! 🏆</div>
+                </td>
+              </tr>
+            `;
+            return;
           }
 
-          const timeText = tab === 'my' && item.timestamp ? `<span style="font-size:0.75rem; color:#94a3b8; display:block;">${formatHofDate(item.timestamp)}</span>` : '';
-          const rankLabel = tab === 'my' ? `#${rank}` : `${medal}${rank}위`;
+          top30.forEach((item, idx) => {
+            const rank = item.calculatedRank || (idx + 1);
+            const isTop3 = currentHofTab !== 'my' && rank <= 3;
+            const rankClass = isTop3 ? `hof-rank-${rank}` : '';
+            const rowClass = isTop3 ? `hof-row-${rank}` : '';
+            const medal = currentHofTab !== 'my' ? (rank === 1 ? '🥇 ' : (rank === 2 ? '🥈 ' : (rank === 3 ? '🥉 ' : ''))) : '';
 
-          const tr = document.createElement('tr');
-          tr.className = rowClass;
-          tr.innerHTML = `
-            <td class="${rankClass}" style="font-weight:bold;">${rankLabel}</td>
-            <td>${item.grade ? `${item.grade}-${item.classNum || 1} ` : ''}<strong>${displayName}</strong>${timeText}</td>
-            <td style="color:#38bdf8; font-weight:bold; font-size:0.95rem;">${(item.score || 0).toLocaleString()}</td>
-            <td>${item.accuracy || 0}%</td>
-            <td style="color:#94a3b8; font-size:0.82rem;">${item.clearedCount || 0}단어</td>
-          `;
-          hofTableBody.appendChild(tr);
+            const rawName = item.name || '도전자';
+            let displayName = rawName;
+            if (currentHofTab !== 'my') {
+              displayName = (window.WaurimalMask && window.WaurimalMask.maskName)
+                ? window.WaurimalMask.maskName(rawName)
+                : (rawName.length > 2 ? rawName[0] + 'O' + rawName.slice(2) : (rawName.length === 2 ? rawName[0] + 'O' : rawName));
+            }
+
+            const timeText = (currentHofTab === 'my' && item.timestamp) ? `<span style="font-size:0.75rem; color:#94a3b8; display:block;">${formatHofDate(item.timestamp)}</span>` : '';
+            const rankLabel = currentHofTab === 'my' ? `#${idx + 1}` : `${medal}${rank}위`;
+
+            const tr = document.createElement('tr');
+            if (rowClass) tr.className = rowClass;
+            tr.innerHTML = `
+              <td class="${rankClass}" style="font-weight:bold; text-align:center;">${rankLabel}</td>
+              <td style="text-align:left;">${item.grade ? `${item.grade}-${item.classNum || 1} ` : ''}<strong>${displayName}</strong>${timeText}</td>
+              <td style="color:#38bdf8; font-weight:bold; font-size:0.95rem; text-align:center;">${(item.score || 0).toLocaleString()}</td>
+              <td style="text-align:center;">${item.accuracy || 0}%</td>
+              <td style="color:#94a3b8; font-size:0.82rem; text-align:center;">${item.clearedCount || 0}단어</td>
+            `;
+            tbody.appendChild(tr);
+          });
         });
       }
 
       async function loadHof(tab = currentHofTab) {
         currentHofTab = tab;
-        hofTabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+        document.querySelectorAll('.hof-tab-btn').forEach(b => {
+          b.classList.toggle('active', b.dataset.tab === tab);
+        });
 
-        // 1. 0ms 무지연 로컬 캐시 + 기본 시드 레코드 즉시 반영 (쿼터 소진/오프라인 시에도 항상 0ms 렌더링)
+        // 1. 0ms 무지연 로컬 캐시 + 기본 시드 레코드 즉시 반영
         const localHistory = getLocalHofScores();
-        let cachedCombined = [...localHistory, ...DEFAULT_HOF_RECORDS];
-        renderHofTable(cachedCombined, tab);
+        allHofRawRecords = [...localHistory, ...DEFAULT_HOF_RECORDS];
+        applyHofFilter();
 
-        // 2. Firebase Firestore 비동기 백그라운드 쿼리 (블로킹 없이 결과 수신 시 자동 병합)
+        // 2. Firebase Firestore 비동기 백그라운드 쿼리
         const db = getFirestoreDb();
         if (db) {
           try {
             const snap = await db.collection('games').doc('spelling_galaga').collection('scores')
               .orderBy('score', 'desc')
-              .limit(50)
+              .limit(100)
               .get();
 
             let cloudScores = [];
@@ -840,7 +1096,6 @@
             });
 
             if (cloudScores.length > 0) {
-              // 클라우드와 로컬 병합
               const mergedMap = new Map();
               cloudScores.forEach(r => mergedMap.set(r.id || `${r.name}_${r.score}_${r.timestamp}`, r));
               localHistory.forEach(r => {
@@ -851,7 +1106,8 @@
                 const k = r.id || `${r.name}_${r.score}_${r.timestamp}`;
                 if (!mergedMap.has(k)) mergedMap.set(k, r);
               });
-              renderHofTable(Array.from(mergedMap.values()), tab);
+              allHofRawRecords = Array.from(mergedMap.values());
+              applyHofFilter();
             }
           } catch (snapErr) {
             if (snapErr && (snapErr.code === 'resource-exhausted' || String(snapErr).includes('429'))) {
@@ -863,6 +1119,128 @@
             console.warn("Firestore query fallback (quota/network):", snapErr);
           }
         }
+      }
+      window.loadHof = loadHof;
+      window.applyHofFilter = applyHofFilter;
+
+      // 화면 전환 헬퍼 함수
+      function showHomeScreen() {
+        const homeScreen = document.getElementById('screen-home');
+        const gameScreen = document.getElementById('screen-game');
+        if (homeScreen) homeScreen.classList.remove('hidden');
+        if (gameScreen) gameScreen.classList.add('hidden');
+        document.body.classList.remove('in-game');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (window.gameInstance) {
+          window.gameInstance.state = 'TITLE';
+        }
+        updateHomeStudentProfileDisplay();
+        loadHof(currentHofTab);
+      }
+      window.showHomeScreen = showHomeScreen;
+
+      function showGameScreen(categoryKey, diff) {
+        const homeScreen = document.getElementById('screen-home');
+        const gameScreen = document.getElementById('screen-game');
+        if (homeScreen) homeScreen.classList.add('hidden');
+        if (gameScreen) gameScreen.classList.remove('hidden');
+        document.body.classList.add('in-game');
+
+        if (window.gameInstance) {
+          if (diff) {
+            window.gameInstance.setDifficulty(diff);
+            const selDiff = document.getElementById('selectDifficulty');
+            if (selDiff) selDiff.value = diff;
+          }
+          setTimeout(() => {
+            window.gameInstance.resizeCanvas();
+            window.gameInstance.startGame(categoryKey);
+          }, 40);
+        }
+      }
+      window.showGameScreen = showGameScreen;
+
+      // 홈 카테고리 셀렉트 채우기
+      function populateHomeCategories() {
+        const select = document.getElementById('homeCategorySelect');
+        if (!select || !window.gameInstance || !window.gameInstance.wordManager) return;
+        select.innerHTML = '';
+        const cats = window.gameInstance.wordManager.getCategoryList();
+        cats.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.key;
+          opt.textContent = `${c.name} (${c.count}단어) - ${c.description}`;
+          if (c.key === 'grade6') opt.selected = true;
+          select.appendChild(opt);
+        });
+      }
+
+      populateHomeCategories();
+      updateHomeStudentProfileDisplay();
+      loadHof('all');
+
+      // 홈 화면 시작 버튼
+      const btnHomeStart = document.getElementById('btnHomeStartGame');
+      if (btnHomeStart) {
+        btnHomeStart.addEventListener('click', () => {
+          const catKey = document.getElementById('homeCategorySelect')?.value || 'grade6';
+          const diff = document.getElementById('homeDifficultySelect')?.value || 'easy';
+          window.gameInstance.sounds.init();
+          showGameScreen(catKey, diff);
+        });
+      }
+
+      // 첫 화면으로 복귀 버튼
+      const btnBackToHome = document.getElementById('btnBackToHome');
+      if (btnBackToHome) {
+        btnBackToHome.addEventListener('click', showHomeScreen);
+      }
+
+      const btnResultHome = document.getElementById('btnResultHome');
+      if (btnResultHome) {
+        btnResultHome.addEventListener('click', () => {
+          const resultModal = document.getElementById('resultModal');
+          if (resultModal) resultModal.close();
+          showHomeScreen();
+        });
+      }
+
+      // 홈 화면 맞춤 단어 버튼
+      const btnHomeCustomWord = document.getElementById('btnHomeCustomWord');
+      if (btnHomeCustomWord) {
+        btnHomeCustomWord.addEventListener('click', () => {
+          const existing = window.gameInstance.wordManager.getCustomWords();
+          if (existing.length > 0) {
+            customTextarea.value = existing.map(item => `${item.word}: ${item.meaning}`).join('\n');
+          } else {
+            customTextarea.value = "APPLE: 사과\nBANANA: 바나나\nFRIEND: 친구\nSCHOOL: 학교\nTEACHER: 선생님";
+          }
+          customModal.showModal();
+        });
+      }
+
+      // 홈 화면 명예의 전당 필터 이벤트들
+      const homeGradeSel = document.getElementById('homeHofFilterGrade');
+      const homeClassSel = document.getElementById('homeHofFilterClass');
+      const homeSearchInp = document.getElementById('homeHofSearchInput');
+      const btnHomeMyClass = document.getElementById('btnHomeMyClassHof');
+      const btnHomeHofRefresh = document.getElementById('btnHomeHofRefresh');
+
+      if (homeGradeSel) homeGradeSel.addEventListener('change', applyHofFilter);
+      if (homeClassSel) homeClassSel.addEventListener('change', applyHofFilter);
+      if (homeSearchInp) homeSearchInp.addEventListener('input', applyHofFilter);
+
+      if (btnHomeMyClass) {
+        btnHomeMyClass.addEventListener('click', () => {
+          const prof = getStudentProfile();
+          if (homeGradeSel && prof.grade) homeGradeSel.value = String(prof.grade);
+          if (homeClassSel && prof.classNum) homeClassSel.value = String(prof.classNum);
+          applyHofFilter();
+        });
+      }
+
+      if (btnHomeHofRefresh) {
+        btnHomeHofRefresh.addEventListener('click', () => loadHof(currentHofTab));
       }
 
       btnHof.addEventListener('click', () => {
@@ -883,7 +1261,7 @@
         });
       }
 
-      hofTabBtns.forEach(btn => {
+      document.querySelectorAll('.hof-tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           loadHof(btn.dataset.tab);
         });
