@@ -91,6 +91,13 @@
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
 
+                osc.onended = () => {
+                    try {
+                        osc.disconnect();
+                        gain.disconnect();
+                    } catch(e) {}
+                };
+
                 osc.start();
                 osc.stop(this.ctx.currentTime + duration);
             } catch (e) {
@@ -2204,25 +2211,29 @@
             const shouldSyncTeams = roomData.teamsState && (!isMyTurn || isInitial || isRemoteAction || isProxyAction || !isLocalBusy);
 
             if (shouldSyncTeams) {
-                if (roomData.teamsState[0] && Array.isArray(roomData.teamsState[0].pieces)) {
-                    this.teams[0].pieces = JSON.parse(JSON.stringify(roomData.teamsState[0].pieces));
-                    this.teams[0].pieces.forEach(p => {
-                        p.teamId = 0;
-                        p.team = 'blue';
-                        if (p.stackedPieces === undefined) p.stackedPieces = [];
-                        if (p.history === undefined) p.history = [];
-                    });
+                const teamsStateStr = JSON.stringify(roomData.teamsState);
+                if (isInitial || teamsStateStr !== this._lastRenderedTeamsState) {
+                    this._lastRenderedTeamsState = teamsStateStr;
+                    if (roomData.teamsState[0] && Array.isArray(roomData.teamsState[0].pieces)) {
+                        this.teams[0].pieces = JSON.parse(JSON.stringify(roomData.teamsState[0].pieces));
+                        this.teams[0].pieces.forEach(p => {
+                            p.teamId = 0;
+                            p.team = 'blue';
+                            if (p.stackedPieces === undefined) p.stackedPieces = [];
+                            if (p.history === undefined) p.history = [];
+                        });
+                    }
+                    if (roomData.teamsState[1] && Array.isArray(roomData.teamsState[1].pieces)) {
+                        this.teams[1].pieces = JSON.parse(JSON.stringify(roomData.teamsState[1].pieces));
+                        this.teams[1].pieces.forEach(p => {
+                            p.teamId = 1;
+                            p.team = 'white';
+                            if (p.stackedPieces === undefined) p.stackedPieces = [];
+                            if (p.history === undefined) p.history = [];
+                        });
+                    }
+                    this.renderAllPieces();
                 }
-                if (roomData.teamsState[1] && Array.isArray(roomData.teamsState[1].pieces)) {
-                    this.teams[1].pieces = JSON.parse(JSON.stringify(roomData.teamsState[1].pieces));
-                    this.teams[1].pieces.forEach(p => {
-                        p.teamId = 1;
-                        p.team = 'white';
-                        if (p.stackedPieces === undefined) p.stackedPieces = [];
-                        if (p.history === undefined) p.history = [];
-                    });
-                }
-                this.renderAllPieces();
             }
 
             // 재접속 또는 초기 동기화 시 윷 상태 및 턴 상태 복원
@@ -3197,9 +3208,9 @@
         }
 
         /**
-         * 말 렌더링 및 하이라이트
+         * 말 렌더링 및 하이라이트 (skipWaitingRoom=true 시 스텝 애니메이션 중 대기실 재연산 스킵)
          */
-        renderAllPieces(selectablePieces = null) {
+        renderAllPieces(selectablePieces = null, skipWaitingRoom = false) {
             if (!this.dom.piecesLayer) return;
             this.dom.piecesLayer.innerHTML = '';
 
@@ -3290,8 +3301,10 @@
                 this.dom.piecesLayer.appendChild(pieceEl);
             });
 
-            // 2. 대기실(START)에 있는 말들 렌더링
-            this.renderWaitingRoomPieces(selectableSet);
+            // 2. 대기실(START)에 있는 말들 렌더링 (스텝 이동 중에는 불필요한 DOM 재생성 스킵)
+            if (!skipWaitingRoom) {
+                this.renderWaitingRoomPieces(selectableSet);
+            }
         }
 
         renderWaitingRoomPieces(selectableSet) {
@@ -3796,7 +3809,7 @@
                                 </span>
                                 <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-black">윷: ${this.currentRoll.name} (${stepDesc})</span>
                             </div>
-                            <div class="text-sm font-extrabold text-slate-900 bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2">
+                            <div class="text-sm font-extrabold text-slate-900 bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between gap-2">
                                 <span>${q.questionText || ''} ${q.subText ? `<span class="text-xs text-slate-500 font-normal ml-1">(${q.subText})</span>` : ''}</span>
                                 ${ttsBtn}
                             </div>
@@ -3842,7 +3855,7 @@
                                 </span>
                                 <span class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 font-black">윷: ${this.currentRoll.name}</span>
                             </div>
-                            <div class="text-sm font-extrabold text-slate-900 bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2">
+                            <div class="text-sm font-extrabold text-slate-900 bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between gap-2">
                                 <span>${q.questionText || ''} ${q.subText ? `<span class="text-xs text-slate-500 font-normal ml-1">(${q.subText})</span>` : ''}</span>
                                 ${ttsBtn}
                             </div>
@@ -3997,7 +4010,7 @@
                 p.isHome = false;
             });
 
-            // 한 칸씩 따각따각 전진 연출
+            // 한 칸씩 따각따각 전진 연출 (고성능 경량 렌더링)
             let stepIndex = 0;
             const animateStep = () => {
                 if (stepIndex < movePath.path.length) {
@@ -4013,11 +4026,13 @@
                         }
                     });
 
-                    this.renderAllPieces();
+                    // 중간 스텝에서는 대기실 재생성을 스킵하여 프레임 드랍 방지
+                    this.renderAllPieces(null, true);
                     stepIndex++;
-                    setTimeout(animateStep, 220);
+                    setTimeout(animateStep, 190);
                 } else {
-                    // 최종 착지 처리 (함께 이동한 묶음 전체 전달)
+                    // 최종 착지 처리: 대기실 및 전체 상태 완벽 갱신
+                    this.renderAllPieces();
                     this.onPieceLanded(piece, movingGroup, movePath);
                 }
             };
