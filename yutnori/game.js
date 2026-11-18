@@ -191,6 +191,7 @@
     }
 
     const Sound = new SoundEngine();
+    window.YutnoriSpeakText = (text) => Sound.speakText(text);
 
     // ==========================================
     // 3. 윷놀이 경로 계산 알고리즘
@@ -3781,12 +3782,42 @@
                 this.recordStat(playerName, 'correctCount', 1);
                 this.logMessage(`🎉 [${currentTeam.name}] ${playerName}님이 문제를 맞혔습니다! 말이 ${this.currentRoll.name}만큼 전진합니다.`);
 
+                let explanationHtml = q.explanation || '';
+                if (isAI) {
+                    const stepDesc = this.currentRoll.step > 0 ? `${this.currentRoll.step}칸 전진` : (this.currentRoll.step < 0 ? '1칸 후진' : '골인');
+                    const ttsBtn = q.ttsText ? `<button type="button" onclick="if(window.YutnoriSpeakText)window.YutnoriSpeakText('${q.ttsText.replace(/'/g, "\\'")}')" class="ml-1.5 px-2 py-0.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[11px] font-bold border border-indigo-200 transition cursor-pointer inline-flex items-center gap-1"><i class="fa-solid fa-volume-high"></i> 발음 듣기</button>` : '';
+
+                    explanationHtml = `
+                        <div class="space-y-2.5 text-left">
+                            <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 border-b border-slate-100 pb-1.5">
+                                <span class="flex items-center gap-1.5">
+                                    <span class="px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 font-extrabold">로봇 출제 문제</span>
+                                    <span>${q.prompt || '영어 퀴즈'}</span>
+                                </span>
+                                <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-black">윷: ${this.currentRoll.name} (${stepDesc})</span>
+                            </div>
+                            <div class="text-sm font-extrabold text-slate-900 bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2">
+                                <span>${q.questionText || ''} ${q.subText ? `<span class="text-xs text-slate-500 font-normal ml-1">(${q.subText})</span>` : ''}</span>
+                                ${ttsBtn}
+                            </div>
+                            <div class="flex items-center gap-2 text-xs bg-emerald-50 text-emerald-900 border border-emerald-200 px-2.5 py-1.5 rounded-lg">
+                                <span class="font-bold">로봇의 선택:</span>
+                                <span class="font-black text-emerald-700">⭕ ${q.answer || ''} (정답)</span>
+                            </div>
+                            ${q.explanation ? `
+                            <div class="text-[11.5px] text-slate-700 bg-amber-50/90 border border-amber-200/80 p-2.5 rounded-xl leading-relaxed">
+                                💡 <span class="font-medium">${q.explanation}</span>
+                            </div>` : ''}
+                        </div>
+                    `;
+                }
+
                 this.showFeedbackModal({
                     title: isAI ? '컴퓨터 정답! 🤖' : '정답입니다! 👏',
                     message: isAI
-                        ? `컴퓨터가 정답을 맞혀 말이 ${this.currentRoll.name}만큼 전진합니다!`
-                        : `훌륭합니다! 말이 ${this.currentRoll.name}만큼 윷판을 전진합니다!`,
-                    explanation: q.explanation,
+                        ? `로봇이 문제를 맞혀 말이 <strong>'${this.currentRoll.name}'</strong> (${this.currentRoll.step > 0 ? this.currentRoll.step + '칸 전진' : '1칸 후진'})합니다!`
+                        : `훌륭합니다! 말이 <strong>'${this.currentRoll.name}'</strong>만큼 윷판을 전진합니다!`,
+                    explanation: explanationHtml,
                     isSuccess: true,
                     onClose: () => {
                         this.executePieceMovement(piece, movePath);
@@ -3798,12 +3829,42 @@
                 this.recordStat(playerName, 'wrongCount', 1);
                 this.logMessage(`❌ [${currentTeam.name}] ${playerName}님이 아쉽게 문제를 틀렸습니다. (정답: ${q.answer || q.answerSentence}) 전진하지 못합니다.`);
 
+                let explanationHtml = q.explanation || '';
+                if (isAI) {
+                    const ttsBtn = q.ttsText ? `<button type="button" onclick="if(window.YutnoriSpeakText)window.YutnoriSpeakText('${q.ttsText.replace(/'/g, "\\'")}')" class="ml-1.5 px-2 py-0.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[11px] font-bold border border-indigo-200 transition cursor-pointer inline-flex items-center gap-1"><i class="fa-solid fa-volume-high"></i> 발음 듣기</button>` : '';
+
+                    explanationHtml = `
+                        <div class="space-y-2.5 text-left">
+                            <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 border-b border-slate-100 pb-1.5">
+                                <span class="flex items-center gap-1.5">
+                                    <span class="px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 font-extrabold">로봇 출제 문제</span>
+                                    <span>${q.prompt || '영어 퀴즈'}</span>
+                                </span>
+                                <span class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 font-black">윷: ${this.currentRoll.name}</span>
+                            </div>
+                            <div class="text-sm font-extrabold text-slate-900 bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2">
+                                <span>${q.questionText || ''} ${q.subText ? `<span class="text-xs text-slate-500 font-normal ml-1">(${q.subText})</span>` : ''}</span>
+                                ${ttsBtn}
+                            </div>
+                            <div class="flex items-center gap-2 text-xs bg-rose-50 text-rose-900 border border-rose-200 px-2.5 py-1.5 rounded-lg">
+                                <span class="font-bold">로봇의 선택:</span>
+                                <span class="font-black text-rose-700">❌ 오답</span>
+                                ${q.answer ? `<span class="text-slate-600 text-[11px] font-semibold">(올바른 정답: ${q.answer})</span>` : ''}
+                            </div>
+                            ${q.explanation ? `
+                            <div class="text-[11.5px] text-slate-700 bg-amber-50/90 border border-amber-200/80 p-2.5 rounded-xl leading-relaxed">
+                                💡 <span class="font-medium">${q.explanation}</span>
+                            </div>` : ''}
+                        </div>
+                    `;
+                }
+
                 this.showFeedbackModal({
                     title: isAI ? '컴퓨터 오답! 🤖' : '아쉽습니다! 💡',
                     message: isAI
-                        ? '컴퓨터가 문제를 맞히지 못하여 전진하지 못하고 턴이 종료됩니다.'
+                        ? `로봇이 문제를 맞히지 못하여 말이 전진하지 못하고 턴이 종료됩니다.`
                         : '문제를 맞히지 못하여 전진하지 못하고 턴이 종료됩니다.',
-                    explanation: q.explanation,
+                    explanation: explanationHtml,
                     isSuccess: false,
                     onClose: () => {
                         this.clearHighlights();
@@ -3836,8 +3897,17 @@
 
             this.dom.feedbackTitle.textContent = title;
             this.dom.feedbackTitle.className = `font-black text-2xl ${isSuccess ? 'text-emerald-600' : 'text-rose-600'}`;
-            this.dom.feedbackMessage.textContent = message;
-            this.dom.feedbackExplanation.textContent = explanation || '';
+            if (typeof message === 'string' && message.includes('<')) {
+                this.dom.feedbackMessage.innerHTML = message;
+            } else {
+                this.dom.feedbackMessage.textContent = message || '';
+            }
+
+            if (typeof explanation === 'string' && explanation.includes('<')) {
+                this.dom.feedbackExplanation.innerHTML = explanation;
+            } else {
+                this.dom.feedbackExplanation.textContent = explanation || '';
+            }
 
             this._onFeedbackClosed = onClose;
             this.dom.feedbackModal.classList.remove('hidden');
@@ -3846,28 +3916,27 @@
             const isAI = currentTeam && currentTeam.isAI;
 
             if (isAI) {
-                // 컴퓨터 턴인 경우: 자동 진행 안내 및 1.5초 후 자동 닫힘
+                // 컴퓨터 턴: 문제와 해설을 충분히 읽을 수 있도록 자동 타이머 없이 학생 수동 확인 대기!
                 if (this.dom.feedbackAutoCloseNotice) {
+                    this.dom.feedbackAutoCloseNotice.className = 'mb-3 text-[11.5px] font-bold text-indigo-900 bg-indigo-50 py-1.5 px-3 rounded-xl border border-indigo-200 flex items-center justify-center gap-1.5 text-center';
                     this.dom.feedbackAutoCloseNotice.classList.remove('hidden');
                 }
                 if (this.dom.feedbackCountdownText) {
-                    this.dom.feedbackCountdownText.textContent = '1.5초 후 자동 진행...';
+                    this.dom.feedbackCountdownText.innerHTML = '컴퓨터 턴: 문제·해설 확인 후 아래 <span class="font-extrabold text-indigo-950 underline">[확인]</span>을 누르면 로봇 말이 이동합니다.';
                 }
                 if (this.dom.feedbackOkBtnText) {
-                    this.dom.feedbackOkBtnText.textContent = '확인 (자동 진행 중...)';
+                    this.dom.feedbackOkBtnText.textContent = isSuccess ? '확인하고 로봇 말 이동하기 ➔' : '확인 (내 차례로 넘어가기) ➔';
                 }
-
-                this._feedbackAutoCloseTimer = setTimeout(() => {
-                    this.closeFeedbackModal();
-                }, 1500);
+                // 자동 진행 타이머(this._feedbackAutoCloseTimer)는 절대 실행하지 않음!
             } else if (this.isOnline) {
                 // 온라인 모드: 학생이 '확인'을 누르지 않아 전체 방의 게임이 멈추는(랙) 현상 방지
                 // 3초 후 자동 진행, 학생이 직접 '확인' 클릭 시 즉시 진행
                 if (this.dom.feedbackAutoCloseNotice) {
+                    this.dom.feedbackAutoCloseNotice.className = 'mb-3 text-[11px] font-bold text-amber-700 bg-amber-50 py-1 px-3 rounded-xl border border-amber-200 flex items-center justify-center gap-1.5 animate-pulse text-center';
                     this.dom.feedbackAutoCloseNotice.classList.remove('hidden');
                 }
                 if (this.dom.feedbackCountdownText) {
-                    this.dom.feedbackCountdownText.textContent = '3초 후 자동 진행 (클릭 시 즉시 진행)...';
+                    this.dom.feedbackCountdownText.textContent = '온라인 진행: 3초 후 자동 진행 (클릭 시 즉시 진행)...';
                 }
                 if (this.dom.feedbackOkBtnText) {
                     this.dom.feedbackOkBtnText.textContent = '확인 (즉시 진행)';
