@@ -526,6 +526,34 @@
                 if (raw !== null) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed)) {
+                        // 자가 치유(Self-healing): 로컬에 저장된 실제 학생 프로필과 대조하여 과거 기본값(6-1)으로 저장되었던 본인 기록 자동 보정
+                        try {
+                            const localRealName = localStorage.getItem('yutnori_real_name');
+                            const localGrade = localStorage.getItem('yutnori_grade');
+                            const localClass = localStorage.getItem('yutnori_class');
+                            const localNum = localStorage.getItem('yutnori_num');
+                            if (localRealName && localGrade && localClass) {
+                                let updated = false;
+                                parsed.forEach(r => {
+                                    if (r.name === localRealName) {
+                                        if (r.grade !== Number(localGrade) || r.classNum !== Number(localClass)) {
+                                            r.grade = Number(localGrade);
+                                            r.classNum = Number(localClass);
+                                            updated = true;
+                                        }
+                                        if (localNum && (!r.studentNum || r.studentNum === 1)) {
+                                            r.studentNum = Number(localNum);
+                                            updated = true;
+                                        }
+                                    }
+                                });
+                                if (updated) {
+                                    localStorage.setItem(this.storageKey, JSON.stringify(parsed));
+                                }
+                            }
+                        } catch(err) {
+                            console.warn("Self-healing HOF records warning:", err);
+                        }
                         return this.normalizeRecords(parsed);
                     }
                 }
@@ -540,7 +568,7 @@
                 id: r.id || `hof_${idx}_${Date.now()}`,
                 grade: Number(r.grade) || 6,
                 classNum: Number(r.classNum) || 1,
-                studentNum: Number(r.studentNum) || (idx + 1),
+                studentNum: (r.studentNum !== undefined && r.studentNum !== null && r.studentNum !== '') ? Number(r.studentNum) : null,
                 name: String(r.name || '학생').trim(),
                 wins: Number(r.wins) || 0,
                 totalGames: Number(r.totalGames) || 1,
@@ -600,7 +628,7 @@
                 const kw = keyword.trim().toLowerCase();
                 records = records.filter(r => {
                     const nameMatch = (r.name || '').toLowerCase().includes(kw);
-                    const gradeMatch = `${r.grade}-${r.classNum}`.includes(kw);
+                    const gradeMatch = `${r.grade}-${r.classNum}`.includes(kw) || `${r.grade}학년`.includes(kw) || `${r.classNum}반`.includes(kw);
                     return nameMatch || gradeMatch;
                 });
             }
@@ -668,7 +696,7 @@
 
                 const sGrade = Number(stat.grade) || 6;
                 const sClass = Number(stat.classNum) || 1;
-                const sNum = Number(stat.studentNum) || 1;
+                const sNum = (stat.studentNum !== undefined && stat.studentNum !== null && stat.studentNum !== '') ? Number(stat.studentNum) : null;
 
                 let existing = records.find(r => {
                     if (stat.grade && stat.classNum && r.grade && r.classNum) {
@@ -693,7 +721,10 @@
                     if (!existing.bestScore || stat.matchScore > existing.bestScore) {
                         existing.bestScore = stat.matchScore;
                     }
-                    if (stat.studentNum) existing.studentNum = sNum;
+                    // 최신 학적 정보로 갱신 (기존 6-1 기본값 덮어쓰기)
+                    if (stat.grade) existing.grade = sGrade;
+                    if (stat.classNum) existing.classNum = sClass;
+                    if (sNum !== null) existing.studentNum = sNum;
                 } else {
                     records.push({
                         id: 'hof_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -772,14 +803,14 @@
                 }
 
                 const masked = maskStudentName(r.name);
-                const gradeInfo = `${r.grade || 6}-${r.classNum || 1}${r.studentNum ? `-${r.studentNum}` : ''}`;
+                const gradeInfo = `${r.grade || 6}학년 ${r.classNum || 1}반${r.studentNum ? ` ${r.studentNum}번` : ''}`;
                 const winRate = r.totalGames ? Math.round(((r.wins || 0) / r.totalGames) * 100) : 0;
 
                 return `
                     <div class="flex items-center justify-between p-2.5 rounded-2xl ${cardBg} border transition text-xs">
                         <div class="flex items-center gap-2.5 min-w-0">
                             ${rankBadge}
-                            <span class="text-[10px] font-bold text-slate-400 font-mono px-1.5 py-0.5 rounded bg-slate-800/80 border border-slate-700/80">${gradeInfo}</span>
+                            <span class="text-[10px] font-bold text-amber-200/90 font-mono px-2 py-0.5 rounded-full bg-slate-800/90 border border-slate-700/80 whitespace-nowrap">${gradeInfo}</span>
                             <span class="font-bold text-slate-100 truncate">${masked}</span>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
@@ -873,7 +904,7 @@
 
                 const masked = maskStudentName(r.name);
                 const winRate = r.totalGames ? Math.round(((r.wins || 0) / r.totalGames) * 100) : 0;
-                const gradeText = `${r.grade || 6}학년 ${r.classNum || 1}반`;
+                const gradeText = `${r.grade || 6}학년 ${r.classNum || 1}반${r.studentNum ? ` (${r.studentNum}번)` : ''}`;
 
                 return `
                     <tr class="border-b border-slate-800 ${rowBg} transition text-center text-xs whitespace-nowrap">
@@ -1111,7 +1142,7 @@
                 const winRate = Math.round((wins / totalG) * 100);
                 const totalQ = (r.correctCount || 0) + (r.wrongCount || 0);
                 const qAccuracy = totalQ > 0 ? Math.round(((r.correctCount || 0) / totalQ) * 100) : (r.correctCount > 0 ? 100 : 0);
-                const gradeText = `${r.grade || 6}-${r.classNum || 1}${r.studentNum ? `-${r.studentNum}` : ''}`;
+                const gradeText = `${r.grade || 6}학년 ${r.classNum || 1}반${r.studentNum ? ` (${r.studentNum}번)` : ''}`;
 
                 let medalBadge = `<span class="font-bold text-slate-400">${r.rank}위</span>`;
                 if (r.rank === 1) medalBadge = `<span class="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40 font-black">🥇 1위</span>`;
@@ -1284,7 +1315,7 @@
                     r.rank,
                     r.grade || 6,
                     r.classNum || 1,
-                    r.studentNum || 1,
+                    r.studentNum || '',
                     `"${(r.name || '').replace(/"/g, '""')}"`,
                     wins,
                     losses,
@@ -1934,10 +1965,18 @@
             this.gradeFilter = config.grade || 'all';
 
             // 팀 구성 (컴퓨터 대전 시 학생 실명 및 학적 반영)
-            const realName = config.playerName || '나(플레이어)';
-            const studentGrade = Number(config.gradeNum) || (Number(config.grade) >= 1 ? Number(config.grade) : 6);
-            const studentClass = Number(config.classNum) || 1;
-            const studentNum = Number(config.studentNum) || 1;
+            const savedRealName = (typeof localStorage !== 'undefined') ? localStorage.getItem('yutnori_real_name') : null;
+            const savedGrade = (typeof localStorage !== 'undefined') ? localStorage.getItem('yutnori_grade') : null;
+            const savedClass = (typeof localStorage !== 'undefined') ? localStorage.getItem('yutnori_class') : null;
+            const savedNum = (typeof localStorage !== 'undefined') ? localStorage.getItem('yutnori_num') : null;
+
+            const existingStudent = this.currentStudentInfo || {};
+            const realName = config.playerName || existingStudent.name || savedRealName || '나(플레이어)';
+            const studentGrade = Number(config.gradeNum) || (Number(config.grade) >= 1 ? Number(config.grade) : null) || existingStudent.grade || Number(savedGrade) || 6;
+            const studentClass = Number(config.classNum) || existingStudent.classNum || Number(savedClass) || 1;
+            const studentNum = (config.studentNum !== undefined && config.studentNum !== null && config.studentNum !== '') 
+                ? Number(config.studentNum) 
+                : (existingStudent.studentNum || (savedNum ? Number(savedNum) : null));
 
             this.currentStudentInfo = {
                 name: realName,
@@ -1977,7 +2016,7 @@
                         name: pName,
                         grade: (pName === realName) ? studentGrade : 6,
                         classNum: (pName === realName) ? studentClass : 1,
-                        studentNum: (pName === realName) ? studentNum : 1,
+                        studentNum: (pName === realName) ? studentNum : null,
                         teamId: team.id,
                         teamName: team.name,
                         correctCount: 0,
@@ -2087,8 +2126,12 @@
             this.matchStats = {};
             this.teams.forEach(team => {
                 team.players.forEach(pName => {
+                    const pObj = players.find(p => p.name === pName);
                     this.matchStats[pName] = {
                         name: pName,
+                        grade: (pObj && pObj.grade) ? Number(pObj.grade) : 6,
+                        classNum: (pObj && pObj.classNum) ? Number(pObj.classNum) : 1,
+                        studentNum: (pObj && pObj.studentNum !== undefined && pObj.studentNum !== null && pObj.studentNum !== '') ? Number(pObj.studentNum) : null,
                         teamId: team.id,
                         teamName: team.name,
                         correctCount: 0,
@@ -2110,7 +2153,21 @@
 
             // 기존 경기 통계 복원 (재접속 시 점수 유지)
             if (roomData.matchStats) {
-                this.matchStats = { ...this.matchStats, ...roomData.matchStats };
+                Object.keys(roomData.matchStats).forEach(pName => {
+                    if (this.matchStats[pName]) {
+                        this.matchStats[pName] = {
+                            ...this.matchStats[pName],
+                            ...roomData.matchStats[pName],
+                            grade: this.matchStats[pName].grade || roomData.matchStats[pName].grade || 6,
+                            classNum: this.matchStats[pName].classNum || roomData.matchStats[pName].classNum || 1,
+                            studentNum: (this.matchStats[pName].studentNum !== null && this.matchStats[pName].studentNum !== undefined) 
+                                ? this.matchStats[pName].studentNum 
+                                : roomData.matchStats[pName].studentNum
+                        };
+                    } else {
+                        this.matchStats[pName] = roomData.matchStats[pName];
+                    }
+                });
             }
 
             this.logMessage(`🌐 실시간 온라인 방 [${roomData.roomId}] 게임에 연결되었습니다!`);
@@ -2200,6 +2257,19 @@
             // 기여도 통계 복원 (존재 시)
             if (roomData.matchStats) {
                 this.matchStats = { ...this.matchStats, ...roomData.matchStats };
+            }
+            if (roomData.players && this.matchStats) {
+                const pList = Object.values(roomData.players);
+                Object.keys(this.matchStats).forEach(pName => {
+                    const matchedP = pList.find(p => p.name === pName);
+                    if (matchedP) {
+                        if (matchedP.grade) this.matchStats[pName].grade = Number(matchedP.grade);
+                        if (matchedP.classNum) this.matchStats[pName].classNum = Number(matchedP.classNum);
+                        if (matchedP.studentNum !== undefined && matchedP.studentNum !== null && matchedP.studentNum !== '') {
+                            this.matchStats[pName].studentNum = Number(matchedP.studentNum);
+                        }
+                    }
+                });
             }
 
             // 말 위치 상태 동기화:
@@ -2528,8 +2598,24 @@
             if (!this.matchStats || !playerName) return;
             if (!this.matchStats[playerName]) {
                 const currentTeam = this.getCurrentTeam();
+                let pGrade = 6, pClass = 1, pNum = null;
+                if (this.currentRoomData && this.currentRoomData.players) {
+                    const pObj = Object.values(this.currentRoomData.players).find(p => p.name === playerName);
+                    if (pObj) {
+                        pGrade = Number(pObj.grade) || 6;
+                        pClass = Number(pObj.classNum) || 1;
+                        pNum = (pObj.studentNum !== undefined && pObj.studentNum !== null && pObj.studentNum !== '') ? Number(pObj.studentNum) : null;
+                    }
+                } else if (this.currentStudentInfo && this.currentStudentInfo.name === playerName) {
+                    pGrade = this.currentStudentInfo.grade || 6;
+                    pClass = this.currentStudentInfo.classNum || 1;
+                    pNum = this.currentStudentInfo.studentNum || null;
+                }
                 this.matchStats[playerName] = {
                     name: playerName,
+                    grade: pGrade,
+                    classNum: pClass,
+                    studentNum: pNum,
                     teamId: currentTeam.id,
                     teamName: currentTeam.name,
                     correctCount: 0,
@@ -4401,6 +4487,22 @@
 
                 stat.isWinner = isWinner;
                 stat.matchScore = matchScore;
+
+                // 학적 정보 누락 방지 및 최신화
+                if (this.isOnline && this.currentRoomData && this.currentRoomData.players) {
+                    const pObj = Object.values(this.currentRoomData.players).find(p => p.name === stat.name);
+                    if (pObj) {
+                        if (pObj.grade) stat.grade = Number(pObj.grade);
+                        if (pObj.classNum) stat.classNum = Number(pObj.classNum);
+                        if (pObj.studentNum !== undefined && pObj.studentNum !== null && pObj.studentNum !== '') {
+                            stat.studentNum = Number(pObj.studentNum);
+                        }
+                    }
+                } else if (this.currentStudentInfo && (stat.name === this.currentStudentInfo.name || !stat.grade)) {
+                    stat.grade = this.currentStudentInfo.grade || 6;
+                    stat.classNum = this.currentStudentInfo.classNum || 1;
+                    if (this.currentStudentInfo.studentNum) stat.studentNum = this.currentStudentInfo.studentNum;
+                }
                 participants.push(stat);
             });
 
@@ -4489,7 +4591,7 @@
                         return `
                             <tr class="border-b border-slate-800 text-center text-xs ${rowBg}">
                                 <td class="py-2.5 font-bold">${badge}</td>
-                                <td class="py-2.5 text-left pl-3 text-white font-semibold">${maskStudentName(p.name)}</td>
+                                <td class="py-2.5 text-left pl-3 text-white font-semibold">${maskStudentName(p.name)}${p.grade && p.classNum && !p.name.includes('봇') && !p.name.includes('컴퓨터') ? ` <span class="text-[10px] text-slate-400 font-mono">(${p.grade}-${p.classNum})</span>` : ''}</td>
                                 <td class="py-2.5 text-emerald-400 font-black">${p.matchScore.toLocaleString()}점</td>
                                 <td class="py-2.5">${p.correctCount || 0}문제</td>
                                 <td class="py-2.5">${p.goalCount || 0}마리</td>
