@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-theme="golden">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -31,14 +31,116 @@
             box-sizing: border-box;
         }
 
+        /* ── 테마별 CSS 변수 정의 ── */
+        :root, [data-theme="golden"] {
+            --bg-page: #0B0F19;
+            --bg-canvas: #111827;
+            --bg-card: rgba(22, 30, 49, 0.95);
+            --bg-card-hover: rgba(30, 41, 69, 0.98);
+            --border-card: rgba(245, 158, 11, 0.28);
+            --border-card-hover: #F59E0B;
+            --text-main: #F8FAFC;
+            --text-sub: #94A3B8;
+            --text-muted: #64748B;
+            --accent: #F59E0B;
+            --accent-glow: rgba(245, 158, 11, 0.4);
+            --slot-bg: rgba(15, 23, 42, 0.7);
+            --slot-hover: rgba(245, 158, 11, 0.12);
+            --winner-bg: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(16, 185, 129, 0.18));
+            --winner-border: #F59E0B;
+            --winner-text: #FDE68A;
+            --line-default: rgba(148, 163, 184, 0.32);
+            --line-winner: #F59E0B;
+            --line-champion: #FBBF24;
+            --badge-bg: rgba(245, 158, 11, 0.15);
+            --badge-text: #FBBF24;
+            --badge-border: rgba(245, 158, 11, 0.35);
+        }
+
+        [data-theme="cyber"] {
+            --bg-page: #080C14;
+            --bg-canvas: #0F172A;
+            --bg-card: rgba(19, 28, 48, 0.95);
+            --bg-card-hover: rgba(28, 41, 71, 0.98);
+            --border-card: rgba(6, 182, 212, 0.35);
+            --border-card-hover: #06B6D4;
+            --text-main: #F9FAFB;
+            --text-sub: #A5F3FC;
+            --text-muted: #64748B;
+            --accent: #06B6D4;
+            --accent-glow: rgba(6, 182, 212, 0.5);
+            --slot-bg: rgba(12, 20, 36, 0.75);
+            --slot-hover: rgba(6, 182, 212, 0.15);
+            --winner-bg: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(236, 72, 153, 0.2));
+            --winner-border: #06B6D4;
+            --winner-text: #67E8F9;
+            --line-default: rgba(100, 116, 139, 0.35);
+            --line-winner: #06B6D4;
+            --line-champion: #EC4899;
+            --badge-bg: rgba(6, 182, 212, 0.15);
+            --badge-text: #22D3EE;
+            --badge-border: rgba(6, 182, 212, 0.35);
+        }
+
+        [data-theme="stadium"] {
+            --bg-page: #F0FDF4;
+            --bg-canvas: #FFFFFF;
+            --bg-card: #FFFFFF;
+            --bg-card-hover: #F8FAFC;
+            --border-card: #CBD5E1;
+            --border-card-hover: #10B981;
+            --text-main: #0F172A;
+            --text-sub: #475569;
+            --text-muted: #94A3B8;
+            --accent: #10B981;
+            --accent-glow: rgba(16, 185, 129, 0.3);
+            --slot-bg: #F8FAFC;
+            --slot-hover: #ECFDF5;
+            --winner-bg: linear-gradient(135deg, #ECFDF5, #D1FAE5);
+            --winner-border: #10B981;
+            --winner-text: #065F46;
+            --line-default: #CBD5E1;
+            --line-winner: #10B981;
+            --line-champion: #EA580C;
+            --badge-bg: #ECFDF5;
+            --badge-text: #047857;
+            --badge-border: #A7F3D0;
+        }
+
+        [data-theme="clean"] {
+            --bg-page: #F8FAFC;
+            --bg-canvas: #FFFFFF;
+            --bg-card: #FFFFFF;
+            --bg-card-hover: #F0F9FF;
+            --border-card: #E2E8F0;
+            --border-card-hover: #0284C7;
+            --text-main: #0F172A;
+            --text-sub: #475569;
+            --text-muted: #94A3B8;
+            --accent: #0284C7;
+            --accent-glow: rgba(2, 132, 199, 0.3);
+            --slot-bg: #F8FAFC;
+            --slot-hover: #F0F9FF;
+            --winner-bg: linear-gradient(135deg, #EFF6FF, #E0F2FE);
+            --winner-border: #0284C7;
+            --winner-text: #0369A1;
+            --line-default: #CBD5E1;
+            --line-winner: #0284C7;
+            --line-champion: #F59E0B;
+            --badge-bg: #F0F9FF;
+            --badge-text: #0369A1;
+            --badge-border: #BAE6FD;
+        }
+
         body {
-            background-color: #F8FAFC;
-            color: #0F172A;
+            background-color: var(--bg-page);
+            color: var(--text-main);
             margin: 0;
             padding: 0;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            transition: background-color 0.3s ease, color 0.3s ease;
             overflow-x: auto;
         }
 
@@ -48,83 +150,184 @@
             height: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #F1F5F9;
+            background: rgba(0, 0, 0, 0.05);
         }
         ::-webkit-scrollbar-thumb {
-            background: #CBD5E1;
+            background: rgba(148, 163, 184, 0.4);
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #94A3B8;
+            background: rgba(148, 163, 184, 0.7);
         }
 
-        /* 매치 카드 스타일 */
+        /* ── 매치 카드 스타일 ── */
         .match-card {
-            background: #FFFFFF;
-            border: 1.5px solid #E2E8F0;
-            border-radius: 14px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--bg-card);
+            border: 1.5px solid var(--border-card);
+            border-radius: 16px;
+            box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.15), 0 2px 6px -1px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(8px);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease, border-color 0.2s ease;
             position: relative;
+            z-index: 10;
         }
         .match-card:hover {
-            border-color: #38BDF8;
-            box-shadow: 0 10px 15px -3px rgba(2, 132, 199, 0.12), 0 4px 6px -4px rgba(2, 132, 199, 0.08);
+            transform: translateY(-2px);
+            border-color: var(--border-card-hover);
+            box-shadow: 0 12px 24px -4px var(--accent-glow), 0 4px 12px -2px rgba(0, 0, 0, 0.2);
         }
 
         .participant-slot {
-            transition: all 0.15s ease;
+            background: var(--slot-bg);
+            border: 1px solid transparent;
+            border-radius: 12px;
+            transition: all 0.18s ease;
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
         .participant-slot:hover {
-            background-color: #F0F9FF;
-        }
-        .participant-slot.winner {
-            background-color: #ECFDF5;
-            color: #065F46;
-            font-weight: 800;
-        }
-        .participant-slot.winner .winner-badge {
-            display: inline-flex;
-        }
-        .participant-slot.loser {
-            color: #94A3B8;
-            background-color: #F8FAFC;
+            background: var(--slot-hover);
+            border-color: var(--accent);
+            transform: scale(1.01);
         }
 
+        .participant-slot.winner {
+            background: var(--winner-bg) !important;
+            border-color: var(--winner-border) !important;
+            color: var(--winner-text) !important;
+            font-weight: 800;
+            box-shadow: 0 0 12px -2px var(--accent-glow);
+        }
+        .participant-slot.winner .winner-crown {
+            display: inline-flex !important;
+        }
+
+        .participant-slot.loser {
+            opacity: 0.45;
+            filter: grayscale(0.5);
+            background: var(--slot-bg);
+        }
+        .participant-slot.loser:hover {
+            opacity: 0.8;
+            filter: none;
+        }
+
+        /* 부전승 (BYE) 슬롯 */
+        .participant-slot.bye-slot {
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(148, 163, 184, 0.05),
+                rgba(148, 163, 184, 0.05) 8px,
+                rgba(148, 163, 184, 0.12) 8px,
+                rgba(148, 163, 184, 0.12) 16px
+            );
+            border: 1px dashed rgba(148, 163, 184, 0.35);
+            cursor: default;
+        }
+
+        /* 자리 맞교환 (Swap) 하이라이트 */
         .participant-slot.swap-selected {
-            outline: 2px dashed #F59E0B;
-            background-color: #FEF3C7 !important;
+            outline: 2.5px dashed #F59E0B !important;
+            background: rgba(245, 158, 11, 0.25) !important;
             animation: pulse-swap 1.2s infinite;
         }
-
         @keyframes pulse-swap {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
+            50% { transform: scale(1.03); box-shadow: 0 0 16px 4px rgba(245, 158, 11, 0.4); }
         }
 
-        /* 브래킷 연결선 (Connector Lines) */
-        .connector-line {
-            position: absolute;
-            right: -24px;
-            width: 24px;
-            border-right: 2px solid #CBD5E1;
-            pointer-events: none;
+        /* ── SVG 브래킷 연결선 (Connector Lines) ── */
+        .connector-path {
+            stroke: var(--line-default);
+            stroke-width: 2.5px;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: stroke 0.3s ease, stroke-width 0.3s ease;
         }
-        .connector-line-h {
-            position: absolute;
-            left: -24px;
-            width: 24px;
-            top: 50%;
-            height: 2px;
-            background-color: #CBD5E1;
-            pointer-events: none;
+        .connector-path.winner-path {
+            stroke: var(--line-winner) !important;
+            stroke-width: 3.5px !important;
+            filter: drop-shadow(0 0 6px var(--accent-glow));
+            animation: flowGlow 3s infinite linear;
+        }
+        .connector-path.champion-path {
+            stroke: var(--line-champion) !important;
+            stroke-width: 4px !important;
+            filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.8));
         }
 
-        /* 인쇄 전용 스타일 */
+        @keyframes flowGlow {
+            0%, 100% { stroke-opacity: 0.85; }
+            50% { stroke-opacity: 1; }
+        }
+
+        /* ── VS 배지 스타일 ── */
+        .vs-badge {
+            width: 22px;
+            height: 22px;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: 900;
+            background: rgba(148, 163, 184, 0.2);
+            color: var(--text-muted);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            letter-spacing: -0.5px;
+        }
+
+        /* ── 동전 던지기 3D 회전 애니메이션 ── */
+        .coin-3d {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1.8s cubic-bezier(0.15, 0.85, 0.35, 1.2);
+        }
+        .coin-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 16px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.3);
+            border: 4px solid #F59E0B;
+        }
+        .coin-heads {
+            background: radial-gradient(circle, #FDE68A 0%, #F59E0B 70%, #B45309 100%);
+            color: #78350F;
+        }
+        .coin-tails {
+            background: radial-gradient(circle, #E2E8F0 0%, #94A3B8 70%, #475569 100%);
+            color: #1E293B;
+            border-color: #CBD5E1;
+            transform: rotateY(180deg);
+        }
+
+        /* ── 슬롯머신 롤링 애니메이션 ── */
+        @keyframes slotShake {
+            0% { transform: translateY(0); }
+            25% { transform: translateY(-4px); }
+            50% { transform: translateY(4px); }
+            75% { transform: translateY(-2px); }
+            100% { transform: translateY(0); }
+        }
+        .slot-shaking {
+            animation: slotShake 0.1s infinite;
+        }
+
+        /* ── 인쇄 최적화 스타일 ── */
         @media print {
             body {
                 background: white !important;
+                color: black !important;
             }
             .no-print {
                 display: none !important;
@@ -135,9 +338,15 @@
                 padding: 0 !important;
             }
             .match-card {
+                background: white !important;
                 border: 1.5px solid #000000 !important;
                 box-shadow: none !important;
                 break-inside: avoid;
+            }
+            .connector-path {
+                stroke: #000000 !important;
+                stroke-width: 2px !important;
+                filter: none !important;
             }
         }
     </style>
@@ -150,55 +359,108 @@
     <!-- ─────────────────────────────────────────── -->
     <!-- 상단 툴바 및 컨트롤 헤더 -->
     <!-- ─────────────────────────────────────────── -->
-    <header class="no-print bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+    <header class="no-print border-b sticky top-0 z-40 backdrop-blur-md transition-colors" style="background-color: var(--bg-card); border-color: var(--border-card);">
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
             <!-- 좌측 타이틀 & 배지 -->
             <div class="flex items-center gap-3">
-                <div id="tournamentIconBadge" class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-xl shadow-xs">
+                <div id="tournamentIconBadge" class="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl shadow-md transition-transform hover:scale-105" style="background: linear-gradient(135deg, #F59E0B, #D97706); color: white;">
                     🏆
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <h1 id="headerTournamentTitle" class="text-base md:text-lg font-black text-slate-900 tracking-tight">
+                        <h1 id="headerTournamentTitle" class="text-base md:text-lg font-black tracking-tight" style="color: var(--text-main);">
                             우리 반 챔피언십 토너먼트
                         </h1>
-                        <span id="headerRoundCountBadge" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                        <span id="headerRoundCountBadge" class="text-[11px] font-black px-2.5 py-0.5 rounded-full border shadow-xs" style="background: var(--badge-bg); color: var(--badge-text); border-color: var(--badge-border);">
                             8강 토너먼트
                         </span>
                     </div>
-                    <p class="text-xs text-slate-500">
-                        클릭 한 번으로 승자를 진출시키고 실시간 대진표를 관리하세요.
-                    </p>
+                    <div class="flex items-center gap-2 mt-0.5">
+                        <p class="text-xs" style="color: var(--text-sub);">
+                            클릭 한 번으로 승자 진출 및 실시간 브래킷 연동
+                        </p>
+                        <span class="text-xs" style="color: var(--text-muted);">•</span>
+                        <!-- 경기 진행률 표시기 -->
+                        <div class="flex items-center gap-1.5 text-xs font-bold" style="color: var(--text-sub);">
+                            <span id="headerProgressPercentText">진행률 0%</span>
+                            <div class="w-16 h-2 rounded-full overflow-hidden" style="background: rgba(148, 163, 184, 0.2);">
+                                <div id="headerProgressBar" class="h-full rounded-full transition-all duration-300" style="background: var(--accent); width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- 우측 액션 버튼 모음 -->
+            <!-- 우측 액션 도구함 버튼 모음 -->
             <div class="flex items-center flex-wrap gap-2">
-                <button type="button" onclick="openSetupModal()" class="px-3.5 py-2 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5">
+                <!-- 명단 및 대진 생성 -->
+                <button type="button" onclick="openSetupModal()" class="px-3.5 py-2 text-white text-xs font-black rounded-xl shadow-md transition-all hover:brightness-110 flex items-center gap-1.5" style="background: linear-gradient(135deg, #0284C7, #0369A1);">
                     <i class="fa-solid fa-users-gear"></i>
                     <span>명단 및 대진 생성</span>
                 </button>
 
-                <button type="button" id="btnToggleSwap" onclick="toggleSwapMode()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1.5">
+                <!-- 대진 추첨 쇼 다시보기 -->
+                <button type="button" onclick="startDrawShow()" class="px-3 py-2 text-xs font-black rounded-xl border transition-all hover:scale-105 flex items-center gap-1.5" style="background: var(--badge-bg); color: var(--badge-text); border-color: var(--badge-border);" title="두구두구 대진 추첨 쇼 실행">
+                    <i class="fa-solid fa-dice text-sm animate-bounce"></i>
+                    <span class="hidden sm:inline">대진 추첨 쇼</span>
+                </button>
+
+                <!-- 선공/순서 결정기 (동전/주사위/가위바위보) -->
+                <button type="button" onclick="openDeciderModal()" class="px-3 py-2 text-xs font-black rounded-xl border transition-all hover:scale-105 flex items-center gap-1.5" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);" title="경기 전 선공/순서 결정 도구">
+                    <i class="fa-solid fa-coins text-amber-500"></i>
+                    <span class="hidden sm:inline">선공 결정 툴</span>
+                </button>
+
+                <!-- 자리 맞교환 모드 -->
+                <button type="button" id="btnToggleSwap" onclick="toggleSwapMode()" class="px-3 py-2 text-xs font-black rounded-xl border transition-all flex items-center gap-1.5" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">
                     <i class="fa-solid fa-arrows-rotate"></i>
                     <span id="swapBtnText">자리 맞교환</span>
                 </button>
 
-                <button type="button" onclick="downloadBracketImage()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1.5" title="이미지로 저장">
+                <!-- 테마 선택 드롭다운 -->
+                <div class="relative inline-block text-left">
+                    <select id="themeSelector" onchange="changeTheme(this.value)" class="px-2.5 py-2 text-xs font-black rounded-xl border outline-none cursor-pointer transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">
+                        <option value="golden">🌟 골든 챔피언십</option>
+                        <option value="cyber">💎 사이버 네온</option>
+                        <option value="stadium">⚽ 스타디움 스포츠</option>
+                        <option value="clean">❄️ 모던 블루</option>
+                    </select>
+                </div>
+
+                <!-- 줌/핏 컨트롤러 -->
+                <div class="flex items-center rounded-xl border overflow-hidden" style="background: var(--slot-bg); border-color: var(--border-card);">
+                    <button type="button" onclick="adjustZoom(-0.1)" class="px-2 py-2 text-xs hover:bg-black/10 transition" title="축소" style="color: var(--text-main);">
+                        <i class="fa-solid fa-minus"></i>
+                    </button>
+                    <span id="zoomPercentDisplay" onclick="resetZoom()" class="px-2 py-2 text-[11px] font-black cursor-pointer hover:underline" style="color: var(--text-sub);" title="클릭 시 100% 복귀">
+                        100%
+                    </span>
+                    <button type="button" onclick="adjustZoom(0.1)" class="px-2 py-2 text-xs hover:bg-black/10 transition" title="확대" style="color: var(--text-main);">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <button type="button" onclick="fitBracketToScreen()" class="px-2 py-2 text-xs hover:bg-black/10 border-l transition" style="color: var(--accent); border-color: var(--border-card);" title="화면 너비에 딱 맞춤">
+                        <i class="fa-solid fa-expand"></i>
+                    </button>
+                </div>
+
+                <!-- 이미지 저장 -->
+                <button type="button" onclick="downloadBracketImage()" class="px-3 py-2 text-xs font-black rounded-xl border transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);" title="대진표 고화질 이미지 저장">
                     <i class="fa-solid fa-camera"></i>
-                    <span class="hidden sm:inline">이미지 저장</span>
+                    <span class="hidden md:inline">저장</span>
                 </button>
 
-                <button type="button" onclick="window.print()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1.5" title="인쇄하기">
+                <!-- 인쇄 -->
+                <button type="button" onclick="window.print()" class="px-3 py-2 text-xs font-black rounded-xl border transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);" title="A4 인쇄">
                     <i class="fa-solid fa-print"></i>
-                    <span class="hidden sm:inline">인쇄</span>
                 </button>
 
-                <button type="button" onclick="toggleFullscreen()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition" title="전체화면">
-                    <i id="fullscreenIcon" class="fa-solid fa-expand"></i>
+                <!-- 전체화면 -->
+                <button type="button" onclick="toggleFullscreen()" class="px-3 py-2 text-xs font-black rounded-xl border transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);" title="전체화면">
+                    <i id="fullscreenIcon" class="fa-solid fa-up-right-and-down-left-from-center"></i>
                 </button>
 
-                <button type="button" onclick="confirmResetTournament()" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold rounded-xl border border-rose-200 transition" title="대진표 초기화">
+                <!-- 리셋 -->
+                <button type="button" onclick="confirmResetTournament()" class="px-3 py-2 text-xs font-black rounded-xl border transition hover:bg-rose-500/20 text-rose-400 border-rose-500/40" title="대진표 초기화">
                     <i class="fa-solid fa-rotate-left"></i>
                 </button>
             </div>
@@ -208,47 +470,53 @@
     <!-- ─────────────────────────────────────────── -->
     <!-- 메인 대진표 브래킷 캔버스 영역 -->
     <!-- ─────────────────────────────────────────── -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 print-area overflow-x-auto">
+    <main class="flex-1 w-full max-w-[1600px] mx-auto p-4 md:p-6 print-area overflow-x-auto">
         <!-- 맞교환 모드 안내 배너 (활성화 시 표시) -->
-        <div id="swapModeBanner" class="hidden no-print mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-center text-xs font-bold text-amber-800 flex items-center justify-center gap-2">
-            <i class="fa-solid fa-circle-info text-amber-600"></i>
+        <div id="swapModeBanner" class="hidden no-print mb-4 p-3.5 bg-amber-500/20 border-2 border-amber-400 rounded-2xl text-center text-xs font-black text-amber-300 flex items-center justify-center gap-2 shadow-lg animate-pulse">
+            <i class="fa-solid fa-circle-exclamation text-base text-amber-400"></i>
             <span>[자리 맞교환 모드 작동 중] 1라운드에서 자리를 바꿀 두 선수를 차례대로 클릭하세요.</span>
-            <button type="button" onclick="toggleSwapMode()" class="ml-3 px-2 py-0.5 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded font-black">완료</button>
+            <button type="button" onclick="toggleSwapMode()" class="ml-4 px-3 py-1 bg-amber-400 hover:bg-amber-300 text-amber-950 rounded-xl font-black shadow-xs">완료</button>
         </div>
 
         <!-- 대진표 타이틀 및 경기 요약 바 (인쇄 및 캡처 시에도 노출) -->
-        <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-200 pb-4">
+        <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b pb-4" style="border-color: var(--border-card);">
             <div>
-                <h2 id="tournamentTitleDisplay" class="text-xl md:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
-                    <span id="tournamentIconDisplay">🏆</span>
+                <h2 id="tournamentTitleDisplay" class="text-xl md:text-2xl font-black tracking-tight flex items-center gap-2.5" style="color: var(--text-main);">
+                    <span id="tournamentIconDisplay" class="text-2xl">🏆</span>
                     <span id="tournamentNameText">우리 반 챔피언십 토너먼트</span>
                 </h2>
-                <div id="tournamentSubtitle" class="text-xs text-slate-500 mt-1 font-medium">
+                <div id="tournamentSubtitle" class="text-xs mt-1 font-semibold" style="color: var(--text-sub);">
                     총 8명 참가 • 4강 토너먼트 대진표
                 </div>
             </div>
 
-            <!-- 현재 상태 인디케이터 -->
-            <div id="progressStatusBadge" class="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-full flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <!-- 현재 상태 인디케이터 배지 -->
+            <div id="progressStatusBadge" class="px-4 py-1.5 rounded-full border shadow-sm flex items-center gap-2 text-xs font-black" style="background: var(--badge-bg); color: var(--badge-text); border-color: var(--badge-border);">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
                 <span id="progressStatusText">경기가 진행 중입니다</span>
             </div>
         </div>
 
-        <!-- 브래킷 렌더링 컨테이너 -->
-        <div id="bracketCaptureArea" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs min-w-[760px]">
-            <div id="bracketRoundsContainer" class="flex gap-8 justify-between items-stretch">
-                <!-- JavaScript renderBracket()에 의해 라운드별 컬럼이 동적 생성됩니다 -->
-            </div>
+        <!-- 브래킷 렌더링 컨테이너 (줌/팬 래퍼) -->
+        <div id="bracketZoomWrap" class="w-full overflow-x-auto pb-4 transition-transform origin-top-left">
+            <div id="bracketCaptureArea" class="rounded-3xl p-6 md:p-8 border shadow-xl relative min-w-[840px] transition-colors" style="background-color: var(--bg-canvas); border-color: var(--border-card);">
+                <!-- 동적 SVG 브래킷 연결선 레이어 -->
+                <svg id="bracketSvgLayer" class="absolute inset-0 w-full h-full pointer-events-none" style="z-index: 5;"></svg>
 
-            <!-- 3·4위전 (동메달 결정전) 영역 -->
-            <div id="bronzeMatchSection" class="mt-8 pt-6 border-t border-slate-200 flex flex-col items-center">
-                <div class="text-xs font-black text-amber-800 bg-amber-50 px-3 py-1 rounded-full border border-amber-200 mb-3 flex items-center gap-1.5">
-                    <span>🥉</span>
-                    <span>3·4위전 (동메달 결정전)</span>
+                <!-- 라운드 컬럼들이 배치되는 플렉스 컨테이너 -->
+                <div id="bracketRoundsContainer" class="flex gap-10 md:gap-14 justify-between items-stretch relative" style="z-index: 10;">
+                    <!-- JavaScript renderTournament()에 의해 라운드별 컬럼이 동적 생성됩니다 -->
                 </div>
-                <div id="bronzeMatchCardWrap" class="w-64">
-                    <!-- JavaScript renderBronzeMatch()에 의해 렌더링됩니다 -->
+
+                <!-- 3·4위전 (동메달 결정전) 전용 하단 영역 -->
+                <div id="bronzeMatchSection" class="mt-10 pt-8 border-t flex flex-col items-center relative" style="border-color: var(--border-card); z-index: 15;">
+                    <div class="text-xs font-black px-4 py-1.5 rounded-full border mb-4 flex items-center gap-2 shadow-sm" style="background: linear-gradient(135deg, rgba(217, 119, 6, 0.2), rgba(180, 83, 9, 0.1)); color: #F59E0B; border-color: rgba(245, 158, 11, 0.4);">
+                        <span class="text-base">🥉</span>
+                        <span>3·4위전 (동메달 결정전)</span>
+                    </div>
+                    <div id="bronzeMatchCardWrap" class="w-72">
+                        <!-- JavaScript renderBronzeSection()에 의해 렌더링됩니다 -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -257,127 +525,129 @@
     <!-- ─────────────────────────────────────────── -->
     <!-- 1. 명단 입력 및 대진 생성 설정 모달 -->
     <!-- ─────────────────────────────────────────── -->
-    <div id="setupModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col my-auto">
-            <!-- 헤더 -->
-            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-sky-500 text-white flex items-center justify-center text-lg">
+    <div id="setupModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+        <div class="rounded-3xl max-w-xl w-full p-6 shadow-2xl border max-h-[92vh] flex flex-col my-auto transition-colors" style="background-color: var(--bg-canvas); border-color: var(--border-card);">
+            <!-- 모달 헤더 -->
+            <div class="flex items-center justify-between pb-4 border-b" style="border-color: var(--border-card);">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-xl text-white shadow-md" style="background: linear-gradient(135deg, #0284C7, #0369A1);">
                         <i class="fa-solid fa-users"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-black text-slate-900">토너먼트 대진표 설정</h3>
-                        <p class="text-xs text-slate-500">참가자 명단을 입력하고 배정 방식을 선택하세요.</p>
+                        <h3 class="text-base font-black" style="color: var(--text-main);">토너먼트 대진표 설정</h3>
+                        <p class="text-xs" style="color: var(--text-sub);">참가자 명단을 입력하고 배정 방식을 선택하세요.</p>
                     </div>
                 </div>
-                <button type="button" onclick="closeSetupModal()" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition">
+                <button type="button" onclick="closeSetupModal()" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700/50 transition">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
-            <!-- 바디 (스크롤 가능) -->
+            <!-- 모달 바디 (스크롤) -->
             <div class="flex-1 overflow-y-auto py-4 space-y-5 pr-1">
                 <!-- 대회 제목 및 종목 아이콘 -->
                 <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate-700">대회 명칭 & 종목 아이콘</label>
+                    <label class="text-xs font-black" style="color: var(--text-main);">대회 명칭 & 종목 아이콘</label>
                     <div class="flex gap-2">
-                        <select id="inputTournamentIcon" class="w-16 px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-center text-lg font-bold">
-                            <option value="🏆">🏆</option>
-                            <option value="🏸">🏸</option>
-                            <option value="⚽">⚽</option>
-                            <option value="🏀">🏀</option>
-                            <option value="🎮">🎮</option>
-                            <option value="🪵">🪵</option>
-                            <option value="🧠">🧠</option>
-                            <option value="🏓">🏓</option>
-                            <option value="🥋">🥋</option>
-                            <option value="♟️">♟️</option>
-                            <option value="🎯">🎯</option>
-                            <option value="🥊">🥊</option>
+                        <select id="inputTournamentIcon" class="w-20 px-2 py-2.5 rounded-xl text-center text-xl font-bold border outline-none" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">
+                            <option value="🏆">🏆 트로피</option>
+                            <option value="🏸">🏸 배드민턴</option>
+                            <option value="⚽">⚽ 축구</option>
+                            <option value="🏀">🏀 농구</option>
+                            <option value="🏓">🏓 탁구</option>
+                            <option value="🎮">🎮 e스포츠</option>
+                            <option value="🧠">🧠 퀴즈/체스</option>
+                            <option value="🪵">🪵 윷놀이</option>
+                            <option value="🥋">🥋 태권도/격투</option>
+                            <option value="🎯">🎯 다트/양궁</option>
+                            <option value="🥊">🥊 복싱/권투</option>
+                            <option value="🥇">🥇 메달</option>
                         </select>
-                        <input type="text" id="inputTournamentTitle" placeholder="예: 6학년 1반 배드민턴 토너먼트" value="우리 반 챔피언십 토너먼트" class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:bg-white focus:border-sky-500 outline-hidden">
+                        <input type="text" id="inputTournamentTitle" placeholder="예: 6학년 1반 배드민턴 챔피언십" value="우리 반 챔피언십 토너먼트" class="flex-1 px-3.5 py-2.5 rounded-xl text-xs font-bold border outline-none focus:border-sky-500" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">
                     </div>
                 </div>
 
                 <!-- 참가자 명단 입력 영역 -->
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
-                        <label class="text-xs font-bold text-slate-700">
-                            참가자 명단 입력 <span id="participantCountLabel" class="text-sky-600 font-extrabold">(0명)</span>
+                        <label class="text-xs font-black" style="color: var(--text-main);">
+                            참가자 명단 입력 <span id="participantCountLabel" class="text-sky-400 font-extrabold">(0명)</span>
                         </label>
                         <div class="flex items-center gap-1.5">
-                            <button type="button" onclick="clearParticipantsInput()" class="text-[11px] font-bold text-slate-500 hover:text-rose-600 px-2 py-0.5 rounded hover:bg-slate-100 transition">
-                                비우기
+                            <button type="button" onclick="clearParticipantsInput()" class="text-[11px] font-bold text-rose-400 hover:text-rose-300 px-2 py-0.5 rounded hover:bg-rose-500/10 transition">
+                                <i class="fa-solid fa-trash-can mr-1"></i>비우기
                             </button>
                         </div>
                     </div>
 
-                    <textarea id="inputParticipantsText" rows="6" oninput="updateParticipantCountDisplay()" placeholder="참가자 이름을 한 줄에 한 명씩 입력하거나 쉼표(,)로 구분해 입력하세요.&#10;예:&#10;김철수&#10;이영희&#10;박민수&#10;정지원" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:border-sky-500 outline-hidden leading-relaxed"></textarea>
+                    <textarea id="inputParticipantsText" rows="6" oninput="updateParticipantCountDisplay()" placeholder="참가자 이름을 한 줄에 한 명씩 입력하거나 쉼표(,)로 구분해 입력하세요.&#10;예:&#10;김민수&#10;이지우&#10;박서준&#10;최유진" class="w-full px-3.5 py-2.5 rounded-xl text-xs font-medium border outline-none leading-relaxed focus:border-sky-500" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);"></textarea>
 
                     <!-- 원클릭 빠른 인원 프리셋 버튼 -->
-                    <div class="space-y-1">
-                        <div class="text-[11px] font-bold text-slate-500">빠른 인원 프리셋:</div>
+                    <div class="space-y-1.5">
+                        <div class="text-[11px] font-bold" style="color: var(--text-sub);">빠른 인원 프리셋:</div>
                         <div class="flex flex-wrap gap-1.5">
-                            <button type="button" onclick="applyPresetNumbers(4)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition">4명</button>
-                            <button type="button" onclick="applyPresetNumbers(6)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition">6명 (부전승 2)</button>
-                            <button type="button" onclick="applyPresetNumbers(8)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition">8명 (8강)</button>
-                            <button type="button" onclick="applyPresetNumbers(12)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition">12명</button>
-                            <button type="button" onclick="applyPresetNumbers(16)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition">16명 (16강)</button>
-                            <button type="button" onclick="applyPresetNumbers(24)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition">24명</button>
-                            <button type="button" onclick="applyPresetNumbers(25)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition">25명 (1학급)</button>
-                            <button type="button" onclick="applyPresetNumbers(26)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition">26명</button>
-                            <button type="button" onclick="applyPresetTeams(6)" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[11px] font-bold rounded-lg transition">6모둠(팀)</button>
-                            <button type="button" onclick="applyPresetTeams(8)" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[11px] font-bold rounded-lg transition">8모둠(팀)</button>
+                            <button type="button" onclick="applyPresetNumbers(4)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">4명</button>
+                            <button type="button" onclick="applyPresetNumbers(6)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">6명 (부전승 2)</button>
+                            <button type="button" onclick="applyPresetNumbers(8)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">8명 (8강)</button>
+                            <button type="button" onclick="applyPresetNumbers(12)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">12명</button>
+                            <button type="button" onclick="applyPresetNumbers(16)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">16명 (16강)</button>
+                            <button type="button" onclick="applyPresetNumbers(20)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">20명</button>
+                            <button type="button" onclick="applyPresetNumbers(24)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">24명</button>
+                            <button type="button" onclick="applyPresetNumbers(25)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">25명 (1학급)</button>
+                            <button type="button" onclick="applyPresetNumbers(26)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">26명</button>
+                            <button type="button" onclick="applyPresetTeams(4)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition text-amber-400 border-amber-500/40" style="background: rgba(245, 158, 11, 0.1);">4모둠(팀)</button>
+                            <button type="button" onclick="applyPresetTeams(6)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition text-amber-400 border-amber-500/40" style="background: rgba(245, 158, 11, 0.1);">6모둠(팀)</button>
+                            <button type="button" onclick="applyPresetTeams(8)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition text-amber-400 border-amber-500/40" style="background: rgba(245, 158, 11, 0.1);">8모둠(팀)</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- 배정 방식 선택 -->
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-700">대진표 배정 방식</label>
+                    <label class="text-xs font-black" style="color: var(--text-main);">대진표 배정 방식</label>
                     <div class="grid grid-cols-3 gap-2">
-                        <label class="flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 border-sky-500 bg-sky-50/50 cursor-pointer text-center">
-                            <input type="radio" name="drawMethod" value="animated" checked class="text-sky-600 focus:ring-sky-500">
-                            <span class="text-lg">🎲</span>
-                            <span class="text-xs font-black text-sky-950">두구두구 추첨</span>
-                            <span class="text-[10px] text-slate-500">슬롯머신 연출</span>
+                        <label class="flex flex-col items-center gap-1.5 p-3 rounded-2xl border-2 cursor-pointer text-center transition-all hover:scale-105" style="border-color: #F59E0B; background: rgba(245, 158, 11, 0.15);">
+                            <input type="radio" name="drawMethod" value="animated" checked class="text-amber-500">
+                            <span class="text-xl">🎲</span>
+                            <span class="text-xs font-black text-amber-400">두구두구 추첨 쇼</span>
+                            <span class="text-[10px]" style="color: var(--text-sub);">슬롯 롤링 연출</span>
                         </label>
 
-                        <label class="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white cursor-pointer text-center">
-                            <input type="radio" name="drawMethod" value="instant" class="text-sky-600 focus:ring-sky-500">
-                            <span class="text-lg">⚡</span>
-                            <span class="text-xs font-black text-slate-800">즉시 셔플</span>
-                            <span class="text-[10px] text-slate-500">대기 없이 배정</span>
+                        <label class="flex flex-col items-center gap-1.5 p-3 rounded-2xl border cursor-pointer text-center transition-all hover:scale-105" style="background: var(--slot-bg); border-color: var(--border-card);">
+                            <input type="radio" name="drawMethod" value="instant" class="text-sky-500">
+                            <span class="text-xl">⚡</span>
+                            <span class="text-xs font-black" style="color: var(--text-main);">즉시 셔플</span>
+                            <span class="text-[10px]" style="color: var(--text-sub);">대기 없이 완성</span>
                         </label>
 
-                        <label class="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white cursor-pointer text-center">
-                            <input type="radio" name="drawMethod" value="order" class="text-sky-600 focus:ring-sky-500">
-                            <span class="text-lg">🔢</span>
-                            <span class="text-xs font-black text-slate-800">입력 순서대로</span>
-                            <span class="text-[10px] text-slate-500">시드/순위 배치</span>
+                        <label class="flex flex-col items-center gap-1.5 p-3 rounded-2xl border cursor-pointer text-center transition-all hover:scale-105" style="background: var(--slot-bg); border-color: var(--border-card);">
+                            <input type="radio" name="drawMethod" value="order" class="text-sky-500">
+                            <span class="text-xl">🔢</span>
+                            <span class="text-xs font-black" style="color: var(--text-main);">입력 순서대로</span>
+                            <span class="text-[10px]" style="color: var(--text-sub);">시드/순위 배치</span>
                         </label>
                     </div>
                 </div>
 
-                <!-- 부가 옵션 -->
-                <div class="space-y-2 pt-2 border-t border-slate-100">
-                    <label class="flex items-center gap-2 cursor-pointer">
+                <!-- 부가 옵션 토글 -->
+                <div class="space-y-2.5 pt-2 border-t" style="border-color: var(--border-card);">
+                    <label class="flex items-center gap-2.5 cursor-pointer">
                         <input type="checkbox" id="checkBronzeMatch" checked class="w-4 h-4 rounded text-sky-600 focus:ring-sky-500">
-                        <span class="text-xs font-bold text-slate-800">🥉 3·4위전 (동메달 결정전) 포함하기</span>
+                        <span class="text-xs font-bold" style="color: var(--text-main);">🥉 3·4위전 (동메달 결정전) 자동 연동하기</span>
                     </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
+                    <label class="flex items-center gap-2.5 cursor-pointer">
                         <input type="checkbox" id="checkSoundEffects" checked class="w-4 h-4 rounded text-sky-600 focus:ring-sky-500">
-                        <span class="text-xs font-bold text-slate-800">🔊 효과음 (추첨 사운드, 승자 딩동, 팡파레) 활성화</span>
+                        <span class="text-xs font-bold" style="color: var(--text-main);">🔊 효과음 (추첨 사운드, 승자 딩동, 팡파레, 휘슬) 활성화</span>
                     </label>
                 </div>
             </div>
 
-            <!-- 하단 확인 버튼 -->
-            <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
-                <button type="button" onclick="closeSetupModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">
+            <!-- 모달 하단 버튼 -->
+            <div class="pt-4 border-t flex items-center justify-end gap-2" style="border-color: var(--border-card);">
+                <button type="button" onclick="closeSetupModal()" class="px-4 py-2.5 text-xs font-bold rounded-xl border hover:bg-slate-700/30 transition" style="color: var(--text-sub); border-color: var(--border-card);">
                     취소
                 </button>
-                <button type="button" onclick="generateTournamentFromModal()" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black rounded-xl shadow-xs transition flex items-center gap-2">
+                <button type="button" onclick="generateTournamentFromModal()" class="px-5 py-2.5 text-xs font-black rounded-xl shadow-lg transition-all hover:brightness-110 flex items-center gap-2 text-amber-950" style="background: linear-gradient(135deg, #F59E0B, #FBBF24);">
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
                     <span>토너먼트 대진표 완성하기</span>
                 </button>
@@ -386,120 +656,297 @@
     </div>
 
     <!-- ─────────────────────────────────────────── -->
-    <!-- 2. 점수 입력 모달 -->
+    <!-- 2. 대진 추첨 쇼 모달 (Slot Machine Ceremony) -->
     <!-- ─────────────────────────────────────────── -->
-    <div id="scoreModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100">
-            <h3 id="scoreModalTitle" class="text-sm font-black text-slate-900 text-center mb-1">경기 결과 입력</h3>
-            <p id="scoreModalMatchDesc" class="text-xs text-slate-500 text-center mb-4">점수를 입력하고 승자를 선택하세요.</p>
+    <div id="drawShowModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-lg flex flex-col items-center justify-center p-4 text-center">
+        <div class="max-w-2xl w-full p-6 md:p-8 rounded-3xl border shadow-2xl relative overflow-hidden flex flex-col items-center" style="background-color: var(--bg-canvas); border-color: #F59E0B;">
+            <!-- 상단 뱃지 & 타이틀 -->
+            <div class="flex items-center gap-2 px-4 py-1 rounded-full text-xs font-black mb-3 border shadow-xs" style="background: rgba(245, 158, 11, 0.2); color: #FBBF24; border-color: #F59E0B;">
+                <span class="animate-spin text-sm">🎲</span>
+                <span>공식 대진 추첨식 (DRAW CEREMONY)</span>
+            </div>
 
-            <div class="space-y-3">
-                <!-- 참가자 1 -->
-                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-200">
-                    <span id="scoreModalP1Name" class="text-xs font-black text-slate-800 truncate max-w-[150px]">선수 1</span>
-                    <input type="number" id="scoreModalP1Score" min="0" max="99" value="0" class="w-16 px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-center text-sm font-black focus:border-sky-500 outline-hidden">
+            <h3 id="drawShowStageTitle" class="text-xl md:text-2xl font-black mb-1 tracking-tight" style="color: var(--text-main);">
+                제 1경기 대진 추첨 중...
+            </h3>
+            <p id="drawShowStageSubtitle" class="text-xs mb-6" style="color: var(--text-sub);">
+                두구두구두구! 과연 첫 경기의 주인공은 누구일까요?
+            </p>
+
+            <!-- 슬롯 스테이지 카드 -->
+            <div class="w-full grid grid-cols-1 md:grid-cols-5 gap-3 items-center mb-6">
+                <!-- 선수 1 슬롯 -->
+                <div class="md:col-span-2 p-5 rounded-2xl border-2 flex flex-col items-center justify-center min-h-[120px] transition-all relative overflow-hidden" style="background: var(--slot-bg); border-color: var(--accent);">
+                    <span class="text-[10px] font-black tracking-wider px-2 py-0.5 rounded-full mb-1.5" style="background: rgba(245, 158, 11, 0.2); color: #FBBF24;">선수 1 (BLUE)</span>
+                    <div id="drawSlot1Name" class="text-lg md:text-xl font-black truncate max-w-full tracking-tight slot-shaking" style="color: var(--text-main);">
+                        추첨 대기 중...
+                    </div>
+                    <div id="drawSlot1Badge" class="hidden text-xs font-black text-emerald-400 mt-1">
+                        <i class="fa-solid fa-check"></i> 확정 완료
+                    </div>
                 </div>
 
-                <div class="text-center font-black text-xs text-slate-400">VS</div>
+                <!-- VS 엠블럼 -->
+                <div class="md:col-span-1 flex flex-col items-center justify-center my-2 md:my-0">
+                    <div class="w-12 h-12 rounded-full border-2 flex items-center justify-center text-sm font-black shadow-lg animate-pulse" style="background: linear-gradient(135deg, #EF4444, #F59E0B); color: white; border-color: #FBBF24;">
+                        VS
+                    </div>
+                </div>
 
-                <!-- 참가자 2 -->
-                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-200">
-                    <span id="scoreModalP2Name" class="text-xs font-black text-slate-800 truncate max-w-[150px]">선수 2</span>
-                    <input type="number" id="scoreModalP2Score" min="0" max="99" value="0" class="w-16 px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-center text-sm font-black focus:border-sky-500 outline-hidden">
+                <!-- 선수 2 슬롯 -->
+                <div class="md:col-span-2 p-5 rounded-2xl border-2 flex flex-col items-center justify-center min-h-[120px] transition-all relative overflow-hidden" style="background: var(--slot-bg); border-color: #EF4444;">
+                    <span class="text-[10px] font-black tracking-wider px-2 py-0.5 rounded-full mb-1.5" style="background: rgba(239, 68, 68, 0.2); color: #FCA5A5;">선수 2 (RED)</span>
+                    <div id="drawSlot2Name" class="text-lg md:text-xl font-black truncate max-w-full tracking-tight slot-shaking" style="color: var(--text-main);">
+                        추첨 대기 중...
+                    </div>
+                    <div id="drawSlot2Badge" class="hidden text-xs font-black text-emerald-400 mt-1">
+                        <i class="fa-solid fa-check"></i> 확정 완료
+                    </div>
                 </div>
             </div>
 
-            <div class="mt-5 flex gap-2">
-                <button type="button" onclick="closeScoreModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">
-                    취소
+            <!-- 진행 프로그레스 바 -->
+            <div class="w-full max-w-md h-2.5 rounded-full overflow-hidden mb-6" style="background: rgba(148, 163, 184, 0.2);">
+                <div id="drawShowProgressBar" class="h-full rounded-full transition-all duration-300" style="background: linear-gradient(90deg, #F59E0B, #10B981); width: 0%;"></div>
+            </div>
+
+            <!-- 컨트롤 버튼 -->
+            <div class="flex items-center gap-3">
+                <button type="button" onclick="skipDrawShow()" class="px-4 py-2 text-xs font-bold rounded-xl border hover:bg-slate-700/40 transition" style="color: var(--text-sub); border-color: var(--border-card);">
+                    <i class="fa-solid fa-forward-step mr-1.5"></i>건너뛰기 (즉시 완성)
                 </button>
-                <button type="button" onclick="saveScoreModal()" class="flex-1 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-black rounded-xl shadow-xs transition">
-                    결과 저장
+                <button type="button" id="btnPauseDrawShow" onclick="togglePauseDrawShow()" class="px-4 py-2 text-xs font-black rounded-xl border hover:bg-slate-700/40 transition" style="color: var(--text-main); border-color: var(--border-card);">
+                    <i class="fa-solid fa-pause mr-1.5"></i>일시정지
+                </button>
+                <button type="button" onclick="setDrawSpeedFast()" id="btnDrawSpeed" class="px-4 py-2 text-xs font-black rounded-xl border hover:bg-slate-700/40 transition text-amber-400 border-amber-500/40">
+                    <i class="fa-solid fa-bolt mr-1.5"></i>2배속 추첨
                 </button>
             </div>
         </div>
     </div>
 
     <!-- ─────────────────────────────────────────── -->
-    <!-- 3. 우승자 시상식 & 포디움 축하 모달 -->
+    <!-- 3. 교실 선공/순서 결정 미니 툴 모달 -->
     <!-- ─────────────────────────────────────────── -->
-    <div id="championModal" class="hidden fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-lg w-full p-6 text-center shadow-2xl border-4 border-amber-300 relative overflow-hidden">
-            <!-- 배경 리본 장식 -->
-            <div class="absolute -top-12 -right-12 w-32 h-32 bg-amber-100 rounded-full blur-2xl pointer-events-none"></div>
-            <div class="absolute -bottom-12 -left-12 w-32 h-32 bg-sky-100 rounded-full blur-2xl pointer-events-none"></div>
-
-            <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 text-white flex items-center justify-center text-4xl shadow-lg mb-3 animate-bounce">
-                🏆
+    <div id="deciderModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="rounded-3xl max-w-md w-full p-6 shadow-2xl border text-center relative" style="background-color: var(--bg-canvas); border-color: var(--border-card);">
+            <!-- 헤더 닫기 -->
+            <div class="flex items-center justify-between pb-3 border-b mb-4" style="border-color: var(--border-card);">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🪙</span>
+                    <h3 class="text-sm font-black" style="color: var(--text-main);">선공 / 순서 결정 도구</h3>
+                </div>
+                <button type="button" onclick="closeDeciderModal()" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700/50 transition">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
             </div>
 
-            <span class="text-xs font-black px-3 py-1 bg-amber-100 text-amber-800 rounded-full border border-amber-300">
-                CHAMPIONSHIP VICTORY
-            </span>
+            <!-- 탭 전환기 -->
+            <div class="grid grid-cols-3 gap-1.5 p-1 rounded-2xl mb-5" style="background: var(--slot-bg);">
+                <button type="button" onclick="switchDeciderTab('coin')" id="deciderTabBtnCoin" class="py-1.5 text-xs font-black rounded-xl transition bg-amber-500 text-white">
+                    🪙 동전 던지기
+                </button>
+                <button type="button" onclick="switchDeciderTab('dice')" id="deciderTabBtnDice" class="py-1.5 text-xs font-bold rounded-xl transition text-slate-400 hover:text-white">
+                    🎲 주사위 배틀
+                </button>
+                <button type="button" onclick="switchDeciderTab('rps')" id="deciderTabBtnRps" class="py-1.5 text-xs font-bold rounded-xl transition text-slate-400 hover:text-white">
+                    ✌️ 가위바위보
+                </button>
+            </div>
 
-            <h3 id="championModalTitle" class="text-xl md:text-2xl font-black text-slate-900 mt-2 mb-1">
-                토너먼트 우승을 축하합니다!
-            </h3>
-            <p id="championModalDesc" class="text-xs text-slate-500 mb-6">치열한 대결 끝에 영광의 챔피언이 탄생했습니다.</p>
+            <!-- 1. 동전 던지기 콘텐츠 -->
+            <div id="deciderTabCoin" class="space-y-4">
+                <div class="h-36 flex items-center justify-center">
+                    <div id="coinElement" class="coin-3d cursor-pointer" onclick="flipCoin()">
+                        <div class="coin-face coin-heads">
+                            <span class="text-3xl font-black">앞</span>
+                            <span class="text-[10px] font-black mt-1">선공 (Heads)</span>
+                        </div>
+                        <div class="coin-face coin-tails">
+                            <span class="text-3xl font-black">뒤</span>
+                            <span class="text-[10px] font-black mt-1">후공 (Tails)</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="coinResultText" class="text-sm font-black text-amber-400">
+                    동전을 클릭하거나 아래 버튼을 누르세요!
+                </div>
+                <button type="button" onclick="flipCoin()" class="w-full py-2.5 rounded-xl text-xs font-black shadow-md transition-transform hover:scale-102 text-amber-950" style="background: linear-gradient(135deg, #F59E0B, #FBBF24);">
+                    <i class="fa-solid fa-rotate mr-1.5"></i>동전 던지기 (Flip!)
+                </button>
+            </div>
 
-            <!-- 포디움 시상대 -->
-            <div class="grid grid-cols-3 gap-2 items-end mb-6 pt-4">
-                <!-- 2위 은메달 -->
-                <div class="flex flex-col items-center">
-                    <span class="text-xl mb-1">🥈</span>
-                    <div id="podium2ndName" class="text-xs font-black text-slate-700 truncate max-w-full px-1 mb-1">준우승</div>
-                    <div class="w-full h-20 bg-gradient-to-t from-slate-300 to-slate-200 rounded-t-xl flex items-center justify-center font-black text-sm text-slate-600 shadow-inner">
-                        2위
+            <!-- 2. 주사위 배틀 콘텐츠 -->
+            <div id="deciderTabDice" class="hidden space-y-4">
+                <div class="h-36 flex items-center justify-around px-4">
+                    <!-- 주사위 1 -->
+                    <div class="flex flex-col items-center">
+                        <span class="text-xs font-bold text-sky-400 mb-1">선수 1</span>
+                        <div id="dice1Box" class="w-16 h-16 rounded-2xl bg-sky-600 text-white flex items-center justify-center text-3xl font-black shadow-lg border-2 border-sky-400">
+                            ⚅
+                        </div>
+                    </div>
+                    <span class="text-xl font-black" style="color: var(--text-muted);">VS</span>
+                    <!-- 주사위 2 -->
+                    <div class="flex flex-col items-center">
+                        <span class="text-xs font-bold text-rose-400 mb-1">선수 2</span>
+                        <div id="dice2Box" class="w-16 h-16 rounded-2xl bg-rose-600 text-white flex items-center justify-center text-3xl font-black shadow-lg border-2 border-rose-400">
+                            ⚂
+                        </div>
+                    </div>
+                </div>
+                <div id="diceResultText" class="text-sm font-black text-sky-400">
+                    주사위를 굴려 높은 쪽이 선공을 갖습니다!
+                </div>
+                <button type="button" onclick="rollDiceBattle()" class="w-full py-2.5 rounded-xl text-xs font-black shadow-md transition-transform hover:scale-102 text-white bg-sky-600 hover:bg-sky-500">
+                    <i class="fa-solid fa-dice mr-1.5"></i>주사위 굴리기 (Roll!)
+                </button>
+            </div>
+
+            <!-- 3. 가위바위보 콘텐츠 -->
+            <div id="deciderTabRps" class="hidden space-y-4">
+                <div class="h-36 flex items-center justify-around px-4">
+                    <div class="flex flex-col items-center">
+                        <span class="text-xs font-bold text-sky-400 mb-1">선수 1</span>
+                        <div id="rpsP1Hand" class="w-16 h-16 rounded-2xl border-2 border-sky-400 flex items-center justify-center text-3xl shadow-lg" style="background: var(--slot-bg);">
+                            ✊
+                        </div>
+                    </div>
+                    <span class="text-xl font-black" style="color: var(--text-muted);">VS</span>
+                    <div class="flex flex-col items-center">
+                        <span class="text-xs font-bold text-rose-400 mb-1">선수 2</span>
+                        <div id="rpsP2Hand" class="w-16 h-16 rounded-2xl border-2 border-rose-400 flex items-center justify-center text-3xl shadow-lg" style="background: var(--slot-bg);">
+                            ✌️
+                        </div>
+                    </div>
+                </div>
+                <div id="rpsResultText" class="text-sm font-black text-amber-400">
+                    버튼을 누르면 랜덤 가위바위보가 시작됩니다!
+                </div>
+                <button type="button" onclick="playRpsBattle()" class="w-full py-2.5 rounded-xl text-xs font-black shadow-md transition-transform hover:scale-102 text-white bg-emerald-600 hover:bg-emerald-500">
+                    <i class="fa-solid fa-hand-back-fist mr-1.5"></i>가위바위보 대결!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 4. 경기 스코어보드 입력 모달 (Scorekeeper) -->
+    <!-- ─────────────────────────────────────────── -->
+    <div id="scoreModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="rounded-3xl max-w-sm w-full p-6 shadow-2xl border" style="background-color: var(--bg-canvas); border-color: var(--border-card);">
+            <h3 id="scoreModalTitle" class="text-sm font-black text-center mb-1" style="color: var(--text-main);">경기 결과 입력</h3>
+            <p id="scoreModalMatchDesc" class="text-xs text-center mb-4" style="color: var(--text-sub);">점수를 입력하고 승자를 확정하세요.</p>
+
+            <div class="space-y-3">
+                <!-- 참가자 1 스코어 카드 -->
+                <div class="p-3 rounded-2xl border flex items-center justify-between" style="background: var(--slot-bg); border-color: var(--border-card);">
+                    <div class="flex items-center gap-2 max-w-[150px] truncate">
+                        <span class="w-6 h-6 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center text-xs font-black">1</span>
+                        <span id="scoreModalP1Name" class="text-xs font-black truncate" style="color: var(--text-main);">선수 1</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" onclick="stepScore('scoreModalP1Score', -1)" class="w-7 h-7 rounded-lg border font-black text-xs hover:bg-white/10 transition" style="border-color: var(--border-card); color: var(--text-main);">-</button>
+                        <input type="number" id="scoreModalP1Score" min="0" max="999" value="0" class="w-12 h-7 border rounded-lg text-center text-sm font-black outline-none focus:border-sky-500" style="background: var(--bg-card); color: var(--text-main); border-color: var(--border-card);">
+                        <button type="button" onclick="stepScore('scoreModalP1Score', 1)" class="w-7 h-7 rounded-lg border font-black text-xs hover:bg-white/10 transition" style="border-color: var(--border-card); color: var(--text-main);">+</button>
                     </div>
                 </div>
 
-                <!-- 1위 금메달 (우승) -->
+                <div class="text-center font-black text-xs" style="color: var(--text-muted);">VS</div>
+
+                <!-- 참가자 2 스코어 카드 -->
+                <div class="p-3 rounded-2xl border flex items-center justify-between" style="background: var(--slot-bg); border-color: var(--border-card);">
+                    <div class="flex items-center gap-2 max-w-[150px] truncate">
+                        <span class="w-6 h-6 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center text-xs font-black">2</span>
+                        <span id="scoreModalP2Name" class="text-xs font-black truncate" style="color: var(--text-main);">선수 2</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" onclick="stepScore('scoreModalP2Score', -1)" class="w-7 h-7 rounded-lg border font-black text-xs hover:bg-white/10 transition" style="border-color: var(--border-card); color: var(--text-main);">-</button>
+                        <input type="number" id="scoreModalP2Score" min="0" max="999" value="0" class="w-12 h-7 border rounded-lg text-center text-sm font-black outline-none focus:border-sky-500" style="background: var(--bg-card); color: var(--text-main); border-color: var(--border-card);">
+                        <button type="button" onclick="stepScore('scoreModalP2Score', 1)" class="w-7 h-7 rounded-lg border font-black text-xs hover:bg-white/10 transition" style="border-color: var(--border-card); color: var(--text-main);">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 하단 확인 버튼 -->
+            <div class="mt-5 flex gap-2">
+                <button type="button" onclick="closeScoreModal()" class="flex-1 py-2.5 rounded-xl text-xs font-bold border hover:bg-white/10 transition" style="color: var(--text-sub); border-color: var(--border-card);">
+                    취소
+                </button>
+                <button type="button" onclick="saveScoreModal()" class="flex-1 py-2.5 rounded-xl text-xs font-black shadow-md transition-transform hover:scale-102 text-white bg-sky-600 hover:bg-sky-500">
+                    점수 저장 & 승자 진출
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 5. 우승자 시상식 & 포디움 축하 모달 -->
+    <!-- ─────────────────────────────────────────── -->
+    <div id="championModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="rounded-3xl max-w-lg w-full p-6 md:p-8 text-center shadow-2xl border-4 relative overflow-hidden" style="background-color: var(--bg-canvas); border-color: #F59E0B;">
+            <!-- 배경 축하 후광 -->
+            <div class="absolute -top-16 -right-16 w-40 h-40 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-16 -left-16 w-40 h-40 bg-sky-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="w-24 h-24 mx-auto rounded-3xl flex items-center justify-center text-5xl shadow-2xl mb-3 animate-bounce" style="background: linear-gradient(135deg, #F59E0B, #FBBF24); color: white;">
+                🏆
+            </div>
+
+            <span class="text-xs font-black px-3.5 py-1 rounded-full border shadow-xs" style="background: rgba(245, 158, 11, 0.2); color: #FBBF24; border-color: #F59E0B;">
+                CHAMPIONSHIP CEREMONY
+            </span>
+
+            <h3 id="championModalTitle" class="text-2xl md:text-3xl font-black mt-2 mb-1 tracking-tight" style="color: var(--text-main);">
+                토너먼트 우승을 축하합니다!
+            </h3>
+            <p id="championModalDesc" class="text-xs mb-6" style="color: var(--text-sub);">
+                치열한 경기 끝에 영광의 챔피언이 탄생했습니다.
+            </p>
+
+            <!-- 3D 포디움 시상대 -->
+            <div class="grid grid-cols-3 gap-2.5 items-end mb-6 pt-4">
+                <!-- 2위 은메달 -->
                 <div class="flex flex-col items-center">
-                    <span class="text-3xl mb-1">👑</span>
-                    <div id="podium1stName" class="text-sm font-black text-amber-600 truncate max-w-full px-1 mb-1">우승자</div>
-                    <div class="w-full h-28 bg-gradient-to-t from-amber-400 to-yellow-300 rounded-t-xl flex items-center justify-center font-black text-base text-amber-950 shadow-md">
-                        우승 🏆
+                    <span class="text-2xl mb-1">🥈</span>
+                    <div id="podium2ndName" class="text-xs font-black truncate max-w-full px-1 mb-1.5" style="color: var(--text-main);">준우승</div>
+                    <div class="w-full h-20 rounded-t-2xl flex flex-col items-center justify-center font-black text-sm shadow-md" style="background: linear-gradient(to top, #475569, #94A3B8); color: white;">
+                        <span>2위</span>
+                        <span class="text-[10px] opacity-80">SILVER</span>
+                    </div>
+                </div>
+
+                <!-- 1위 금메달 (챔피언) -->
+                <div class="flex flex-col items-center">
+                    <span class="text-4xl mb-1 animate-pulse">👑</span>
+                    <div id="podium1stName" class="text-sm font-black text-amber-400 truncate max-w-full px-1 mb-1.5">우승자</div>
+                    <div class="w-full h-32 rounded-t-2xl flex flex-col items-center justify-center font-black text-base shadow-xl" style="background: linear-gradient(to top, #B45309, #F59E0B, #FDE68A); color: #78350F;">
+                        <span class="text-lg">우승 🏆</span>
+                        <span class="text-xs font-extrabold tracking-wider">CHAMPION</span>
                     </div>
                 </div>
 
                 <!-- 3위 동메달 -->
                 <div class="flex flex-col items-center">
-                    <span class="text-xl mb-1">🥉</span>
-                    <div id="podium3rdName" class="text-xs font-black text-amber-900 truncate max-w-full px-1 mb-1">3위</div>
-                    <div class="w-full h-14 bg-gradient-to-t from-amber-700/30 to-amber-600/20 rounded-t-xl flex items-center justify-center font-black text-xs text-amber-900 shadow-inner">
-                        3위
+                    <span class="text-2xl mb-1">🥉</span>
+                    <div id="podium3rdName" class="text-xs font-black truncate max-w-full px-1 mb-1.5 text-amber-500">3위</div>
+                    <div class="w-full h-16 rounded-t-2xl flex flex-col items-center justify-center font-black text-xs shadow-md" style="background: linear-gradient(to top, #78350F, #D97706); color: white;">
+                        <span>3위</span>
+                        <span class="text-[9px] opacity-80">BRONZE</span>
                     </div>
                 </div>
             </div>
 
             <!-- 모달 버튼 -->
             <div class="flex gap-2">
-                <button type="button" onclick="closeChampionModal()" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">
+                <button type="button" onclick="closeChampionModal()" class="flex-1 py-3 text-xs font-bold rounded-xl border hover:bg-white/10 transition" style="color: var(--text-sub); border-color: var(--border-card);">
                     대진표 계속 보기
                 </button>
-                <button type="button" onclick="downloadBracketImage()" class="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black rounded-xl shadow-xs transition flex items-center justify-center gap-1.5">
+                <button type="button" onclick="downloadBracketImage()" class="flex-1 py-3 text-xs font-black rounded-xl shadow-lg transition-transform hover:scale-102 flex items-center justify-center gap-1.5 text-amber-950" style="background: linear-gradient(135deg, #F59E0B, #FBBF24);">
                     <i class="fa-solid fa-camera"></i>
                     <span>결과 이미지 저장</span>
                 </button>
             </div>
-        </div>
-    </div>
-
-    <!-- ─────────────────────────────────────────── -->
-    <!-- 4. 추첨 애니메이션 오버레이 -->
-    <!-- ─────────────────────────────────────────── -->
-    <div id="drawAnimationOverlay" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-white text-center">
-        <div class="text-5xl md:text-6xl mb-4 animate-spin">
-            🎲
-        </div>
-        <h3 class="text-xl md:text-2xl font-black mb-2 tracking-tight">
-            대진을 랜덤 추첨하고 있습니다!
-        </h3>
-        <p class="text-xs text-sky-200 mb-6">
-            두구두구두구... 과연 첫 경기 상대는 누구일까요?
-        </p>
-        <div class="w-64 h-3 bg-slate-700 rounded-full overflow-hidden">
-            <div id="drawProgressBar" class="h-full bg-gradient-to-r from-sky-400 to-amber-400 w-0 transition-all duration-300"></div>
         </div>
     </div>
 
@@ -522,16 +969,32 @@
             thirdPlace: null
         };
 
+        let currentTheme = localStorage.getItem('waurimal_tournament_theme') || 'golden';
+        let zoomLevel = 1.0;
         let isSwapMode = false;
         let swapSelectedSlot = null; // { roundIndex: 0, matchIndex, participantIndex: 1|2 }
         let currentScoreTarget = null; // { roundIndex, matchIndex, isBronze }
 
-        // ── Web Audio API 사운드 합성기 ──
+        // 추첨 쇼 상태
+        let drawShowState = {
+            active: false,
+            paused: false,
+            speed: 1, // 1: normal, 2: fast
+            names: [],
+            method: 'animated',
+            currentIndex: 0,
+            intervalId: null
+        };
+
+        // ── Web Audio API 고품질 사운드 합성기 ──
         const AudioEngine = {
             ctx: null,
             init() {
                 if (!this.ctx && (window.AudioContext || window.webkitAudioContext)) {
                     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
                 }
             },
             playTick() {
@@ -542,13 +1005,33 @@
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(440, this.ctx.currentTime);
-                    gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+                    osc.frequency.setValueAtTime(520, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
                     osc.connect(gain);
                     gain.connect(this.ctx.destination);
                     osc.start();
-                    osc.stop(this.ctx.currentTime + 0.05);
+                    osc.stop(this.ctx.currentTime + 0.04);
+                } catch(e){}
+            },
+            playLock() {
+                if (!tournamentData.soundEnabled) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    // 금속성 타종음 (880Hz + 1760Hz)
+                    [880, 1760].forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                        gain.gain.setValueAtTime(0.12 / (idx + 1), this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.28);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start();
+                        osc.stop(this.ctx.currentTime + 0.28);
+                    });
                 } catch(e){}
             },
             playWin() {
@@ -556,19 +1039,58 @@
                 try {
                     this.init();
                     if (!this.ctx) return;
-                    const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+                    const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
                     notes.forEach((freq, idx) => {
                         const osc = this.ctx.createOscillator();
                         const gain = this.ctx.createGain();
                         osc.type = 'triangle';
-                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
-                        gain.gain.setValueAtTime(0.12, this.ctx.currentTime + idx * 0.08);
-                        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.08 + 0.2);
+                        const t = this.ctx.currentTime + idx * 0.06;
+                        osc.frequency.setValueAtTime(freq, t);
+                        gain.gain.setValueAtTime(0.12, t);
+                        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
                         osc.connect(gain);
                         gain.connect(this.ctx.destination);
-                        osc.start(this.ctx.currentTime + idx * 0.08);
-                        osc.stop(this.ctx.currentTime + idx * 0.08 + 0.2);
+                        osc.start(t);
+                        osc.stop(t + 0.25);
                     });
+                } catch(e){}
+            },
+            playCoin() {
+                if (!tournamentData.soundEnabled) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(1400, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(2600, this.ctx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.18);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.18);
+                } catch(e){}
+            },
+            playDice() {
+                if (!tournamentData.soundEnabled) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    for (let i = 0; i < 4; i++) {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'triangle';
+                        const t = this.ctx.currentTime + i * 0.04;
+                        osc.frequency.setValueAtTime(300 + Math.random() * 200, t);
+                        gain.gain.setValueAtTime(0.1, t);
+                        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(t);
+                        osc.stop(t + 0.05);
+                    }
                 } catch(e){}
             },
             playFanfare() {
@@ -580,9 +1102,9 @@
                         { f: 523.25, d: 0.12 }, // C5
                         { f: 523.25, d: 0.12 }, // C5
                         { f: 523.25, d: 0.12 }, // C5
-                        { f: 659.25, d: 0.25 }, // E5
+                        { f: 659.25, d: 0.28 }, // E5
                         { f: 523.25, d: 0.12 }, // C5
-                        { f: 783.99, d: 0.5 }   // G5
+                        { f: 783.99, d: 0.6 }   // G5
                     ];
                     let curTime = this.ctx.currentTime;
                     fanfare.forEach(item => {
@@ -590,13 +1112,13 @@
                         const gain = this.ctx.createGain();
                         osc.type = 'sawtooth';
                         osc.frequency.setValueAtTime(item.f, curTime);
-                        gain.gain.setValueAtTime(0.15, curTime);
+                        gain.gain.setValueAtTime(0.16, curTime);
                         gain.gain.exponentialRampToValueAtTime(0.001, curTime + item.d);
                         osc.connect(gain);
                         gain.connect(this.ctx.destination);
                         osc.start(curTime);
                         osc.stop(curTime + item.d);
-                        curTime += item.d + 0.03;
+                        curTime += item.d + 0.02;
                     });
                 } catch(e){}
             }
@@ -604,10 +1126,67 @@
 
         // ── 초기화 실행 ──
         window.addEventListener('DOMContentLoaded', () => {
+            applyTheme(currentTheme);
             loadSavedTournament();
+
+            // 리사이즈 시 SVG 연결선 자동 재계산
+            window.addEventListener('resize', () => {
+                requestAnimationFrame(drawConnectorLines);
+            });
         });
 
-        // ── 로컬 스토리지 복원 또는 기본 생성 ──
+        // ── 테마 관리 ──
+        function applyTheme(themeName) {
+            currentTheme = themeName;
+            document.documentElement.setAttribute('data-theme', themeName);
+            const sel = document.getElementById('themeSelector');
+            if (sel) sel.value = themeName;
+            localStorage.setItem('waurimal_tournament_theme', themeName);
+            requestAnimationFrame(drawConnectorLines);
+        }
+
+        window.changeTheme = (val) => {
+            applyTheme(val);
+        };
+
+        // ── 줌 및 화면 맞춤 컨트롤러 ──
+        window.adjustZoom = (delta) => {
+            zoomLevel = Math.max(0.5, Math.min(1.5, Math.round((zoomLevel + delta) * 10) / 10));
+            updateZoomDisplay();
+        };
+
+        window.resetZoom = () => {
+            zoomLevel = 1.0;
+            updateZoomDisplay();
+        };
+
+        window.fitBracketToScreen = () => {
+            const container = document.getElementById('bracketZoomWrap');
+            const target = document.getElementById('bracketCaptureArea');
+            if (!container || !target) return;
+            const containerWidth = container.clientWidth - 20;
+            const targetWidth = target.scrollWidth;
+            if (targetWidth > 0 && containerWidth > 0) {
+                let optimalZoom = containerWidth / targetWidth;
+                zoomLevel = Math.max(0.5, Math.min(1.0, Math.round(optimalZoom * 100) / 100));
+                updateZoomDisplay();
+            }
+        };
+
+        function updateZoomDisplay() {
+            const wrap = document.getElementById('bracketCaptureArea');
+            const display = document.getElementById('zoomPercentDisplay');
+            if (wrap) {
+                wrap.style.transform = (zoomLevel === 1.0) ? 'none' : `scale(${zoomLevel})`;
+                wrap.style.transformOrigin = 'top left';
+            }
+            if (display) {
+                display.innerText = `${Math.round(zoomLevel * 100)}%`;
+            }
+            requestAnimationFrame(drawConnectorLines);
+        }
+
+        // ── 로컬 스토리지 복원 및 기본 데이터 생성 ──
         function loadSavedTournament() {
             try {
                 const saved = localStorage.getItem('waurimal_tournament_state');
@@ -634,7 +1213,6 @@
 
         // ── 브래킷 생성 알고리즘 ──
         function buildTournamentBracket(participantNames, drawMethod = "instant") {
-            // 이름 정리
             const cleaned = participantNames.map(n => n.trim()).filter(n => n.length > 0);
             if (cleaned.length < 2) {
                 alert("토너먼트를 진행하려면 최소 2명 이상의 참가자가 필요합니다.");
@@ -657,15 +1235,6 @@
             }
             if (bracketSize < 4) bracketSize = 4;
 
-            const byeCount = bracketSize - ordered.length;
-
-            // 시드 배치 (부전승을 고르게 분배)
-            // 슬롯 생성 (null은 BYE)
-            let slots = new Array(bracketSize).fill(null);
-            
-            // 시드 배치 패턴: BYE를 짝수 슬롯(상대방)에 우선 배치
-            let playerIndex = 0;
-            // 각 매치는 (slot[2*i], slot[2*i+1])
             const matchCount = bracketSize / 2;
             let matchPairs = [];
             for (let i = 0; i < matchCount; i++) {
@@ -673,6 +1242,7 @@
             }
 
             // 선수를 먼저 배치
+            let playerIndex = 0;
             for (let i = 0; i < matchCount; i++) {
                 if (playerIndex < ordered.length) {
                     matchPairs[i].p1 = ordered[playerIndex++];
@@ -690,9 +1260,8 @@
             let rounds = [];
             let totalRounds = Math.log2(bracketSize);
 
-            // 라운드 이름 헬퍼
             function getRoundName(currentSize) {
-                if (currentSize === 2) return "결승전 (Final)";
+                if (currentSize === 2) return "결승전 (FINAL) 🏆";
                 if (currentSize === 4) return "4강 (준결승)";
                 if (currentSize === 8) return "8강 (준준결승)";
                 return `${currentSize}강`;
@@ -785,14 +1354,30 @@
             document.getElementById('headerRoundCountBadge').innerText = sizeText;
             document.getElementById('tournamentSubtitle').innerText = countText;
 
+            // 전체 경기 진행률 계산
+            let totalMatches = 0;
+            let finishedMatches = 0;
+            tournamentData.rounds.forEach(r => {
+                r.matches.forEach(m => {
+                    totalMatches++;
+                    if (m.winner) finishedMatches++;
+                });
+            });
+            if (tournamentData.hasBronzeMatch && tournamentData.bronzeMatch) {
+                totalMatches++;
+                if (tournamentData.bronzeMatch.winner) finishedMatches++;
+            }
+            const progressPercent = totalMatches > 0 ? Math.round((finishedMatches / totalMatches) * 100) : 0;
+            document.getElementById('headerProgressPercentText').innerText = `진행률 ${progressPercent}% (${finishedMatches}/${totalMatches})`;
+            document.getElementById('headerProgressBar').style.width = `${progressPercent}%`;
+
             // 상태 배지
             const statusEl = document.getElementById('progressStatusText');
             if (tournamentData.champion) {
                 statusEl.innerText = `🏆 우승: ${tournamentData.champion}`;
-                document.getElementById('progressStatusBadge').className = "px-3.5 py-1 bg-amber-100 border border-amber-300 text-amber-900 text-xs font-black rounded-full flex items-center gap-2";
+                document.getElementById('progressStatusBadge').style.borderColor = '#F59E0B';
             } else {
                 statusEl.innerText = "경기가 진행 중입니다";
-                document.getElementById('progressStatusBadge').className = "px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-full flex items-center gap-2";
             }
 
             // 브래킷 컬럼 렌더링
@@ -803,30 +1388,30 @@
 
             tournamentData.rounds.forEach((round, rIdx) => {
                 const roundCol = document.createElement('div');
-                roundCol.className = "flex-1 flex flex-col justify-around min-w-[200px]";
+                roundCol.className = "flex-1 flex flex-col justify-around min-w-[220px]";
 
-                // 라운드 헤더
+                // 라운드 헤더 배지
+                const isFinal = (rIdx === totalRounds - 1);
                 const header = document.createElement('div');
-                header.className = "text-center mb-4";
+                header.className = "text-center mb-6";
                 header.innerHTML = `
-                    <div class="inline-block px-3 py-1 rounded-full text-xs font-black bg-slate-100 text-slate-800 border border-slate-200">
-                        ${round.roundName}
+                    <div class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black border shadow-xs" style="background: var(--badge-bg); color: var(--badge-text); border-color: var(--badge-border);">
+                        ${isFinal ? '<span>🏆</span>' : ''}
+                        <span>${round.roundName}</span>
                     </div>
                 `;
                 roundCol.appendChild(header);
 
                 // 매치 컨테이너
                 const matchesWrap = document.createElement('div');
-                matchesWrap.className = "flex-1 flex flex-col justify-around gap-6";
+                matchesWrap.className = "flex-1 flex flex-col justify-around gap-8";
 
                 round.matches.forEach((match, mIdx) => {
                     const matchCard = document.createElement('div');
-                    matchCard.className = "match-card p-3";
+                    matchCard.id = `match_${rIdx}_${mIdx}`;
+                    matchCard.className = "match-card p-3.5";
 
-                    // 매치 라벨
-                    const isFinal = (rIdx === totalRounds - 1);
-                    const matchTitle = isFinal ? "🏆 결승전" : `${round.roundName} ${mIdx + 1}경기`;
-
+                    const matchTitle = isFinal ? "FINAL 🏆" : `MATCH 0${mIdx + 1}`;
                     const p1Won = match.winner && match.winner === match.p1;
                     const p2Won = match.winner && match.winner === match.p2;
 
@@ -834,37 +1419,57 @@
                     const isP1SwapSelected = (isSwapMode && swapSelectedSlot && swapSelectedSlot.roundIndex === rIdx && swapSelectedSlot.matchIndex === mIdx && swapSelectedSlot.participantIndex === 1);
                     const isP2SwapSelected = (isSwapMode && swapSelectedSlot && swapSelectedSlot.roundIndex === rIdx && swapSelectedSlot.matchIndex === mIdx && swapSelectedSlot.participantIndex === 2);
 
+                    // 참가자 아바타 이니셜/번호 추출
+                    const getAvatarText = (name, fallback) => {
+                        if (!name) return fallback;
+                        const trimmed = name.trim();
+                        if (trimmed.startsWith('1') || trimmed.startsWith('2') || trimmed.startsWith('3') || trimmed.startsWith('4') || trimmed.startsWith('5') || trimmed.startsWith('6') || trimmed.startsWith('7') || trimmed.startsWith('8') || trimmed.startsWith('9')) {
+                            return trimmed.slice(0, 2).replace(/[^0-9]/g, '') || fallback;
+                        }
+                        return trimmed.slice(0, 1);
+                    };
+
                     matchCard.innerHTML = `
-                        <div class="flex items-center justify-between text-[11px] font-black text-slate-400 mb-2 pb-1.5 border-b border-slate-100">
-                            <span>${matchTitle}</span>
-                            ${(!match.isBye && match.p1 && match.p2) ? `
-                                <button type="button" onclick="openScoreModal(${rIdx}, ${mIdx})" class="hover:text-sky-600 transition" title="점수 기록">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                </button>
-                            ` : ''}
+                        <!-- 매치 헤더 -->
+                        <div class="flex items-center justify-between text-[11px] font-black pb-2 mb-2 border-b" style="color: var(--text-sub); border-color: var(--border-card);">
+                            <span class="tracking-wider uppercase">${matchTitle}</span>
+                            <div class="flex items-center gap-2">
+                                ${match.winner ? '<span class="text-[10px] font-bold text-emerald-400">완료</span>' : '<span class="text-[10px] font-normal" style="color: var(--text-muted);">대기</span>'}
+                                ${(!match.isBye && match.p1 && match.p2) ? `
+                                    <button type="button" onclick="openScoreModal(${rIdx}, ${mIdx})" class="hover:text-sky-400 transition" title="점수 기록">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
                         </div>
 
-                        <!-- 참가자 1 -->
-                        <div onclick="handleParticipantClick(${rIdx}, ${mIdx}, 1)" class="participant-slot flex items-center justify-between p-2 rounded-xl text-xs font-bold ${p1Won ? 'winner' : (p2Won ? 'loser' : 'text-slate-800')} ${isP1SwapSelected ? 'swap-selected' : ''}">
-                            <div class="flex items-center gap-2 truncate">
-                                <span class="w-5 h-5 rounded-md bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-black">1</span>
-                                <span class="truncate">${match.p1 || '<span class="text-slate-300 font-normal">대기 중</span>'}</span>
-                                <span class="winner-badge hidden text-emerald-600 text-xs">✓</span>
+                        <!-- 참가자 1 슬롯 -->
+                        <div id="slot_${rIdx}_${mIdx}_1" onclick="handleParticipantClick(${rIdx}, ${mIdx}, 1)" class="participant-slot slot-p1 flex items-center justify-between p-2.5 rounded-xl text-xs font-bold ${p1Won ? 'winner' : (p2Won ? 'loser' : '')} ${isP1SwapSelected ? 'swap-selected' : ''}">
+                            <div class="flex items-center gap-2.5 truncate">
+                                <span class="w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-black shadow-xs shrink-0" style="background: rgba(148, 163, 184, 0.2); color: var(--text-main);">
+                                    ${getAvatarText(match.p1, '1')}
+                                </span>
+                                <span class="truncate" style="color: var(--text-main);">${match.p1 || '<span style="color: var(--text-muted); font-weight: normal;">대기 중</span>'}</span>
+                                <span class="winner-crown hidden text-amber-400 text-xs shrink-0">👑</span>
                             </div>
-                            <span class="font-black text-xs text-slate-600 ml-2">${match.p1Score !== null ? match.p1Score : ''}</span>
+                            <span class="font-black text-xs ml-2 px-1.5 py-0.5 rounded" style="background: rgba(0,0,0,0.15); color: var(--text-main);">${match.p1Score !== null ? match.p1Score : ''}</span>
                         </div>
 
-                        <!-- VS 디바이더 -->
-                        <div class="text-[10px] font-black text-slate-300 text-center my-0.5">VS</div>
+                        <!-- VS 엠블럼 디바이더 -->
+                        <div class="flex items-center justify-center my-1.5">
+                            <span class="vs-badge">VS</span>
+                        </div>
 
-                        <!-- 참가자 2 -->
-                        <div onclick="handleParticipantClick(${rIdx}, ${mIdx}, 2)" class="participant-slot flex items-center justify-between p-2 rounded-xl text-xs font-bold ${p2Won ? 'winner' : (p1Won ? 'loser' : (match.isBye ? 'text-slate-400 italic' : 'text-slate-800'))} ${isP2SwapSelected ? 'swap-selected' : ''}">
-                            <div class="flex items-center gap-2 truncate">
-                                <span class="w-5 h-5 rounded-md bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-black">2</span>
-                                <span class="truncate">${match.p2 || '<span class="text-slate-300 font-normal">대기 중</span>'}</span>
-                                <span class="winner-badge hidden text-emerald-600 text-xs">✓</span>
+                        <!-- 참가자 2 슬롯 -->
+                        <div id="slot_${rIdx}_${mIdx}_2" onclick="handleParticipantClick(${rIdx}, ${mIdx}, 2)" class="participant-slot slot-p2 flex items-center justify-between p-2.5 rounded-xl text-xs font-bold ${match.isBye ? 'bye-slot' : ''} ${p2Won ? 'winner' : (p1Won ? 'loser' : '')} ${isP2SwapSelected ? 'swap-selected' : ''}">
+                            <div class="flex items-center gap-2.5 truncate">
+                                <span class="w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-black shadow-xs shrink-0" style="background: rgba(148, 163, 184, 0.2); color: var(--text-main);">
+                                    ${match.isBye ? 'BYE' : getAvatarText(match.p2, '2')}
+                                </span>
+                                <span class="truncate" style="color: var(--text-main);">${match.isBye ? '<span class="italic text-slate-400">부전승 (Pass)</span>' : (match.p2 || '<span style="color: var(--text-muted); font-weight: normal;">대기 중</span>')}</span>
+                                <span class="winner-crown hidden text-amber-400 text-xs shrink-0">👑</span>
                             </div>
-                            <span class="font-black text-xs text-slate-600 ml-2">${match.p2Score !== null ? match.p2Score : ''}</span>
+                            <span class="font-black text-xs ml-2 px-1.5 py-0.5 rounded" style="background: rgba(0,0,0,0.15); color: var(--text-main);">${match.p2Score !== null ? match.p2Score : ''}</span>
                         </div>
                     `;
 
@@ -877,8 +1482,12 @@
 
             // 3·4위전 렌더링
             renderBronzeSection();
+
+            // SVG 브래킷 연결선 동적 렌더링
+            requestAnimationFrame(drawConnectorLines);
         }
 
+        // ── 3·4위전 (동메달 결정전) 렌더링 ──
         function renderBronzeSection() {
             const bronzeSec = document.getElementById('bronzeMatchSection');
             if (!tournamentData.hasBronzeMatch) {
@@ -895,40 +1504,108 @@
             const p2Won = bm.winner && bm.winner === bm.p2;
 
             wrap.innerHTML = `
-                <div class="match-card p-3 border-amber-200">
-                    <div class="flex items-center justify-between text-[11px] font-black text-amber-700 mb-2 pb-1.5 border-b border-amber-100">
-                        <span>🥉 3위 결정전</span>
+                <div class="match-card p-3.5" style="border-color: rgba(245, 158, 11, 0.4);">
+                    <div class="flex items-center justify-between text-[11px] font-black pb-2 mb-2 border-b" style="color: #F59E0B; border-color: var(--border-card);">
+                        <span>BRONZE MATCH 🥉</span>
                         ${(bm.p1 && bm.p2) ? `
-                            <button type="button" onclick="openScoreModal(-1, -1)" class="hover:text-amber-800 transition" title="점수 기록">
+                            <button type="button" onclick="openScoreModal(-1, -1)" class="hover:text-amber-400 transition" title="점수 기록">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </button>
                         ` : ''}
                     </div>
 
-                    <div onclick="handleBronzeParticipantClick(1)" class="participant-slot flex items-center justify-between p-2 rounded-xl text-xs font-bold ${p1Won ? 'winner' : (p2Won ? 'loser' : 'text-slate-800')}">
-                        <div class="flex items-center gap-2 truncate">
-                            <span class="w-5 h-5 rounded-md bg-amber-100 text-amber-800 flex items-center justify-center text-[10px] font-black">A</span>
-                            <span class="truncate">${bm.p1 || '<span class="text-slate-300 font-normal">준결승 패자 1</span>'}</span>
-                            <span class="winner-badge hidden text-emerald-600 text-xs">✓</span>
+                    <div onclick="handleBronzeParticipantClick(1)" class="participant-slot flex items-center justify-between p-2.5 rounded-xl text-xs font-bold ${p1Won ? 'winner' : (p2Won ? 'loser' : '')}">
+                        <div class="flex items-center gap-2.5 truncate">
+                            <span class="w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-black" style="background: rgba(245, 158, 11, 0.2); color: #F59E0B;">A</span>
+                            <span class="truncate" style="color: var(--text-main);">${bm.p1 || '<span style="color: var(--text-muted); font-weight: normal;">준결승 패자 1</span>'}</span>
+                            <span class="winner-crown hidden text-amber-400 text-xs">🥉</span>
                         </div>
-                        <span class="font-black text-xs text-slate-600 ml-2">${bm.p1Score !== null ? bm.p1Score : ''}</span>
+                        <span class="font-black text-xs ml-2">${bm.p1Score !== null ? bm.p1Score : ''}</span>
                     </div>
 
-                    <div class="text-[10px] font-black text-slate-300 text-center my-0.5">VS</div>
+                    <div class="flex items-center justify-center my-1.5">
+                        <span class="vs-badge">VS</span>
+                    </div>
 
-                    <div onclick="handleBronzeParticipantClick(2)" class="participant-slot flex items-center justify-between p-2 rounded-xl text-xs font-bold ${p2Won ? 'winner' : (p1Won ? 'loser' : 'text-slate-800')}">
-                        <div class="flex items-center gap-2 truncate">
-                            <span class="w-5 h-5 rounded-md bg-amber-100 text-amber-800 flex items-center justify-center text-[10px] font-black">B</span>
-                            <span class="truncate">${bm.p2 || '<span class="text-slate-300 font-normal">준결승 패자 2</span>'}</span>
-                            <span class="winner-badge hidden text-emerald-600 text-xs">✓</span>
+                    <div onclick="handleBronzeParticipantClick(2)" class="participant-slot flex items-center justify-between p-2.5 rounded-xl text-xs font-bold ${p2Won ? 'winner' : (p1Won ? 'loser' : '')}">
+                        <div class="flex items-center gap-2.5 truncate">
+                            <span class="w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-black" style="background: rgba(245, 158, 11, 0.2); color: #F59E0B;">B</span>
+                            <span class="truncate" style="color: var(--text-main);">${bm.p2 || '<span style="color: var(--text-muted); font-weight: normal;">준결승 패자 2</span>'}</span>
+                            <span class="winner-crown hidden text-amber-400 text-xs">🥉</span>
                         </div>
-                        <span class="font-black text-xs text-slate-600 ml-2">${bm.p2Score !== null ? bm.p2Score : ''}</span>
+                        <span class="font-black text-xs ml-2">${bm.p2Score !== null ? bm.p2Score : ''}</span>
                     </div>
                 </div>
             `;
         }
 
-        // ── 승자 진출 인터랙션 ──
+        // ── 동적 SVG 연결선 (Connector Lines) 계산 & 그리기 ──
+        function drawConnectorLines() {
+            const svg = document.getElementById('bracketSvgLayer');
+            const captureArea = document.getElementById('bracketCaptureArea');
+            if (!svg || !captureArea || !tournamentData.rounds || tournamentData.rounds.length < 2) {
+                if (svg) svg.innerHTML = '';
+                return;
+            }
+
+            // SVG 크기 동기화
+            const areaRect = captureArea.getBoundingClientRect();
+            svg.setAttribute('width', captureArea.scrollWidth);
+            svg.setAttribute('height', captureArea.scrollHeight);
+            svg.innerHTML = '';
+
+            const totalRounds = tournamentData.rounds.length;
+
+            for (let r = 0; r < totalRounds - 1; r++) {
+                const currentRound = tournamentData.rounds[r];
+                const nextRound = tournamentData.rounds[r + 1];
+
+                currentRound.matches.forEach((match, mIdx) => {
+                    const currentCard = document.getElementById(`match_${r}_${mIdx}`);
+                    const nextMatchIdx = Math.floor(mIdx / 2);
+                    const nextCard = document.getElementById(`match_${r + 1}_${nextMatchIdx}`);
+
+                    if (!currentCard || !nextCard) return;
+
+                    const slotIdx = (mIdx % 2 === 0) ? 1 : 2;
+                    const nextSlot = nextCard.querySelector(`.slot-p${slotIdx}`);
+
+                    const c1Rect = currentCard.getBoundingClientRect();
+                    const nextSlotRect = nextSlot ? nextSlot.getBoundingClientRect() : nextCard.getBoundingClientRect();
+
+                    // 좌표 계산 (줌 레벨 보정)
+                    const x1 = (c1Rect.right - areaRect.left) / zoomLevel;
+                    const y1 = (c1Rect.top + c1Rect.height / 2 - areaRect.top) / zoomLevel;
+
+                    const x2 = (nextCard.getBoundingClientRect().left - areaRect.left) / zoomLevel;
+                    const y2 = (nextSlotRect.top + nextSlotRect.height / 2 - areaRect.top) / zoomLevel;
+
+                    const dx = x2 - x1;
+                    const midX = x1 + dx * 0.5;
+
+                    // 스텝형 브래킷 패스 생성 (M x1 y1 H midX V y2 H x2)
+                    const pathD = `M ${x1} ${y1} H ${midX} V ${y2} H ${x2}`;
+
+                    // 1. 기본 배경 연결선
+                    const baseLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    baseLine.setAttribute('d', pathD);
+                    baseLine.setAttribute('class', 'connector-path');
+                    svg.appendChild(baseLine);
+
+                    // 2. 승자 진출 시 하이라이트 연결선
+                    if (match.winner) {
+                        const activeLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                        activeLine.setAttribute('d', pathD);
+
+                        const isChampionPath = (tournamentData.champion && tournamentData.champion === match.winner);
+                        activeLine.setAttribute('class', `connector-path winner-path ${isChampionPath ? 'champion-path' : ''}`);
+                        svg.appendChild(activeLine);
+                    }
+                });
+            }
+        }
+
+        // ── 참가자 클릭 & 승자 진출 인터랙션 ──
         window.handleParticipantClick = (roundIdx, matchIdx, participantSlot) => {
             // 맞교환 모드인 경우
             if (isSwapMode) {
@@ -947,12 +1624,11 @@
             const selectedParticipant = (participantSlot === 1) ? match.p1 : match.p2;
             const opponentParticipant = (participantSlot === 1) ? match.p2 : match.p1;
 
-            if (!selectedParticipant) return; // 미배정
+            if (!selectedParticipant) return; // 미배정 슬롯
 
             // 이미 승자인데 다시 클릭한 경우 -> 승자 취소 (토글)
             if (match.winner === selectedParticipant) {
                 match.winner = null;
-                // 후속 라운드 진출 취소
                 clearSubsequentRounds(roundIdx, matchIdx);
                 AudioEngine.playTick();
             } else {
@@ -1033,7 +1709,7 @@
             }
         }
 
-        // ── 맞교환 (Swap) 기능 ──
+        // ── 1라운드 자리 맞교환 (Swap) 기능 ──
         window.toggleSwapMode = () => {
             isSwapMode = !isSwapMode;
             swapSelectedSlot = null;
@@ -1058,19 +1734,16 @@
             }
 
             const match = tournamentData.rounds[0].matches[matchIdx];
-            const pName = (participantSlot === 1) ? match.p1 : match.p2;
             if (match.isBye && participantSlot === 2) {
                 alert("부전승 슬롯은 교환할 수 없습니다.");
                 return;
             }
 
             if (!swapSelectedSlot) {
-                // 첫 번째 선택
                 swapSelectedSlot = { roundIndex: 0, matchIndex: matchIdx, participantIndex: participantSlot };
                 AudioEngine.playTick();
                 renderTournament();
             } else {
-                // 두 번째 선택 -> 교환 실행!
                 const s1 = swapSelectedSlot;
                 const m1 = tournamentData.rounds[0].matches[s1.matchIndex];
                 const p1Key = (s1.participantIndex === 1) ? 'p1' : 'p2';
@@ -1093,7 +1766,281 @@
             }
         }
 
-        // ── 점수 모달 ──
+        // ── 대진 추첨 쇼 (Slot Machine Draw Ceremony) ──
+        window.startDrawShow = () => {
+            if (!tournamentData.participants || tournamentData.participants.length < 2) {
+                openSetupModal();
+                return;
+            }
+            runDrawCeremony(tournamentData.participants, "animated");
+        };
+
+        function runDrawCeremony(names, drawMethod) {
+            const modal = document.getElementById('drawShowModal');
+            modal.classList.remove('hidden');
+
+            drawShowState.active = true;
+            drawShowState.paused = false;
+            drawShowState.speed = 1;
+            drawShowState.names = [...names];
+            drawShowState.method = drawMethod;
+            drawShowState.currentIndex = 0;
+
+            document.getElementById('btnDrawSpeed').innerHTML = '<i class="fa-solid fa-bolt mr-1.5"></i>2배속 추첨';
+            document.getElementById('btnPauseDrawShow').innerHTML = '<i class="fa-solid fa-pause mr-1.5"></i>일시정지';
+
+            // 셔플된 대진 준비
+            let shuffled = [...names];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+
+            let bracketSize = 2;
+            while (bracketSize < shuffled.length) {
+                bracketSize *= 2;
+            }
+            if (bracketSize < 4) bracketSize = 4;
+            const matchCount = bracketSize / 2;
+
+            let pairs = [];
+            let pIdx = 0;
+            for (let i = 0; i < matchCount; i++) {
+                const p1 = (pIdx < shuffled.length) ? shuffled[pIdx++] : null;
+                pairs.push({ p1: p1, p2: null });
+            }
+            for (let i = 0; i < matchCount; i++) {
+                const p2 = (pIdx < shuffled.length) ? shuffled[pIdx++] : null;
+                pairs[i].p2 = p2;
+            }
+
+            drawShowState.pairs = pairs;
+            drawShowState.totalMatches = matchCount;
+
+            executeMatchDraw(0);
+        }
+
+        function executeMatchDraw(matchIdx) {
+            if (!drawShowState.active) return;
+            if (matchIdx >= drawShowState.totalMatches) {
+                // 전체 추첨 완료!
+                finishDrawShow();
+                return;
+            }
+
+            drawShowState.currentIndex = matchIdx;
+            const pair = drawShowState.pairs[matchIdx];
+
+            document.getElementById('drawShowStageTitle').innerText = `제 ${matchIdx + 1}경기 대진 추첨 (${matchIdx + 1}/${drawShowState.totalMatches})`;
+            const progress = Math.round(((matchIdx) / drawShowState.totalMatches) * 100);
+            document.getElementById('drawShowProgressBar').style.width = `${progress}%`;
+
+            const slot1NameEl = document.getElementById('drawSlot1Name');
+            const slot2NameEl = document.getElementById('drawSlot2Name');
+            const slot1Badge = document.getElementById('drawSlot1Badge');
+            const slot2Badge = document.getElementById('drawSlot2Badge');
+
+            slot1Badge.classList.add('hidden');
+            slot2Badge.classList.add('hidden');
+            slot1NameEl.classList.add('slot-shaking');
+            slot2NameEl.classList.add('slot-shaking');
+
+            // 슬롯 1 롤링
+            let rollCount = 0;
+            const rollSpeed = (drawShowState.speed === 2) ? 35 : 65;
+            const rollDuration = (drawShowState.speed === 2) ? 12 : 20;
+
+            if (drawShowState.intervalId) clearInterval(drawShowState.intervalId);
+
+            drawShowState.intervalId = setInterval(() => {
+                if (drawShowState.paused) return;
+
+                const randomName1 = drawShowState.names[Math.floor(Math.random() * drawShowState.names.length)];
+                const randomName2 = drawShowState.names[Math.floor(Math.random() * drawShowState.names.length)];
+                slot1NameEl.innerText = randomName1;
+                slot2NameEl.innerText = randomName2;
+                AudioEngine.playTick();
+
+                rollCount++;
+                if (rollCount >= rollDuration) {
+                    clearInterval(drawShowState.intervalId);
+
+                    // 슬롯 1 고정
+                    slot1NameEl.innerText = pair.p1 || "부전승";
+                    slot1NameEl.classList.remove('slot-shaking');
+                    slot1Badge.classList.remove('hidden');
+                    AudioEngine.playLock();
+
+                    // 슬롯 2 롤링 계속 후 멈춤
+                    setTimeout(() => {
+                        slot2NameEl.innerText = pair.p2 || "부전승 (BYE)";
+                        slot2NameEl.classList.remove('slot-shaking');
+                        slot2Badge.classList.remove('hidden');
+                        AudioEngine.playLock();
+
+                        // 다음 매치로 전환
+                        setTimeout(() => {
+                            executeMatchDraw(matchIdx + 1);
+                        }, (drawShowState.speed === 2) ? 600 : 1100);
+                    }, (drawShowState.speed === 2) ? 400 : 700);
+                }
+            }, rollSpeed);
+        }
+
+        window.togglePauseDrawShow = () => {
+            drawShowState.paused = !drawShowState.paused;
+            const btn = document.getElementById('btnPauseDrawShow');
+            btn.innerHTML = drawShowState.paused ? '<i class="fa-solid fa-play mr-1.5"></i>계속하기' : '<i class="fa-solid fa-pause mr-1.5"></i>일시정지';
+        };
+
+        window.setDrawSpeedFast = () => {
+            drawShowState.speed = (drawShowState.speed === 1) ? 2 : 1;
+            const btn = document.getElementById('btnDrawSpeed');
+            btn.innerHTML = (drawShowState.speed === 2) ? '<i class="fa-solid fa-gauge-high mr-1.5"></i>1배속 (보통)' : '<i class="fa-solid fa-bolt mr-1.5"></i>2배속 추첨';
+        };
+
+        window.skipDrawShow = () => {
+            if (drawShowState.intervalId) clearInterval(drawShowState.intervalId);
+            finishDrawShow();
+        };
+
+        function finishDrawShow() {
+            drawShowState.active = false;
+            if (drawShowState.intervalId) clearInterval(drawShowState.intervalId);
+
+            document.getElementById('drawShowProgressBar').style.width = '100%';
+            AudioEngine.playFanfare();
+
+            try {
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                }
+            } catch(e){}
+
+            setTimeout(() => {
+                document.getElementById('drawShowModal').classList.add('hidden');
+                buildTournamentBracket(tournamentData.participants, "animated");
+            }, 600);
+        }
+
+        // ── 선공/순서 결정 미니 툴 (동전/주사위/가위바위보) ──
+        window.openDeciderModal = () => {
+            document.getElementById('deciderModal').classList.remove('hidden');
+        };
+
+        window.closeDeciderModal = () => {
+            document.getElementById('deciderModal').classList.add('hidden');
+        };
+
+        window.switchDeciderTab = (tab) => {
+            ['coin', 'dice', 'rps'].forEach(t => {
+                document.getElementById(`deciderTab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.add('hidden');
+                document.getElementById(`deciderTabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`).className = "py-1.5 text-xs font-bold rounded-xl transition text-slate-400 hover:text-white";
+            });
+            document.getElementById(`deciderTab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.remove('hidden');
+            document.getElementById(`deciderTabBtn${tab.charAt(0).toUpperCase() + tab.slice(1)}`).className = "py-1.5 text-xs font-black rounded-xl transition bg-amber-500 text-white";
+        };
+
+        // 3D 동전 던지기
+        let coinIsFlipping = false;
+        window.flipCoin = () => {
+            if (coinIsFlipping) return;
+            coinIsFlipping = true;
+            AudioEngine.playCoin();
+
+            const coin = document.getElementById('coinElement');
+            const resultText = document.getElementById('coinResultText');
+            resultText.innerText = "동전이 공중에서 회전하고 있습니다...";
+
+            const isHeads = Math.random() < 0.5;
+            const extraDegrees = isHeads ? 1800 : 1980; // 앞면 or 뒷면
+
+            coin.style.transform = `rotateY(${extraDegrees}deg)`;
+
+            setTimeout(() => {
+                coinIsFlipping = false;
+                if (isHeads) {
+                    resultText.innerHTML = '<span class="text-amber-400 text-base font-black">🎉 [앞면] 선수 1 선공!</span>';
+                } else {
+                    resultText.innerHTML = '<span class="text-sky-400 text-base font-black">🎉 [뒷면] 선수 2 선공!</span>';
+                }
+                AudioEngine.playLock();
+                // 3초 후 회전 상태 복원
+                setTimeout(() => {
+                    coin.style.transition = 'none';
+                    coin.style.transform = isHeads ? 'rotateY(0deg)' : 'rotateY(180deg)';
+                    setTimeout(() => { coin.style.transition = ''; }, 50);
+                }, 2500);
+            }, 1800);
+        };
+
+        // 주사위 배틀
+        window.rollDiceBattle = () => {
+            AudioEngine.playDice();
+            const diceIcons = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+            const b1 = document.getElementById('dice1Box');
+            const b2 = document.getElementById('dice2Box');
+            const res = document.getElementById('diceResultText');
+
+            let rolls = 0;
+            const intv = setInterval(() => {
+                const r1 = Math.floor(Math.random() * 6);
+                const r2 = Math.floor(Math.random() * 6);
+                b1.innerText = diceIcons[r1];
+                b2.innerText = diceIcons[r2];
+                rolls++;
+                if (rolls >= 10) {
+                    clearInterval(intv);
+                    const v1 = r1 + 1;
+                    const v2 = r2 + 1;
+                    if (v1 > v2) {
+                        res.innerHTML = `<span class="text-sky-400 font-black">선수 1 선공 승리! (${v1} vs ${v2})</span>`;
+                    } else if (v2 > v1) {
+                        res.innerHTML = `<span class="text-rose-400 font-black">선수 2 선공 승리! (${v1} vs ${v2})</span>`;
+                    } else {
+                        res.innerHTML = `<span class="text-amber-400 font-black">동점 (${v1} vs ${v2})! 다시 굴리세요!</span>`;
+                    }
+                    AudioEngine.playLock();
+                }
+            }, 70);
+        };
+
+        // 가위바위보 대결
+        window.playRpsBattle = () => {
+            AudioEngine.playTick();
+            const hands = ['✊', '✌️', '🖐️'];
+            const p1El = document.getElementById('rpsP1Hand');
+            const p2El = document.getElementById('rpsP2Hand');
+            const res = document.getElementById('rpsResultText');
+
+            let steps = 0;
+            const intv = setInterval(() => {
+                const h1 = hands[Math.floor(Math.random() * 3)];
+                const h2 = hands[Math.floor(Math.random() * 3)];
+                p1El.innerText = h1;
+                p2El.innerText = h2;
+                steps++;
+                if (steps >= 8) {
+                    clearInterval(intv);
+                    const f1 = p1El.innerText;
+                    const f2 = p2El.innerText;
+                    if (f1 === f2) {
+                        res.innerHTML = '<span class="text-amber-400 font-black">비겼습니다! 다시 대결하세요!</span>';
+                    } else if (
+                        (f1 === '✊' && f2 === '✌️') ||
+                        (f1 === '✌️' && f2 === '🖐️') ||
+                        (f1 === '🖐️' && f2 === '✊')
+                    ) {
+                        res.innerHTML = '<span class="text-sky-400 font-black">선수 1 선공 승리!</span>';
+                    } else {
+                        res.innerHTML = '<span class="text-rose-400 font-black">선수 2 선공 승리!</span>';
+                    }
+                    AudioEngine.playLock();
+                }
+            }, 80);
+        };
+
+        // ── 스코어보드 모달 (Scorekeeper) ──
         window.openScoreModal = (rIdx, mIdx) => {
             currentScoreTarget = { roundIndex: rIdx, matchIndex: mIdx, isBronze: (rIdx === -1) };
             let p1Name = "", p2Name = "", p1Score = 0, p2Score = 0, title = "";
@@ -1128,6 +2075,15 @@
             currentScoreTarget = null;
         };
 
+        window.stepScore = (inputId, delta) => {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            let val = parseInt(input.value, 10) || 0;
+            val = Math.max(0, val + delta);
+            input.value = val;
+            AudioEngine.playTick();
+        };
+
         window.saveScoreModal = () => {
             if (!currentScoreTarget) return;
             const p1s = parseInt(document.getElementById('scoreModalP1Score').value, 10) || 0;
@@ -1160,27 +2116,12 @@
         function showChampionCelebration() {
             AudioEngine.playFanfare();
 
-            // 콘페티 폭죽 팡팡!
             try {
                 if (typeof confetti === 'function') {
-                    confetti({
-                        particleCount: 120,
-                        spread: 80,
-                        origin: { y: 0.6 }
-                    });
+                    confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
                     setTimeout(() => {
-                        confetti({
-                            particleCount: 150,
-                            angle: 60,
-                            spread: 60,
-                            origin: { x: 0.2, y: 0.6 }
-                        });
-                        confetti({
-                            particleCount: 150,
-                            angle: 120,
-                            spread: 60,
-                            origin: { x: 0.8, y: 0.6 }
-                        });
+                        confetti({ particleCount: 150, angle: 60, spread: 60, origin: { x: 0.2, y: 0.6 } });
+                        confetti({ particleCount: 150, angle: 120, spread: 60, origin: { x: 0.8, y: 0.6 } });
                     }, 350);
                 }
             } catch(e){}
@@ -1272,36 +2213,13 @@
             closeSetupModal();
 
             if (drawMethod === 'animated') {
-                runDrawAnimation(names, drawMethod);
+                runDrawCeremony(names, drawMethod);
             } else {
                 buildTournamentBracket(names, drawMethod);
             }
         };
 
-        function runDrawAnimation(names, drawMethod) {
-            const overlay = document.getElementById('drawAnimationOverlay');
-            const bar = document.getElementById('drawProgressBar');
-            overlay.classList.remove('hidden');
-            bar.style.width = '0%';
-
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += 20;
-                bar.style.width = `${progress}%`;
-                AudioEngine.playTick();
-
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    setTimeout(() => {
-                        overlay.classList.add('hidden');
-                        buildTournamentBracket(names, drawMethod);
-                        AudioEngine.playWin();
-                    }, 300);
-                }
-            }, 250);
-        }
-
-        // ── 기타 유틸리티 (인쇄, 이미지 저장, 전체화면) ──
+        // ── 유틸리티 (인쇄, 이미지 저장, 전체화면, 리셋) ──
         window.confirmResetTournament = () => {
             if (confirm("대진표와 모든 경기 진행 상황을 초기화하시겠습니까?")) {
                 localStorage.removeItem('waurimal_tournament_state');
@@ -1316,7 +2234,7 @@
             } else {
                 if (document.exitFullscreen) {
                     document.exitFullscreen();
-                    document.getElementById('fullscreenIcon').className = "fa-solid fa-expand";
+                    document.getElementById('fullscreenIcon').className = "fa-solid fa-up-right-and-down-left-from-center";
                 }
             }
         };
@@ -1325,18 +2243,27 @@
             try {
                 const target = document.getElementById('bracketCaptureArea');
                 if (!target || typeof html2canvas === 'undefined') {
-                    alert("이미지 저장 엔진을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.");
+                    alert("이미지 저장 모듈을 준비 중입니다. 잠시 후 다시 시도해 주세요.");
                     return;
                 }
+
+                // 이미지 캡처 시 줌 레벨 임시 복원
+                const prevZoom = zoomLevel;
+                target.style.transform = 'none';
 
                 const canvas = await html2canvas(target, {
                     scale: 2,
                     useCORS: true,
-                    backgroundColor: '#FFFFFF'
+                    backgroundColor: null
                 });
 
+                // 줌 복원
+                if (prevZoom !== 1.0) {
+                    target.style.transform = `scale(${prevZoom})`;
+                }
+
                 const link = document.createElement('a');
-                link.download = `${tournamentData.title}_대진표.png`;
+                link.download = `${tournamentData.title}_토너먼트_대진표.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
             } catch(e) {
