@@ -1,0 +1,70 @@
+{
+  "school": "이의초등학교",
+  "lessons": [
+    {
+      "code": "3G_L07",
+      "name": "3학년 Lesson 07 - 학용품",
+      "words": "crayon : 크레용\neraser : 지우개\nglue stick : 풀\nnotebook : 공책\npencil : 연필\npencil case : 필통\nruler : 자\nscissors : 가위"
+    },
+    {
+      "code": "L01",
+      "name": "6학년 Lesson 01 - 서수와 학교생활",
+      "words": "first : 첫 번째의\nsecond : 두 번째의\nthird : 세 번째의\nfourth : 네 번째의\nfifth : 다섯 번째의\nsixth : 여섯 번째의\ngrade : 학년\nspell : 철자를 쓰다\njoin : 가입하다\nclub : 동아리\ndance : 춤추다, 춤\ndraw : 그리다\nplay : 놀다, 연주하다\nlisten : 듣다\nread : 읽다\nride : (자전거 등을) 타다"
+    },
+    {
+      "code": "L02",
+      "name": "6학년 Lesson 02 - 계절과 날씨",
+      "words": "season : 계절\nspring : 봄\nsummer : 여름\nfall : 가을\nwinter : 겨울\nbeautiful : 아름다운\nflower : 꽃\ncold : 추운\nwarm : 따뜻한\ndelicious : 맛있는\nalso : 또한\ncolorful : 다채로운\nswim : 수영하다\nfield trip : 현장학습\nclear : 맑은\nbright : 밝은"
+    },
+    {
+      "code": "L03",
+      "name": "6학년 Lesson 03 - 환경과 지구 보호",
+      "words": "campaign : 홍보활동\nearth : 지구\npaper : 종이\nposter : 포스터\nsave : 구하다\nshirt : 셔츠\nturn off : 끄다\nwhen : 언제\nworld : 세계"
+    },
+    {
+      "code": "L04",
+      "name": "6학년 Lesson 04 - 감정과 이유 묻기",
+      "words": "because : ~ 때문에\nbelt : 띠\nbirdhouse : 새집, 새장\nbreak : 부수다, 깨다\ncongratulations : 축하\ntest : 시험\nwhy : 왜\nworry : 걱정하다\nwrong : 나쁜, 틀린"
+    },
+    {
+      "code": "L05",
+      "name": "6학년 Lesson 05 - 길 찾기와 장소",
+      "words": "bank : 은행\nblock : 구역\nhospital : 병원\nhungry : 배고픈\nrestaurant : 식당\nleft : 왼쪽\nrestroom : 화장실\nstop : 정류장\nstore : 가게\nstraight : 똑바로, 일직선으로\ntown : 마을"
+    },
+    {
+      "code": "L06",
+      "name": "6학년 Lesson 06 - 가족과 묘사하기",
+      "words": "aunt : 고모\ndaughter : 딸\ndress : 드레스\neye : 눈\nhair : 머리카락\nlong : 긴\nof : …의\nsame : 같은\nsand : 모래\nshort : 짧은"
+    },
+    {
+      "code": "L07",
+      "name": "6학년 Lesson 07 - 경험과 과거",
+      "words": "after : ~후에\nbiscuit : 비스킷\nlaser : 레이저\nlight : 빛\nnumber : 숫자\nsoft drink : 청량음료\ntell : 말하다"
+    },
+    {
+      "code": "L08",
+      "name": "6학년 Lesson 08 - 비교하기",
+      "words": "always : 항상, 언제나\nbaby : 아기\ncatch : 잡다\nclock : 시계\ndribble : 공을 몰다\nfast : 빠른\ngiraffe : 기린\ngive : 주다\ngoal : 득점\nheavy : 무거운\nrace : 경주\nside : 쪽\nstrong : 힘 센\nthan : ~보다\ntower : 탑\nwin : 이기다"
+    },
+    {
+      "code": "L09",
+      "name": "6학년 Lesson 09 - 방학 계획과 미래",
+      "words": "any : 어떤\nchildren : 아이들\nforest : 숲\nhamburger : 햄버거\nplan : 계획\nprogram : 프로그램\nroom : 방\nstay : 머무르다\ntent : 텐트\nvillage : 마을\nzoo : 동물원"
+    },
+    {
+      "code": "L10",
+      "name": "6학년 Lesson 10 - 가격 묻기와 쇼핑",
+      "words": "shirt : 셔츠\npants : 바지\nshoes : 신발\ndollar : 달러\ncent : 센트\ncheap : 값싼\nexpensive : 비싼\nbuy : 사다\nsell : 팔다\nmoney : 돈\nmarket : 시장\npresent : 선물"
+    },
+    {
+      "code": "L11",
+      "name": "6학년 Lesson 11 - 건강 상태와 조언",
+      "words": "headache : 두통, 머리 아픔\nstomachache : 복통, 배 아픔\ntoothache : 치통, 이 아픔\nfever : 열\ncold : 감기, 추운\nmatter : 문제, 일\ndoctor : 의사\nhospital : 병원\nmedicine : 약\nrest : 휴식, 쉬다\nwarm : 따뜻한\nhealthy : 건강한"
+    },
+    {
+      "code": "L12",
+      "name": "6학년 Lesson 12 - 제안하기와 여가 활동",
+      "words": "idea : 생각, 아이디어\ntogether : 함께\npark : 공원\nmovie : 영화\nsound : 들리다\nwonderful : 멋진\nbadminton : 배드민턴\nafternoon : 오후\ntomorrow : 내일\nweekend : 주말\nbusy : 바쁜\nfinish : 끝내다"
+    }
+  ]
+}

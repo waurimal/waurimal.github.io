@@ -798,78 +798,335 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // 기본 추천 단원 세트 (DB가 비어있어도 즉시 플레이 가능)
+// 기본 추천 단원 세트 (단어 타자 연습 연동 교과서 단원 13개 + 주제별 추천 단원 4개)
         const DEFAULT_PRESET_UNITS = [
             {
-                id: 'preset_animals',
-                name: '동물 (Animals)',
+                id: "lesson_3g_l07",
+                code: "3G_L07",
+                category: "curriculum",
+                name: "3학년 Lesson 07 - 학용품",
                 words: [
-                    { word: 'Dog', meaning: '개' },
-                    { word: 'Cat', meaning: '고양이' },
-                    { word: 'Elephant', meaning: '코끼리' },
-                    { word: 'Lion', meaning: '사자' },
-                    { word: 'Tiger', meaning: '호랑이' },
-                    { word: 'Monkey', meaning: '원숭이' },
-                    { word: 'Rabbit', meaning: '토끼' },
-                    { word: 'Bear', meaning: '곰' },
-                    { word: 'Horse', meaning: '말' },
-                    { word: 'Duck', meaning: '오리' },
-                    { word: 'Pig', meaning: '돼지' },
-                    { word: 'Cow', meaning: '소' }
+                    { word: "crayon", meaning: "크레용" },
+                    { word: "eraser", meaning: "지우개" },
+                    { word: "glue stick", meaning: "풀" },
+                    { word: "notebook", meaning: "공책" },
+                    { word: "pencil", meaning: "연필" },
+                    { word: "pencil case", meaning: "필통" },
+                    { word: "ruler", meaning: "자" },
+                    { word: "scissors", meaning: "가위" }
                 ]
             },
             {
-                id: 'preset_food',
-                name: '과일과 음식 (Food)',
+                id: "lesson_l01",
+                code: "L01",
+                category: "curriculum",
+                name: "6학년 Lesson 01 - 서수와 학교생활",
                 words: [
-                    { word: 'Apple', meaning: '사과' },
-                    { word: 'Banana', meaning: '바나나' },
-                    { word: 'Orange', meaning: '오렌지' },
-                    { word: 'Water', meaning: '물' },
-                    { word: 'Milk', meaning: '우유' },
-                    { word: 'Bread', meaning: '빵' },
-                    { word: 'Juice', meaning: '주스' },
-                    { word: 'Grape', meaning: '포도' },
-                    { word: 'Rice', meaning: '밥' },
-                    { word: 'Egg', meaning: '달걀' },
-                    { word: 'Pizza', meaning: '피자' },
-                    { word: 'Cheese', meaning: '치즈' }
+                    { word: "first", meaning: "첫 번째의" },
+                    { word: "second", meaning: "두 번째의" },
+                    { word: "third", meaning: "세 번째의" },
+                    { word: "fourth", meaning: "네 번째의" },
+                    { word: "fifth", meaning: "다섯 번째의" },
+                    { word: "sixth", meaning: "여섯 번째의" },
+                    { word: "grade", meaning: "학년" },
+                    { word: "spell", meaning: "철자를 쓰다" },
+                    { word: "join", meaning: "가입하다" },
+                    { word: "club", meaning: "동아리" },
+                    { word: "dance", meaning: "춤추다, 춤" },
+                    { word: "draw", meaning: "그리다" },
+                    { word: "play", meaning: "놀다, 연주하다" },
+                    { word: "listen", meaning: "듣다" },
+                    { word: "read", meaning: "읽다" },
+                    { word: "ride", meaning: "(자전거 등을) 타다" }
                 ]
             },
             {
-                id: 'preset_school',
-                name: '학교와 교실 (School)',
+                id: "lesson_l02",
+                code: "L02",
+                category: "curriculum",
+                name: "6학년 Lesson 02 - 계절과 날씨",
                 words: [
-                    { word: 'Book', meaning: '책' },
-                    { word: 'Desk', meaning: '책상' },
-                    { word: 'Chair', meaning: '의자' },
-                    { word: 'Pencil', meaning: '연필' },
-                    { word: 'Eraser', meaning: '지우개' },
-                    { word: 'Teacher', meaning: '선생님' },
-                    { word: 'Student', meaning: '학생' },
-                    { word: 'School', meaning: '학교' },
-                    { word: 'Bag', meaning: '가방' },
-                    { word: 'Friend', meaning: '친구' },
-                    { word: 'Clock', meaning: '시계' },
-                    { word: 'Door', meaning: '문' }
+                    { word: "season", meaning: "계절" },
+                    { word: "spring", meaning: "봄" },
+                    { word: "summer", meaning: "여름" },
+                    { word: "fall", meaning: "가을" },
+                    { word: "winter", meaning: "겨울" },
+                    { word: "beautiful", meaning: "아름다운" },
+                    { word: "flower", meaning: "꽃" },
+                    { word: "cold", meaning: "추운" },
+                    { word: "warm", meaning: "따뜻한" },
+                    { word: "delicious", meaning: "맛있는" },
+                    { word: "also", meaning: "또한" },
+                    { word: "colorful", meaning: "다채로운" },
+                    { word: "swim", meaning: "수영하다" },
+                    { word: "field trip", meaning: "현장학습" },
+                    { word: "clear", meaning: "맑은" },
+                    { word: "bright", meaning: "밝은" }
                 ]
             },
             {
-                id: 'preset_actions',
-                name: '동작과 일상 (Actions)',
+                id: "lesson_l03",
+                code: "L03",
+                category: "curriculum",
+                name: "6학년 Lesson 03 - 환경과 지구 보호",
                 words: [
-                    { word: 'Run', meaning: '달리다' },
-                    { word: 'Jump', meaning: '뛰다' },
-                    { word: 'Swim', meaning: '수영하다' },
-                    { word: 'Sleep', meaning: '자다' },
-                    { word: 'Eat', meaning: '먹다' },
-                    { word: 'Drink', meaning: '마시다' },
-                    { word: 'Read', meaning: '읽다' },
-                    { word: 'Write', meaning: '쓰다' },
-                    { word: 'Play', meaning: '놀다' },
-                    { word: 'Sing', meaning: '노래하다' },
-                    { word: 'Walk', meaning: '걷다' },
-                    { word: 'Dance', meaning: '춤추다' }
+                    { word: "campaign", meaning: "홍보활동" },
+                    { word: "earth", meaning: "지구" },
+                    { word: "paper", meaning: "종이" },
+                    { word: "poster", meaning: "포스터" },
+                    { word: "save", meaning: "구하다" },
+                    { word: "shirt", meaning: "셔츠" },
+                    { word: "turn off", meaning: "끄다" },
+                    { word: "when", meaning: "언제" },
+                    { word: "world", meaning: "세계" }
+                ]
+            },
+            {
+                id: "lesson_l04",
+                code: "L04",
+                category: "curriculum",
+                name: "6학년 Lesson 04 - 감정과 이유 묻기",
+                words: [
+                    { word: "because", meaning: "~ 때문에" },
+                    { word: "belt", meaning: "띠" },
+                    { word: "birdhouse", meaning: "새집, 새장" },
+                    { word: "break", meaning: "부수다, 깨다" },
+                    { word: "congratulations", meaning: "축하" },
+                    { word: "test", meaning: "시험" },
+                    { word: "why", meaning: "왜" },
+                    { word: "worry", meaning: "걱정하다" },
+                    { word: "wrong", meaning: "나쁜, 틀린" }
+                ]
+            },
+            {
+                id: "lesson_l05",
+                code: "L05",
+                category: "curriculum",
+                name: "6학년 Lesson 05 - 길 찾기와 장소",
+                words: [
+                    { word: "bank", meaning: "은행" },
+                    { word: "block", meaning: "구역" },
+                    { word: "hospital", meaning: "병원" },
+                    { word: "hungry", meaning: "배고픈" },
+                    { word: "restaurant", meaning: "식당" },
+                    { word: "left", meaning: "왼쪽" },
+                    { word: "restroom", meaning: "화장실" },
+                    { word: "stop", meaning: "정류장" },
+                    { word: "store", meaning: "가게" },
+                    { word: "straight", meaning: "똑바로, 일직선으로" },
+                    { word: "town", meaning: "마을" }
+                ]
+            },
+            {
+                id: "lesson_l06",
+                code: "L06",
+                category: "curriculum",
+                name: "6학년 Lesson 06 - 가족과 묘사하기",
+                words: [
+                    { word: "aunt", meaning: "고모" },
+                    { word: "daughter", meaning: "딸" },
+                    { word: "dress", meaning: "드레스" },
+                    { word: "eye", meaning: "눈" },
+                    { word: "hair", meaning: "머리카락" },
+                    { word: "long", meaning: "긴" },
+                    { word: "of", meaning: "…의" },
+                    { word: "same", meaning: "같은" },
+                    { word: "sand", meaning: "모래" },
+                    { word: "short", meaning: "짧은" }
+                ]
+            },
+            {
+                id: "lesson_l07",
+                code: "L07",
+                category: "curriculum",
+                name: "6학년 Lesson 07 - 경험과 과거",
+                words: [
+                    { word: "after", meaning: "~후에" },
+                    { word: "biscuit", meaning: "비스킷" },
+                    { word: "laser", meaning: "레이저" },
+                    { word: "light", meaning: "빛" },
+                    { word: "number", meaning: "숫자" },
+                    { word: "soft drink", meaning: "청량음료" },
+                    { word: "tell", meaning: "말하다" }
+                ]
+            },
+            {
+                id: "lesson_l08",
+                code: "L08",
+                category: "curriculum",
+                name: "6학년 Lesson 08 - 비교하기",
+                words: [
+                    { word: "always", meaning: "항상, 언제나" },
+                    { word: "baby", meaning: "아기" },
+                    { word: "catch", meaning: "잡다" },
+                    { word: "clock", meaning: "시계" },
+                    { word: "dribble", meaning: "공을 몰다" },
+                    { word: "fast", meaning: "빠른" },
+                    { word: "giraffe", meaning: "기린" },
+                    { word: "give", meaning: "주다" },
+                    { word: "goal", meaning: "득점" },
+                    { word: "heavy", meaning: "무거운" },
+                    { word: "race", meaning: "경주" },
+                    { word: "side", meaning: "쪽" },
+                    { word: "strong", meaning: "힘 센" },
+                    { word: "than", meaning: "~보다" },
+                    { word: "tower", meaning: "탑" },
+                    { word: "win", meaning: "이기다" }
+                ]
+            },
+            {
+                id: "lesson_l09",
+                code: "L09",
+                category: "curriculum",
+                name: "6학년 Lesson 09 - 방학 계획과 미래",
+                words: [
+                    { word: "any", meaning: "어떤" },
+                    { word: "children", meaning: "아이들" },
+                    { word: "forest", meaning: "숲" },
+                    { word: "hamburger", meaning: "햄버거" },
+                    { word: "plan", meaning: "계획" },
+                    { word: "program", meaning: "프로그램" },
+                    { word: "room", meaning: "방" },
+                    { word: "stay", meaning: "머무르다" },
+                    { word: "tent", meaning: "텐트" },
+                    { word: "village", meaning: "마을" },
+                    { word: "zoo", meaning: "동물원" }
+                ]
+            },
+            {
+                id: "lesson_l10",
+                code: "L10",
+                category: "curriculum",
+                name: "6학년 Lesson 10 - 가격 묻기와 쇼핑",
+                words: [
+                    { word: "shirt", meaning: "셔츠" },
+                    { word: "pants", meaning: "바지" },
+                    { word: "shoes", meaning: "신발" },
+                    { word: "dollar", meaning: "달러" },
+                    { word: "cent", meaning: "센트" },
+                    { word: "cheap", meaning: "값싼" },
+                    { word: "expensive", meaning: "비싼" },
+                    { word: "buy", meaning: "사다" },
+                    { word: "sell", meaning: "팔다" },
+                    { word: "money", meaning: "돈" },
+                    { word: "market", meaning: "시장" },
+                    { word: "present", meaning: "선물" }
+                ]
+            },
+            {
+                id: "lesson_l11",
+                code: "L11",
+                category: "curriculum",
+                name: "6학년 Lesson 11 - 건강 상태와 조언",
+                words: [
+                    { word: "headache", meaning: "두통, 머리 아픔" },
+                    { word: "stomachache", meaning: "복통, 배 아픔" },
+                    { word: "toothache", meaning: "치통, 이 아픔" },
+                    { word: "fever", meaning: "열" },
+                    { word: "cold", meaning: "감기, 추운" },
+                    { word: "matter", meaning: "문제, 일" },
+                    { word: "doctor", meaning: "의사" },
+                    { word: "hospital", meaning: "병원" },
+                    { word: "medicine", meaning: "약" },
+                    { word: "rest", meaning: "휴식, 쉬다" },
+                    { word: "warm", meaning: "따뜻한" },
+                    { word: "healthy", meaning: "건강한" }
+                ]
+            },
+            {
+                id: "lesson_l12",
+                code: "L12",
+                category: "curriculum",
+                name: "6학년 Lesson 12 - 제안하기와 여가 활동",
+                words: [
+                    { word: "idea", meaning: "생각, 아이디어" },
+                    { word: "together", meaning: "함께" },
+                    { word: "park", meaning: "공원" },
+                    { word: "movie", meaning: "영화" },
+                    { word: "sound", meaning: "들리다" },
+                    { word: "wonderful", meaning: "멋진" },
+                    { word: "badminton", meaning: "배드민턴" },
+                    { word: "afternoon", meaning: "오후" },
+                    { word: "tomorrow", meaning: "내일" },
+                    { word: "weekend", meaning: "주말" },
+                    { word: "busy", meaning: "바쁜" },
+                    { word: "finish", meaning: "끝내다" }
+                ]
+            },
+            {
+                id: "preset_animals",
+                category: "theme",
+                name: "동물 (Animals)",
+                words: [
+                    { word: "Dog", meaning: "개" },
+                    { word: "Cat", meaning: "고양이" },
+                    { word: "Elephant", meaning: "코끼리" },
+                    { word: "Lion", meaning: "사자" },
+                    { word: "Tiger", meaning: "호랑이" },
+                    { word: "Monkey", meaning: "원숭이" },
+                    { word: "Rabbit", meaning: "토끼" },
+                    { word: "Bear", meaning: "곰" },
+                    { word: "Horse", meaning: "말" },
+                    { word: "Duck", meaning: "오리" },
+                    { word: "Pig", meaning: "돼지" },
+                    { word: "Cow", meaning: "소" }
+                ]
+            },
+            {
+                id: "preset_food",
+                category: "theme",
+                name: "과일과 음식 (Food)",
+                words: [
+                    { word: "Apple", meaning: "사과" },
+                    { word: "Banana", meaning: "바나나" },
+                    { word: "Orange", meaning: "오렌지" },
+                    { word: "Water", meaning: "물" },
+                    { word: "Milk", meaning: "우유" },
+                    { word: "Bread", meaning: "빵" },
+                    { word: "Juice", meaning: "주스" },
+                    { word: "Grape", meaning: "포도" },
+                    { word: "Rice", meaning: "밥" },
+                    { word: "Egg", meaning: "달걀" },
+                    { word: "Pizza", meaning: "피자" },
+                    { word: "Cheese", meaning: "치즈" }
+                ]
+            },
+            {
+                id: "preset_school",
+                category: "theme",
+                name: "학교와 교실 (School)",
+                words: [
+                    { word: "Book", meaning: "책" },
+                    { word: "Desk", meaning: "책상" },
+                    { word: "Chair", meaning: "의자" },
+                    { word: "Pencil", meaning: "연필" },
+                    { word: "Eraser", meaning: "지우개" },
+                    { word: "Teacher", meaning: "선생님" },
+                    { word: "Student", meaning: "학생" },
+                    { word: "School", meaning: "학교" },
+                    { word: "Bag", meaning: "가방" },
+                    { word: "Friend", meaning: "친구" },
+                    { word: "Clock", meaning: "시계" },
+                    { word: "Door", meaning: "문" }
+                ]
+            },
+            {
+                id: "preset_actions",
+                category: "theme",
+                name: "동작과 일상 (Actions)",
+                words: [
+                    { word: "Run", meaning: "달리다" },
+                    { word: "Jump", meaning: "뛰다" },
+                    { word: "Swim", meaning: "수영하다" },
+                    { word: "Sleep", meaning: "자다" },
+                    { word: "Eat", meaning: "먹다" },
+                    { word: "Drink", meaning: "마시다" },
+                    { word: "Read", meaning: "읽다" },
+                    { word: "Write", meaning: "쓰다" },
+                    { word: "Play", meaning: "놀다" },
+                    { word: "Sing", meaning: "노래하다" },
+                    { word: "Walk", meaning: "걷다" },
+                    { word: "Dance", meaning: "춤추다" }
                 ]
             }
         ];
@@ -1020,8 +1277,48 @@
         // ════════════════════════════════════════════════════════════════════
         // ── 초기화 ──
         // ════════════════════════════════════════════════════════════════════
+        // config.json 비동기 로드 및 단원 동기화 (단어 타자 연습 연동)
+        async function loadConfigJson() {
+            try {
+                const res = await fetch('config.json?t=' + Date.now(), { cache: 'no-store' });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.lessons && Array.isArray(data.lessons)) {
+                        data.lessons.forEach(l => {
+                            const unitId = 'lesson_' + (l.code || l.name).toLowerCase();
+                            let existing = DEFAULT_PRESET_UNITS.find(u => u.id === unitId || u.code === l.code);
+                            let parsedWords = [];
+                            if (typeof l.words === 'string') {
+                                parsedWords = l.words.split('\n').filter(line => line.trim()).map(line => {
+                                    const parts = line.split(':');
+                                    return { word: parts[0].trim(), meaning: parts.slice(1).join(':').trim() };
+                                });
+                            } else if (Array.isArray(l.words)) {
+                                parsedWords = l.words.map(w => ({ word: w.word || w.en, meaning: w.meaning || w.kr }));
+                            }
+                            if (parsedWords.length >= 2) {
+                                if (existing) {
+                                    existing.words = parsedWords;
+                                    if (l.name) existing.name = l.name;
+                                } else {
+                                    DEFAULT_PRESET_UNITS.push({
+                                        id: unitId,
+                                        code: l.code,
+                                        category: 'curriculum',
+                                        name: l.name || l.code,
+                                        words: parsedWords
+                                    });
+                                }
+                            }
+                        });
+                    }
+                }
+            } catch (e) {}
+        }
+
         window.addEventListener('DOMContentLoaded', async () => {
             loadStudentProfile();
+            loadConfigJson();
             try {
                 const userCred = await signInAnonymously(auth);
                 currentUserUid = userCred.user.uid;
@@ -1070,12 +1367,25 @@
                 html += '</optgroup>';
             }
 
-            // 2. 기본 추천 단원 추가
-            html += '<optgroup label="기본 추천 단원">';
-            DEFAULT_PRESET_UNITS.forEach(p => {
-                html += `<option value="preset:${p.id}">${p.name}</option>`;
-            });
-            html += '</optgroup>';
+            // 2. 교과서 단원 (단어 타자 연습 연동)
+            const textbookUnits = DEFAULT_PRESET_UNITS.filter(p => p.category === 'curriculum');
+            if (textbookUnits.length > 0) {
+                html += '<optgroup label="📚 교과서 단원 (단어 타자 연습 연동)">';
+                textbookUnits.forEach(p => {
+                    html += `<option value="preset:${p.id}">${p.name}</option>`;
+                });
+                html += '</optgroup>';
+            }
+
+            // 3. 주제별 추천 단원
+            const themeUnits = DEFAULT_PRESET_UNITS.filter(p => p.category !== 'curriculum');
+            if (themeUnits.length > 0) {
+                html += '<optgroup label="🌟 주제별 추천 단원">';
+                themeUnits.forEach(p => {
+                    html += `<option value="preset:${p.id}">${p.name}</option>`;
+                });
+                html += '</optgroup>';
+            }
 
             selectEl.innerHTML = html;
             hideLoading();
@@ -1107,7 +1417,7 @@
                     const found = DEFAULT_PRESET_UNITS.find(p => p.id === presetId);
                     if (found) {
                         unitTitle = found.name;
-                        loadedWords = found.words.map((w, idx) => ({ id: `w_${idx}`, ...w }));
+                        loadedWords = found.words.map((w, idx) => ({ id: `w_${idx}`, word: w.word || w.en, meaning: w.meaning || w.kr }));
                     }
                 } else if (selectVal.startsWith('db:')) {
                     const dbUnitId = selectVal.replace('db:', '');
@@ -1604,8 +1914,8 @@
             // Preset units
             DEFAULT_PRESET_UNITS.forEach(u => {
                 const opt = document.createElement('option');
-                opt.value = u.title;
-                opt.textContent = u.title;
+                opt.value = u.name || u.title || u.id;
+                opt.textContent = u.name || u.title || u.id;
                 unitSel.appendChild(opt);
             });
 
@@ -1861,9 +2171,9 @@
             }
         };
 
-        // 기본 추천 단원 원클릭 생성
+        // 기본 추천 단원 원클릭 생성 (단어 타자 연습 연동 단원 포함)
         window.installDefaultUnitsToFirebase = async () => {
-            const confirmed = await showConfirm("초등 필수 4개 단원(동물, 음식, 학교, 동작)과 단어들을 일괄 등록하시겠습니까?", "기본 단원 등록", "🌟");
+            const confirmed = await showConfirm("단어 타자 연습 연동 교과서 단원(13개) 및 주제별 단원(4개)을 데이터베이스에 일괄 등록하시겠습니까?", "기본 단원 등록", "🌟");
             if (!confirmed) return;
 
             showLoading();
@@ -1871,12 +2181,12 @@
                 for (const p of DEFAULT_PRESET_UNITS) {
                     const unitDoc = await addDoc(getCollection('units'), { name: p.name, createdAt: Date.now() });
                     for (const w of p.words) {
-                        await addDoc(getCollection(`words_${unitDoc.id}`), { word: w.word, meaning: w.meaning, createdAt: Date.now() });
+                        await addDoc(getCollection(`words_${unitDoc.id}`), { word: w.word || w.en, meaning: w.meaning || w.kr, createdAt: Date.now() });
                     }
                 }
                 await loadTeacherUnits();
                 hideLoading();
-                showAlert("기본 추천 단원이 성공적으로 생성되었습니다.", "완료", "✅");
+                showAlert("모든 단원이 데이터베이스에 성공적으로 등록되었습니다.", "완료", "✅");
             } catch (e) {
                 hideLoading();
                 showAlert("생성 중 오류 발생: " + e.message, "오류", "❌");
