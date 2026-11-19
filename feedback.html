@@ -62,7 +62,7 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 940px;
             margin: 0 auto;
             padding: 0 1rem;
             flex-grow: 1;
@@ -109,29 +109,126 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* 좋아요 탭 상단 필터 및 정렬 툴바 */
+        .likes-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+            background: #ffffff;
+            padding: 0.6rem 0.8rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .likes-category-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }
+
+        .like-cat-btn {
+            background: #F3F4F6;
+            border: 1px solid #E5E7EB;
+            color: #4B5563;
+            padding: 0.28rem 0.65rem;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-family: inherit;
+        }
+
+        .like-cat-btn:hover {
+            background: #E5E7EB;
+            color: #1F2937;
+        }
+
+        .like-cat-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+        }
+
+        .like-cat-btn .badge {
+            background: rgba(0, 0, 0, 0.1);
+            color: inherit;
+            padding: 0.05rem 0.35rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+        }
+
+        .like-cat-btn.active .badge {
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+        }
+
+        .likes-sort-tabs {
+            display: flex;
+            gap: 0.3rem;
+        }
+
+        .like-sort-btn {
+            background: transparent;
+            border: 1px solid #D1D5DB;
+            color: #6B7280;
+            padding: 0.28rem 0.6rem;
+            border-radius: 0.4rem;
+            font-size: 0.76rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-family: inherit;
+        }
+
+        .like-sort-btn:hover {
+            background: #F9FAFB;
+            color: #1F2937;
+        }
+
+        .like-sort-btn.active {
+            background: #1F2937;
+            border-color: #1F2937;
+            color: #ffffff;
+        }
+
         .likes-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 0.85rem;
             margin-bottom: 2rem;
         }
 
         .like-card {
             background: var(--card-bg);
             border-radius: 0.8rem;
-            padding: 1rem;
+            padding: 0.9rem 1rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
+            border: 1px solid #E5E7EB;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
         }
 
-        .like-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .like-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            border-color: #CBD5E1;
+        }
 
-        .app-info { display: flex; align-items: center; gap: 0.8rem; }
-        .app-icon { font-size: 1.5rem; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .app-name { font-weight: 700; font-size: 0.95rem; }
+        .app-info { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+        .app-icon { font-size: 1.35rem; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .app-name { font-weight: 700; font-size: 0.92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         .like-btn {
             background: none;
@@ -140,16 +237,51 @@
             display: flex;
             align-items: center;
             gap: 0.4rem;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             color: #9CA3AF;
-            font-weight: 600;
-            padding: 0.5rem;
+            font-weight: 700;
+            padding: 0.45rem 0.65rem;
             border-radius: 2rem;
             transition: all 0.2s;
+            flex-shrink: 0;
         }
         
         .like-btn.liked { color: #EF4444; }
         .like-btn:hover { background: #F3F4F6; }
+
+        @media (max-width: 600px) {
+            .container { padding: 0 0.6rem; }
+            .likes-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.5rem;
+            }
+            .like-card {
+                padding: 0.65rem 0.5rem;
+            }
+            .app-name {
+                font-size: 0.8rem;
+            }
+            .app-icon {
+                width: 30px;
+                height: 30px;
+                font-size: 1.1rem;
+            }
+            .like-btn {
+                font-size: 0.9rem;
+                padding: 0.25rem 0.35rem;
+                gap: 0.25rem;
+            }
+            .likes-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .likes-category-tabs {
+                justify-content: center;
+            }
+            .likes-sort-tabs {
+                justify-content: center;
+            }
+        }
 
         .board-form {
             background: white;
@@ -268,8 +400,22 @@
         </div>
 
         <div id="tab-likes" class="tab-content active">
+            <div class="likes-toolbar">
+                <div class="likes-category-tabs">
+                    <button class="like-cat-btn active" data-cat="all" onclick="setLikeCategory('all')">전체 <span class="badge">28</span></button>
+                    <button class="like-cat-btn" data-cat="word" onclick="setLikeCategory('word')">🔤 단어 <span class="badge">9</span></button>
+                    <button class="like-cat-btn" data-cat="sentence" onclick="setLikeCategory('sentence')">📝 문장·독해 <span class="badge">5</span></button>
+                    <button class="like-cat-btn" data-cat="battle" onclick="setLikeCategory('battle')">⚔️ 대결 <span class="badge">7</span></button>
+                    <button class="like-cat-btn" data-cat="puzzle" onclick="setLikeCategory('puzzle')">🧩 퍼즐 <span class="badge">4</span></button>
+                    <button class="like-cat-btn" data-cat="tool" onclick="setLikeCategory('tool')">🛠️ 도구 <span class="badge">3</span></button>
+                </div>
+                <div class="likes-sort-tabs">
+                    <button class="like-sort-btn active" data-sort="default" onclick="setLikeSort('default')"><i class="fas fa-list"></i> 기본순</button>
+                    <button class="like-sort-btn" data-sort="popular" onclick="setLikeSort('popular')"><i class="fas fa-fire"></i> 인기순</button>
+                </div>
+            </div>
             <div class="likes-grid" id="likes-container">
-                <div style="text-align: center; width: 100%; color: #6B7280;">데이터를 불러오는 중...</div>
+                <div style="text-align: center; width: 100%; color: #6B7280; grid-column: 1 / -1;">데이터를 불러오는 중...</div>
             </div>
         </div>
 
@@ -315,25 +461,46 @@
         };
 
         const appsData = [
-            { id: "wordtyping", title: "단어 타자 연습", icon: "fas fa-keyboard", theme: "#3B82F6", bgTheme: "#EFF6FF" },
-            { id: "hangman", title: "행맨 게임", icon: "fas fa-gamepad", theme: "#8B5CF6", bgTheme: "#F5F3FF" },
-            { id: "alchemist", title: "연금술사", icon: "fas fa-flask", theme: "#F97316", bgTheme: "#FFF7ED" },
-            { id: "reading", title: "영어 읽기", icon: "fas fa-glasses", theme: "#DB2777", bgTheme: "#FDF2F8" },
-            { id: "swarm", title: "Swarm 게임", icon: "fas fa-users", theme: "#0891B2", bgTheme: "#ECFEFF" },
-            { id: "tictac", title: "Tic Tac Toe", icon: "fas fa-hashtag", theme: "#D97706", bgTheme: "#FEF3C7" },
-            { id: "file_upload", title: "파일 제출", icon: "fas fa-cloud-upload-alt", theme: "#6366F1", bgTheme: "#EEF2FF" },
-            { id: "baseball", title: "야구게임", icon: "fas fa-baseball-ball", theme: "#14B8A6", bgTheme: "#CCFBF1" },
-            { id: "where", title: "길 찾기 게임", icon: "fas fa-map-marker-alt", theme: "#84CC16", bgTheme: "#ECFCCB" },
-            { id: "bingo", title: "빙고 게임", icon: "fas fa-star", theme: "#EC4899", bgTheme: "#FCE7F3" },
-            { id: "skribble", title: "Skribble 게임", icon: "fas fa-pen-nib", theme: "#0EA5E9", bgTheme: "#E0F2FE" },
-            { id: "bluemarble", title: "부루마불", icon: "fas fa-dice", theme: "#EAB308", bgTheme: "#FEF9C3" },
-            { id: "flip", title: "카드 뒤집기", icon: "fas fa-sync", theme: "#8B5CF6", bgTheme: "#EDE9FE" },
-            { id: "sudoku", title: "스도쿠 게임", icon: "fas fa-th", theme: "#4F46E5", bgTheme: "#E0E7FF" },
-            { id: "earthworm", title: "지렁이 게임", icon: "fas fa-worm", theme: "#16A34A", bgTheme: "#DCFCE7" },
-            { id: "street", title: "Crossy Road", icon: "fas fa-road", theme: "#64748B", bgTheme: "#F1F5F9" },
-            { id: "frog", title: "개구리 게임", icon: "fas fa-frog", theme: "#059669", bgTheme: "#D1FAE5" },
-            { id: "chain", title: "단어 체인", icon: "fas fa-link", theme: "#EA580C", bgTheme: "#FFEDD5" },
-            { id: "general", title: "사이트 전체 / 기타", icon: "fas fa-globe", theme: "#1F2937", bgTheme: "#F3F4F6" }
+            // 단어 학습 (9개)
+            { id: "wordtyping", category: "word", title: "단어 타자 연습", icon: "fas fa-keyboard", theme: "#3B82F6", bgTheme: "#EFF6FF" },
+            { id: "hangman", category: "word", title: "행맨 게임", icon: "fas fa-gamepad", theme: "#8B5CF6", bgTheme: "#F5F3FF" },
+            { id: "alchemist", category: "word", title: "단어 연금술사", icon: "fas fa-flask", theme: "#F97316", bgTheme: "#FFF7ED" },
+            { id: "chain", category: "word", title: "단어 체인", icon: "fas fa-link", theme: "#EA580C", bgTheme: "#FFEDD5" },
+            { id: "flip", category: "word", title: "카드 뒤집기", icon: "fas fa-sync", theme: "#8B5CF6", bgTheme: "#EDE9FE" },
+            { id: "earthworm", category: "word", title: "지렁이 게임", icon: "fas fa-worm", theme: "#16A34A", bgTheme: "#DCFCE7" },
+            { id: "skribble", category: "word", title: "Skribble 게임", icon: "fas fa-pen-nib", theme: "#0EA5E9", bgTheme: "#E0F2FE" },
+            { id: "bingo", category: "word", title: "학교 빙고 게임", icon: "fas fa-star", theme: "#EC4899", bgTheme: "#FCE7F3" },
+            { id: "spelling_galaga", category: "word", title: "스펠링 갤럭시", icon: "fas fa-rocket", theme: "#0284C7", bgTheme: "#F0F9FF" },
+
+            // 문장·독해·말하기 (5개)
+            { id: "reading", category: "sentence", title: "영어 읽기", icon: "fas fa-glasses", theme: "#DB2777", bgTheme: "#FDF2F8" },
+            { id: "speaking", category: "sentence", title: "영어 말하기", icon: "fas fa-comments", theme: "#0284C7", bgTheme: "#F0F9FF" },
+            { id: "sen_typing", category: "sentence", title: "영어 문장", icon: "fas fa-book-open", theme: "#10B981", bgTheme: "#ECFDF5" },
+            { id: "where", category: "sentence", title: "길 찾기 게임", icon: "fas fa-map-marker-alt", theme: "#84CC16", bgTheme: "#ECFCCB" },
+            { id: "sparkle", category: "sentence", title: "Sparkle DIE", icon: "fas fa-bolt", theme: "#EC4899", bgTheme: "#FDF2F8" },
+
+            // 실시간 대결 (7개)
+            { id: "goldenbell", category: "battle", title: "도전 골든벨", icon: "fas fa-bell", theme: "#D97706", bgTheme: "#FEF3C7" },
+            { id: "baseball", category: "battle", title: "야구게임", icon: "fas fa-baseball-ball", theme: "#14B8A6", bgTheme: "#CCFBF1" },
+            { id: "tictac", category: "battle", title: "Tic Tac Toe", icon: "fas fa-hashtag", theme: "#D97706", bgTheme: "#FEF3C7" },
+            { id: "swarm", category: "battle", title: "Swarm 게임", icon: "fas fa-users", theme: "#0891B2", bgTheme: "#ECFEFF" },
+            { id: "bluemarble", category: "battle", title: "부루마불", icon: "fas fa-dice", theme: "#EAB308", bgTheme: "#FEF9C3" },
+            { id: "yutnori", category: "battle", title: "영어 윷놀이", icon: "fas fa-dice", theme: "#F59E0B", bgTheme: "#FEF3C7" },
+            { id: "mafia", category: "battle", title: "영어 마피아 게임", icon: "fas fa-user-secret", theme: "#E11D48", bgTheme: "#FFE4E6" },
+
+            // 퍼즐·탐험 (4개)
+            { id: "jumpman", category: "puzzle", title: "점프맨 게임", icon: "fas fa-running", theme: "#3B82F6", bgTheme: "#EFF6FF" },
+            { id: "frog", category: "puzzle", title: "개구리 게임", icon: "fas fa-frog", theme: "#059669", bgTheme: "#D1FAE5" },
+            { id: "street", category: "puzzle", title: "Crossy Road", icon: "fas fa-road", theme: "#64748B", bgTheme: "#F1F5F9" },
+            { id: "sudoku", category: "puzzle", title: "스도쿠 게임", icon: "fas fa-th", theme: "#4F46E5", bgTheme: "#E0E7FF" },
+
+            // 수업 도구 (3개)
+            { id: "tournament", category: "tool", title: "토너먼트 배정", icon: "fas fa-trophy", theme: "#D97706", bgTheme: "#FEF3C7" },
+            { id: "seating", category: "tool", title: "모둠 자리 배정", icon: "fas fa-users-viewfinder", theme: "#2563EB", bgTheme: "#EFF6FF" },
+            { id: "file_upload", category: "tool", title: "파일 제출", icon: "fas fa-cloud-upload-alt", theme: "#6366F1", bgTheme: "#EEF2FF" },
+
+            // 사이트 전체 / 기타 (게시판 의견 전용)
+            { id: "general", category: "etc", title: "사이트 전체 / 기타", icon: "fas fa-globe", theme: "#1F2937", bgTheme: "#F3F4F6" }
         ];
 
         let app, analytics, db, auth, currentUser;
@@ -343,6 +510,9 @@
         
         let clickCount = 0;
         let clickTimer = null;
+
+        let currentLikeCategory = 'all';
+        let currentLikeSort = 'default';
 
         const getAdminPassword = () => localStorage.getItem('admin_pw') || "1234";
 
@@ -406,14 +576,60 @@
             }
         };
 
+        window.setLikeCategory = function(cat) {
+            currentLikeCategory = cat;
+            document.querySelectorAll('.like-cat-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-cat') === cat);
+            });
+            renderLikes();
+        };
+
+        window.setLikeSort = function(sort) {
+            currentLikeSort = sort;
+            document.querySelectorAll('.like-sort-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-sort') === sort);
+            });
+            renderLikes();
+        };
+
         async function init() {
             const selectBox = document.getElementById('app-select');
+            selectBox.innerHTML = '';
+
+            const categoryLabels = {
+                word: "🔤 단어 학습",
+                sentence: "📝 문장·독해·말하기",
+                battle: "⚔️ 실시간 대결",
+                puzzle: "🧩 퍼즐·탐험",
+                tool: "🛠️ 수업 도구",
+                etc: "🌐 기타"
+            };
+
+            const groups = {};
             appsData.forEach(appItem => {
+                const cat = appItem.category || 'etc';
+                if (!groups[cat]) {
+                    groups[cat] = document.createElement('optgroup');
+                    groups[cat].label = categoryLabels[cat] || cat;
+                    selectBox.appendChild(groups[cat]);
+                }
                 const option = document.createElement('option');
                 option.value = appItem.id;
                 option.textContent = appItem.title;
-                selectBox.appendChild(option);
+                groups[cat].appendChild(option);
             });
+
+            // URL 파라미터 처리 (?app= 및 ?tab=)
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetAppParam = urlParams.get('app');
+            const targetTabParam = urlParams.get('tab');
+
+            if (targetAppParam && appsData.some(a => a.id === targetAppParam)) {
+                selectBox.value = targetAppParam;
+            }
+            if (targetTabParam === 'board') {
+                switchTab('board');
+            }
 
             try {
                 app = initializeApp(firebaseConfig);
@@ -429,7 +645,7 @@
                 startPostsListener();
             } catch (error) {
                 console.error("Firebase 초기화 에러:", error);
-                document.getElementById('likes-container').innerHTML = '<div style="color: red; text-align: center; width: 100%;">데이터베이스 연결에 실패했습니다. Firebase 콘솔 설정을 확인해주세요.</div>';
+                document.getElementById('likes-container').innerHTML = '<div style="color: red; text-align: center; width: 100%; grid-column: 1 / -1;">데이터베이스 연결에 실패했습니다. Firebase 콘솔 설정을 확인해주세요.</div>';
             }
         }
 
@@ -451,27 +667,64 @@
             const container = document.getElementById('likes-container');
             container.innerHTML = '';
 
-            const voteApps = appsData.filter(a => a.id !== 'general');
+            let voteApps = appsData.filter(a => a.id !== 'general');
+
+            if (currentLikeCategory !== 'all') {
+                voteApps = voteApps.filter(a => a.category === currentLikeCategory);
+            }
+
+            if (currentLikeSort === 'popular') {
+                voteApps = [...voteApps].sort((a, b) => {
+                    const likesA = likesData.filter(l => l.targetApp === a.id).length;
+                    const likesB = likesData.filter(l => l.targetApp === b.id).length;
+                    return likesB - likesA;
+                });
+            }
+
+            if (voteApps.length === 0) {
+                container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #9CA3AF; padding: 2rem;">해당 분류의 앱이 없습니다.</div>';
+                return;
+            }
 
             voteApps.forEach(appItem => {
                 const appLikes = likesData.filter(like => like.targetApp === appItem.id);
-                const hasLiked = appLikes.some(like => like.userId === currentUser.uid);
+                const hasLiked = currentUser ? appLikes.some(like => like.userId === currentUser.uid) : false;
 
                 const card = document.createElement('div');
                 card.className = 'like-card';
+                card.id = `like-card-${appItem.id}`;
                 card.innerHTML = `
                     <div class="app-info">
                         <div class="app-icon" style="background-color: ${appItem.bgTheme}; color: ${appItem.theme};">
                             <i class="${appItem.icon}"></i>
                         </div>
-                        <div class="app-name">${appItem.title}</div>
+                        <div class="app-name" title="${appItem.title}">${appItem.title}</div>
                     </div>
-                    <button class="like-btn ${hasLiked ? 'liked' : ''}" onclick="toggleLike('${appItem.id}', ${hasLiked})">
-                        <i class="${hasLiked ? 'fas' : 'far'} fa-heart"></i> ${appLikes.length}
+                    <button class="like-btn ${hasLiked ? 'liked' : ''}" onclick="toggleLike('${appItem.id}', ${hasLiked})" title="${hasLiked ? '좋아요 취소' : '좋아요 투표'}">
+                        <i class="${hasLiked ? 'fas' : 'far'} fa-heart"></i> <span>${appLikes.length}</span>
                     </button>
                 `;
                 container.appendChild(card);
             });
+
+            // 만약 URL에 ?app=이 전달된 경우 해당 카드로 부드럽게 스크롤 & 강조 표시
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetAppParam = urlParams.get('app');
+            if (targetAppParam && !window._scrolledToApp) {
+                window._scrolledToApp = true;
+                setTimeout(() => {
+                    const el = document.getElementById(`like-card-${targetAppParam}`);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        el.style.borderColor = '#10B981';
+                        el.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.35)';
+                        setTimeout(() => {
+                            el.style.borderColor = '';
+                            el.style.boxShadow = '';
+                        }, 2500);
+                    }
+                }, 300);
+            }
         }
 
         window.toggleLike = async function(targetApp, hasLiked) {
