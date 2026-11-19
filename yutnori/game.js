@@ -501,15 +501,9 @@
     class HallOfFameManager {
         constructor() {
             this.storageKey = 'waurimal_yutnori_hof';
-            this.defaultRecords = [
-                { id: 'hof_1', grade: 6, classNum: 3, studentNum: 14, name: '세종대왕', wins: 12, totalGames: 14, score: 9850, correctCount: 58, wrongCount: 4, goalCount: 32, catchCount: 18, stackCount: 14, yutMoCount: 24, bestScore: 2150, lastPlayed: '2026-10-24' },
-                { id: 'hof_2', grade: 6, classNum: 1, studentNum: 7, name: '이순신', wins: 10, totalGames: 12, score: 8400, correctCount: 46, wrongCount: 3, goalCount: 27, catchCount: 22, stackCount: 9, yutMoCount: 18, bestScore: 1980, lastPlayed: '2026-10-23' },
-                { id: 'hof_3', grade: 6, classNum: 2, studentNum: 21, name: '신사임당', wins: 8, totalGames: 9, score: 7100, correctCount: 42, wrongCount: 2, goalCount: 21, catchCount: 12, stackCount: 12, yutMoCount: 15, bestScore: 1820, lastPlayed: '2026-10-22' },
-                { id: 'hof_4', grade: 5, classNum: 4, studentNum: 9, name: '율곡이이', wins: 7, totalGames: 8, score: 6250, correctCount: 38, wrongCount: 5, goalCount: 19, catchCount: 10, stackCount: 8, yutMoCount: 12, bestScore: 1650, lastPlayed: '2026-10-21' },
-                { id: 'hof_5', grade: 5, classNum: 2, studentNum: 18, name: '장영실', wins: 6, totalGames: 7, score: 5600, correctCount: 35, wrongCount: 3, goalCount: 16, catchCount: 9, stackCount: 7, yutMoCount: 10, bestScore: 1540, lastPlayed: '2026-10-20' },
-                { id: 'hof_6', grade: 4, classNum: 3, studentNum: 5, name: '홍길동', wins: 5, totalGames: 6, score: 4750, correctCount: 28, wrongCount: 4, goalCount: 14, catchCount: 7, stackCount: 6, yutMoCount: 8, bestScore: 1420, lastPlayed: '2026-10-19' },
-                { id: 'hof_7', grade: 4, classNum: 1, studentNum: 12, name: '김유신', wins: 4, totalGames: 5, score: 3900, correctCount: 24, wrongCount: 2, goalCount: 11, catchCount: 6, stackCount: 5, yutMoCount: 6, bestScore: 1310, lastPlayed: '2026-10-18' }
-            ];
+            this.cloudRecords = [];
+            this.cloudHOF = null;
+            this.defaultRecords = this.getDefaultRecords();
             this.modalFilterGrade = 'all';
             this.modalFilterClass = 'all';
             this.modalPeriod = 'all';
@@ -518,81 +512,154 @@
             this.homePeriod = 'all';
             this.homeFilterGrade = 'all';
             this.homeFilterClass = 'all';
+
+            if (typeof window !== 'undefined' && window.YutnoriCloudHOF) {
+                this.attachCloudSync(window.YutnoriCloudHOF);
+            }
         }
 
-        getRecords() {
+        getDefaultRecords() {
+            const today = new Date().toISOString().split('T')[0];
+            return [
+                { id: 'hof_1', grade: 6, classNum: 3, studentNum: 14, name: '세종대왕', wins: 12, totalGames: 14, score: 9850, correctCount: 58, wrongCount: 4, goalCount: 32, catchCount: 18, stackCount: 14, yutMoCount: 24, bestScore: 2150, lastPlayed: today },
+                { id: 'hof_2', grade: 6, classNum: 1, studentNum: 7, name: '이순신', wins: 10, totalGames: 12, score: 8400, correctCount: 46, wrongCount: 3, goalCount: 27, catchCount: 22, stackCount: 9, yutMoCount: 18, bestScore: 1980, lastPlayed: today },
+                { id: 'hof_3', grade: 6, classNum: 2, studentNum: 21, name: '신사임당', wins: 8, totalGames: 9, score: 7100, correctCount: 42, wrongCount: 2, goalCount: 21, catchCount: 12, stackCount: 12, yutMoCount: 15, bestScore: 1820, lastPlayed: today },
+                { id: 'hof_4', grade: 5, classNum: 4, studentNum: 9, name: '율곡이이', wins: 7, totalGames: 8, score: 6250, correctCount: 38, wrongCount: 5, goalCount: 19, catchCount: 10, stackCount: 8, yutMoCount: 12, bestScore: 1650, lastPlayed: today },
+                { id: 'hof_5', grade: 5, classNum: 2, studentNum: 18, name: '장영실', wins: 6, totalGames: 7, score: 5600, correctCount: 35, wrongCount: 3, goalCount: 16, catchCount: 9, stackCount: 7, yutMoCount: 10, bestScore: 1540, lastPlayed: today },
+                { id: 'hof_6', grade: 4, classNum: 3, studentNum: 5, name: '홍길동', wins: 5, totalGames: 6, score: 4750, correctCount: 28, wrongCount: 4, goalCount: 14, catchCount: 7, stackCount: 6, yutMoCount: 8, bestScore: 1420, lastPlayed: today },
+                { id: 'hof_7', grade: 4, classNum: 1, studentNum: 12, name: '김유신', wins: 4, totalGames: 5, score: 3900, correctCount: 24, wrongCount: 2, goalCount: 11, catchCount: 6, stackCount: 5, yutMoCount: 6, bestScore: 1310, lastPlayed: today },
+                { id: 'hof_8', grade: 3, classNum: 1, studentNum: 15, name: '강감찬', wins: 3, totalGames: 4, score: 3200, correctCount: 20, wrongCount: 2, goalCount: 9, catchCount: 5, stackCount: 4, yutMoCount: 5, bestScore: 1150, lastPlayed: today },
+                { id: 'hof_9', grade: 3, classNum: 2, studentNum: 8, name: '을지문덕', wins: 2, totalGames: 3, score: 2500, correctCount: 16, wrongCount: 1, goalCount: 7, catchCount: 4, stackCount: 3, yutMoCount: 4, bestScore: 980, lastPlayed: today }
+            ];
+        }
+
+        attachCloudSync(cloudHOF) {
+            this.cloudHOF = cloudHOF;
+            if (this.cloudHOF && typeof this.cloudHOF.listen === 'function') {
+                this.cloudHOF.listen((cloudScores) => {
+                    this.handleCloudScoresUpdate(cloudScores);
+                });
+            }
+        }
+
+        handleCloudScoresUpdate(cloudScores) {
+            if (!Array.isArray(cloudScores)) return;
+            this.cloudRecords = cloudScores;
+
+            // 만약 클라우드 데이터가 아직 비어있다면, 첫 기기에서 기본 샘플 레코드 자동 시드
+            if (cloudScores.length === 0) {
+                const localRecords = this.getLocalRecords();
+                if (localRecords.length === 0) {
+                    this.resetToDefault(true);
+                    return;
+                }
+            }
+
+            const localRecords = this.getLocalRecords();
+            const merged = this.mergeRecords(cloudScores, localRecords);
+            try {
+                localStorage.setItem(this.storageKey, JSON.stringify(merged));
+            } catch(e) {}
+            this.renderAllViews();
+        }
+
+        getLocalRecords() {
             try {
                 const raw = localStorage.getItem(this.storageKey);
                 if (raw !== null) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed)) {
-                        let updated = false;
-
-                        // 1. 과거 1반 기본값으로 저장되었던 기본 인물 기록(hof_1 ~ hof_7 등)을 최신 다양화 학적으로 갱신
-                        parsed.forEach(r => {
-                            const defMatch = this.defaultRecords.find(d => d.id === r.id || d.name === r.name);
-                            if (defMatch && (String(r.id).startsWith('hof_') || ['세종대왕', '이순신', '신사임당', '율곡이이', '장영실', '홍길동', '김유신'].includes(r.name))) {
-                                if (r.classNum === 1 && defMatch.classNum !== 1) {
-                                    r.classNum = defMatch.classNum;
-                                    updated = true;
-                                }
-                                if (r.studentNum === 1 && defMatch.studentNum !== 1) {
-                                    r.studentNum = defMatch.studentNum;
-                                    updated = true;
-                                }
-                            }
-                        });
-
-                        // 2. 자가 치유(Self-healing): 로컬에 저장된 실제 학생 프로필과 대조하여 과거 기본값(6-1)으로 저장되었던 본인 기록 자동 보정
-                        try {
-                            const localRealName = localStorage.getItem('yutnori_real_name') || 
-                                (window.WaurimalStudent && window.WaurimalStudent.get && window.WaurimalStudent.get() && window.WaurimalStudent.get().name);
-                            const localGrade = localStorage.getItem('yutnori_grade') || 
-                                (window.WaurimalStudent && window.WaurimalStudent.get && window.WaurimalStudent.get() && window.WaurimalStudent.get().grade);
-                            const localClass = localStorage.getItem('yutnori_class') || 
-                                (window.WaurimalStudent && window.WaurimalStudent.get && window.WaurimalStudent.get() && window.WaurimalStudent.get().classNum);
-                            const localNum = localStorage.getItem('yutnori_num') || 
-                                (window.WaurimalStudent && window.WaurimalStudent.get && window.WaurimalStudent.get() && window.WaurimalStudent.get().studentNum);
-
-                            if (localRealName && String(localRealName).trim()) {
-                                const cleanRealName = String(localRealName).trim();
-                                parsed.forEach(r => {
-                                    if (r.name && r.name.trim() === cleanRealName) {
-                                        if (localClass && Number(localClass) !== r.classNum) {
-                                            r.classNum = Number(localClass);
-                                            updated = true;
-                                        }
-                                        if (localGrade && Number(localGrade) !== r.grade) {
-                                            r.grade = Number(localGrade);
-                                            updated = true;
-                                        }
-                                        if (localNum && !isNaN(Number(localNum)) && String(localNum).trim() !== '') {
-                                            if (r.studentNum !== Number(localNum)) {
-                                                r.studentNum = Number(localNum);
-                                                updated = true;
-                                            }
-                                        } else if ((!localNum || String(localNum).trim() === '') && r.studentNum !== null) {
-                                            // 번호 미입력 학생의 경우 강제 1번 부여 제거 및 null 정리
-                                            r.studentNum = null;
-                                            updated = true;
-                                        }
-                                    }
-                                });
-                            }
-                        } catch(err) {
-                            console.warn("Self-healing HOF records warning:", err);
-                        }
-
-                        if (updated) {
-                            localStorage.setItem(this.storageKey, JSON.stringify(parsed));
-                        }
-                        return this.normalizeRecords(parsed);
+                        return parsed;
                     }
                 }
             } catch(e) {
-                console.warn("HOF load error:", e);
+                console.warn("[HOF] Local load error:", e);
             }
-            return this.normalizeRecords([...this.defaultRecords]);
+            return [];
+        }
+
+        mergeRecords(cloudList = [], localList = []) {
+            const map = new Map();
+
+            // 1. 기본 샘플 레코드 먼저 맵에 등록 (기본값)
+            this.getDefaultRecords().forEach(r => {
+                const k = `${r.grade}_${r.classNum}_${r.name.trim()}`;
+                map.set(k, { ...r });
+            });
+
+            // 2. 로컬 레코드 병합
+            (localList || []).forEach(r => {
+                if (!r || !r.name) return;
+                const k = `${r.grade || 6}_${r.classNum || 1}_${r.name.trim()}`;
+                map.set(k, { ...r });
+            });
+
+            // 3. 클라우드 레코드 최우선 병합 (서버 클라우드가 최신 기준)
+            (cloudList || []).forEach(r => {
+                if (!r || !r.name) return;
+                const k = `${r.grade || 6}_${r.classNum || 1}_${r.name.trim()}`;
+                const existing = map.get(k);
+                if (existing) {
+                    map.set(k, {
+                        ...existing,
+                        ...r,
+                        score: Math.max(existing.score || 0, r.score || 0),
+                        bestScore: Math.max(existing.bestScore || 0, r.bestScore || 0),
+                        wins: Math.max(existing.wins || 0, r.wins || 0),
+                        totalGames: Math.max(existing.totalGames || 0, r.totalGames || 0),
+                        lastPlayed: r.lastPlayed || existing.lastPlayed
+                    });
+                } else {
+                    map.set(k, { ...r });
+                }
+            });
+
+            return Array.from(map.values());
+        }
+
+        getRecords() {
+            let combined;
+            if (this.cloudRecords && this.cloudRecords.length > 0) {
+                combined = this.mergeRecords(this.cloudRecords, this.getLocalRecords());
+            } else {
+                const local = this.getLocalRecords();
+                if (local.length > 0) {
+                    combined = this.mergeRecords([], local);
+                } else {
+                    combined = [...this.getDefaultRecords()];
+                }
+            }
+
+            // 자가 치유(Self-healing): 로컬에 저장된 실제 학생 프로필과 대조하여 본인 최신 학적 보정
+            try {
+                const localRealName = localStorage.getItem('yutnori_real_name') || 
+                    (window.WaurimalStudent && window.WaurimalStudent.get && window.WaurimalStudent.get() && window.WaurimalStudent.get().name);
+                const localGrade = localStorage.getItem('yutnori_grade') || 
+                    (window.WaurimalStudent && window.WaurimalStudent.get && window.WaurimalStudent.get() && window.WaurimalStudent.get().grade);
+                const localClass = localStorage.getItem('yutnori_class') || 
+                    (window.WaurimalStudent && window.WaurimalStudent.get && window.WaurimalStudent.get() && window.WaurimalStudent.get().classNum);
+                const localNum = localStorage.getItem('yutnori_num') || 
+                    (window.WaurimalStudent && window.WaurimalStudent.get && window.WaurimalStudent.get() && window.WaurimalStudent.get().studentNum);
+
+                if (localRealName && String(localRealName).trim()) {
+                    const cleanRealName = String(localRealName).trim();
+                    combined.forEach(r => {
+                        if (r.name && r.name.trim() === cleanRealName) {
+                            if (localClass && Number(localClass) !== r.classNum) r.classNum = Number(localClass);
+                            if (localGrade && Number(localGrade) !== r.grade) r.grade = Number(localGrade);
+                            if (localNum && !isNaN(Number(localNum)) && String(localNum).trim() !== '') {
+                                r.studentNum = Number(localNum);
+                            } else if ((!localNum || String(localNum).trim() === '') && r.studentNum !== null) {
+                                r.studentNum = null;
+                            }
+                        }
+                    });
+                }
+            } catch(err) {
+                console.warn("[HOF] Self-healing warning:", err);
+            }
+
+            return this.normalizeRecords(combined);
         }
 
         syncUserProfile(prof) {
@@ -721,24 +788,36 @@
         }
 
         deleteRecord(id) {
-            let records = this.getRecords();
-            records = records.filter(r => r.id !== id);
+            let records = this.getRecords().filter(r => r.id !== id);
             this.saveRecords(records);
+            if (this.cloudHOF && typeof this.cloudHOF.deleteRecord === 'function') {
+                this.cloudHOF.deleteRecord(id);
+            }
         }
 
         deleteSelectedRecords(ids) {
             const idSet = (ids instanceof Set) ? ids : new Set(ids);
-            let records = this.getRecords();
-            records = records.filter(r => !idSet.has(r.id));
+            let records = this.getRecords().filter(r => !idSet.has(r.id));
             this.saveRecords(records);
+            if (this.cloudHOF && typeof this.cloudHOF.deleteSelectedRecords === 'function') {
+                this.cloudHOF.deleteSelectedRecords(idSet);
+            }
         }
 
-        resetToDefault() {
-            this.saveRecords([...this.defaultRecords]);
+        resetToDefault(syncToCloud = true) {
+            const defs = this.getDefaultRecords();
+            this.saveRecords([...defs]);
+            if (syncToCloud && this.cloudHOF && typeof this.cloudHOF.seedDefaultRecords === 'function') {
+                this.cloudHOF.seedDefaultRecords(defs);
+            }
         }
 
         clearAll() {
+            this.cloudRecords = [];
             this.saveRecords([]);
+            if (this.cloudHOF && typeof this.cloudHOF.clearAllScores === 'function') {
+                this.cloudHOF.clearAllScores();
+            }
         }
 
         recordMatch(winningTeam, participantsStats) {
@@ -799,6 +878,17 @@
                         yutMoCount: stat.yutMoCount || 0,
                         lastPlayed: today
                     });
+                }
+
+                // 🏆 클라우드 Firestore 동기화 (모든 기기 실시간 공유)
+                if (this.cloudHOF && typeof this.cloudHOF.saveMatchParticipant === 'function') {
+                    const isOnline = window.YutnoriGameInstance && window.YutnoriGameInstance.isOnline;
+                    const isHost = window.YutnoriMultiplayer && window.YutnoriMultiplayer.isHost;
+                    // AI 대전이거나, 온라인 멀티플레이 방장(Host)이거나, 본인 기록인 경우 클라우드에 전송
+                    const myName = (window.WaurimalStudent && window.WaurimalStudent.get && window.WaurimalStudent.get().name) || localStorage.getItem('yutnori_real_name');
+                    if (!isOnline || isHost || (myName && stat.name === myName.trim())) {
+                        this.cloudHOF.saveMatchParticipant(stat, Boolean(stat.isWinner));
+                    }
                 }
             });
 
@@ -4678,6 +4768,9 @@
     // 전역 싱글턴 등록 및 유틸리티 노출
     window.YutnoriGameInstance = new YutnoriGame();
     window.YutnoriHOF = HallOfFame;
+    if (typeof window !== 'undefined' && window.YutnoriCloudHOF) {
+        HallOfFame.attachCloudSync(window.YutnoriCloudHOF);
+    }
     window.YutnoriTeacherAdmin = TeacherAdmin;
     window.openTeacherMode = function() {
         TeacherAdmin.openAuthModal();

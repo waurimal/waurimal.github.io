@@ -6,7 +6,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { 
-    getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, deleteDoc 
+    getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, deleteDoc,
+    collection, getDocs, query, orderBy, limit 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // 1. Firebase 통합 설정 (Waurimal 2026 표준 - 독립 샤딩 프로젝트)
@@ -1281,3 +1282,235 @@ class YutnoriMultiplayerManager {
 
 export const multiplayerManager = new YutnoriMultiplayerManager();
 window.YutnoriMultiplayer = multiplayerManager;
+
+// =========================================================================
+// 🏆 실시간 클라우드 명예의 전당 엔진 (Firebase Firestore Cloud Sync Engine)
+// =========================================================================
+const HOF_COLLECTION_PATH = 'games/yutnori/scores';
+
+class YutnoriCloudHOFManager {
+    constructor(dbInstance) {
+        this.db = dbInstance;
+        this.scoresCollection = collection(this.db, 'games', 'yutnori', 'scores');
+        this.listeners = new Set();
+        this.currentScores = [];
+        this.unsubscribe = null;
+        this.isListening = false;
+        this.initListener();
+    }
+
+    initListener() {
+        if (this.isListening) return;
+        try {
+            if (window.WaurimalFirebase && window.WaurimalFirebase.isCircuitBroken && window.WaurimalFirebase.isCircuitBroken('tournament-267ab')) {
+                console.warn("[CloudHOF] tournament-267ab is circuit-broken. Using local cache.");
+                return;
+            }
+
+            const q = query(this.scoresCollection, orderBy('score', 'desc'), limit(150));
+            this.isListening = true;
+
+            this.unsubscribe = onSnapshot(q, (snapshot) => {
+                const scores = [];
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data) {
+                        scores.push({
+                            id: docSnap.id,
+                            ...data,
+                            lastPlayed: data.lastPlayed || new Date().toISOString().split('T')[0]
+                        });
+                    }
+                });
+                this.currentScores = scores;
+                this.notifyListeners(scores);
+            }, (error) => {
+                console.warn("[CloudHOF] onSnapshot warning, fallback to getDocs:", error);
+                if (error && (error.code === 'resource-exhausted' || String(error).includes('429'))) {
+                    if (window.WaurimalFirebase && window.WaurimalFirebase.tripCircuitBreaker) {
+                        window.WaurimalFirebase.tripCircuitBreaker('tournament-267ab');
+                    }
+                }
+                this.fetchScores().then(scores => {
+                    if (scores && scores.length > 0) {
+                        this.currentScores = scores;
+                        this.notifyListeners(scores);
+                    }
+                }).catch(() => {});
+            });
+        } catch (e) {
+            console.warn("[CloudHOF] Listener init error:", e);
+        }
+    }
+
+    listen(callback) {
+        if (typeof callback === 'function') {
+            this.listeners.add(callback);
+            if (this.currentScores.length > 0) {
+                callback(this.currentScores);
+            }
+        }
+        return () => this.listeners.delete(callback);
+    }
+
+    notifyListeners(scores) {
+        this.listeners.forEach(cb => {
+            try {
+                cb(scores);
+            } catch(e) {
+                console.warn("[CloudHOF] listener callback error:", e);
+            }
+        });
+    }
+
+    async fetchScores() {
+        try {
+            const q = query(this.scoresCollection, orderBy('score', 'desc'), limit(150));
+            const snapshot = await getDocs(q);
+            const scores = [];
+            snapshot.forEach(docSnap => {
+                scores.push({
+                    id: docSnap.id,
+                    ...docSnap.data()
+                });
+            });
+            return scores;
+        } catch(e) {
+            console.warn("[CloudHOF] fetchScores error:", e);
+            return [];
+        }
+    }
+
+    getDocId(grade, classNum, name) {
+        const cleanName = (name || '학생').trim().replace(/[\/\s]/g, '_');
+        return `hof_${Number(grade) || 6}_${Number(classNum) || 1}_${cleanName}`;
+    }
+
+    async saveMatchParticipant(stat, isWinner) {
+        const pName = (stat.name || '').trim();
+        if (!pName || pName.includes('봇') || pName.includes('AI') || pName.includes('인공지능') || pName.includes('컴퓨터')) {
+            return null;
+        }
+
+        const sGrade = Number(stat.grade) || 6;
+        const sClass = (stat.classNum !== undefined && stat.classNum !== null && stat.classNum !== '' && !isNaN(Number(stat.classNum))) ? Number(stat.classNum) : 1;
+        const sNum = (stat.studentNum !== undefined && stat.studentNum !== null && stat.studentNum !== '' && !isNaN(Number(stat.studentNum))) ? Number(stat.studentNum) : null;
+        const matchScore = Number(stat.matchScore || stat.score || 0);
+
+        const docId = this.getDocId(sGrade, sClass, pName);
+        const docRef = doc(this.scoresCollection, docId);
+        const today = new Date().toISOString().split('T')[0];
+
+        try {
+            const docSnap = await getDoc(docRef);
+            let finalData;
+            if (docSnap.exists()) {
+                const prev = docSnap.data();
+                finalData = {
+                    id: docId,
+                    name: pName,
+                    grade: sGrade,
+                    classNum: sClass,
+                    studentNum: sNum !== null ? sNum : (prev.studentNum || null),
+                    wins: (prev.wins || 0) + (isWinner ? 1 : 0),
+                    totalGames: (prev.totalGames || 0) + 1,
+                    score: (prev.score || 0) + matchScore,
+                    bestScore: Math.max(prev.bestScore || 0, matchScore),
+                    correctCount: (prev.correctCount || 0) + (stat.correctCount || 0),
+                    wrongCount: (prev.wrongCount || 0) + (stat.wrongCount || 0),
+                    goalCount: (prev.goalCount || 0) + (stat.goalCount || 0),
+                    catchCount: (prev.catchCount || 0) + (stat.catchCount || 0),
+                    stackCount: (prev.stackCount || 0) + (stat.stackCount || 0),
+                    yutMoCount: (prev.yutMoCount || 0) + (stat.yutMoCount || 0),
+                    lastPlayed: today,
+                    updatedAt: Date.now()
+                };
+            } else {
+                finalData = {
+                    id: docId,
+                    name: pName,
+                    grade: sGrade,
+                    classNum: sClass,
+                    studentNum: sNum,
+                    wins: isWinner ? 1 : 0,
+                    totalGames: 1,
+                    score: matchScore,
+                    bestScore: matchScore,
+                    correctCount: stat.correctCount || 0,
+                    wrongCount: stat.wrongCount || 0,
+                    goalCount: stat.goalCount || 0,
+                    catchCount: stat.catchCount || 0,
+                    stackCount: stat.stackCount || 0,
+                    yutMoCount: stat.yutMoCount || 0,
+                    lastPlayed: today,
+                    updatedAt: Date.now()
+                };
+            }
+            await setDoc(docRef, finalData);
+            return finalData;
+        } catch (e) {
+            console.warn("[CloudHOF] saveMatchParticipant error:", e);
+            return null;
+        }
+    }
+
+    async saveDirectRecord(record) {
+        if (!record || !record.name) return;
+        const docId = record.id || this.getDocId(record.grade, record.classNum, record.name);
+        const docRef = doc(this.scoresCollection, docId);
+        try {
+            await setDoc(docRef, {
+                ...record,
+                id: docId,
+                updatedAt: Date.now()
+            }, { merge: true });
+        } catch(e) {
+            console.warn("[CloudHOF] saveDirectRecord error:", e);
+        }
+    }
+
+    async deleteRecord(docId) {
+        if (!docId) return;
+        try {
+            await deleteDoc(doc(this.scoresCollection, docId));
+        } catch (e) {
+            console.warn("[CloudHOF] deleteRecord error:", e);
+        }
+    }
+
+    async deleteSelectedRecords(docIds) {
+        const list = Array.from(docIds || []);
+        for (const id of list) {
+            try {
+                await deleteDoc(doc(this.scoresCollection, id));
+            } catch(e) {}
+        }
+    }
+
+    async clearAllScores() {
+        try {
+            const snap = await getDocs(this.scoresCollection);
+            const promises = [];
+            snap.forEach(d => {
+                promises.push(deleteDoc(d.ref));
+            });
+            await Promise.all(promises);
+        } catch (e) {
+            console.warn("[CloudHOF] clearAllScores error:", e);
+        }
+    }
+
+    async seedDefaultRecords(defaultList) {
+        if (!Array.isArray(defaultList)) return;
+        for (const item of defaultList) {
+            await this.saveDirectRecord(item);
+        }
+    }
+}
+
+export const cloudHOF = new YutnoriCloudHOFManager(db);
+window.YutnoriCloudHOF = cloudHOF;
+
+if (window.YutnoriHOF && typeof window.YutnoriHOF.attachCloudSync === 'function') {
+    window.YutnoriHOF.attachCloudSync(cloudHOF);
+}
