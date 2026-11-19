@@ -1699,7 +1699,7 @@
         constructor() {
             this.mode = 'ai'; // 'ai', '1v1', 'team'
             this.difficulty = 'normal'; // 'easy', 'normal', 'hard'
-            this.pieceCount = 4; // 팀당 말의 수 (3 또는 4)
+            this.pieceCount = 4; // 팀당 말의 수 (2, 3 또는 4)
             this.teams = [];
             this.currentTeamIndex = 0;
             this.gameState = 'IDLE'; // 'IDLE', 'WAIT_ROLL', 'WAIT_PIECE_SELECT', 'WAIT_QUIZ', 'MOVING', 'GAME_OVER'
