@@ -1,0 +1,2808 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WORD SNAKE - 초등 영단어 지렁이 게임 | 와우리말</title>
+    
+    <!-- Pretendard 최신 웹폰트 -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome 아이콘 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+    <!-- Waurimal 통합 테마 및 GNB 내비게이션 -->
+    <link rel="stylesheet" href="../common/waurimal-theme.css">
+    <script src="../common/waurimal-nav.js"></script>
+
+    <style>
+        :root {
+            --primary: #059669;
+            --primary-dark: #047857;
+            --primary-light: #ECFDF5;
+            --primary-glow: rgba(5, 150, 105, 0.25);
+            --secondary: #0D9488;
+            --secondary-light: #F0FDFA;
+            --teacher: #D97706;
+            --teacher-light: #FEF3C7;
+            --accent: #F59E0B;
+            --bg-page: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --border-color: #E2E8F0;
+            --text-main: #0F172A;
+            --text-sub: #475569;
+            --text-muted: #94A3B8;
+            --success: #10B981;
+            --danger: #EF4444;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 14px rgba(0,0,0,0.07), 0 2px 6px rgba(0,0,0,0.04);
+            --shadow-lg: 0 10px 25px -3px rgba(0,0,0,0.08), 0 4px 10px -2px rgba(0,0,0,0.04);
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            background: linear-gradient(180deg, #F8FAFC 0%, #ECFDF5 50%, #F0FDFA 100%);
+            min-height: 100vh;
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+            user-select: none;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 7px; height: 7px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #F1F5F9; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+        .worm-wrap {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 0.8rem 1.2rem 2.5rem;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        /* 1. 상단 타이틀 헤더 및 시인성 극대화 서브타이틀 */
+        .hdr {
+            text-align: center;
+            padding: 0.4rem 0 1.2rem;
+        }
+
+        .hdr h1 {
+            font-size: clamp(1.7rem, 3.4vw, 2.4rem);
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #065F46 0%, #059669 45%, #0D9488 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.45rem;
+            line-height: 1.2;
+        }
+
+        .hdr-sub-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #FFFFFF;
+            border: 2px solid #34D399;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.12);
+            padding: 0.45rem 1.3rem;
+            border-radius: 99px;
+            margin-top: 0.2rem;
+        }
+
+        .hdr-sub-text {
+            font-size: clamp(0.95rem, 2vw, 1.08rem) !important;
+            color: #064E3B !important;
+            font-weight: 800 !important;
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        /* 홈 화면 좌우 2분할 레이아웃 (게임 모드 50%, 명예의 전당 50%) */
+        .hidden { display: none !important; }
+        .home-split-grid.hidden, .game-layout.hidden { display: none !important; }
+
+        .home-split-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.5rem;
+            align-items: stretch;
+            width: 100%;
+        }
+
+        @media (max-width: 960px) {
+            .home-split-grid {
+                grid-template-columns: 1fr;
+                gap: 1.2rem;
+            }
+        }
+
+        /* 공통 카드 컴포넌트 */
+        .worm-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+        }
+
+        .worm-card-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.1rem;
+        }
+
+        /* 학생 환영 바 */
+        .student-welcome-bar {
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 14px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* 1인 연습 히어로 버튼 */
+        .hero-btn {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 1.2rem 1.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 8px 20px rgba(5, 150, 105, 0.28);
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            text-align: left;
+        }
+
+        .hero-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(5, 150, 105, 0.35);
+        }
+
+        /* 모드 선택 카드 */
+        .mode-card {
+            background: #FFFFFF;
+            border: 1.5px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            width: 100%;
+        }
+
+        .mode-card:hover {
+            border-color: #34D399;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            background: #F0FDFA;
+        }
+
+        .mode-icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        /* LIVE 펄스 배지 */
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #10B981;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse-live 1.5s infinite;
+        }
+
+        @keyframes pulse-live {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* 캔버스 게임 컨테이너 & 모바일 반응형 뷰포트 */
+        .game-canvas-container {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            max-width: min(100%, 720px, calc(100vh - 180px));
+            margin: 0 auto;
+            position: relative;
+        }
+        @media (max-width: 768px) {
+            .game-canvas-container {
+                max-width: min(100%, calc(100dvh - 310px), calc(100vh - 310px), 440px);
+            }
+        }
+
+        canvas {
+            background-color: #FFFFFF;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            border-radius: 20px;
+            border: 4px solid #34D399;
+        }
+
+        #gameCanvas {
+            touch-action: none !important;
+            -webkit-touch-callout: none !important;
+            -webkit-user-select: none !important;
+            user-select: none !important;
+        }
+
+        #screen-game {
+            touch-action: manipulation;
+            overscroll-behavior: contain;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* 모바일 가상 패드 D-Pad 스타일 */
+        .mobile-dpad-btn {
+            touch-action: none !important;
+            -webkit-touch-callout: none !important;
+            -webkit-user-select: none !important;
+            user-select: none !important;
+            -webkit-tap-highlight-color: transparent !important;
+            cursor: pointer;
+            background-color: #FFFFFF;
+            color: #1E293B;
+            border: 2.5px solid #CBD5E1;
+            border-radius: 18px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            transition: transform 0.08s ease, background-color 0.08s ease, border-color 0.08s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 54px;
+            font-size: 1.45rem;
+        }
+
+        .mobile-dpad-btn:active, .mobile-dpad-btn.is-active {
+            background-color: #059669 !important;
+            color: #FFFFFF !important;
+            border-color: #047857 !important;
+            transform: scale(0.92) !important;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25) !important;
+        }
+
+        /* 모달 애니메이션 */
+        .modal-enter { animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body>
+    <div class="worm-wrap">
+        <!-- 상단 통합 헤더 -->
+        <header class="hdr">
+            <h1>WORD SNAKE</h1>
+            <div class="hdr-sub-box">
+                <span class="hdr-sub-text">
+                    <i class="fa-solid fa-worm" style="color: #059669;"></i>
+                    뜻에 맞는 올바른 영단어를 찾아먹고 성장하는 실시간 지렁이 놀이터
+                </span>
+            </div>
+        </header>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- 1. 메인 화면: 홈 화면 (좌우 2열 분할 레이아웃) -->
+        <!-- ─────────────────────────────────────────── -->
+        <div id="screen-home" class="home-split-grid">
+            <!-- [좌측]: 게임 모드 선택 및 마법 규칙 안내 -->
+            <div class="flex flex-col gap-4">
+                <div class="worm-card">
+                    <!-- 1인 연습 히어로 버튼 -->
+                    <div class="mb-4">
+                        <button type="button" onclick="startSinglePlayer()" class="hero-btn">
+                            <div class="flex items-center gap-3.5">
+                                <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-2xl flex-shrink-0">
+                                    🎮
+                                </div>
+                                <div>
+                                    <div class="font-black text-lg">혼자하기 (솔로 지렁이 플레이)</div>
+                                    <div class="text-xs text-emerald-100 font-medium mt-0.5">선택한 단원의 영어 단어를 먹으며 뱀을 키우고 최고 점수를 기록하세요!</div>
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-lg text-emerald-200"></i>
+                        </button>
+                    </div>
+
+                    <!-- 게임 옵션: 단원 선택 & 속도 조절 -->
+                    <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 mb-4 space-y-3">
+                        <div>
+                            <label class="text-xs font-bold text-slate-700 mb-1.5 block flex items-center gap-1.5">
+                                <i class="fa-solid fa-book-open text-emerald-600"></i> 학습할 단원 선택
+                            </label>
+                            <select id="unitSelect" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800">
+                                <option value="all">전체 단원 섞어서</option>
+                            </select>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center text-xs font-bold text-slate-700 mb-1">
+                                <span class="flex items-center gap-1.5">
+                                    <i class="fa-solid fa-gauge-high text-teal-600"></i> 지렁이 속도 (난이도)
+                                </span>
+                                <span id="speedValue" class="text-emerald-600 font-black text-xs md:text-sm">속도 5 (단어당 +25점)</span>
+                            </div>
+                            <input type="range" id="speedSlider" min="1" max="10" value="5" class="w-full accent-emerald-600 cursor-pointer" oninput="if(typeof updateSpeedDisplay==='function') updateSpeedDisplay(this.value); else document.getElementById('speedValue').innerText = `속도 ${this.value} (단어당 +${this.value*5}점)`">
+                            <div class="flex justify-between text-[10px] text-slate-400 font-bold px-1 mt-0.5">
+                                <span>느림 1 (+5점)</span>
+                                <span>보통 5 (+25점)</span>
+                                <span>빠름 10 (+50점)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 멀티플레이 모드 그리드 (2열) -->
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <button type="button" onclick="createMultiplayerRoom()" class="mode-card">
+                            <div class="mode-icon-box bg-purple-50 text-purple-600 border border-purple-100">
+                                <i class="fa-solid fa-crown"></i>
+                            </div>
+                            <div>
+                                <div class="font-black text-sm text-slate-800">1:1 방 만들기</div>
+                                <div class="text-[11px] text-slate-500 font-medium">방장이 되어 친구 초대</div>
+                            </div>
+                        </button>
+                        <button type="button" onclick="openJoinRoomModal()" class="mode-card">
+                            <div class="mode-icon-box bg-teal-50 text-teal-600 border border-teal-100">
+                                <i class="fa-solid fa-handshake"></i>
+                            </div>
+                            <div>
+                                <div class="font-black text-sm text-slate-800">1:1 방 참여하기</div>
+                                <div class="text-[11px] text-slate-500 font-medium">방 코드로 즉시 참여</div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- 핵심 규칙 안내 카드 -->
+                    <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 text-xs text-slate-600">
+                        <div class="font-extrabold text-slate-800 mb-2 flex items-center gap-1.5">
+                            <i class="fa-solid fa-lightbulb text-amber-500"></i> 지렁이 게임 핵심 규칙
+                        </div>
+                        <ul class="space-y-1 font-semibold text-slate-600 leading-relaxed text-[11.5px]">
+                            <li>• 상단에 제시되는 <strong>한글 뜻에 맞는 올바른 영단어</strong>를 찾아먹으세요!</li>
+                            <li>• 정답 단어를 먹으면 몸통이 1칸 길어지고 <strong>난이도 속도에 비례한 점수(속도 × 5점)</strong>를 획득합니다. (속도 1: +5점 ~ 속도 10: +50점)</li>
+                            <li>• 1:1 대결 시 <strong>상대방 몸통과는 부딪혀도 통과</strong>되며, 오직 <strong>자신의 몸통에 부딪히거나 다른 단어(오답)를 먹었을 때에만 사망</strong>합니다.</li>
+                            <li>• <strong>사방 벽은 뚫려 있어</strong> 반대편으로 자연스럽게 통과할 수 있습니다.</li>
+                            <li>• 조작: 키보드 방향키 또는 W, A, S, D 키 (모바일 터치 패드 지원).</li>
+                        </ul>
+                    </div>
+
+                    <!-- 교사 모드 진입 링크 -->
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex justify-end">
+                        <button type="button" onclick="openTeacherAuthModal()" class="text-xs text-slate-400 hover:text-amber-600 font-bold flex items-center gap-1 transition-colors">
+                            <i class="fa-solid fa-lock"></i> 교사 전용 관리 화면 (단원 관리 / 성적표)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [우측]: 실시간 명예의 전당 (50% 분할) -->
+            <div class="worm-card flex flex-col h-full">
+                <!-- 카드 타이틀 & LIVE 배지 -->
+                <div class="flex justify-between items-center mb-3">
+                    <div class="worm-card-title mb-0">
+                        <i class="fa-solid fa-trophy text-amber-500"></i> 실시간 명예의 전당
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full text-xs font-extrabold border border-emerald-200">
+                        <span class="live-dot"></span> LIVE
+                    </div>
+                </div>
+
+                <!-- 1. 기간 선택 탭 (단어타자연습 표준 동일) -->
+                <div class="hof-period-tabs flex gap-1 mb-2.5 p-1 bg-slate-100 rounded-xl">
+                    <button type="button" class="hof-period-tab flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-emerald-700 shadow-2xs" id="hof-tab-all" onclick="setHofPeriod('all')">
+                        <i class="fas fa-infinity"></i> 전체
+                    </button>
+                    <button type="button" class="hof-period-tab flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800" id="hof-tab-month" onclick="setHofPeriod('month')">
+                        <i class="fas fa-calendar-alt"></i> 이번 달
+                    </button>
+                    <button type="button" class="hof-period-tab flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800" id="hof-tab-week" onclick="setHofPeriod('week')">
+                        <i class="fas fa-fire"></i> 이번 주
+                    </button>
+                </div>
+
+                <!-- 단원별 및 학년/반 필터 -->
+                <div class="mb-2">
+                    <select id="hof-filter-unit" onchange="filterHofList()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="ALL">전체 단원</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <select id="hof-filter-grade" onchange="filterHofList()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="ALL">전체 학년</option>
+                        <option value="3">3학년</option>
+                        <option value="4">4학년</option>
+                        <option value="5">5학년</option>
+                        <option value="6">6학년</option>
+                    </select>
+                    <select id="hof-filter-class" onchange="filterHofList()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="ALL">전체 반</option>
+                        <option value="1">1반</option><option value="2">2반</option>
+                        <option value="3">3반</option><option value="4">4반</option>
+                        <option value="5">5반</option><option value="6">6반</option>
+                        <option value="7">7반</option><option value="8">8반</option>
+                        <option value="9">9반</option><option value="10">10반</option>
+                        <option value="11">11반</option><option value="12">12반</option>
+                        <option value="13">13반</option><option value="14">14반</option>
+                        <option value="15">15반</option>
+                    </select>
+                </div>
+
+                <!-- 랭킹 목록 영역 -->
+                <div id="hof-records-container" class="flex-1 overflow-y-auto custom-scrollbar border border-slate-100 rounded-xl p-2 bg-slate-50/60 min-h-[350px] max-h-[480px]">
+                    <div class="text-center py-16 text-slate-400 text-xs font-bold animate-pulse">
+                        <i class="fa-solid fa-spinner fa-spin text-lg mb-2"></i><br>
+                        명예의 전당 집계 중...
+                    </div>
+                </div>
+
+                <!-- 하단 새로고침 바 -->
+                <div class="flex justify-between items-center mt-3 pt-2 border-t border-slate-100 text-xs text-slate-400 font-semibold">
+                    <span>누적 최고 점수 반영</span>
+                    <button type="button" onclick="loadHallOfFame()" class="flex items-center gap-1 px-2.5 py-1 text-slate-600 hover:text-emerald-600 bg-white border border-slate-200 rounded-lg transition-colors font-bold">
+                        <i class="fa-solid fa-rotate-right"></i> 새로고침
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- 2. 게임 캔버스 화면: 지렁이 플레이 룸 -->
+        <!-- ─────────────────────────────────────────── -->
+        <div id="screen-game" class="hidden flex-col items-center max-w-4xl mx-auto">
+            <!-- 상단 HUD 바 -->
+            <div class="w-full flex justify-between items-center mb-3 px-2 max-w-[720px] mx-auto bg-white p-3 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-500 font-bold">내 점수:</span>
+                    <span id="scoreDisplay" class="text-xl md:text-2xl text-emerald-600 font-black inline-block transition-transform duration-150">0</span>
+                    <span id="scoreRateBadge" class="text-[11px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200 shadow-xs whitespace-nowrap">+25점/단어</span>
+                </div>
+                
+                <div class="flex-1 text-center px-2">
+                    <div id="targetWordKr" class="text-lg md:text-2xl text-indigo-700 font-black bg-indigo-50 px-4 py-1.5 rounded-xl border border-indigo-200 inline-block shadow-inner">
+                        준비...
+                    </div>
+                </div>
+
+                <button type="button" onclick="quitGame()" class="bg-slate-700 hover:bg-slate-800 text-white px-3.5 py-1.5 rounded-xl font-bold text-xs shadow transition">
+                    <i class="fa-solid fa-door-open mr-1"></i> 나가기
+                </button>
+            </div>
+
+            <!-- 캔버스 영역 -->
+            <div class="game-canvas-container">
+                <canvas id="gameCanvas" width="800" height="800" class="w-full h-full absolute inset-0"></canvas>
+
+                <!-- 게임 오버 오버레이 -->
+                <div id="gameOverOverlay" class="hidden absolute inset-0 bg-black/75 backdrop-blur-xs rounded-2xl flex flex-col items-center justify-center p-6 text-center z-20 modal-enter">
+                    <h2 class="text-4xl md:text-5xl font-black text-red-500 mb-2 drop-shadow-md">게임 오버!</h2>
+                    <p id="deathReasonText" class="text-xs md:text-sm text-amber-300 font-bold mb-2">💥 탈락 원인</p>
+                    <p id="finalScoreText" class="text-xl md:text-2xl text-white font-bold mb-6">최종 점수: 0점</p>
+                    <div class="flex gap-3">
+                        <button type="button" id="restartBtn" onclick="restartGame()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm px-6 py-3 rounded-xl shadow-lg transition">다시 하기</button>
+                        <button type="button" onclick="quitGame()" class="bg-slate-600 hover:bg-slate-700 text-white font-bold text-sm px-6 py-3 rounded-xl shadow transition">로비로</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 모바일 컨트롤러 (가상 D-Pad) -->
+            <div id="mobileController" class="grid grid-cols-3 gap-2.5 mt-3 md:hidden w-64 max-w-full mx-auto select-none touch-none">
+                <div></div>
+                <button type="button" class="mobile-dpad-btn" data-dir="up" aria-label="위쪽 이동">
+                    <i class="fa-solid fa-arrow-up pointer-events-none"></i>
+                </button>
+                <div></div>
+                
+                <button type="button" class="mobile-dpad-btn" data-dir="left" aria-label="왼쪽 이동">
+                    <i class="fa-solid fa-arrow-left pointer-events-none"></i>
+                </button>
+                <div class="flex flex-col items-center justify-center text-slate-400 select-none pointer-events-none py-1">
+                    <i class="fa-solid fa-hand-pointer text-emerald-500 text-sm animate-bounce mb-0.5"></i>
+                    <span class="text-[10px] font-extrabold text-slate-500 whitespace-nowrap">화면 스와이프</span>
+                </div>
+                <button type="button" class="mobile-dpad-btn" data-dir="right" aria-label="오른쪽 이동">
+                    <i class="fa-solid fa-arrow-right pointer-events-none"></i>
+                </button>
+
+                <div></div>
+                <button type="button" class="mobile-dpad-btn" data-dir="down" aria-label="아래쪽 이동">
+                    <i class="fa-solid fa-arrow-down pointer-events-none"></i>
+                </button>
+                <div></div>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- 3. 교사 전용 관리 화면 (전용 와이드 뷰) -->
+        <!-- ─────────────────────────────────────────── -->
+        <div id="screen-teacher" class="hidden">
+            <div class="worm-card">
+                <!-- 헤더 & 닫기 -->
+                <div class="flex justify-between items-center pb-4 border-b border-slate-200 mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-xl shadow-md">
+                            <i class="fa-solid fa-chalkboard-user"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-black text-slate-800">지렁이 게임 교사 전용 관리</h2>
+                            <p class="text-xs text-slate-500 font-semibold">단원 단어 관리, 학생 성적표 CSV 다운로드, 학급 일괄 관리</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeTeacherScreen()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-bold text-slate-700 transition-colors">
+                        ✕ 로비로 돌아가기
+                    </button>
+                </div>
+
+                <!-- 탭 버튼 -->
+                <div class="grid grid-cols-3 gap-2 bg-slate-100 p-1.5 rounded-xl mb-6 text-xs font-bold">
+                    <button type="button" id="tab-btn-units" onclick="switchTeacherTab('units')" class="py-2.5 rounded-lg bg-white text-emerald-700 shadow-sm transition-all">
+                        📚 단원 및 단어 관리
+                    </button>
+                    <button type="button" id="tab-btn-scores" onclick="switchTeacherTab('scores')" class="py-2.5 rounded-lg text-slate-500 hover:text-slate-800 transition-all">
+                        📊 학생 성적표 및 순위
+                    </button>
+                    <button type="button" id="tab-btn-settings" onclick="switchTeacherTab('settings')" class="py-2.5 rounded-lg text-slate-500 hover:text-slate-800 transition-all">
+                        🔒 보안 & 학급 삭제
+                    </button>
+                </div>
+
+                <!-- 탭 1: 단원 및 단어 관리 -->
+                <div id="teacher-tab-units" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <!-- 단원 목록 -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h3 class="text-sm font-extrabold text-slate-700 mb-3 flex items-center gap-1.5">
+                            <i class="fa-solid fa-list-check text-emerald-600"></i> 현재 등록된 단원
+                        </h3>
+                        <ul id="adminUnitList" class="space-y-2 max-h-72 overflow-y-auto custom-scrollbar pr-1">
+                            <!-- 동적 렌더링 -->
+                        </ul>
+                    </div>
+
+                    <!-- 새 단원 추가 -->
+                    <div class="bg-emerald-50/60 p-4 rounded-xl border border-emerald-100 flex flex-col gap-3">
+                        <h3 class="text-sm font-extrabold text-emerald-800 flex items-center gap-1.5">
+                            <i class="fa-solid fa-plus-circle"></i> 새 단원 추가 / 수정
+                        </h3>
+                        <input type="text" id="adminUnitName" placeholder="단원명 (예: 1단원 과일)" class="w-full p-2.5 bg-white border border-emerald-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-400">
+                        <p class="text-[11px] text-emerald-700 font-semibold">형식: 영어:한글 (줄바꿈으로 구분, 최소 3단어 이상)</p>
+                        <textarea id="adminUnitWords" placeholder="apple:사과&#10;banana:바나나&#10;cat:고양이" class="w-full p-2.5 bg-white border border-emerald-200 rounded-xl h-36 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-xs font-mono resize-none"></textarea>
+                        <button type="button" onclick="saveUnit()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition">
+                            저장하기
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 탭 2: 학생 성적표 및 순위 -->
+                <div id="teacher-tab-scores" class="hidden space-y-4">
+                    <div class="flex flex-wrap justify-between items-center gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <select id="teacher-filter-grade" onchange="renderTeacherTable()" class="p-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none">
+                                <option value="ALL">전체 학년</option>
+                                <option value="3">3학년</option><option value="4">4학년</option>
+                                <option value="5">5학년</option><option value="6">6학년</option>
+                            </select>
+                            <select id="teacher-filter-class" onchange="renderTeacherTable()" class="p-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none">
+                                <option value="ALL">전체 반</option>
+                                <option value="1">1반</option><option value="2">2반</option>
+                                <option value="3">3반</option><option value="4">4반</option>
+                                <option value="5">5반</option><option value="6">6반</option>
+                                <option value="7">7반</option><option value="8">8반</option>
+                                <option value="9">9반</option><option value="10">10반</option>
+                                <option value="11">11반</option><option value="12">12반</option>
+                                <option value="13">13반</option><option value="14">14반</option>
+                                <option value="15">15반</option>
+                            </select>
+                            <input type="text" id="teacher-search-name" oninput="renderTeacherTable()" placeholder="학생 이름 검색..." class="p-2 bg-white border border-slate-200 rounded-lg text-xs font-bold outline-none w-36">
+                        </div>
+                        <button type="button" onclick="downloadTeacherCSV()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-excel"></i> 성적표 CSV 다운로드
+                        </button>
+                    </div>
+
+                    <!-- 성적표 테이블 -->
+                    <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-slate-100 text-slate-600 font-bold border-b border-slate-200">
+                                <tr>
+                                    <th class="p-3 text-center w-14">순위</th>
+                                    <th class="p-3">학적 정보</th>
+                                    <th class="p-3">학생명</th>
+                                    <th class="p-3 text-center">모드</th>
+                                    <th class="p-3 text-right">점수</th>
+                                    <th class="p-3 text-center">기록일시</th>
+                                    <th class="p-3 text-center w-16">관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teacher-table-body" class="divide-y divide-slate-100 font-semibold">
+                                <!-- 동적 렌더링 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 탭 3: 보안 & 학급 삭제 -->
+                <div id="teacher-tab-settings" class="hidden space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- 교사 비밀번호 변경 -->
+                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                            <h4 class="font-black text-sm text-slate-700 mb-1 flex items-center gap-1.5">
+                                <i class="fa-solid fa-key"></i> 교사 비밀번호 변경
+                            </h4>
+                            <p class="text-xs text-slate-500 mb-3">교사 전용 모드 진입 시 사용할 새 비밀번호를 설정합니다.</p>
+                            <div class="flex gap-2">
+                                <input type="password" id="newAdminPassword" placeholder="새 비밀번호 (4자리 이상)" class="flex-1 p-2 bg-white border border-slate-200 rounded-lg text-xs font-bold outline-none">
+                                <button type="button" onclick="changeAdminPassword()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold shadow">
+                                    변경 저장
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 학급별 성적 일괄 삭제 -->
+                        <div class="p-4 bg-red-50/70 border border-red-200 rounded-xl">
+                            <h4 class="font-black text-sm text-red-700 mb-1 flex items-center gap-1.5">
+                                <i class="fa-solid fa-trash-can"></i> 학급별 기록 일괄 삭제
+                            </h4>
+                            <p class="text-xs text-slate-500 mb-3">특정 학년과 반 학생들의 명예의 전당 점수를 안전하게 일괄 삭제합니다.</p>
+                            <div class="flex gap-2">
+                                <select id="delete-target-grade" class="p-2 bg-white border border-red-200 rounded-lg text-xs font-bold text-slate-700 outline-none">
+                                    <option value="3">3학년</option><option value="4">4학년</option>
+                                    <option value="5">5학년</option><option value="6">6학년</option>
+                                </select>
+                                <select id="delete-target-class" class="p-2 bg-white border border-red-200 rounded-lg text-xs font-bold text-slate-700 outline-none">
+                                    <option value="1">1반</option><option value="2">2반</option>
+                                    <option value="3">3반</option><option value="4">4반</option>
+                                    <option value="5">5반</option><option value="6">6반</option>
+                                    <option value="7">7반</option><option value="8">8반</option>
+                                    <option value="9">9반</option><option value="10">10반</option>
+                                    <option value="11">11반</option><option value="12">12반</option>
+                                    <option value="13">13반</option><option value="14">14반</option>
+                                    <option value="15">15반</option>
+                                </select>
+                                <button type="button" onclick="executeBatchClassDelete()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold shadow">
+                                    해당 학급 삭제
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 모달 다이얼로그 모음 -->
+    <!-- ─────────────────────────────────────────── -->
+
+    <!-- 1. 학생 프로필 모달 -->
+    <div id="modal-profile" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-sm modal-enter shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-black text-lg text-slate-800 flex items-center gap-2">
+                    <span class="text-xl">🧙‍♂️</span> 학생 정보 설정
+                </h3>
+                <button onclick="closeProfileModal()" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+            </div>
+            <div class="space-y-3">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[11px] font-bold text-slate-500 block mb-1">학년 (3~6)</label>
+                        <select id="prof-grade" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="3">3학년</option><option value="4">4학년</option>
+                            <option value="5">5학년</option><option value="6">6학년</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-bold text-slate-500 block mb-1">반 (1~15)</label>
+                        <select id="prof-class" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="1">1반</option><option value="2">2반</option>
+                            <option value="3">3반</option><option value="4">4반</option>
+                            <option value="5">5반</option><option value="6">6반</option>
+                            <option value="7">7반</option><option value="8">8반</option>
+                            <option value="9">9반</option><option value="10">10반</option>
+                            <option value="11">11반</option><option value="12">12반</option>
+                            <option value="13">13반</option><option value="14">14반</option>
+                            <option value="15">15반</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[11px] font-bold text-slate-500 block mb-1">번호</label>
+                        <input type="number" id="prof-num" min="1" max="50" placeholder="예: 1" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-bold text-slate-500 block mb-1">이름</label>
+                        <input type="text" id="prof-name" placeholder="예: 홍길동" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+            </div>
+            <div class="mt-5 flex gap-2">
+                <button type="button" onclick="closeProfileModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-xs text-slate-600 transition-colors">취소</button>
+                <button type="button" onclick="saveProfile()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md transition-colors">저장 완료</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 교사 인증 모달 -->
+    <div id="modal-pwd" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-sm modal-enter shadow-2xl text-center">
+            <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl mx-auto mb-3">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h3 class="font-black text-lg text-slate-800 mb-1">교사 모드 인증</h3>
+            <p class="text-xs text-slate-500 mb-4">선생님 확인을 위해 비밀번호를 입력해주세요.</p>
+            <input type="password" id="input-teacher-pwd" placeholder="비밀번호 입력" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-center text-sm outline-none focus:ring-2 focus:ring-amber-500 mb-4" onkeypress="if(event.key==='Enter') verifyTeacherPwd()">
+            <div class="flex gap-2">
+                <button type="button" onclick="closeTeacherAuthModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-xs text-slate-600 transition-colors">취소</button>
+                <button type="button" onclick="verifyTeacherPwd()" class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-xs shadow-md transition-colors">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 방 대기 모달 (멀티플레이) -->
+    <div id="modal-waiting" class="hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl modal-enter">
+            <h3 class="text-xl font-black text-slate-800 mb-1">멀티플레이 대기방</h3>
+            <p class="text-xs text-slate-500 mb-4">친구에게 아래 4자리 코드를 알려주세요.</p>
+            <div id="roomCodeDisplay" class="text-5xl font-black text-purple-600 tracking-widest bg-purple-50 py-4 rounded-2xl border-2 border-purple-200 mb-2 shadow-inner">0000</div>
+            <div id="roomSpeedBadge" class="text-xs font-bold text-teal-700 bg-teal-50 px-3 py-1 rounded-full inline-block border border-teal-200 mb-4">
+                지렁이 속도 5 (단어당 +25점)
+            </div>
+            
+            <div class="mb-5 text-left">
+                <span class="text-xs font-bold text-slate-500 block mb-1">접속한 플레이어:</span>
+                <ul id="playerList" class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-1.5 text-xs font-bold min-h-[60px]">
+                    <!-- 동적 목록 -->
+                </ul>
+            </div>
+
+            <div id="hostControls" class="hidden">
+                <button type="button" onclick="hostStartGame()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-black text-sm shadow-md transition">🚀 게임 시작!</button>
+            </div>
+            <div id="clientMsg" class="hidden">
+                <p class="text-xs text-purple-600 font-bold animate-pulse">방장이 게임을 시작할 때까지 대기해 주세요...</p>
+            </div>
+            <button type="button" onclick="leaveRoom()" class="w-full mt-2 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl font-bold text-xs transition">나가기</button>
+        </div>
+    </div>
+
+    <!-- 4. 방 입장 모달 -->
+    <div id="modal-join" class="hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl modal-enter">
+            <h3 class="text-xl font-black text-slate-800 mb-1">1:1 방 참여하기</h3>
+            <p class="text-xs text-slate-500 mb-4">친구가 알려준 4자리 참여 코드를 입력하세요.</p>
+            <input type="text" id="input-join-code" maxlength="4" placeholder="4자리 코드" class="w-full text-center text-4xl p-3.5 font-black tracking-widest border-2 border-teal-300 rounded-2xl mb-6 outline-none focus:border-teal-500 uppercase bg-slate-50" onkeypress="if(event.key==='Enter') submitJoinRoom()">
+            <div class="flex gap-2">
+                <button type="button" onclick="closeJoinRoomModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-bold text-xs transition">취소</button>
+                <button type="button" onclick="submitJoinRoom()" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white py-3 rounded-xl font-bold text-xs shadow-md transition">참여하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. 커스텀 Alert / Confirm 대화상자 -->
+    <div id="custom-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm modal-enter flex flex-col items-center text-center">
+            <div id="modal-icon" class="text-4xl mb-3">🔔</div>
+            <h3 id="modal-title" class="text-lg font-black mb-2 text-slate-800">알림</h3>
+            <p id="modal-message" class="text-slate-600 mb-6 text-sm font-medium leading-relaxed"></p>
+            <div id="modal-buttons" class="flex gap-2 w-full">
+                <button id="modal-btn-cancel" class="hidden flex-1 bg-slate-100 text-slate-700 py-2.5 rounded-xl font-bold text-xs hover:bg-slate-200 transition">취소</button>
+                <button id="modal-btn-confirm" class="flex-1 bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-xs hover:bg-emerald-700 shadow-md transition">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- Firebase SDK & 지렁이 게임 엔진 -->
+    <!-- ─────────────────────────────────────────── -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, orderBy, limit, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'eng-word-snake-v2';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDHCnRrVE2dVuJpf77P-1oftGpczR5WDd4",
+            authDomain: "eng-activity.firebaseapp.com",
+            projectId: "eng-activity",
+            storageBucket: "eng-activity.firebasestorage.app",
+            messagingSenderId: "528859753713",
+            appId: "1:528859753713:web:6246944b52e40213c10d50"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        const DB_PREFIX = `artifacts/${appId}/public/data`;
+        const UNITS_PATH = `${DB_PREFIX}/eng_snake_units`;
+        const SCORES_PATH = `${DB_PREFIX}/eng_snake_scores`;
+        const ROOMS_PATH = `${DB_PREFIX}/eng_snake_rooms`;
+        const SETTINGS_PATH = `${DB_PREFIX}/eng_snake_settings`;
+
+        let isAuthReady = false;
+        let userId = null;
+
+        // 학생 프로필
+        let studentProfile = { grade: '3', classNum: '1', studentNum: '1', name: '' };
+        let adminPassword = '4657';
+        let wordUnits = {};
+        let currentUnit = '전체 단원';
+
+        // 명예의 전당 로컬 캐시 (Firebase 쿼터 초과 대응)
+        const HOF_CACHE_KEY = 'waurimal_earthworm_scores_cache';
+
+        function getLocalHofCache() {
+            try {
+                const raw = localStorage.getItem(HOF_CACHE_KEY);
+                if (raw) {
+                    const list = JSON.parse(raw);
+                    if (Array.isArray(list)) return list;
+                }
+            } catch (e) {}
+            return [];
+        }
+
+        function saveScoreToLocalCache(record) {
+            try {
+                let list = getLocalHofCache();
+                list.unshift(record);
+                if (list.length > 300) list = list.slice(0, 300);
+                localStorage.setItem(HOF_CACHE_KEY, JSON.stringify(list));
+            } catch (e) {}
+        }
+
+        function syncScoresWithLocalCache(serverRecords) {
+            try {
+                let localList = getLocalHofCache();
+                const mergedMap = new Map();
+
+                serverRecords.forEach(r => {
+                    const key = r.id || `${r.name}_${r.score}_${r.timestamp}`;
+                    mergedMap.set(key, r);
+                });
+
+                localList.forEach(r => {
+                    const key = r.id || `${r.name}_${r.score}_${r.timestamp}`;
+                    if (!mergedMap.has(key)) {
+                        mergedMap.set(key, r);
+                    }
+                });
+
+                const merged = Array.from(mergedMap.values());
+                merged.sort((a, b) => (b.score || 0) - (a.score || 0));
+                localStorage.setItem(HOF_CACHE_KEY, JSON.stringify(merged.slice(0, 300)));
+                return merged;
+            } catch (e) {
+                return serverRecords;
+            }
+        }
+
+        // 게임 루프 변수
+        let canvas, ctx;
+        const TILE_COUNT = 20;
+        let TILE_SIZE = 40;
+        let gameLoopId = null;
+        let gameMode = 'single'; // 'single' | 'multi'
+        let currentRoomId = null;
+        let unsubscribeRoom = null;
+        let isHost = false;
+        let gameSpeed = 5;
+
+        let snake = [];
+        let dx = 1, dy = 0;
+        let inputQueue = [];
+        let score = 0;
+        let foods = [];
+        let targetWordKr = "";
+        let isGameOver = false;
+        let floatingScores = [];
+
+        // 멀티플레이 상태
+        let mpPlayers = {};
+
+        let hofAllScores = [];
+
+        
+        // ════════════════════════════════════════════════════════════════════
+        // ── 마인크래프트 스타일 음식 섭취 효과음 엔진 (Minecraft Eating Sound) ──
+        // ════════════════════════════════════════════════════════════════════
+        const MINECRAFT_EAT_B64 = [
+            "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",
+            "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",
+            "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"
+        ];
+
+        let eatAudioCtx = null;
+        const decodedEatBuffers = [];
+        let isEatAudioInitialized = false;
+
+        function base64ToArrayBuffer(b64) {
+            const bin = window.atob(b64);
+            const len = bin.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+            return bytes.buffer;
+        }
+
+        function initEatAudio() {
+            if (isEatAudioInitialized) {
+                if (eatAudioCtx && eatAudioCtx.state === 'suspended') {
+                    eatAudioCtx.resume().catch(() => {});
+                }
+                return;
+            }
+            try {
+                const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtxClass) return;
+                eatAudioCtx = (window.WaurimalAudio && window.WaurimalAudio.ctx) || new AudioCtxClass();
+                if (eatAudioCtx.state === 'suspended') {
+                    eatAudioCtx.resume().catch(() => {});
+                }
+
+                MINECRAFT_EAT_B64.forEach((b64, idx) => {
+                    try {
+                        const ab = base64ToArrayBuffer(b64);
+                        eatAudioCtx.decodeAudioData(ab, (buffer) => {
+                            decodedEatBuffers[idx] = buffer;
+                        }, () => {});
+                    } catch(e) {}
+                });
+                isEatAudioInitialized = true;
+            } catch(e) {}
+        }
+
+        // 첫 사용자 터치/클릭/키입력 시 오디오 컨텍스트 사전 활성화
+        ['pointerdown', 'keydown', 'touchstart'].forEach(evt => {
+            window.addEventListener(evt, () => initEatAudio(), { once: true, passive: true });
+        });
+
+        // 절차적 바삭한 씹는 소리 (최후의 오프라인/제한 환경 폴백)
+        function playProceduralCrunch(vol = 0.8) {
+            if (!eatAudioCtx) return;
+            const now = eatAudioCtx.currentTime;
+            const pitch = 0.92 + Math.random() * 0.22;
+            
+            // 1. 치아로 부수는 바삭한 노이즈
+            const bufLen = Math.floor(eatAudioCtx.sampleRate * 0.16);
+            const nBuf = eatAudioCtx.createBuffer(1, bufLen, eatAudioCtx.sampleRate);
+            const data = nBuf.getChannelData(0);
+            for (let i = 0; i < bufLen; i++) data[i] = (Math.random() * 2 - 1) * 0.8;
+            
+            const nSrc = eatAudioCtx.createBufferSource();
+            nSrc.buffer = nBuf;
+            const bp = eatAudioCtx.createBiquadFilter();
+            bp.type = 'bandpass';
+            bp.frequency.setValueAtTime((1700 + Math.random() * 400) * pitch, now);
+            bp.Q.setValueAtTime(2.4, now);
+            
+            const nGain = eatAudioCtx.createGain();
+            nGain.gain.setValueAtTime(vol * 0.35, now);
+            nGain.gain.exponentialRampToValueAtTime(0.005, now + 0.14);
+            
+            nSrc.connect(bp);
+            bp.connect(nGain);
+            nGain.connect(eatAudioCtx.destination);
+            nSrc.start(now);
+            nSrc.stop(now + 0.15);
+
+            // 2. 입안 울림 (턱/입 닫힘 피치 스윕)
+            const osc = eatAudioCtx.createOscillator();
+            const oGain = eatAudioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(320 * pitch, now);
+            osc.frequency.exponentialRampToValueAtTime(130 * pitch, now + 0.12);
+            oGain.gain.setValueAtTime(vol * 0.25, now);
+            oGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+            osc.connect(oGain);
+            oGain.connect(eatAudioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.12);
+        }
+
+        // 지렁이가 음식(정답 단어)을 먹을 때 마인크래프트 효과음 재생
+        window.playEatSound = function(volume = 0.9) {
+            // 1. 음소거 여부 체크 (공통 GNB 네비게이션 동기화)
+            if (window.WaurimalAudio && window.WaurimalAudio.muted) return;
+            if (localStorage.getItem('waurimal_muted') === 'true') return;
+
+            initEatAudio();
+
+            // 2. Web Audio API 디코딩 버퍼 (0ms 즉시 무지연 재생 + 마인크래프트 특유의 랜덤 피치)
+            if (eatAudioCtx) {
+                if (eatAudioCtx.state === 'suspended') {
+                    eatAudioCtx.resume().catch(() => {});
+                }
+                const ready = decodedEatBuffers.filter(Boolean);
+                if (ready.length > 0) {
+                    const buf = ready[Math.floor(Math.random() * ready.length)];
+                    const src = eatAudioCtx.createBufferSource();
+                    const gain = eatAudioCtx.createGain();
+                    src.buffer = buf;
+                    // 마인크래프트 원작 동일 피치 지터 (0.92 ~ 1.14 배속/피치로 단조로움 해소)
+                    src.playbackRate.value = 0.92 + Math.random() * 0.22;
+                    gain.gain.value = volume;
+                    src.connect(gain);
+                    gain.connect(eatAudioCtx.destination);
+                    src.start(0);
+                    return;
+                }
+            }
+
+            // 3. HTML5 Audio 백업 (버퍼 디코딩 대기 중이거나 예외 시)
+            try {
+                const b64 = MINECRAFT_EAT_B64[Math.floor(Math.random() * MINECRAFT_EAT_B64.length)];
+                const a = new Audio('data:audio/mp3;base64,' + b64);
+                a.volume = Math.min(1.0, Math.max(0.1, volume));
+                a.playbackRate = 0.92 + Math.random() * 0.22;
+                a.play().catch(() => {
+                    playProceduralCrunch(volume);
+                });
+                return;
+            } catch(e) {}
+
+            // 4. 절차적 합성 폴백
+            try {
+                playProceduralCrunch(volume);
+            } catch(e) {}
+        };
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── 공통 모달 알림 ──
+        // ════════════════════════════════════════════════════════════════════
+        window.showAlert = (msg, title="알림", icon="🔔") => {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('custom-modal');
+                document.getElementById('modal-title').innerText = title;
+                document.getElementById('modal-message').innerHTML = msg;
+                document.getElementById('modal-icon').innerText = icon;
+                document.getElementById('modal-btn-cancel').classList.add('hidden');
+                modal.classList.remove('hidden');
+
+                document.getElementById('modal-btn-confirm').onclick = () => {
+                    modal.classList.add('hidden');
+                    resolve();
+                };
+            });
+        };
+
+        window.showConfirm = (msg, title="확인", icon="❓") => {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('custom-modal');
+                document.getElementById('modal-title').innerText = title;
+                document.getElementById('modal-message').innerHTML = msg;
+                document.getElementById('modal-icon').innerText = icon;
+                document.getElementById('modal-btn-cancel').classList.remove('hidden');
+                modal.classList.remove('hidden');
+
+                document.getElementById('modal-btn-confirm').onclick = () => {
+                    modal.classList.add('hidden');
+                    resolve(true);
+                };
+                document.getElementById('modal-btn-cancel').onclick = () => {
+                    modal.classList.add('hidden');
+                    resolve(false);
+                };
+            });
+        };
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── 학생 프로필 및 GNB 연동 ──
+        // ════════════════════════════════════════════════════════════════════
+        function loadStudentProfile() {
+            try {
+                if (window.WaurimalStudent && typeof window.WaurimalStudent.get === 'function') {
+                    const ws = window.WaurimalStudent.get();
+                    if (ws) {
+                        if (ws.grade) studentProfile.grade = String(ws.grade);
+                        if (ws.class) studentProfile.classNum = String(ws.class);
+                        if (ws.classNum) studentProfile.classNum = String(ws.classNum);
+                        if (ws.number) studentProfile.studentNum = String(ws.number);
+                        if (ws.studentNum) studentProfile.studentNum = String(ws.studentNum);
+                        if (ws.name) studentProfile.name = ws.name.trim();
+                    }
+                }
+                const saved = JSON.parse(localStorage.getItem('waurimal_student_profile') || '{}');
+                if (saved.grade) studentProfile.grade = String(saved.grade);
+                if (saved.class) studentProfile.classNum = String(saved.class);
+                if (saved.classNum) studentProfile.classNum = String(saved.classNum);
+                if (saved.number) studentProfile.studentNum = String(saved.number);
+                if (saved.studentNum) studentProfile.studentNum = String(saved.studentNum);
+                if (saved.name) studentProfile.name = saved.name.trim();
+            } catch (e) {}
+            updateWelcomeUI();
+        }
+
+        function updateWelcomeUI() {
+            const el = document.getElementById('welcome-text');
+            if (!el) return;
+            if (studentProfile.name) {
+                const sanitize = window.WaurimalSanitize || (s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+                const safeName = sanitize(studentProfile.name);
+                el.innerHTML = `<strong class="text-emerald-700">${studentProfile.grade}학년 ${studentProfile.classNum}반 ${studentProfile.studentNum}번 ${safeName}</strong> 학생 환영해요!`;
+            } else {
+                el.innerHTML = `<span class="text-amber-600 font-bold">프로필을 등록해주세요!</span> <span class="text-xs text-slate-400 font-normal ml-1">(오른쪽 버튼 클릭)</span>`;
+            }
+        }
+
+        function getFormattedName() {
+            const g = studentProfile.grade || '3';
+            const c = studentProfile.classNum || '1';
+            const num = studentProfile.studentNum || '1';
+            const raw = studentProfile.name || '학생';
+            const masked = raw.length <= 1 ? raw : (raw[0] + 'O' + (raw.length > 2 ? raw.substring(2) : ''));
+            return `${g}학년 ${c}반 ${num}번 ${masked}`;
+        }
+
+        window.openProfileModal = () => {
+            document.getElementById('prof-grade').value = studentProfile.grade || '3';
+            document.getElementById('prof-class').value = studentProfile.classNum || '1';
+            document.getElementById('prof-num').value = studentProfile.studentNum || '1';
+            document.getElementById('prof-name').value = studentProfile.name || '';
+            document.getElementById('modal-profile').classList.remove('hidden');
+        };
+
+        window.closeProfileModal = () => {
+            document.getElementById('modal-profile').classList.add('hidden');
+        };
+
+        window.saveProfile = () => {
+            const g = document.getElementById('prof-grade').value;
+            const c = document.getElementById('prof-class').value;
+            const num = document.getElementById('prof-num').value.trim();
+            const name = document.getElementById('prof-name').value.trim();
+
+            if (!name) {
+                showAlert("이름을 입력해주세요!", "알림", "⚠️");
+                return;
+            }
+
+            studentProfile = { grade: g, classNum: c, studentNum: num || '1', name };
+            try {
+                const profData = {
+                    school: '이의초등학교',
+                    grade: g,
+                    class: c,
+                    classNum: c,
+                    number: num || '1',
+                    studentNum: num || '1',
+                    name: name
+                };
+                localStorage.setItem('waurimal_student_profile', JSON.stringify(profData));
+                if (window.WaurimalStudent && typeof window.WaurimalStudent.set === 'function') {
+                    window.WaurimalStudent.set(profData);
+                }
+            } catch (e) {}
+
+            updateWelcomeUI();
+            closeProfileModal();
+        };
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── 초기화 ──
+        // ════════════════════════════════════════════════════════════════════
+        window.addEventListener('DOMContentLoaded', async () => {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            loadStudentProfile();
+            loadUnits();
+            loadHallOfFame();
+            if (typeof initMobileControls === 'function') initMobileControls();
+            if (typeof initCanvasSwipe === 'function') initCanvasSwipe();
+
+            try {
+                const cred = await signInAnonymously(auth);
+                userId = cred.user.uid;
+                isAuthReady = true;
+                await loadUnits();
+                loadAdminSettings();
+                loadHallOfFame();
+            } catch (e) {
+                console.error("Auth Error", e);
+            }
+        });
+
+        async function loadAdminSettings() {
+            if (!isAuthReady) return;
+            try {
+                const snap = await getDoc(doc(db, SETTINGS_PATH, 'adminAuth'));
+                if (snap.exists() && snap.data().password) {
+                    adminPassword = snap.data().password;
+                }
+            } catch(e) {}
+        }
+
+        async function loadUnits() {
+            const defaultUnits = {
+                '과일과 채소': [
+                    {en:'apple', kr:'사과'}, {en:'banana', kr:'바나나'}, {en:'orange', kr:'오렌지'},
+                    {en:'grape', kr:'포도'}, {en:'carrot', kr:'당근'}, {en:'tomato', kr:'토마토'}
+                ],
+                '귀여운 동물': [
+                    {en:'cat', kr:'고양이'}, {en:'dog', kr:'개'}, {en:'bear', kr:'곰'},
+                    {en:'lion', kr:'사자'}, {en:'tiger', kr:'호랑이'}, {en:'rabbit', kr:'토끼'}
+                ],
+                '학교와 학용품': [
+                    {en:'book', kr:'책'}, {en:'desk', kr:'책상'}, {en:'pencil', kr:'연필'},
+                    {en:'eraser', kr:'지우개'}, {en:'school', kr:'학교'}, {en:'friend', kr:'친구'}
+                ]
+            };
+
+            if (Object.keys(wordUnits).length === 0) {
+                wordUnits = { ...defaultUnits };
+            }
+
+            if (isAuthReady) {
+                try {
+                    const snap = await getDocs(collection(db, UNITS_PATH));
+                    if (snap.empty) {
+                        for(let u in defaultUnits) {
+                            try {
+                                await setDoc(doc(db, UNITS_PATH, u), { words: defaultUnits[u] });
+                            } catch(e) {}
+                        }
+                    } else {
+                        wordUnits = {};
+                        snap.forEach(docSnap => {
+                            wordUnits[docSnap.id] = docSnap.data().words;
+                        });
+                    }
+                } catch(e) {
+                    console.warn("Units fetch failed, using fallback:", e);
+                }
+            }
+            updateUnitSelect();
+            if (typeof window.updateHofUnitSelect === 'function') {
+                window.updateHofUnitSelect();
+            }
+        }
+
+        function updateUnitSelect() {
+            const select = document.getElementById('unitSelect');
+            if (!select) return;
+            select.innerHTML = '<option value="all">전체 단원 섞어서</option>';
+            for(let u in wordUnits) {
+                const opt = document.createElement('option');
+                opt.value = u;
+                opt.innerText = `${u} (${wordUnits[u].length}단어)`;
+                select.appendChild(opt);
+            }
+        }
+
+        function getAllWords() {
+            let all = [];
+            for (let u in wordUnits) {
+                all = all.concat(wordUnits[u]);
+            }
+            return all;
+        }
+
+        function getActiveWords() {
+            if (gameMode === 'multi' && currentUnit && currentUnit !== '전체 단원' && wordUnits[currentUnit]) {
+                return wordUnits[currentUnit];
+            }
+            const select = document.getElementById('unitSelect');
+            const sel = select ? select.value : 'all';
+            if (sel !== 'all' && wordUnits[sel]) return wordUnits[sel];
+            return getAllWords();
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── 게임 루프 & 스네이크 엔진 ──
+        // ════════════════════════════════════════════════════════════════════
+        window.startSinglePlayer = () => {
+            if (!studentProfile.name) {
+                showAlert("게임에 참여하려면 먼저 학생 정보(학년, 반, 번호, 이름)를 등록해야 합니다.", "학생 정보 필요", "🧙‍♂️").then(() => {
+                    openProfileModal();
+                });
+                return;
+            }
+            gameMode = 'single';
+            gameSpeed = parseInt(document.getElementById('speedSlider').value) || 5;
+            initGame('single');
+        };
+
+        function getScorePerFood(speed) {
+            const s = parseInt(speed) || 5;
+            return Math.max(5, Math.min(50, s * 5));
+        }
+
+        window.updateSpeedDisplay = (val) => {
+            const speed = parseInt(val) || 5;
+            const pts = getScorePerFood(speed);
+            const el = document.getElementById('speedValue');
+            if (el) {
+                el.innerText = `속도 ${speed} (단어당 +${pts}점)`;
+            }
+        };
+
+        function getDelayBySpeed(speed) {
+            return 300 - ((speed - 1) * 26);
+        }
+
+        window.showScreen = (screenId) => {
+            if (screenId === 'screen-teacher' && (!window.WaurimalAuth || !window.WaurimalAuth.isAuthenticated())) {
+                if (typeof window.openTeacherAuthModal === 'function') {
+                    window.openTeacherAuthModal();
+                } else {
+                    alert('교사 인증이 필요합니다.');
+                }
+                return;
+            }
+            const screens = ['screen-home', 'screen-game', 'screen-teacher'];
+            screens.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (id === screenId) {
+                        el.classList.remove('hidden');
+                        el.style.setProperty('display', id === 'screen-home' ? 'grid' : (id === 'screen-game' ? 'flex' : 'block'), 'important');
+                    } else {
+                        el.classList.add('hidden');
+                        el.style.setProperty('display', 'none', 'important');
+                    }
+                }
+            });
+
+            const hdr = document.querySelector('.hdr');
+            if (hdr) {
+                if (screenId === 'screen-home' || screenId === 'screen-teacher') {
+                    hdr.style.removeProperty('display');
+                } else {
+                    hdr.style.setProperty('display', 'none', 'important');
+                }
+            }
+            window.scrollTo({ top: 0, behavior: 'instant' });
+        };
+
+        function initGame(mode) {
+            if (Object.keys(wordUnits).length === 0) {
+                showAlert("단어 데이터가 없습니다. 교사 모드에서 단원을 추가해주세요.", "알림", "⚠️");
+                return;
+            }
+
+            const unitSelect = document.getElementById('unitSelect');
+            if (mode === 'single') {
+                currentUnit = (unitSelect && unitSelect.value !== 'all') ? unitSelect.value : '전체 단원';
+            }
+
+            window.showScreen('screen-game');
+            document.getElementById('gameOverOverlay').classList.add('hidden');
+
+            snake = [
+                {x: 10, y: 10},
+                {x: 9, y: 10},
+                {x: 8, y: 10}
+            ];
+            dx = 1; dy = 0;
+            inputQueue = [];
+            score = 0;
+            isGameOver = false;
+            floatingScores = [];
+            document.getElementById('scoreDisplay').innerText = score;
+            const rateBadge = document.getElementById('scoreRateBadge');
+            if (rateBadge) {
+                rateBadge.innerText = `+${getScorePerFood(gameSpeed)}점/단어 (속도 ${gameSpeed})`;
+            }
+            initEatAudio();
+
+            if (mode === 'multi') {
+                updateMyStateInDB();
+                if (isHost) spawnFood(true);
+            } else {
+                spawnFood(false);
+            }
+
+            if (gameLoopId) clearTimeout(gameLoopId);
+            gameLoop();
+        }
+
+        function spawnFood(syncToDb = false) {
+            const activeWords = getActiveWords();
+            const poolWords = getAllWords();
+            if (activeWords.length === 0) return;
+
+            const correctWord = activeWords[Math.floor(Math.random() * activeWords.length)];
+            targetWordKr = correctWord.kr;
+            document.getElementById('targetWordKr').innerText = targetWordKr;
+
+            let dummyWords = [];
+            let attempts = 0;
+            while (dummyWords.length < 5 && attempts < 200) {
+                attempts++;
+                let r = poolWords[Math.floor(Math.random() * poolWords.length)];
+                if (r && r.en !== correctWord.en && !dummyWords.find(d => d.en === r.en)) {
+                    dummyWords.push(r);
+                }
+            }
+
+            foods = [];
+
+            function getEmptySpot(wordStr = '') {
+                let spot;
+                let at = 0;
+                const head = snake.length > 0 ? snake[0] : null;
+                const wordLen = (wordStr || '').length;
+                const halfSpan = Math.max(1, Math.ceil(wordLen * 0.22));
+
+                while (true) {
+                    at++;
+                    // 단어 길이를 고려하여 캔버스 가장자리 마진 확보
+                    const minX = Math.min(halfSpan + 1, Math.floor(TILE_COUNT / 2) - 1);
+                    const maxX = Math.max(minX, TILE_COUNT - 2 - halfSpan);
+                    const rangeX = maxX - minX + 1;
+
+                    spot = {
+                        x: minX + Math.floor(Math.random() * rangeX),
+                        y: Math.floor(Math.random() * (TILE_COUNT - 2)) + 1
+                    };
+
+                    let collision = snake.some(s => s.x === spot.x && s.y === spot.y);
+                    if (!collision && head && at < 100) {
+                        const distX = Math.min(Math.abs(spot.x - head.x), TILE_COUNT - Math.abs(spot.x - head.x));
+                        const distY = Math.min(Math.abs(spot.y - head.y), TILE_COUNT - Math.abs(spot.y - head.y));
+                        if (distX <= 3 && distY <= 3) collision = true;
+                    }
+
+                    // 다른 먹이와의 충돌 및 단어 가로 길이 겹침 방지 (동일 행 및 인접 행)
+                    if (!collision) {
+                        for (let f of foods) {
+                            const fLen = (f.en || '').length;
+                            const otherHalfSpan = Math.max(1, Math.ceil(fLen * 0.22));
+                            const reqDistX = halfSpan + otherHalfSpan + (at < 100 ? 2 : 1);
+                            const dy = Math.abs(spot.y - f.y);
+                            const dx = Math.abs(spot.x - f.x);
+
+                            if (dy === 0) {
+                                if (dx < reqDistX) {
+                                    collision = true;
+                                    break;
+                                }
+                            } else if (dy === 1) {
+                                if (dx < Math.max(2, reqDistX - 2)) {
+                                    collision = true;
+                                    break;
+                                }
+                            } else if (dy === 2 && at < 50) {
+                                if (dx === 0) {
+                                    collision = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (gameMode === 'multi' && !collision) {
+                        for (let uid in mpPlayers) {
+                            if (mpPlayers[uid].snake) {
+                                collision = collision || mpPlayers[uid].snake.some(s => s.x === spot.x && s.y === spot.y);
+                            }
+                        }
+                    }
+
+                    if (!collision || at >= 250) break;
+                }
+                return spot;
+            }
+
+            let pos = getEmptySpot(correctWord.en);
+            foods.push({ x: pos.x, y: pos.y, en: correctWord.en, kr: correctWord.kr, isCorrect: true });
+
+            for (let d of dummyWords) {
+                pos = getEmptySpot(d.en);
+                foods.push({ x: pos.x, y: pos.y, en: d.en, kr: d.kr, isCorrect: false });
+            }
+
+            if (syncToDb && gameMode === 'multi' && isHost) {
+                updateDoc(doc(db, ROOMS_PATH, currentRoomId), {
+                    foods: foods,
+                    targetWordKr: targetWordKr
+                }).catch(e => console.error(e));
+            }
+        }
+
+        function gameLoop() {
+            if (isGameOver) return;
+            update();
+            draw();
+            const delay = getDelayBySpeed(gameSpeed);
+            gameLoopId = setTimeout(gameLoop, delay);
+        }
+
+        function update() {
+            if (inputQueue.length > 0) {
+                const next = inputQueue.shift();
+                dx = next.dx;
+                dy = next.dy;
+            }
+
+            // 추가 안전 방어: 지렁이 길이가 2 이상일 때 자신의 목(snake[1]) 방향으로 역주행하는 것을 원천 차단
+            if (snake.length > 1) {
+                let testX = snake[0].x + dx;
+                let testY = snake[0].y + dy;
+                if (testX < 0) testX = TILE_COUNT - 1;
+                else if (testX >= TILE_COUNT) testX = 0;
+                if (testY < 0) testY = TILE_COUNT - 1;
+                else if (testY >= TILE_COUNT) testY = 0;
+
+                if (testX === snake[1].x && testY === snake[1].y) {
+                    dx = snake[0].x - snake[1].x;
+                    dy = snake[0].y - snake[1].y;
+                    if (Math.abs(dx) > 1) dx = -Math.sign(dx);
+                    if (Math.abs(dy) > 1) dy = -Math.sign(dy);
+                }
+            }
+
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+
+            // 사방 벽 뚫림 (Wrap-around)
+            if (head.x < 0) head.x = TILE_COUNT - 1;
+            else if (head.x >= TILE_COUNT) head.x = 0;
+            if (head.y < 0) head.y = TILE_COUNT - 1;
+            else if (head.y >= TILE_COUNT) head.y = 0;
+
+            snake.unshift(head);
+
+            // 1. 자신의 몸통 충돌만 검사 (상대방 몸통 충돌로는 사망하지 않음)
+            let deadBySelf = false;
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    deadBySelf = true; break;
+                }
+            }
+
+            if (deadBySelf) {
+                handleDeath('자신의 몸통에 부딪혀 탈락했습니다!');
+                return;
+            }
+
+            // 2. 단어 먹기 검사 (정답: 득점 및 성장 / 오답: 다른 단어를 먹어 즉시 탈락)
+            let ate = false;
+            for (let i = 0; i < foods.length; i++) {
+                if (head.x === foods[i].x && head.y === foods[i].y) {
+                    if (foods[i].isCorrect) {
+                        const earnedPoints = getScorePerFood(gameSpeed);
+                        score += earnedPoints;
+                        const scoreEl = document.getElementById('scoreDisplay');
+                        if (scoreEl) {
+                            scoreEl.innerText = score;
+                            scoreEl.classList.remove('scale-125');
+                            void scoreEl.offsetWidth;
+                            scoreEl.classList.add('scale-125');
+                            setTimeout(() => scoreEl.classList.remove('scale-125'), 150);
+                        }
+                        floatingScores.push({
+                            x: foods[i].x * TILE_SIZE + TILE_SIZE / 2,
+                            y: foods[i].y * TILE_SIZE + TILE_SIZE / 2,
+                            text: `+${earnedPoints}`,
+                            opacity: 1.0,
+                            life: 25
+                        });
+                        ate = true;
+                        playEatSound(0.95);
+                        if (gameMode === 'multi') {
+                            if (isHost) spawnFood(true);
+                        } else {
+                            spawnFood(false);
+                        }
+                    } else {
+                        // 다른 단어(오답 사과)를 먹었을 때에만 사망!
+                        const eatenWord = foods[i].en || '';
+                        handleDeath(`다른 단어("${eatenWord}")를 먹어 탈락했습니다!`);
+                        return;
+                    }
+                    break;
+                }
+            }
+
+            if (!ate) {
+                snake.pop();
+            }
+
+            if (gameMode === 'multi') {
+                updateMyStateInDB();
+            }
+        }
+
+        function handleDeath(reason = '게임 오버!') {
+            isGameOver = true;
+            if (gameMode === 'single') {
+                showGameOver(false, reason);
+            } else {
+                updateDoc(doc(db, ROOMS_PATH, currentRoomId), {
+                    [`players.${userId}.isDead`]: true
+                }).catch(e => console.error(e));
+                showGameOver(true, reason);
+            }
+        }
+
+        function updateMyStateInDB() {
+            if (!currentRoomId || isGameOver) return;
+            updateDoc(doc(db, ROOMS_PATH, currentRoomId), {
+                [`players.${userId}.snake`]: snake,
+                [`players.${userId}.score`]: score,
+                [`players.${userId}.dx`]: dx,
+                [`players.${userId}.dy`]: dy
+            }).catch(() => {});
+        }
+
+        function draw() {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            TILE_SIZE = canvas.width / TILE_COUNT;
+
+            // 격자선
+            ctx.strokeStyle = '#F0FDF4';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= TILE_COUNT; i++) {
+                ctx.beginPath(); ctx.moveTo(i * TILE_SIZE, 0); ctx.lineTo(i * TILE_SIZE, canvas.height); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i * TILE_SIZE); ctx.lineTo(canvas.width, i * TILE_SIZE); ctx.stroke();
+            }
+
+            // 단어 먹이 그리기 (긴 단어 시인성 강화: 캡슐 배지 + 가변 폰트 + 외곽선 스트로크)
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            for (let f of foods) {
+                const cx = f.x * TILE_SIZE + TILE_SIZE / 2;
+                const cy = f.y * TILE_SIZE + TILE_SIZE / 2;
+                const wordStr = f.en || '';
+                const wordLen = wordStr.length;
+
+                // 단어 길이에 따른 동적 폰트 크기 계산 (긴 단어도 잘리지 않고 선명하게)
+                let fontSize = TILE_SIZE * 0.42;
+                if (wordLen > 10) {
+                    fontSize = TILE_SIZE * 0.32;
+                } else if (wordLen > 6) {
+                    fontSize = TILE_SIZE * 0.38;
+                }
+                ctx.font = `bold ${fontSize}px 'Pretendard', sans-serif`;
+
+                const textMetrics = ctx.measureText(wordStr);
+                const textWidth = textMetrics.width;
+                const pillPaddingX = TILE_SIZE * 0.32;
+                const pillWidth = Math.max(TILE_SIZE * 1.15, textWidth + pillPaddingX * 2);
+                const pillHeight = Math.max(TILE_SIZE * 0.85, fontSize + TILE_SIZE * 0.38);
+                const pillRadius = pillHeight / 2;
+
+                // 캔버스 경계를 벗어나지 않도록 클램핑
+                let pillX = cx - pillWidth / 2;
+                let pillY = cy - pillHeight / 2;
+                if (pillX < 4) pillX = 4;
+                if (pillX + pillWidth > canvas.width - 4) pillX = canvas.width - 4 - pillWidth;
+                const textDrawX = pillX + pillWidth / 2;
+
+                ctx.save();
+                // 1. 먹이 중심 타일 앵커 표시
+                ctx.beginPath();
+                ctx.arc(cx, cy, TILE_SIZE * 0.48, 0, Math.PI * 2);
+                ctx.fillStyle = '#FEE2E2';
+                ctx.fill();
+
+                // 2. 캡슐 알약(Pill) 배지 배경 (선명한 흰색 배경으로 격자선 투과 방지)
+                ctx.shadowColor = 'rgba(239, 68, 68, 0.28)';
+                ctx.shadowBlur = 8;
+                ctx.shadowOffsetY = 2;
+
+                ctx.beginPath();
+                if (typeof ctx.roundRect === 'function') {
+                    ctx.roundRect(pillX, pillY, pillWidth, pillHeight, pillRadius);
+                } else {
+                    ctx.arc(pillX + pillRadius, pillY + pillRadius, pillRadius, Math.PI * 0.5, Math.PI * 1.5);
+                    ctx.lineTo(pillX + pillWidth - pillRadius, pillY);
+                    ctx.arc(pillX + pillWidth - pillRadius, pillY + pillRadius, pillRadius, Math.PI * 1.5, Math.PI * 0.5);
+                    ctx.lineTo(pillX + pillRadius, pillY + pillHeight);
+                }
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fill();
+
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetY = 0;
+                ctx.strokeStyle = '#F87171';
+                ctx.lineWidth = 1.6;
+                ctx.stroke();
+
+                // 3. 단어 텍스트 렌더링 (흰색 외곽선 스트로크 + 진한 버건디 텍스트로 가독성 극대화)
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = 2.5;
+                ctx.strokeText(wordStr, textDrawX, cy);
+
+                ctx.fillStyle = '#991B1B';
+                ctx.fillText(wordStr, textDrawX, cy);
+                ctx.restore();
+            }
+
+            // 내 지렁이
+            drawSnake(snake, '#34D399', '#059669', studentProfile.name || '나');
+
+            // 멀티플레이 다른 플레이어 지렁이
+            if (gameMode === 'multi') {
+                for (let uid in mpPlayers) {
+                    const p = mpPlayers[uid];
+                    if (!p.isDead && p.snake && p.snake.length > 0) {
+                        let colorLight = '#93C5FD', colorDark = '#2563EB';
+                        if (p.color === 'orange') { colorLight='#FDBA74'; colorDark='#EA580C'; }
+                        else if (p.color === 'purple') { colorLight='#D8B4FE'; colorDark='#7C3AED'; }
+                        else if (p.color === 'red') { colorLight='#FCA5A5'; colorDark='#DC2626'; }
+                        drawSnake(p.snake, colorLight, colorDark, p.name);
+                    }
+                }
+            }
+
+            // 플로팅 득점 이펙트 애니메이션
+            for (let i = floatingScores.length - 1; i >= 0; i--) {
+                const fs = floatingScores[i];
+                ctx.save();
+                ctx.font = `900 ${TILE_SIZE * 0.55}px 'Pretendard', sans-serif`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.strokeStyle = `rgba(255, 255, 255, ${fs.opacity})`;
+                ctx.lineWidth = 4;
+                ctx.strokeText(fs.text, fs.x, fs.y);
+                ctx.fillStyle = `rgba(5, 150, 105, ${fs.opacity})`;
+                ctx.fillText(fs.text, fs.x, fs.y);
+                ctx.restore();
+                fs.y -= 1.2;
+                fs.life--;
+                fs.opacity = fs.life / 25;
+                if (fs.life <= 0) {
+                    floatingScores.splice(i, 1);
+                }
+            }
+        }
+
+        function drawSnake(snakeArr, lightColor, darkColor, name) {
+            for (let i = 0; i < snakeArr.length; i++) {
+                const part = snakeArr[i];
+                const x = part.x * TILE_SIZE;
+                const y = part.y * TILE_SIZE;
+
+                ctx.fillStyle = i === 0 ? darkColor : lightColor;
+                ctx.beginPath();
+                ctx.roundRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4, 8);
+                ctx.fill();
+
+                if (i === 0) {
+                    // 눈 그리기
+                    ctx.fillStyle = 'white';
+                    ctx.beginPath(); ctx.arc(x + TILE_SIZE / 3, y + TILE_SIZE / 3, 3.5, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(x + TILE_SIZE * 2 / 3, y + TILE_SIZE / 3, 3.5, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = 'black';
+                    ctx.beginPath(); ctx.arc(x + TILE_SIZE / 3, y + TILE_SIZE / 3, 1.8, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(x + TILE_SIZE * 2 / 3, y + TILE_SIZE / 3, 1.8, 0, Math.PI * 2); ctx.fill();
+
+                    // 네임 태그
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
+                    ctx.font = `bold 11px sans-serif`;
+                    ctx.fillText(name, x + TILE_SIZE / 2, y - 4);
+                }
+            }
+        }
+
+        async function showGameOver(isMulti = false, reason = '') {
+            document.getElementById('gameOverOverlay').classList.remove('hidden');
+            const reasonEl = document.getElementById('deathReasonText');
+            if (reasonEl) {
+                reasonEl.innerText = reason ? ('💥 ' + reason) : '';
+            }
+            const ptsPerWord = getScorePerFood(gameSpeed);
+            document.getElementById('finalScoreText').innerText = isMulti 
+                ? `게임 종료! 내 점수: ${score}점 (속도 ${gameSpeed}: +${ptsPerWord}점/단어)` 
+                : `최종 점수: ${score}점 (속도 ${gameSpeed}: +${ptsPerWord}점/단어)`;
+
+            if (score > 0) {
+                const formattedName = getFormattedName();
+                const recordData = {
+                    id: 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                    name: formattedName,
+                    rawName: studentProfile.name || '',
+                    grade: studentProfile.grade || '3',
+                    classNum: studentProfile.classNum || '1',
+                    studentNum: studentProfile.studentNum || '1',
+                    score: score,
+                    mode: gameMode,
+                    speed: gameSpeed,
+                    unit: currentUnit || '전체 단원',
+                    timestamp: Date.now()
+                };
+
+                // 1. 로컬 캐시 즉시 저장 (네트워크/쿼터 무관)
+                saveScoreToLocalCache(recordData);
+
+                // 2. Firestore 서버 저장 시도
+                if (isAuthReady) {
+                    try {
+                        const newDocRef = doc(collection(db, SCORES_PATH));
+                        await setDoc(newDocRef, {
+                            name: recordData.name,
+                            rawName: recordData.rawName,
+                            grade: recordData.grade,
+                            classNum: recordData.classNum,
+                            studentNum: recordData.studentNum,
+                            score: recordData.score,
+                            mode: recordData.mode,
+                            speed: recordData.speed,
+                            unit: recordData.unit,
+                            timestamp: recordData.timestamp
+                        });
+                        recordData.id = newDocRef.id;
+                    } catch (e) {
+                        console.warn("Firestore score save error (quota exceeded or offline):", e);
+                    }
+                }
+
+                // 3. 명예의 전당 최신화
+                loadHallOfFame();
+            }
+        }
+
+        window.restartGame = () => {
+            if (gameMode === 'multi') {
+                showAlert("멀티플레이는 방장이 새로 시작해야 합니다.", "알림", "ℹ️");
+                showWaitingRoomScreen();
+                if (isHost) {
+                    updateDoc(doc(db, ROOMS_PATH, currentRoomId), {
+                        status: 'waiting',
+                        foods: []
+                    });
+                }
+            } else {
+                initGame('single');
+            }
+        };
+
+        window.quitGame = () => {
+            isGameOver = true;
+            if (gameLoopId) clearTimeout(gameLoopId);
+            if (gameMode === 'multi') leaveRoom();
+            else backToHome();
+        };
+
+        function backToHome() {
+            window.showScreen('screen-home');
+            loadHallOfFame();
+        }
+
+        const DIRS = {
+            up:    { dx: 0, dy: -1 },
+            down:  { dx: 0, dy: 1 },
+            left:  { dx: -1, dy: 0 },
+            right: { dx: 1, dy: 0 }
+        };
+
+        window.changeDirection = (dir) => {
+            if (isGameOver) return;
+            const target = DIRS[dir];
+            if (!target) return;
+
+            // 기준 방향: 큐에 대기 중인 명령이 있으면 마지막 명령, 없으면 현재 진행 방향 (dx, dy)
+            const last = (inputQueue.length > 0) ? inputQueue[inputQueue.length - 1] : { dx, dy };
+
+            // 1. 이미 동일한 방향으로 진행 중이면 무시
+            if (target.dx === last.dx && target.dy === last.dy) return;
+
+            // 2. 180도 정반대 역주행 입력 무시 (자신의 목/몸통 충돌 즉사 원천 차단)
+            if (target.dx === -last.dx && target.dy === -last.dy) return;
+
+            // 3. 입력 큐 버퍼링 (최대 2개: 옆으로+위로 등 연속 연타 시 2턴에 걸쳐 부드럽게 L자 연속 회전)
+            if (inputQueue.length < 2) {
+                inputQueue.push(target);
+            } else {
+                // 대기열이 꽉 찼을 때, 마지막 대기 명령을 최신 입력으로 갱신 (단, 첫 번째 대기 명령과 180도 역주행/중복이 아닐 때)
+                const first = inputQueue[0];
+                if (!(target.dx === -first.dx && target.dy === -first.dy) &&
+                    !(target.dx === first.dx && target.dy === first.dy)) {
+                    inputQueue[1] = target;
+                }
+            }
+        };
+
+        // ── 모바일 터치 패드 & 스와이프 제스처 엔진 ──
+        let lastInputTime = 0;
+        let lastInputDir = '';
+
+        window.handleMobileDir = (dir, event) => {
+            if (event) {
+                if (event.cancelable) event.preventDefault();
+                event.stopPropagation();
+            }
+            const now = Date.now();
+            // 60ms 이내 동일 방향 중복 이벤트(pointerdown + touchstart 동시 발생) 방지
+            if (lastInputDir === dir && (now - lastInputTime) < 60) {
+                return;
+            }
+            lastInputTime = now;
+            lastInputDir = dir;
+
+            window.changeDirection(dir);
+
+            // 가상 패드 시각적 활성화 피드백
+            const targetBtn = document.querySelector(`.mobile-dpad-btn[data-dir="${dir}"]`);
+            if (targetBtn) {
+                targetBtn.classList.add('is-active');
+                setTimeout(() => targetBtn.classList.remove('is-active'), 120);
+            }
+
+            // 기기 햅틱 진동 피드백 (모바일 지원 브라우저)
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                try { navigator.vibrate(12); } catch (_) {}
+            }
+        };
+
+        function detectSwipeDirection(diffX, diffY, currentDx, currentDy) {
+            const absX = Math.abs(diffX);
+            const absY = Math.abs(diffY);
+            
+            let primaryDir = '';
+            let secondaryDir = '';
+            let secondaryDist = 0;
+
+            if (absX >= absY) {
+                primaryDir = diffX > 0 ? 'right' : 'left';
+                secondaryDir = diffY > 0 ? 'down' : 'up';
+                secondaryDist = absY;
+            } else {
+                primaryDir = diffY > 0 ? 'down' : 'up';
+                secondaryDir = diffX > 0 ? 'right' : 'left';
+                secondaryDist = absX;
+            }
+
+            const currentDirName = 
+                currentDx === 1 ? 'right' :
+                currentDx === -1 ? 'left' :
+                currentDy === 1 ? 'down' :
+                currentDy === -1 ? 'up' : '';
+
+            const reverseDirName = 
+                currentDx === 1 ? 'left' :
+                currentDx === -1 ? 'right' :
+                currentDy === 1 ? 'up' :
+                currentDy === -1 ? 'down' : '';
+
+            // 주 방향이 현재 진행 방향과 같거나 180도 역주행인 경우, 보조 방향 이동량이 16px 이상이면 보조 방향 우선 선택
+            if ((primaryDir === currentDirName || primaryDir === reverseDirName) && secondaryDist >= 16) {
+                return secondaryDir;
+            }
+
+            return primaryDir;
+        }
+
+        function initMobileControls() {
+            const dpadButtons = document.querySelectorAll('.mobile-dpad-btn');
+            dpadButtons.forEach(btn => {
+                if (btn.dataset.initialized) return;
+                btn.dataset.initialized = 'true';
+
+                const dir = btn.getAttribute('data-dir');
+                if (!dir) return;
+
+                const onTrigger = (e) => {
+                    if (e && e.cancelable) e.preventDefault();
+                    if (e) e.stopPropagation();
+                    window.handleMobileDir(dir, e);
+                };
+
+                btn.addEventListener('pointerdown', onTrigger, { passive: false });
+                btn.addEventListener('touchstart', onTrigger, { passive: false });
+                btn.addEventListener('contextmenu', (e) => {
+                    if (e.cancelable) e.preventDefault();
+                });
+            });
+        }
+
+        function initCanvasSwipe() {
+            const canvasEl = document.getElementById('gameCanvas');
+            if (!canvasEl || canvasEl.dataset.swipeInitialized) return;
+            canvasEl.dataset.swipeInitialized = 'true';
+
+            let touchStartX = 0;
+            let touchStartY = 0;
+            let isTouching = false;
+
+            canvasEl.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    touchStartX = e.touches[0].clientX;
+                    touchStartY = e.touches[0].clientY;
+                    isTouching = true;
+                    if (e.cancelable) e.preventDefault();
+                }
+            }, { passive: false });
+
+            canvasEl.addEventListener('touchmove', (e) => {
+                if (!isTouching || e.touches.length === 0) return;
+                if (e.cancelable) e.preventDefault();
+
+                const currentX = e.touches[0].clientX;
+                const currentY = e.touches[0].clientY;
+                const diffX = currentX - touchStartX;
+                const diffY = currentY - touchStartY;
+                const dist = Math.hypot(diffX, diffY);
+
+                const SWIPE_THRESHOLD = 22; // 22px 이상 이동 시 감지
+
+                if (dist >= SWIPE_THRESHOLD) {
+                    const decidedDir = detectSwipeDirection(diffX, diffY, dx, dy);
+                    if (decidedDir) {
+                        window.handleMobileDir(decidedDir, e);
+                    }
+                    // 연속 조종을 위해 터치 시작 위치 갱신
+                    touchStartX = currentX;
+                    touchStartY = currentY;
+                }
+            }, { passive: false });
+
+            const endTouch = (e) => {
+                isTouching = false;
+                if (e && e.cancelable) e.preventDefault();
+            };
+
+            canvasEl.addEventListener('touchend', endTouch, { passive: false });
+            canvasEl.addEventListener('touchcancel', endTouch, { passive: false });
+            canvasEl.addEventListener('contextmenu', (e) => {
+                if (e.cancelable) e.preventDefault();
+            });
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].indexOf(e.code) > -1) {
+                e.preventDefault();
+            }
+            let dir = null;
+            switch (e.key) {
+                case 'ArrowUp': case 'w': case 'W': case 'ㅈ':
+                    dir = 'up'; break;
+                case 'ArrowDown': case 's': case 'S': case 'ㄴ':
+                    dir = 'down'; break;
+                case 'ArrowLeft': case 'a': case 'A': case 'ㅁ':
+                    dir = 'left'; break;
+                case 'ArrowRight': case 'd': case 'D': case 'ㅇ':
+                    dir = 'right'; break;
+            }
+            if (dir) {
+                window.changeDirection(dir);
+                const targetBtn = document.querySelector(`.mobile-dpad-btn[data-dir="${dir}"]`);
+                if (targetBtn) {
+                    targetBtn.classList.add('is-active');
+                    setTimeout(() => targetBtn.classList.remove('is-active'), 120);
+                }
+            }
+        });
+
+        // 즉시 초기화 실행
+        initMobileControls();
+        initCanvasSwipe();
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── 1:1 멀티플레이 로직 ──
+        // ════════════════════════════════════════════════════════════════════
+        window.createMultiplayerRoom = async () => {
+            if (!studentProfile.name) {
+                showAlert("게임에 참여하려면 먼저 학생 정보(학년, 반, 번호, 이름)를 등록해야 합니다.", "학생 정보 필요", "🧙‍♂️").then(() => {
+                    openProfileModal();
+                });
+                return;
+            }
+            if (!isAuthReady) return;
+
+            const code = Math.floor(1000 + Math.random() * 9000).toString();
+            currentRoomId = code;
+            isHost = true;
+            gameMode = 'multi';
+            gameSpeed = parseInt(document.getElementById('speedSlider').value) || 5;
+
+            const unitSelect = document.getElementById('unitSelect');
+            const selectedUnit = (unitSelect && unitSelect.value !== 'all') ? unitSelect.value : '전체 단원';
+            currentUnit = selectedUnit;
+
+            const roomData = {
+                status: 'waiting',
+                hostId: userId,
+                speed: gameSpeed,
+                unit: selectedUnit,
+                players: {
+                    [userId]: { name: getFormattedName(), score: 0, isDead: false, color: 'green' }
+                },
+                createdAt: Date.now()
+            };
+
+            try {
+                await setDoc(doc(db, ROOMS_PATH, code), roomData);
+                document.getElementById('roomCodeDisplay').innerText = code;
+                const rSpeedBadge = document.getElementById('roomSpeedBadge');
+                if (rSpeedBadge) {
+                    rSpeedBadge.innerText = `지렁이 속도 ${gameSpeed} (단어당 +${getScorePerFood(gameSpeed)}점)`;
+                }
+                document.getElementById('hostControls').classList.remove('hidden');
+                document.getElementById('clientMsg').classList.add('hidden');
+                document.getElementById('modal-waiting').classList.remove('hidden');
+                listenToRoom(code);
+            } catch(e) {
+                showAlert("방 생성 실패!", "오류", "❌");
+            }
+        };
+
+        window.openJoinRoomModal = () => {
+            if (!studentProfile.name) {
+                showAlert("게임에 참여하려면 먼저 학생 정보(학년, 반, 번호, 이름)를 등록해야 합니다.", "학생 정보 필요", "🧙‍♂️").then(() => {
+                    openProfileModal();
+                });
+                return;
+            }
+            document.getElementById('input-join-code').value = '';
+            document.getElementById('modal-join').classList.remove('hidden');
+        };
+
+        window.closeJoinRoomModal = () => {
+            document.getElementById('modal-join').classList.add('hidden');
+        };
+
+        window.submitJoinRoom = async () => {
+            const code = document.getElementById('input-join-code').value.trim();
+            if (code.length !== 4) {
+                showAlert("4자리 코드를 입력해주세요.", "알림", "⚠️");
+                return;
+            }
+
+            try {
+                const roomRef = doc(db, ROOMS_PATH, code);
+                const snap = await getDoc(roomRef);
+                if (!snap.exists() || snap.data().status !== 'waiting') {
+                    showAlert("존재하지 않거나 이미 시작된 방입니다.", "알림", "❌");
+                    return;
+                }
+
+                currentRoomId = code;
+                isHost = false;
+                gameMode = 'multi';
+                gameSpeed = snap.data().speed || 5;
+                if (snap.data().unit) {
+                    currentUnit = snap.data().unit;
+                }
+
+                const players = snap.data().players || {};
+                const pCount = Object.keys(players).length;
+                const colors = ['green', 'blue', 'orange', 'purple', 'red'];
+                const myColor = colors[pCount % colors.length];
+
+                await setDoc(roomRef, {
+                    players: {
+                        ...players,
+                        [userId]: { name: getFormattedName(), score: 0, isDead: false, color: myColor }
+                    }
+                }, { merge: true });
+
+                closeJoinRoomModal();
+                document.getElementById('roomCodeDisplay').innerText = code;
+                const rSpeedBadge = document.getElementById('roomSpeedBadge');
+                if (rSpeedBadge) {
+                    rSpeedBadge.innerText = `지렁이 속도 ${gameSpeed} (단어당 +${getScorePerFood(gameSpeed)}점)`;
+                }
+                document.getElementById('hostControls').classList.add('hidden');
+                document.getElementById('clientMsg').classList.remove('hidden');
+                document.getElementById('modal-waiting').classList.remove('hidden');
+                listenToRoom(code);
+            } catch (e) {
+                showAlert("방 참여 실패!", "오류", "❌");
+            }
+        };
+
+        function listenToRoom(code) {
+            if (unsubscribeRoom) unsubscribeRoom();
+            unsubscribeRoom = onSnapshot(doc(db, ROOMS_PATH, code), (docSnap) => {
+                if (!docSnap.exists()) {
+                    showAlert("방이 삭제되었습니다.", "알림", "💥");
+                    leaveRoom();
+                    return;
+                }
+                const data = docSnap.data();
+
+                if (data.unit) {
+                    currentUnit = data.unit;
+                }
+                if (data.speed) {
+                    gameSpeed = parseInt(data.speed) || 5;
+                }
+                const rSpeedBadge = document.getElementById('roomSpeedBadge');
+                if (rSpeedBadge) {
+                    rSpeedBadge.innerText = `지렁이 속도 ${gameSpeed} (단어당 +${getScorePerFood(gameSpeed)}점)`;
+                }
+
+                if (data.status === 'waiting') {
+                    const list = document.getElementById('playerList');
+                    list.innerHTML = '';
+                    for (let uid in data.players) {
+                        const p = data.players[uid];
+                        const safeName = window.WaurimalSanitize ? window.WaurimalSanitize(maskStudentName(p.name)) : maskStudentName(p.name);
+                        list.innerHTML += `
+                            <li class="py-1 border-b border-slate-100 flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full" style="background-color: ${p.color}"></span>
+                                <span>${safeName} ${uid === data.hostId ? '👑' : ''}</span>
+                            </li>
+                        `;
+                    }
+                }
+
+                if (data.status === 'playing' && document.getElementById('screen-game').classList.contains('hidden')) {
+                    if (!document.getElementById('modal-waiting').classList.contains('hidden')) {
+                        document.getElementById('modal-waiting').classList.add('hidden');
+                    }
+                    if (!isHost) initGame('multi');
+                }
+
+                if (data.status === 'playing' || data.status === 'gameover') {
+                    if (data.foods) foods = data.foods;
+                    if (data.targetWordKr) {
+                        targetWordKr = data.targetWordKr;
+                        document.getElementById('targetWordKr').innerText = targetWordKr;
+                    }
+
+                    for (let uid in data.players) {
+                        if (uid !== userId) {
+                            const prevScore = (mpPlayers[uid] && mpPlayers[uid].score) || 0;
+                            if (data.players[uid] && data.players[uid].score > prevScore) {
+                                playEatSound(0.45);
+                            }
+                            mpPlayers[uid] = data.players[uid];
+                        } else if (!isHost && data.players[uid].isDead && !isGameOver) {
+                            isGameOver = true;
+                            showGameOver();
+                        }
+                    }
+
+                    if (data.status === 'gameover' && !isGameOver) {
+                        isGameOver = true;
+                        showGameOver(true);
+                    }
+                }
+            });
+        }
+
+        window.hostStartGame = async () => {
+            if (!isHost || !currentRoomId) return;
+            try {
+                await updateDoc(doc(db, ROOMS_PATH, currentRoomId), { status: 'playing' });
+                document.getElementById('modal-waiting').classList.add('hidden');
+                initGame('multi');
+            } catch (e) {}
+        };
+
+        window.leaveRoom = () => {
+            if (unsubscribeRoom) unsubscribeRoom();
+            currentRoomId = null;
+            isHost = false;
+            document.getElementById('modal-waiting').classList.add('hidden');
+            backToHome();
+        };
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── 실시간 명예의 전당 ──
+        // ════════════════════════════════════════════════════════════════════
+        let hofUnsubscribe = null;
+
+        window.loadHallOfFame = async () => {
+            const container = document.getElementById('hof-records-container');
+            if (!container) return;
+
+            // 로컬 캐시 즉시 반영 (쿼터 소진/오프라인 시에도 항상 즉시 표시)
+            const localCached = getLocalHofCache();
+            if (localCached.length > 0) {
+                hofAllScores = [...localCached];
+                filterHofList();
+            } else {
+                container.innerHTML = '<div class="text-center py-16 text-slate-400 text-xs font-bold animate-pulse"><i class="fa-solid fa-spinner fa-spin text-lg mb-2"></i><br>명예의 전당 집계 중...</div>';
+            }
+
+            if (isAuthReady) {
+                try {
+                    if (hofUnsubscribe) {
+                        hofUnsubscribe();
+                        hofUnsubscribe = null;
+                    }
+                    const q = query(collection(db, SCORES_PATH), orderBy("score", "desc"), limit(200));
+                    hofUnsubscribe = onSnapshot(q, (snap) => {
+                        let serverScores = [];
+                        snap.forEach(d => {
+                            serverScores.push({ id: d.id, ...d.data() });
+                        });
+                        hofAllScores = syncScoresWithLocalCache(serverScores);
+                        filterHofList();
+                    }, async (err) => {
+                        console.warn("HOF onSnapshot quota/error, falling back to local cache:", err);
+                        try {
+                            const snap = await getDocs(query(collection(db, SCORES_PATH), orderBy("score", "desc"), limit(100)));
+                            let serverScores = [];
+                            snap.forEach(d => serverScores.push({ id: d.id, ...d.data() }));
+                            hofAllScores = syncScoresWithLocalCache(serverScores);
+                        } catch (e2) {
+                            hofAllScores = getLocalHofCache();
+                        }
+                        filterHofList();
+                    });
+                } catch (e) {
+                    console.warn("HOF listener setup error:", e);
+                    hofAllScores = getLocalHofCache();
+                    filterHofList();
+                }
+            } else {
+                hofAllScores = getLocalHofCache();
+                filterHofList();
+            }
+        };
+
+        // ── 이름 가운데 (홍O동) 표준 마스킹 헬퍼 ──
+        function maskStudentName(nameStr) {
+            if (!nameStr) return '학생';
+            const str = String(nameStr).trim();
+            if (str.includes('선생님') || str.includes('관리자')) return str;
+
+            const parts = str.split(/\s+/);
+            if (parts.length > 1) {
+                const rawName = parts[parts.length - 1];
+                if (!rawName.endsWith('반') && !rawName.endsWith('번') && !rawName.endsWith('학년')) {
+                    const prefix = parts.slice(0, -1).join(' ');
+                    return prefix + ' ' + maskSingleName(rawName);
+                }
+            }
+            return maskSingleName(str);
+        }
+
+        function maskSingleName(name) {
+            if (!name) return '';
+            const s = name.trim();
+            if (s.length <= 1) return s;
+            if (s.length === 2) return s[0] + 'O';
+            if (s.length === 3) return s[0] + 'O' + s[2];
+            return s[0] + 'O'.repeat(s.length - 2) + s[s.length - 1];
+        }
+
+        let hofCurrentPeriod = 'all'; // 'all' | 'month' | 'week'
+
+        window.setHofPeriod = (period) => {
+            hofCurrentPeriod = period;
+            ['all', 'month', 'week'].forEach(p => {
+                const tab = document.getElementById('hof-tab-' + p);
+                if (tab) {
+                    if (p === period) {
+                        tab.className = "hof-period-tab flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-emerald-700 shadow-sm";
+                    } else {
+                        tab.className = "hof-period-tab flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800";
+                    }
+                }
+            });
+            filterHofList();
+        };
+
+        window.updateHofUnitSelect = () => {
+            const unitSel = document.getElementById('hof-filter-unit');
+            if (!unitSel) return;
+            const curVal = unitSel.value;
+            unitSel.innerHTML = '<option value="ALL">전체 단원</option>';
+            Object.keys(wordUnits).forEach(u => {
+                const opt = document.createElement('option');
+                opt.value = u;
+                opt.textContent = u;
+                unitSel.appendChild(opt);
+            });
+            if (Object.keys(wordUnits).includes(curVal)) {
+                unitSel.value = curVal;
+            }
+        };
+
+        window.filterHofList = () => {
+            const container = document.getElementById('hof-records-container');
+            if (!container) return;
+
+            const g = document.getElementById('hof-filter-grade') ? document.getElementById('hof-filter-grade').value : 'ALL';
+            const c = document.getElementById('hof-filter-class') ? document.getElementById('hof-filter-class').value : 'ALL';
+            const u = document.getElementById('hof-filter-unit') ? document.getElementById('hof-filter-unit').value : 'ALL';
+
+            const now = new Date();
+            const curYear = now.getFullYear();
+            const curMonth = now.getMonth();
+            const oneWeekAgoMs = now.getTime() - 7 * 24 * 60 * 60 * 1000;
+
+            // 1. 학년, 반, 단원, 기간별 필터링
+            let filtered = hofAllScores.filter(item => {
+                const name = item.name || '';
+                // 학년 필터
+                if (g !== 'ALL') {
+                    if (item.grade && String(item.grade) !== String(g)) return false;
+                    if (!item.grade && !name.includes(g + '학년 ')) return false;
+                }
+                // 반 필터
+                if (c !== 'ALL') {
+                    if (item.classNum && String(item.classNum) !== String(c)) return false;
+                    if (!item.classNum && !name.includes(' ' + c + '반 ')) return false;
+                }
+                // 단원 필터
+                if (u !== 'ALL' && item.unit && item.unit !== u) return false;
+
+                // 기간 필터
+                if (hofCurrentPeriod !== 'all' && item.timestamp) {
+                    const t = typeof item.timestamp.toDate === 'function' ? item.timestamp.toDate() : new Date(item.timestamp);
+                    if (isNaN(t.getTime())) return true;
+                    if (hofCurrentPeriod === 'month') {
+                        if (t.getFullYear() !== curYear || t.getMonth() !== curMonth) return false;
+                    } else if (hofCurrentPeriod === 'week') {
+                        if (t.getTime() < oneWeekAgoMs) return false;
+                    }
+                }
+                return true;
+            });
+
+            // 2. 해당 필터 조건 내에서 학생별 1인 1최고점만 반영 (중복 제거)
+            const bestPerStudent = new Map();
+            filtered.forEach(item => {
+                const studentKey = item.name || `${item.grade}_${item.classNum}_${item.rawName}`;
+                if (!bestPerStudent.has(studentKey) || (bestPerStudent.get(studentKey).score || 0) < (item.score || 0)) {
+                    bestPerStudent.set(studentKey, item);
+                }
+            });
+
+            const deduplicated = Array.from(bestPerStudent.values()).sort((a, b) => (b.score || 0) - (a.score || 0));
+
+            if (deduplicated.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16 text-slate-400 text-xs font-bold">
+                        <span class="text-2xl block mb-1">🎯</span>
+                        선택한 조건의 도전 기록이 없습니다.<br>
+                        지금 지렁이 게임에 도전해 1위가 되어보세요!
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            deduplicated.slice(0, 50).forEach((item, idx, arr) => {
+                // 동점자 동일 순위 및 차순위 건너뛰기 (1등 2명이면 1등, 1등, 3등)
+                const rank = arr.findIndex(x => Number(x.score || 0) <= Number(item.score || 0)) + 1;
+                const rankBadge = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+                const bgStyle = rank === 1 ? 'bg-amber-50/80 border-amber-200' : rank === 2 ? 'bg-slate-100/90 border-slate-200' : rank === 3 ? 'bg-orange-50/80 border-orange-200' : 'bg-white border-slate-100';
+
+                const unitBadge = item.unit ? `<span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded ml-1">${item.unit}</span>` : '';
+                const speedBadge = item.speed ? `<span class="text-[10px] font-bold text-teal-700 bg-teal-50 border border-teal-100 px-1.5 py-0.5 rounded ml-1">속도 ${item.speed}</span>` : '';
+
+                const row = document.createElement('div');
+                row.className = `flex items-center justify-between p-2.5 mb-1.5 rounded-xl border shadow-xs ${bgStyle} transition-transform hover:-translate-y-0.5`;
+                row.innerHTML = `
+                    <div class="flex items-center gap-2.5 overflow-hidden">
+                        <span class="w-6 text-center font-black text-sm ${rank <= 3 ? 'text-amber-600' : 'text-slate-400'}">
+                            ${rankBadge}
+                        </span>
+                        <div class="truncate">
+                            <span class="font-extrabold text-xs text-slate-800 flex items-center gap-1 truncate">
+                                ${maskStudentName(item.name || '알 수 없음')}
+                                ${unitBadge}
+                                ${speedBadge}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <span class="font-black text-sm text-emerald-600">${(item.score || 0).toLocaleString()}</span>
+                        <span class="text-[10px] text-slate-400 ml-0.5 font-bold">점</span>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        };
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── 교사 전용 관리자 모드 ──
+        // ════════════════════════════════════════════════════════════════════
+        window.openTeacherAuthModal = () => {
+            if (window.WaurimalAuth && window.WaurimalAuth.isAuthenticated()) {
+                openTeacherScreen();
+                return;
+            }
+            document.getElementById('input-teacher-pwd').value = '';
+            document.getElementById('modal-pwd').classList.remove('hidden');
+        };
+
+        window.closeTeacherAuthModal = () => {
+            document.getElementById('modal-pwd').classList.add('hidden');
+        };
+
+        window.verifyTeacherPwd = async () => {
+            const input = document.getElementById('input-teacher-pwd').value.trim();
+            if (!input) return;
+
+            const isValid = window.WaurimalAuth ? window.WaurimalAuth.authenticate(input) : (input === (localStorage.getItem('waurimal_admin_pw') || adminPassword || "4657"));
+            if (isValid) {
+                closeTeacherAuthModal();
+                openTeacherScreen();
+            } else {
+                showAlert("비밀번호가 일치하지 않습니다.", "인증 실패", "❌");
+            }
+        };
+
+        window.openTeacherScreen = () => {
+            if (!window.WaurimalAuth || !window.WaurimalAuth.isAuthenticated()) {
+                window.openTeacherAuthModal();
+                return;
+            }
+            window.showScreen('screen-teacher');
+            renderAdminUnits();
+            loadTeacherScores();
+        };
+
+        window.closeTeacherScreen = () => {
+            window.showScreen('screen-home');
+        };
+
+        window.switchTeacherTab = (tab) => {
+            ['units', 'scores', 'settings'].forEach(t => {
+                const btn = document.getElementById(`tab-btn-${t}`);
+                const panel = document.getElementById(`teacher-tab-${t}`);
+                if (t === tab) {
+                    btn.className = "py-2.5 rounded-lg bg-white text-emerald-700 shadow-sm transition-all";
+                    panel.classList.remove('hidden');
+                } else {
+                    btn.className = "py-2.5 rounded-lg text-slate-500 hover:text-slate-800 transition-all";
+                    panel.classList.add('hidden');
+                }
+            });
+        };
+
+        function renderAdminUnits() {
+            const list = document.getElementById('adminUnitList');
+            list.innerHTML = '';
+            for (let unitName in wordUnits) {
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center bg-white p-3 rounded-xl border border-slate-200 shadow-xs text-xs font-bold';
+                li.innerHTML = `
+                    <span class="text-slate-700">${unitName} <span class="text-slate-400 font-normal">(${wordUnits[unitName].length}단어)</span></span>
+                    <button type="button" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1 rounded-lg transition" onclick="deleteUnit('${unitName}')">삭제</button>
+                `;
+                list.appendChild(li);
+            }
+        }
+
+        window.saveUnit = async () => {
+            const name = document.getElementById('adminUnitName').value.trim();
+            const raw = document.getElementById('adminUnitWords').value.trim();
+
+            if (!name || !raw) return showAlert("단원명과 단어를 모두 입력하세요.", "알림", "👆");
+
+            const lines = raw.split('\n');
+            const newWords = [];
+            for (let line of lines) {
+                if (!line.trim()) continue;
+                const parts = line.split(':');
+                if (parts.length >= 2) {
+                    newWords.push({ en: parts[0].trim(), kr: parts[1].trim() });
+                }
+            }
+
+            if (newWords.length < 3) return showAlert("최소 3개 이상의 단어를 올바른 형식(영어:한글)으로 입력하세요.", "알림", "⚠️");
+
+            try {
+                await setDoc(doc(db, UNITS_PATH, name), { words: newWords });
+                wordUnits[name] = newWords;
+                showAlert(`[${name}] 단원이 성공적으로 저장되었습니다.`, "저장 완료", "✅");
+                document.getElementById('adminUnitName').value = '';
+                document.getElementById('adminUnitWords').value = '';
+                renderAdminUnits();
+                updateUnitSelect();
+                if (typeof window.updateHofUnitSelect === 'function') {
+                    window.updateHofUnitSelect();
+                }
+            } catch(e) {
+                showAlert("단원 저장 실패", "오류", "❌");
+            }
+        };
+
+        window.deleteUnit = async (name) => {
+            const confirmed = await showConfirm(`정말로 '${name}' 단원을 삭제하시겠습니까?`, "단원 삭제", "⚠️");
+            if (!confirmed) return;
+            try {
+                await deleteDoc(doc(db, UNITS_PATH, name));
+                delete wordUnits[name];
+                showAlert(`[${name}] 단원이 삭제되었습니다.`, "삭제 완료", "✅");
+                renderAdminUnits();
+                updateUnitSelect();
+                if (typeof window.updateHofUnitSelect === 'function') {
+                    window.updateHofUnitSelect();
+                }
+            } catch(e) {}
+        };
+
+        let teacherScoreRecords = [];
+        async function loadTeacherScores() {
+            try {
+                let serverRecords = [];
+                if (isAuthReady) {
+                    try {
+                        const snap = await getDocs(collection(db, SCORES_PATH));
+                        snap.forEach(d => serverRecords.push({ id: d.id, ...d.data() }));
+                    } catch (e) {
+                        console.warn("Teacher scores fetch from Firestore failed (quota or network):", e);
+                    }
+                }
+                teacherScoreRecords = syncScoresWithLocalCache(serverRecords);
+                renderTeacherTable();
+            } catch(e) {
+                teacherScoreRecords = getLocalHofCache();
+                renderTeacherTable();
+            }
+        }
+
+        window.renderTeacherTable = () => {
+            const tbody = document.getElementById('teacher-table-body');
+            const g = document.getElementById('teacher-filter-grade').value;
+            const c = document.getElementById('teacher-filter-class').value;
+            const search = document.getElementById('teacher-search-name').value.trim().toLowerCase();
+
+            const filtered = teacherScoreRecords.filter(item => {
+                const name = item.name || '';
+                if (g !== 'ALL') {
+                    if (item.grade && String(item.grade) !== String(g)) return false;
+                    if (!item.grade && !name.includes(`${g}학년 `)) return false;
+                }
+                if (c !== 'ALL') {
+                    if (item.classNum && String(item.classNum) !== String(c)) return false;
+                    if (!item.classNum && !name.includes(` ${c}반 `)) return false;
+                }
+                if (search) {
+                    const searchTarget = (item.rawName || '') + ' ' + name;
+                    if (!searchTarget.toLowerCase().includes(search)) return false;
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400 font-bold">기록이 없습니다.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '';
+            filtered.forEach((r, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
+                const dateStr = r.timestamp ? new Date(r.timestamp).toLocaleString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-';
+                const hakjeok = r.grade && r.classNum && r.studentNum ? `${r.grade}학년 ${r.classNum}반 ${r.studentNum}번` : (r.name ? r.name.split(' ').slice(0, 3).join(' ') : '-');
+                const studentName = r.rawName || (r.name ? r.name.split(' ').slice(3).join(' ') : '-');
+                const unitStr = r.unit ? `<span class="text-[10px] text-slate-400 block">${r.unit}</span>` : '';
+                const speedStr = r.speed ? `<span class="block text-[10px] text-teal-600 font-bold mt-0.5">속도 ${r.speed} (+${getScorePerFood(r.speed)}점)</span>` : '';
+
+                tr.innerHTML = `
+                    <td class="p-3 text-center font-bold ${idx<3 ? 'text-amber-600 font-black' : 'text-slate-400'}">${idx + 1}</td>
+                    <td class="p-3 font-bold text-slate-700">${hakjeok}</td>
+                    <td class="p-3 font-extrabold text-slate-800">${studentName} ${unitStr}</td>
+                    <td class="p-3 text-center">${r.mode === 'multi' ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-100 text-teal-700">멀티</span>' : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">1인용</span>'}${speedStr}</td>
+                    <td class="p-3 text-right font-black text-emerald-600">${(r.score || 0).toLocaleString()}점</td>
+                    <td class="p-3 text-center text-slate-400 text-[11px]">${dateStr}</td>
+                    <td class="p-3 text-center">
+                        <button type="button" class="text-red-500 hover:text-red-700 font-bold px-2 py-0.5" onclick="deleteScoreDoc('${r.id}')">삭제</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        window.deleteScoreDoc = async (id) => {
+            const confirmed = await showConfirm("이 기록을 삭제하시겠습니까?", "기록 삭제", "🗑️");
+            if (!confirmed) return;
+            try {
+                if (isAuthReady && !id.startsWith('local_')) {
+                    await deleteDoc(doc(db, SCORES_PATH, id));
+                }
+            } catch(e) {}
+
+            try {
+                let localList = getLocalHofCache();
+                localList = localList.filter(r => r.id !== id);
+                localStorage.setItem(HOF_CACHE_KEY, JSON.stringify(localList));
+            } catch(e) {}
+
+            showAlert("기록이 삭제되었습니다.", "삭제 완료", "✅");
+            loadTeacherScores();
+            loadHallOfFame();
+        };
+
+        window.downloadTeacherCSV = () => {
+            if (teacherScoreRecords.length === 0) {
+                showAlert("다운로드할 데이터가 없습니다.", "알림", "⚠️");
+                return;
+            }
+            let csv = "\uFEFF순위,학적,학생명,단원,모드,난이도속도,점수,일시\n";
+            teacherScoreRecords.forEach((r, i) => {
+                const hakjeok = r.grade && r.classNum && r.studentNum ? `${r.grade}학년 ${r.classNum}반 ${r.studentNum}번` : (r.name ? r.name.split(' ').slice(0, 3).join(' ') : '');
+                const studentName = r.rawName || (r.name ? r.name.split(' ').slice(3).join(' ') : '');
+                const unit = r.unit || '전체 단원';
+                const dateStr = r.timestamp ? new Date(r.timestamp).toLocaleString().replace(/,/g, '') : '';
+                csv += `${i + 1},"${hakjeok}","${studentName}","${unit}","${r.mode || 'single'}","속도 ${r.speed || 5}",${r.score || 0},"${dateStr}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `word_snake_records_${new Date().toISOString().slice(0, 10)}.csv`;
+            link.click();
+        };
+
+        window.changeAdminPassword = async () => {
+            const np = document.getElementById('newAdminPassword').value.trim();
+            if (np.length < 4) return showAlert("새 비밀번호를 4자리 이상 입력하세요.", "알림", "⚠️");
+            try {
+                if (window.WaurimalAuth) {
+                    window.WaurimalAuth.setPw(np);
+                } else {
+                    localStorage.setItem('waurimal_admin_pw', np);
+                }
+                await setDoc(doc(db, SETTINGS_PATH, 'adminAuth'), { password: np });
+                adminPassword = np;
+                showAlert("비밀번호가 성공적으로 변경되었습니다.", "변경 완료", "✅");
+                document.getElementById('newAdminPassword').value = '';
+            } catch(e) {
+                showAlert("비밀번호 변경 실패", "오류", "❌");
+            }
+        };
+
+        window.executeBatchClassDelete = async () => {
+            const g = document.getElementById('delete-target-grade').value;
+            const c = document.getElementById('delete-target-class').value;
+
+            const targetTag = `${g}학년 ${c}반 `;
+            const targets = teacherScoreRecords.filter(r => {
+                if (r.grade && r.classNum && String(r.grade) === String(g) && String(r.classNum) === String(c)) return true;
+                return (r.name || '').includes(targetTag);
+            });
+
+            if (targets.length === 0) {
+                showAlert(`${g}학년 ${c}반 학생의 기록이 없습니다.`, "알림", "ℹ️");
+                return;
+            }
+
+            const confirmed = await showConfirm(`정말로 <strong>${g}학년 ${c}반 학생들의 모든 기록(${targets.length}건)</strong>을 삭제하시겠습니까?<br><span class="text-red-500 font-bold">삭제 후에는 복구할 수 없습니다!</span>`, "학급 기록 삭제", "⚠️");
+            if (confirmed) {
+                try {
+                    for (const t of targets) {
+                        if (isAuthReady && !t.id.startsWith('local_')) {
+                            try {
+                                await deleteDoc(doc(db, SCORES_PATH, t.id));
+                            } catch (e) {}
+                        }
+                    }
+                    let localList = getLocalHofCache();
+                    const targetIds = new Set(targets.map(t => t.id));
+                    localList = localList.filter(r => !targetIds.has(r.id));
+                    localStorage.setItem(HOF_CACHE_KEY, JSON.stringify(localList));
+
+                    showAlert(`${g}학년 ${c}반 기록이 성공적으로 삭제되었습니다.`, "삭제 완료", "✅");
+                    loadTeacherScores();
+                    loadHallOfFame();
+                } catch(e) {
+                    showAlert("삭제 중 오류 발생", "오류", "❌");
+                }
+            }
+        };
+    </script>
+</body>
+</html>
