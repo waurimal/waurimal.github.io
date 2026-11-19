@@ -532,17 +532,26 @@
                             const localGrade = localStorage.getItem('yutnori_grade');
                             const localClass = localStorage.getItem('yutnori_class');
                             const localNum = localStorage.getItem('yutnori_num');
-                            if (localRealName && localGrade && localClass) {
+                            if (localRealName) {
                                 let updated = false;
                                 parsed.forEach(r => {
                                     if (r.name === localRealName) {
-                                        if (r.grade !== Number(localGrade) || r.classNum !== Number(localClass)) {
-                                            r.grade = Number(localGrade);
+                                        if (localClass && Number(localClass) !== r.classNum) {
                                             r.classNum = Number(localClass);
                                             updated = true;
                                         }
-                                        if (localNum && (!r.studentNum || r.studentNum === 1)) {
-                                            r.studentNum = Number(localNum);
+                                        if (localGrade && Number(localGrade) !== r.grade) {
+                                            r.grade = Number(localGrade);
+                                            updated = true;
+                                        }
+                                        if (localNum && !isNaN(Number(localNum))) {
+                                            if (r.studentNum !== Number(localNum)) {
+                                                r.studentNum = Number(localNum);
+                                                updated = true;
+                                            }
+                                        } else if (!localNum && r.studentNum === 1) {
+                                            // 과거 번호 미입력 시 1번으로 자동 강제 부여되던 버그 치유
+                                            r.studentNum = null;
                                             updated = true;
                                         }
                                     }
@@ -567,8 +576,8 @@
             return records.map((r, idx) => ({
                 id: r.id || `hof_${idx}_${Date.now()}`,
                 grade: Number(r.grade) || 6,
-                classNum: Number(r.classNum) || 1,
-                studentNum: (r.studentNum !== undefined && r.studentNum !== null && r.studentNum !== '') ? Number(r.studentNum) : null,
+                classNum: (r.classNum !== undefined && r.classNum !== null && r.classNum !== '' && !isNaN(Number(r.classNum))) ? Number(r.classNum) : 1,
+                studentNum: (r.studentNum !== undefined && r.studentNum !== null && r.studentNum !== '' && !isNaN(Number(r.studentNum))) ? Number(r.studentNum) : null,
                 name: String(r.name || '학생').trim(),
                 wins: Number(r.wins) || 0,
                 totalGames: Number(r.totalGames) || 1,
@@ -585,13 +594,13 @@
         }
 
         sortRecords(records) {
-            // 정렬 우선순위: 1) 승수(Wins) desc, 2) 기여도 총점(Score) desc, 3) 정답수 desc, 4) 완주수 desc
+            // 정렬 우선순위: 1) 기여도 총점(Score) desc, 2) 승수(Wins) desc, 3) 정답수 desc, 4) 완주수 desc
             return records.sort((a, b) => {
-                if ((b.wins || 0) !== (a.wins || 0)) {
-                    return (b.wins || 0) - (a.wins || 0);
-                }
                 if ((b.score || 0) !== (a.score || 0)) {
                     return (b.score || 0) - (a.score || 0);
+                }
+                if ((b.wins || 0) !== (a.wins || 0)) {
+                    return (b.wins || 0) - (a.wins || 0);
                 }
                 if ((b.correctCount || 0) !== (a.correctCount || 0)) {
                     return (b.correctCount || 0) - (a.correctCount || 0);
@@ -695,14 +704,13 @@
                 }
 
                 const sGrade = Number(stat.grade) || 6;
-                const sClass = Number(stat.classNum) || 1;
-                const sNum = (stat.studentNum !== undefined && stat.studentNum !== null && stat.studentNum !== '') ? Number(stat.studentNum) : null;
+                const sClass = (stat.classNum !== undefined && stat.classNum !== null && stat.classNum !== '' && !isNaN(Number(stat.classNum))) ? Number(stat.classNum) : 1;
+                const sNum = (stat.studentNum !== undefined && stat.studentNum !== null && stat.studentNum !== '' && !isNaN(Number(stat.studentNum))) ? Number(stat.studentNum) : null;
 
                 let existing = records.find(r => {
-                    if (stat.grade && stat.classNum && r.grade && r.classNum) {
-                        return r.grade === sGrade && r.classNum === sClass && r.name.trim() === pName;
-                    }
-                    return r.name.trim() === pName;
+                    if ((r.name || '').trim() !== pName) return false;
+                    // 같은 이름인 경우, 학년이 같고 (반이 일치하거나 기존 기록이 1반 기본값이었던 경우 최신 학적으로 갱신)
+                    return (!r.grade || r.grade === sGrade) && (!r.classNum || r.classNum === sClass || r.classNum === 1);
                 });
 
                 if (existing) {
@@ -721,9 +729,9 @@
                     if (!existing.bestScore || stat.matchScore > existing.bestScore) {
                         existing.bestScore = stat.matchScore;
                     }
-                    // 최신 학적 정보로 갱신 (기존 6-1 기본값 덮어쓰기)
-                    if (stat.grade) existing.grade = sGrade;
-                    if (stat.classNum) existing.classNum = sClass;
+                    // 최신 학적 정보로 갱신 (1반 기본값 탈피)
+                    existing.grade = sGrade;
+                    existing.classNum = sClass;
                     if (sNum !== null) existing.studentNum = sNum;
                 } else {
                     records.push({
@@ -803,7 +811,8 @@
                 }
 
                 const masked = maskStudentName(r.name);
-                const gradeInfo = `${r.grade || 6}학년 ${r.classNum || 1}반${r.studentNum ? ` ${r.studentNum}번` : ''}`;
+                const studentNumText = (r.studentNum !== undefined && r.studentNum !== null && r.studentNum !== '' && !isNaN(Number(r.studentNum))) ? ` ${r.studentNum}번` : '';
+                const gradeInfo = `${r.grade || 6}학년 ${r.classNum || 1}반${studentNumText}`;
                 const winRate = r.totalGames ? Math.round(((r.wins || 0) / r.totalGames) * 100) : 0;
 
                 return `
@@ -904,7 +913,8 @@
 
                 const masked = maskStudentName(r.name);
                 const winRate = r.totalGames ? Math.round(((r.wins || 0) / r.totalGames) * 100) : 0;
-                const gradeText = `${r.grade || 6}학년 ${r.classNum || 1}반${r.studentNum ? ` (${r.studentNum}번)` : ''}`;
+                const studentNumText = (r.studentNum !== undefined && r.studentNum !== null && r.studentNum !== '' && !isNaN(Number(r.studentNum))) ? ` (${r.studentNum}번)` : '';
+                const gradeText = `${r.grade || 6}학년 ${r.classNum || 1}반${studentNumText}`;
 
                 return `
                     <tr class="border-b border-slate-800 ${rowBg} transition text-center text-xs whitespace-nowrap">
@@ -1142,7 +1152,8 @@
                 const winRate = Math.round((wins / totalG) * 100);
                 const totalQ = (r.correctCount || 0) + (r.wrongCount || 0);
                 const qAccuracy = totalQ > 0 ? Math.round(((r.correctCount || 0) / totalQ) * 100) : (r.correctCount > 0 ? 100 : 0);
-                const gradeText = `${r.grade || 6}학년 ${r.classNum || 1}반${r.studentNum ? ` (${r.studentNum}번)` : ''}`;
+                const studentNumText = (r.studentNum !== undefined && r.studentNum !== null && r.studentNum !== '' && !isNaN(Number(r.studentNum))) ? ` (${r.studentNum}번)` : '';
+                const gradeText = `${r.grade || 6}학년 ${r.classNum || 1}반${studentNumText}`;
 
                 let medalBadge = `<span class="font-bold text-slate-400">${r.rank}위</span>`;
                 if (r.rank === 1) medalBadge = `<span class="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40 font-black">🥇 1위</span>`;
@@ -1973,10 +1984,10 @@
             const existingStudent = this.currentStudentInfo || {};
             const realName = config.playerName || existingStudent.name || savedRealName || '나(플레이어)';
             const studentGrade = Number(config.gradeNum) || (Number(config.grade) >= 1 ? Number(config.grade) : null) || existingStudent.grade || Number(savedGrade) || 6;
-            const studentClass = Number(config.classNum) || existingStudent.classNum || Number(savedClass) || 1;
-            const studentNum = (config.studentNum !== undefined && config.studentNum !== null && config.studentNum !== '') 
+            const studentClass = (config.classNum !== undefined && config.classNum !== null && config.classNum !== '' && !isNaN(Number(config.classNum))) ? Number(config.classNum) : (existingStudent.classNum || (savedClass && !isNaN(Number(savedClass)) ? Number(savedClass) : 1));
+            const studentNum = (config.studentNum !== undefined && config.studentNum !== null && config.studentNum !== '' && !isNaN(Number(config.studentNum))) 
                 ? Number(config.studentNum) 
-                : (existingStudent.studentNum || (savedNum ? Number(savedNum) : null));
+                : (existingStudent.studentNum || (savedNum && !isNaN(Number(savedNum)) ? Number(savedNum) : null));
 
             this.currentStudentInfo = {
                 name: realName,
@@ -2078,6 +2089,17 @@
             const players = Object.values(roomData.players || {});
             const bluePlayers = players.filter(p => !p.isSpectator && p.team === 'blue');
             const whitePlayers = players.filter(p => !p.isSpectator && p.team === 'white');
+
+            const mySessionId = (window.YutnoriMultiplayer && window.YutnoriMultiplayer.mySessionId);
+            const myPlayerObj = (mySessionId && roomData.players) ? roomData.players[mySessionId] : null;
+            if (myPlayerObj) {
+                this.currentStudentInfo = {
+                    name: myPlayerObj.name,
+                    grade: Number(myPlayerObj.grade) || 6,
+                    classNum: (myPlayerObj.classNum !== undefined && myPlayerObj.classNum !== null && myPlayerObj.classNum !== '' && !isNaN(Number(myPlayerObj.classNum))) ? Number(myPlayerObj.classNum) : 1,
+                    studentNum: (myPlayerObj.studentNum !== undefined && myPlayerObj.studentNum !== null && myPlayerObj.studentNum !== '' && !isNaN(Number(myPlayerObj.studentNum))) ? Number(myPlayerObj.studentNum) : null
+                };
+            }
 
             this.teams = [
                 {

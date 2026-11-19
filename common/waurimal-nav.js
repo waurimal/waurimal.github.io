@@ -98,8 +98,11 @@
             return 0;
         };
         const targetScore = getVal(item);
-        const firstIdx = arr.findIndex(x => getVal(x) <= targetScore);
-        return (firstIdx >= 0 ? firstIdx + 1 : idx + 1);
+        let strictlyBetter = 0;
+        for (let i = 0; i < arr.length; i++) {
+            if (getVal(arr[i]) > targetScore) strictlyBetter++;
+        }
+        return strictlyBetter + 1;
     }
 
     const WaurimalRank = {
@@ -107,7 +110,21 @@
         computeCompetitionRank: computeCompetitionRank,
         compute: function(list, scoreKey = 'score') {
             if (!Array.isArray(list)) return list;
-            return list.map((item, idx, arr) => {
+            const getVal = (obj) => {
+                if (!obj || typeof obj !== 'object') return 0;
+                if (scoreKey && obj[scoreKey] !== undefined) return Number(obj[scoreKey] || 0);
+                if (obj.effectiveWins !== undefined) return Number(obj.effectiveWins || 0);
+                if (obj.score !== undefined) return Number(obj.score || 0);
+                if (obj.totalAsset !== undefined) return Number(obj.totalAsset || 0);
+                return 0;
+            };
+            const sorted = [...list].sort((a, b) => {
+                const diff = getVal(b) - getVal(a);
+                if (diff !== 0) return diff;
+                if ((b.wins || 0) !== (a.wins || 0)) return (b.wins || 0) - (a.wins || 0);
+                return (b.correctCount || 0) - (a.correctCount || 0);
+            });
+            return sorted.map((item, idx, arr) => {
                 const rank = computeCompetitionRank(item, idx, arr, scoreKey);
                 return Object.assign(item, { _rank: rank, rank: rank });
             });
@@ -345,22 +362,22 @@
                 grade: [
                     '#grade', '#p-grade', '#loginGrade', '#student-grade', '#grade-select',
                     '#grade-input', '#st-grade', '#inp-grade', '#input-grade', '#host-st-grade',
-                    '#guest-st-grade', '#filter-score-grade', 'select[name="grade"]'
+                    '#guest-st-grade', '#filter-score-grade', '#studentGradeSelect', 'select[name="grade"]'
                 ],
                 classNum: [
                     '#classNum', '#p-class', '#loginClass', '#student-class', '#class-select',
                     '#class-input', '#st-class', '#inp-class', '#input-class', '#host-st-class',
-                    '#guest-st-class', '#filter-score-class', 'select[name="class"]'
+                    '#guest-st-class', '#filter-score-class', '#studentClassSelect', 'select[name="class"]'
                 ],
                 studentNum: [
                     '#studentNum', '#p-num', '#st-num', '#loginNumber', '#student-num',
                     '#input-num', '#input-number', '#number-input', '#inp-num', '#host-st-num',
-                    'input[name="num"]', 'input[name="studentNum"]'
+                    '#studentNumInput', 'input[name="num"]', 'input[name="studentNum"]'
                 ],
                 name: [
                     '#studentName', '#p-name', '#st-name', '#loginName', '#student-name',
                     '#input-name', '#name-input', '#inp-name', '#uploaderName', '#host-st-name',
-                    'input[name="name"]', 'input[name="nickname"]'
+                    '#globalStudentNameInput', 'input[name="name"]', 'input[name="nickname"]'
                 ],
                 school: [
                     '#school-input', '#loginSchool', '#settingSchoolName', '#setting-school-name'

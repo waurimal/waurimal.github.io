@@ -147,7 +147,7 @@ class YutnoriMultiplayerManager {
     // ==========================================
     // 1. 방 만들기 (Host)
     // ==========================================
-    async createRoom({ hostName, grade = 6, classNum = 1, studentNum = 1, mode = '1v1', pieceCount = 4, gradeFilter = 'all', hostParticipates = true, throwerMode = 'all_once' }) {
+    async createRoom({ hostName, grade = 6, classNum = 1, studentNum = null, mode = '1v1', pieceCount = 4, gradeFilter = 'all', hostParticipates = true, throwerMode = 'all_once' }) {
         const cleanName = (hostName || '').trim();
         if (!cleanName) {
             throw new Error("닉네임 대신 학생 본인의 실명을 입력해주세요.");
@@ -157,6 +157,8 @@ class YutnoriMultiplayerManager {
 
         const isHostPlaying = (mode === 'team') ? Boolean(hostParticipates) : true;
         const selectedThrowerMode = (mode === 'team') ? (throwerMode || 'all_once') : 'all_once';
+        const cleanStudentNum = (studentNum !== undefined && studentNum !== null && studentNum !== '' && !isNaN(Number(studentNum))) ? Number(studentNum) : null;
+        const cleanClassNum = (classNum !== undefined && classNum !== null && classNum !== '' && !isNaN(Number(classNum))) ? Number(classNum) : 1;
 
         const initialRoom = {
             roomId: code,
@@ -172,8 +174,8 @@ class YutnoriMultiplayerManager {
                     id: this.mySessionId,
                     name: cleanName,
                     grade: Number(grade) || 6,
-                    classNum: Number(classNum) || 1,
-                    studentNum: Number(studentNum) || 1,
+                    classNum: cleanClassNum,
+                    studentNum: cleanStudentNum,
                     team: isHostPlaying ? 'blue' : 'spectator',
                     isSpectator: !isHostPlaying,
                     isHost: true,
@@ -223,15 +225,15 @@ class YutnoriMultiplayerManager {
         let cleanName = '';
         let sGrade = 6;
         let sClass = 1;
-        let sNum = 1;
+        let sNum = null;
 
         if (typeof playerInput === 'string') {
             cleanName = (playerInput || '').trim();
         } else if (playerInput && typeof playerInput === 'object') {
             cleanName = (playerInput.name || '').trim();
             sGrade = Number(playerInput.grade) || 6;
-            sClass = Number(playerInput.classNum) || 1;
-            sNum = Number(playerInput.studentNum) || 1;
+            sClass = (playerInput.classNum !== undefined && playerInput.classNum !== null && playerInput.classNum !== '' && !isNaN(Number(playerInput.classNum))) ? Number(playerInput.classNum) : 1;
+            sNum = (playerInput.studentNum !== undefined && playerInput.studentNum !== null && playerInput.studentNum !== '' && !isNaN(Number(playerInput.studentNum))) ? Number(playerInput.studentNum) : null;
         }
 
         if (!cleanName) {
@@ -307,7 +309,7 @@ class YutnoriMultiplayerManager {
                     name: cleanName || matchedPlayer.name,
                     grade: sGrade || matchedPlayer.grade,
                     classNum: sClass || matchedPlayer.classNum,
-                    studentNum: sNum || matchedPlayer.studentNum,
+                    studentNum: sNum !== null ? sNum : (matchedPlayer.studentNum || null),
                     lastSeen: Date.now(),
                     reconnectedAt: Date.now()
                 };
@@ -326,7 +328,7 @@ class YutnoriMultiplayerManager {
                     name: cleanName || matchedPlayer.name,
                     grade: sGrade || matchedPlayer.grade,
                     classNum: sClass || matchedPlayer.classNum,
-                    studentNum: sNum || matchedPlayer.studentNum,
+                    studentNum: sNum !== null ? sNum : (matchedPlayer.studentNum || null),
                     lastSeen: Date.now(),
                     reconnectedAt: Date.now()
                 };

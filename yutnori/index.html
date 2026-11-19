@@ -1672,12 +1672,16 @@
                 const cleanName = (prof.name || '').trim();
                 const cleanGrade = String(prof.grade || '6');
                 const cleanClass = String(prof.classNum || '1');
-                const cleanNum = String(prof.studentNum || '');
+                const cleanNum = (prof.studentNum !== undefined && prof.studentNum !== null) ? String(prof.studentNum).trim() : '';
 
                 if (cleanName) localStorage.setItem('yutnori_real_name', cleanName);
                 localStorage.setItem('yutnori_grade', cleanGrade);
                 localStorage.setItem('yutnori_class', cleanClass);
-                if (cleanNum) localStorage.setItem('yutnori_num', cleanNum);
+                if (cleanNum) {
+                    localStorage.setItem('yutnori_num', cleanNum);
+                } else {
+                    localStorage.removeItem('yutnori_num');
+                }
 
                 if (window.WaurimalStudent && typeof window.WaurimalStudent.save === 'function') {
                     const current = window.WaurimalStudent.get() || {};
@@ -1714,8 +1718,31 @@
                         if (gradeSelectEl) gradeSelectEl.value = selectedG;
                         if (onlineCreateGradeSelectEl) onlineCreateGradeSelectEl.value = selectedG;
                     }
+                    syncCurrentInputsToProfile();
                 });
             }
+
+            // 학생 학적 입력 즉시 동기화 및 자동 저장
+            function syncCurrentInputsToProfile() {
+                const name = (globalStudentNameInput ? globalStudentNameInput.value : '').trim();
+                const grade = studentGradeSelect ? studentGradeSelect.value : '6';
+                const classNum = studentClassSelect ? studentClassSelect.value : '1';
+                const studentNum = studentNumInput ? studentNumInput.value.trim() : '';
+                saveStudentProfile({ name, grade, classNum, studentNum });
+            }
+            if (studentClassSelect) studentClassSelect.addEventListener('change', syncCurrentInputsToProfile);
+            if (studentNumInput) studentNumInput.addEventListener('input', syncCurrentInputsToProfile);
+            if (globalStudentNameInput) globalStudentNameInput.addEventListener('input', syncCurrentInputsToProfile);
+
+            // 공통 GNB 학생 프로필 갱신 이벤트 수신
+            window.addEventListener('waurimal_student_updated', (e) => {
+                const p = e.detail;
+                if (!p) return;
+                if (p.grade && studentGradeSelect) studentGradeSelect.value = String(p.grade);
+                if (p.classNum && studentClassSelect) studentClassSelect.value = String(p.classNum);
+                if (studentNumInput) studentNumInput.value = (p.studentNum !== undefined && p.studentNum !== null) ? String(p.studentNum) : '';
+                if (p.name && globalStudentNameInput) globalStudentNameInput.value = p.name;
+            });
 
             // 첫 화면 공통 출제범위와 온라인 방 만들기 출제범위 양방향 동기화
             if (gradeSelectEl && onlineCreateGradeSelectEl) {
@@ -1873,7 +1900,7 @@
                     playerName: realName,
                     gradeNum: Number(gradeVal) || 6,
                     classNum: Number(classVal) || 1,
-                    studentNum: Number(numVal) || 1,
+                    studentNum: (numVal && !isNaN(Number(numVal))) ? Number(numVal) : null,
                     difficulty: difficulty,
                     pieceCount: pieceCount,
                     grade: gradeFilter
