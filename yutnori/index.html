@@ -1540,9 +1540,90 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- 교사 모드 플로팅 바로가기 버튼 (우측 하단) -->
+    <!-- 9. 실시간 온라인 팀 전용 작전 회의 채팅 위젯 (Floating Team Chat) -->
     <!-- ============================================================== -->
-    <button id="floatingTeacherBtn" onclick="window.openTeacherMode && window.openTeacherMode()" class="fixed bottom-4 right-4 z-40 px-3.5 py-2 rounded-2xl bg-slate-800/90 hover:bg-slate-700 text-indigo-300 hover:text-white border border-indigo-500/40 shadow-xl backdrop-blur-md text-xs font-black transition flex items-center gap-2 cursor-pointer group" title="교사 전용 데이터 관리 모드">
+    <div id="teamChatWidget" class="hidden">
+        <!-- 1. 플로팅 채팅 토글 버튼 -->
+        <button type="button" id="teamChatToggleBtn" class="fixed bottom-4 right-4 z-40 px-4 py-3 rounded-full shadow-2xl transition-all duration-300 flex items-center gap-2 cursor-pointer border-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-400 hover:scale-105 active:scale-95">
+            <span class="relative flex items-center justify-center">
+                <i class="fa-solid fa-comments text-lg"></i>
+                <span id="teamChatUnreadBadge" class="hidden absolute -top-2.5 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center shadow animate-bounce">0</span>
+            </span>
+            <span id="teamChatBtnLabel" class="text-xs font-black tracking-tight">팀 채팅</span>
+        </button>
+
+        <!-- 2. 플로팅 팀 채팅 서랍 패널 -->
+        <div id="teamChatPanel" class="fixed bottom-20 right-3 sm:right-5 z-50 w-[94vw] sm:w-[380px] max-w-[420px] max-h-[520px] h-[480px] flex flex-col bg-slate-900/95 border-2 border-slate-700 rounded-3xl shadow-2xl backdrop-blur-md overflow-hidden hidden transition-all duration-300">
+            <!-- 채팅창 헤더 -->
+            <div id="teamChatHeader" class="p-3 bg-slate-800/90 border-b border-slate-700/80 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span id="teamChatHeaderBadge" class="px-2.5 py-1 rounded-xl text-xs font-black flex items-center gap-1.5 shrink-0 bg-blue-500/20 text-blue-300 border border-blue-500/40">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span id="teamChatHeaderText">청팀 작전 회의실</span>
+                    </span>
+                    <span class="text-[10px] text-slate-400 font-bold hidden sm:inline-flex items-center gap-1">
+                        <i class="fa-solid fa-lock text-[9px] text-amber-400"></i> 우리 팀 전용
+                    </span>
+                </div>
+
+                <!-- 관전자/선생님 전용 팀 선택 탭 -->
+                <div id="teamChatSpectatorTabs" class="hidden flex items-center gap-1 bg-slate-950/80 p-0.5 rounded-xl border border-slate-700 text-xs shrink-0">
+                    <button type="button" id="spectatorTabBlue" class="px-2 py-0.5 rounded-lg text-[11px] font-black bg-blue-600 text-white transition cursor-pointer">청팀</button>
+                    <button type="button" id="spectatorTabWhite" class="px-2 py-0.5 rounded-lg text-[11px] font-bold text-slate-400 hover:text-white transition cursor-pointer">백팀</button>
+                </div>
+
+                <div class="flex items-center gap-1 shrink-0">
+                    <button type="button" id="teamChatCloseBtn" class="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="채팅창 닫기">
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 초등학생 원터치 퀵 전술 매크로 바 -->
+            <div class="p-2 bg-slate-950/80 border-b border-slate-800 shrink-0">
+                <div class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 text-xs">
+                    <button type="button" class="chat-macro-chip px-2.5 py-1 rounded-xl bg-slate-800/90 hover:bg-amber-500/20 hover:text-amber-300 text-slate-300 border border-slate-700/80 text-[11px] font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1 shrink-0" data-msg="윷 힘차게 던져줘! 🎯">
+                        🎯 윷 던져줘!
+                    </button>
+                    <button type="button" class="chat-macro-chip px-2.5 py-1 rounded-xl bg-slate-800/90 hover:bg-amber-500/20 hover:text-amber-300 text-slate-300 border border-slate-700/80 text-[11px] font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1 shrink-0" data-msg="우리 말 업자! 🐎">
+                        🐎 말 업자!
+                    </button>
+                    <button type="button" class="chat-macro-chip px-2.5 py-1 rounded-xl bg-slate-800/90 hover:bg-amber-500/20 hover:text-amber-300 text-slate-300 border border-slate-700/80 text-[11px] font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1 shrink-0" data-msg="상대 말 잡으러 가자! ⚡">
+                        ⚡ 말 잡자!
+                    </button>
+                    <button type="button" class="chat-macro-chip px-2.5 py-1 rounded-xl bg-slate-800/90 hover:bg-amber-500/20 hover:text-amber-300 text-slate-300 border border-slate-700/80 text-[11px] font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1 shrink-0" data-msg="뒤로 한 칸(빽도) 조심! 🔙">
+                        🔙 빽도 조심!
+                    </button>
+                    <button type="button" class="chat-macro-chip px-2.5 py-1 rounded-xl bg-slate-800/90 hover:bg-amber-500/20 hover:text-amber-300 text-slate-300 border border-slate-700/80 text-[11px] font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1 shrink-0" data-msg="나이스 샷! 👏">
+                        👏 나이스 샷!
+                    </button>
+                    <button type="button" class="chat-macro-chip px-2.5 py-1 rounded-xl bg-slate-800/90 hover:bg-amber-500/20 hover:text-amber-300 text-slate-300 border border-slate-700/80 text-[11px] font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1 shrink-0" data-msg="괜찮아, 잘했어! 힘내자! 💪">
+                        💪 괜찮아 잘했어!
+                    </button>
+                </div>
+            </div>
+
+            <!-- 실시간 메시지 목록 영역 -->
+            <div id="teamChatMessages" class="flex-1 p-3 overflow-y-auto flex flex-col gap-2.5 custom-scrollbar bg-slate-900/60 text-xs">
+                <div class="text-center text-slate-500 text-[11px] py-8">
+                    우리 팀원들과 실시간 작전 회의를 시작하세요!
+                </div>
+            </div>
+
+            <!-- 메시지 입력 폼 -->
+            <form id="teamChatForm" class="p-2.5 bg-slate-800/90 border-t border-slate-700/80 flex items-center gap-2 shrink-0">
+                <input type="text" id="teamChatInput" maxlength="80" placeholder="팀원에게 작전이나 응원 메시지 보내기..." class="flex-1 px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs font-bold text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
+                <button type="submit" id="teamChatSendBtn" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-black text-xs transition flex items-center justify-center gap-1 shadow cursor-pointer shrink-0">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 교사 모드 플로팅 바로가기 버튼 (좌측 하단으로 이동하여 우측 팀 채팅과 분리) -->
+    <!-- ============================================================== -->
+    <button id="floatingTeacherBtn" onclick="window.openTeacherMode && window.openTeacherMode()" class="fixed bottom-4 left-4 z-40 px-3.5 py-2 rounded-2xl bg-slate-800/90 hover:bg-slate-700 text-indigo-300 hover:text-white border border-indigo-500/40 shadow-xl backdrop-blur-md text-xs font-black transition flex items-center gap-2 cursor-pointer group" title="교사 전용 데이터 관리 모드">
         <i class="fa-solid fa-chalkboard-user text-indigo-400 group-hover:rotate-12 transition-transform"></i>
         <span>교사 모드</span>
     </button>
@@ -2050,7 +2131,10 @@
                     if (window.YutnoriGameInstance && window.YutnoriGameInstance.isOnline) {
                         multiplayerManager.leaveRoom();
                     }
-                    window.showScreen('home');
+                    if (teamChatWidget) teamChatWidget.classList.add('hidden');
+                if (teamChatPanel) teamChatPanel.classList.add('hidden');
+                isTeamChatOpen = false;
+                window.showScreen('home');
                 }
             }
 
@@ -2066,6 +2150,9 @@
                     if (onlineBanner) onlineBanner.classList.add('hidden');
                     await multiplayerManager.leaveRoom(true);
                 }
+                if (teamChatWidget) teamChatWidget.classList.add('hidden');
+                if (teamChatPanel) teamChatPanel.classList.add('hidden');
+                isTeamChatOpen = false;
                 window.showScreen('home');
             };
 
@@ -2274,8 +2361,14 @@
                     onlineLobbyModal.classList.add('hidden');
                     const onlineBanner = document.getElementById('onlineRoomBanner');
                     if (onlineBanner) onlineBanner.classList.add('hidden');
+                    if (teamChatWidget) teamChatWidget.classList.add('hidden');
+                    if (teamChatPanel) teamChatPanel.classList.add('hidden');
+                    isTeamChatOpen = false;
                     await multiplayerManager.leaveRoom(true);
-                    window.showScreen('home');
+                    if (teamChatWidget) teamChatWidget.classList.add('hidden');
+                if (teamChatPanel) teamChatPanel.classList.add('hidden');
+                isTeamChatOpen = false;
+                window.showScreen('home');
                 }
             };
             if (lobbyLeaveBtn) lobbyLeaveBtn.addEventListener('click', exitLobby);
@@ -2285,6 +2378,9 @@
             // 7. 실시간 대기실 및 인게임 상태 갱신 리스너
             multiplayerManager.onStateChange((data) => {
                 if (!data) {
+                    if (teamChatWidget) teamChatWidget.classList.add('hidden');
+                    if (teamChatPanel) teamChatPanel.classList.add('hidden');
+                    isTeamChatOpen = false;
                     onlineLobbyModal.classList.add('hidden');
                     const victoryModal = document.getElementById('victoryModal');
                     if (victoryModal) victoryModal.classList.add('hidden');
@@ -2298,9 +2394,16 @@
                             alert("방이 종료되었거나 방장/상대방이 퇴장하여 대기실이 닫혔습니다.");
                         }
                     }
-                    window.showScreen('home');
+                    if (teamChatWidget) teamChatWidget.classList.add('hidden');
+                if (teamChatPanel) teamChatPanel.classList.add('hidden');
+                isTeamChatOpen = false;
+                window.showScreen('home');
                     return;
                 }
+
+                // 온라인 상태이면 팀 채팅 플로팅 위젯 표출 및 메시지 렌더링
+                if (teamChatWidget) teamChatWidget.classList.remove('hidden');
+                renderTeamChatMessages();
 
                 // 1) 대기실(Lobby) 상태
                 if (data.status === 'lobby') {
@@ -2528,6 +2631,250 @@
                     }
                 }
             });
+
+            // ==========================================
+            // 8. 실시간 팀 작전 채팅 컨트롤러 (Team Chat Engine)
+            // ==========================================
+            const teamChatWidget = document.getElementById('teamChatWidget');
+            const teamChatToggleBtn = document.getElementById('teamChatToggleBtn');
+            const teamChatPanel = document.getElementById('teamChatPanel');
+            const teamChatCloseBtn = document.getElementById('teamChatCloseBtn');
+            const teamChatHeaderBadge = document.getElementById('teamChatHeaderBadge');
+            const teamChatHeaderText = document.getElementById('teamChatHeaderText');
+            const teamChatBtnLabel = document.getElementById('teamChatBtnLabel');
+            const teamChatUnreadBadge = document.getElementById('teamChatUnreadBadge');
+            const teamChatSpectatorTabs = document.getElementById('teamChatSpectatorTabs');
+            const spectatorTabBlue = document.getElementById('spectatorTabBlue');
+            const spectatorTabWhite = document.getElementById('spectatorTabWhite');
+            const teamChatMessages = document.getElementById('teamChatMessages');
+            const teamChatForm = document.getElementById('teamChatForm');
+            const teamChatInput = document.getElementById('teamChatInput');
+
+            let currentTeamChatSpectatorTab = 'blue'; // 'blue' | 'white'
+            let teamChatUnreadCount = 0;
+            let lastRenderedChatCount = 0;
+            let isTeamChatOpen = false;
+
+            function toggleTeamChat(forceOpen = null) {
+                if (forceOpen === true) {
+                    isTeamChatOpen = true;
+                } else if (forceOpen === false) {
+                    isTeamChatOpen = false;
+                } else {
+                    isTeamChatOpen = !isTeamChatOpen;
+                }
+
+                if (isTeamChatOpen) {
+                    if (teamChatPanel) teamChatPanel.classList.remove('hidden');
+                    teamChatUnreadCount = 0;
+                    if (teamChatUnreadBadge) {
+                        teamChatUnreadBadge.classList.add('hidden');
+                        teamChatUnreadBadge.textContent = '0';
+                    }
+                    if (teamChatInput) {
+                        setTimeout(() => teamChatInput.focus(), 100);
+                    }
+                    scrollChatToBottom();
+                } else {
+                    if (teamChatPanel) teamChatPanel.classList.add('hidden');
+                }
+            }
+
+            if (teamChatToggleBtn) teamChatToggleBtn.addEventListener('click', () => toggleTeamChat());
+            if (teamChatCloseBtn) teamChatCloseBtn.addEventListener('click', () => toggleTeamChat(false));
+
+            if (spectatorTabBlue) {
+                spectatorTabBlue.addEventListener('click', () => {
+                    currentTeamChatSpectatorTab = 'blue';
+                    spectatorTabBlue.className = 'px-2 py-0.5 rounded-lg text-[11px] font-black bg-blue-600 text-white transition cursor-pointer';
+                    spectatorTabWhite.className = 'px-2 py-0.5 rounded-lg text-[11px] font-bold text-slate-400 hover:text-white transition cursor-pointer';
+                    renderTeamChatMessages();
+                });
+            }
+
+            if (spectatorTabWhite) {
+                spectatorTabWhite.addEventListener('click', () => {
+                    currentTeamChatSpectatorTab = 'white';
+                    spectatorTabWhite.className = 'px-2 py-0.5 rounded-lg text-[11px] font-black bg-rose-600 text-white transition cursor-pointer';
+                    spectatorTabBlue.className = 'px-2 py-0.5 rounded-lg text-[11px] font-bold text-slate-400 hover:text-white transition cursor-pointer';
+                    renderTeamChatMessages();
+                });
+            }
+
+            // 퀵 전술 매크로 버튼 이벤트 바인딩
+            const macroChips = document.querySelectorAll('.chat-macro-chip');
+            macroChips.forEach(chip => {
+                chip.addEventListener('click', async () => {
+                    const msg = chip.getAttribute('data-msg');
+                    if (!msg) return;
+                    await submitTeamChatMessage(msg);
+                });
+            });
+
+            // 채팅 전송 함수
+            async function submitTeamChatMessage(rawText) {
+                const text = (rawText || '').trim();
+                if (!text) return;
+
+                // 비속어 필터링 검사
+                if (window.WaurimalProfanity && typeof window.WaurimalProfanity.check === 'function') {
+                    if (window.WaurimalProfanity.check(text)) {
+                        alert("바르고 고운 말을 사용해 주세요. 부적절한 단어가 포함되어 전송할 수 없습니다.");
+                        return;
+                    }
+                }
+
+                try {
+                    const myInfo = multiplayerManager.getMyPlayerInfo() || {};
+                    const isSpectator = Boolean(myInfo.isSpectator || myInfo.team === 'spectator');
+                    const explicitTeam = isSpectator ? currentTeamChatSpectatorTab : null;
+                    await multiplayerManager.sendTeamChat(text, explicitTeam);
+                    if (teamChatInput) teamChatInput.value = '';
+                } catch (err) {
+                    console.warn("[TeamChat] Send error:", err);
+                }
+            }
+
+            if (teamChatForm) {
+                teamChatForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    if (!teamChatInput) return;
+                    await submitTeamChatMessage(teamChatInput.value);
+                });
+            }
+
+            function scrollChatToBottom() {
+                if (teamChatMessages) {
+                    teamChatMessages.scrollTop = teamChatMessages.scrollHeight;
+                }
+            }
+
+            function renderTeamChatMessages() {
+                if (!multiplayerManager.currentRoomId || !multiplayerManager.roomData) return;
+                const roomData = multiplayerManager.roomData;
+                const mySessionId = multiplayerManager.mySessionId;
+                const myInfo = multiplayerManager.getMyPlayerInfo() || {};
+                const isSpectator = Boolean(myInfo.isSpectator || myInfo.team === 'spectator');
+                const myTeam = isSpectator ? currentTeamChatSpectatorTab : (myInfo.team || 'blue');
+
+                // 헤더 및 토글 버튼 스타일 업데이트
+                if (isSpectator) {
+                    if (teamChatSpectatorTabs) teamChatSpectatorTabs.classList.remove('hidden');
+                    if (teamChatHeaderText) teamChatHeaderText.textContent = (currentTeamChatSpectatorTab === 'blue') ? '청팀 채널 관전' : '백팀 채널 관전';
+                    if (teamChatHeaderBadge) {
+                        teamChatHeaderBadge.className = (currentTeamChatSpectatorTab === 'blue')
+                            ? 'px-2.5 py-1 rounded-xl text-xs font-black flex items-center gap-1.5 shrink-0 bg-blue-500/20 text-blue-300 border border-blue-500/40'
+                            : 'px-2.5 py-1 rounded-xl text-xs font-black flex items-center gap-1.5 shrink-0 bg-rose-500/20 text-rose-300 border border-rose-500/40';
+                    }
+                    if (teamChatBtnLabel) teamChatBtnLabel.textContent = '팀 채팅 모니터링';
+                    if (teamChatToggleBtn) {
+                        teamChatToggleBtn.className = 'fixed bottom-4 right-4 z-40 px-4 py-3 rounded-full shadow-2xl transition-all duration-300 flex items-center gap-2 cursor-pointer border-2 bg-gradient-to-r from-amber-600 to-emerald-600 text-white border-amber-400 hover:scale-105 active:scale-95';
+                    }
+                } else if (myTeam === 'blue') {
+                    if (teamChatSpectatorTabs) teamChatSpectatorTabs.classList.add('hidden');
+                    if (teamChatHeaderText) teamChatHeaderText.textContent = '청팀 작전 회의실';
+                    if (teamChatHeaderBadge) {
+                        teamChatHeaderBadge.className = 'px-2.5 py-1 rounded-xl text-xs font-black flex items-center gap-1.5 shrink-0 bg-blue-500/20 text-blue-300 border border-blue-500/40';
+                    }
+                    if (teamChatBtnLabel) teamChatBtnLabel.textContent = '청팀 작전 채팅';
+                    if (teamChatToggleBtn) {
+                        teamChatToggleBtn.className = 'fixed bottom-4 right-4 z-40 px-4 py-3 rounded-full shadow-2xl transition-all duration-300 flex items-center gap-2 cursor-pointer border-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-400 hover:scale-105 active:scale-95';
+                    }
+                } else {
+                    if (teamChatSpectatorTabs) teamChatSpectatorTabs.classList.add('hidden');
+                    if (teamChatHeaderText) teamChatHeaderText.textContent = '백팀 작전 회의실';
+                    if (teamChatHeaderBadge) {
+                        teamChatHeaderBadge.className = 'px-2.5 py-1 rounded-xl text-xs font-black flex items-center gap-1.5 shrink-0 bg-rose-500/20 text-rose-300 border border-rose-500/40';
+                    }
+                    if (teamChatBtnLabel) teamChatBtnLabel.textContent = '백팀 작전 채팅';
+                    if (teamChatToggleBtn) {
+                        teamChatToggleBtn.className = 'fixed bottom-4 right-4 z-40 px-4 py-3 rounded-full shadow-2xl transition-all duration-300 flex items-center gap-2 cursor-pointer border-2 bg-gradient-to-r from-rose-600 to-pink-600 text-white border-rose-400 hover:scale-105 active:scale-95';
+                    }
+                }
+
+                const allChats = Array.isArray(roomData.teamChats) ? roomData.teamChats : [];
+                // 팀별 비밀 채널 필터링: 청팀은 청팀+선생님공지, 백팀은 백팀+선생님공지
+                const filtered = allChats.filter(msg => {
+                    if (isSpectator) {
+                        return msg.team === currentTeamChatSpectatorTab || msg.team === 'spectator';
+                    }
+                    return msg.team === myTeam || msg.team === 'spectator';
+                });
+
+                // 새 메시지 수신 시 닫힌 상태면 알림 배지 카운트 증가
+                if (filtered.length > lastRenderedChatCount) {
+                    if (!isTeamChatOpen) {
+                        const newMsgDiff = filtered.length - lastRenderedChatCount;
+                        teamChatUnreadCount += newMsgDiff;
+                        if (teamChatUnreadBadge) {
+                            teamChatUnreadBadge.textContent = String(teamChatUnreadCount);
+                            teamChatUnreadBadge.classList.remove('hidden');
+                        }
+                    }
+                }
+                lastRenderedChatCount = filtered.length;
+
+                if (!teamChatMessages) return;
+
+                if (filtered.length === 0) {
+                    teamChatMessages.innerHTML = `
+                        <div class="text-center text-slate-500 text-[11px] py-10">
+                            <i class="fa-regular fa-comment-dots text-slate-600 text-3xl mb-2 block"></i>
+                            아직 주고받은 팀 작전 메시지가 없습니다.<br>
+                            위 <strong class="text-amber-400">전술 매크로 버튼</strong>이나 아래 입력창으로 팀원들에게 응원을 보내보세요!
+                        </div>
+                    `;
+                    return;
+                }
+
+                teamChatMessages.innerHTML = filtered.map(msg => {
+                    const isMe = (msg.senderId === mySessionId);
+                    const timeStr = new Date(msg.timestamp || Date.now()).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+                    const safeText = window.WaurimalSanitize ? window.WaurimalSanitize(msg.text) : msg.text;
+                    const numBadge = (msg.studentNum !== undefined && msg.studentNum !== null) ? `<span class="text-[9px] text-slate-400 font-normal">(${msg.studentNum}번)</span>` : '';
+
+                    if (isMe) {
+                        const myBubbleBg = (myTeam === 'white')
+                            ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white'
+                            : (isSpectator ? 'bg-gradient-to-r from-amber-600 to-emerald-600 text-white' : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white');
+                        return `
+                            <div class="flex flex-col items-end gap-1">
+                                <div class="flex items-end gap-1.5 max-w-[85%]">
+                                    <span class="text-[9px] text-slate-500 font-mono">${timeStr}</span>
+                                    <div class="px-3.5 py-2 rounded-2xl rounded-tr-none ${myBubbleBg} text-xs font-bold shadow-md break-all leading-relaxed">
+                                        ${safeText}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        const isSenderSpectator = (msg.team === 'spectator');
+                        const bubbleBg = isSenderSpectator 
+                            ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40'
+                            : (msg.team === 'white' ? 'bg-slate-800 text-rose-200 border border-rose-500/40' : 'bg-slate-800 text-blue-200 border border-blue-500/40');
+
+                        return `
+                            <div class="flex flex-col items-start gap-1">
+                                <div class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 pl-1">
+                                    <span class="${isSenderSpectator ? 'text-amber-400 font-black' : (msg.team === 'white' ? 'text-rose-300' : 'text-blue-300')}">${msg.senderName}</span>
+                                    ${numBadge}
+                                    ${isSenderSpectator ? '<span class="text-[9px] px-1 py-0.2 bg-amber-500/20 text-amber-300 rounded border border-amber-500/30">사회자</span>' : ''}
+                                </div>
+                                <div class="flex items-end gap-1.5 max-w-[85%]">
+                                    <div class="px-3.5 py-2 rounded-2xl rounded-tl-none ${bubbleBg} text-xs font-semibold shadow break-all leading-relaxed">
+                                        ${safeText}
+                                    </div>
+                                    <span class="text-[9px] text-slate-500 font-mono">${timeStr}</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }).join('');
+
+                if (isTeamChatOpen) {
+                    scrollChatToBottom();
+                }
+            }
 
             // 명예의 전당 모달 열기/닫기
             const hofModal = document.getElementById('hofModal');

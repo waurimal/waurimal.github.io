@@ -195,6 +195,7 @@ class YutnoriMultiplayerManager {
             quizResult: null,
             teamsState: null,
             winner: null,
+            teamChats: [],
             lastAction: {
                 type: 'CREATE_ROOM',
                 actorId: this.mySessionId,
@@ -1184,6 +1185,39 @@ class YutnoriMultiplayerManager {
             whitePlayerIndex: nextWhiteIndex,
             currentTurnIndex: ((this.roomData.currentTurnIndex || 0) + 1)
         };
+    }
+
+    // ==========================================
+    // 6-9. 실시간 같은 편(팀) 작전 회의 채팅 전송
+    // ==========================================
+    async sendTeamChat(text, explicitTeam = null) {
+        if (!this.currentRoomId) return;
+        const cleanText = (text || '').trim();
+        if (!cleanText) return;
+
+        const myInfo = this.getMyPlayerInfo() || {};
+        const isSpectator = Boolean(myInfo.isSpectator || myInfo.team === 'spectator');
+        // 일반 선수는 자신의 소속 팀으로 강제 고정, 사회자/선생님만 explicitTeam 사용 가능
+        const team = isSpectator ? (explicitTeam || 'spectator') : (myInfo.team || 'blue');
+
+        const msgObj = {
+            id: 'tc_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+            team: team, // 'blue' | 'white' | 'spectator'
+            senderId: this.mySessionId,
+            senderName: myInfo.name || '팀원',
+            studentNum: (myInfo.studentNum !== undefined && myInfo.studentNum !== null && myInfo.studentNum !== '') ? Number(myInfo.studentNum) : null,
+            text: cleanText,
+            timestamp: Date.now()
+        };
+
+        const prevChats = Array.isArray(this.roomData?.teamChats) ? this.roomData.teamChats : [];
+        const updatedChats = [...prevChats, msgObj].slice(-60);
+
+        const roomRef = doc(db, ROOMS_COLLECTION, this.currentRoomId);
+        await updateDoc(roomRef, {
+            teamChats: updatedChats,
+            lastChatTimestamp: Date.now()
+        });
     }
 
     // ==========================================
