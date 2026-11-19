@@ -2022,6 +2022,7 @@
             }
 
             drawShowState.pairs = pairs;
+            drawShowState.shuffledNames = shuffled;
             drawShowState.totalMatches = matchCount;
 
             executeMatchDraw(0);
@@ -2126,7 +2127,10 @@
 
             setTimeout(() => {
                 document.getElementById('drawShowModal').classList.add('hidden');
-                buildTournamentBracket(tournamentData.participants, "animated");
+                const targetNames = (drawShowState.shuffledNames && drawShowState.shuffledNames.length > 0)
+                    ? drawShowState.shuffledNames
+                    : (tournamentData.participants || []);
+                buildTournamentBracket(targetNames, "order");
             }, 600);
         }
 
@@ -2392,15 +2396,15 @@
 
         // ── 설정 모달 & 명단 입력 ──
         window.openSetupModal = () => {
-            document.getElementById('inputTournamentTitle').value = tournamentData.title;
-            document.getElementById('inputTournamentIcon').value = tournamentData.icon;
-            document.getElementById('inputParticipantsText').value = tournamentData.participants.join('\n');
-            document.getElementById('checkBronzeMatch').checked = tournamentData.hasBronzeMatch;
+            document.getElementById('inputTournamentTitle').value = tournamentData.title || "우리 반 챔피언십 토너먼트";
+            document.getElementById('inputTournamentIcon').value = tournamentData.icon || "🏆";
+            document.getElementById('inputParticipantsText').value = (tournamentData.participants && Array.isArray(tournamentData.participants)) ? tournamentData.participants.join('\n') : "";
+            document.getElementById('checkBronzeMatch').checked = tournamentData.hasBronzeMatch !== false;
             const checkFifth = document.getElementById('checkFifthMatch');
             if (checkFifth) {
-                checkFifth.checked = (tournamentData.hasFifthMatch !== undefined) ? tournamentData.hasFifthMatch : (tournamentData.participants.length === 6);
+                checkFifth.checked = (tournamentData.hasFifthMatch !== undefined) ? tournamentData.hasFifthMatch : (tournamentData.participants && tournamentData.participants.length === 6);
             }
-            document.getElementById('checkSoundEffects').checked = tournamentData.soundEnabled;
+            document.getElementById('checkSoundEffects').checked = tournamentData.soundEnabled !== false;
 
             updateParticipantCountDisplay();
             document.getElementById('setupModal').classList.remove('hidden');
@@ -2458,8 +2462,6 @@
             const icon = document.getElementById('inputTournamentIcon').value;
             const hasBronze = document.getElementById('checkBronzeMatch').checked;
             const checkFifth = document.getElementById('checkFifthMatch');
-            const hasFifth = checkFifth ? checkFifth.checked : (names.length === 6);
-            const soundEnabled = document.getElementById('checkSoundEffects').checked;
 
             const names = document.getElementById('inputParticipantsText').value
                 .split(/[\n,]/)
@@ -2471,6 +2473,8 @@
                 return;
             }
 
+            const hasFifth = checkFifth ? checkFifth.checked : (names.length === 6);
+            const soundEnabled = document.getElementById('checkSoundEffects').checked;
             const drawMethod = document.querySelector('input[name="drawMethod"]:checked')?.value || "instant";
 
             tournamentData.title = title;
@@ -2478,6 +2482,7 @@
             tournamentData.hasBronzeMatch = hasBronze;
             tournamentData.hasFifthMatch = (names.length === 6) ? hasFifth : false;
             tournamentData.soundEnabled = soundEnabled;
+            tournamentData.participants = [...names];
 
             closeSetupModal();
 
