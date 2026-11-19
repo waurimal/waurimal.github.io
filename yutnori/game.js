@@ -498,6 +498,18 @@
         return str[0] + 'OO' + str[str.length - 1];
     }
 
+    // 예전 하드코딩 더미 샘플 9명만 정확히 판별 (학생 실제 기록 오인 삭제 방지)
+    const DUMMY_SAMPLE_NAMES = ['세종대왕', '이순신', '신사임당', '율곡이이', '장영실', '홍길동', '김유신', '강감찬', '을지문덕'];
+    function isLegacyDummyHOF(r) {
+        if (!r) return true;
+        const id = String(r.id || '');
+        if (/^hof_[1-9]$/.test(id)) return true; // 오직 hof_1 ~ hof_9 만 더미
+        if (DUMMY_SAMPLE_NAMES.includes((r.name || '').trim()) && !r.updatedAt && (r.wins === 12 || r.wins === 10 || r.wins === 8 || r.wins === 7 || r.wins === 6 || r.wins === 5 || r.wins === 4 || r.wins === 3 || r.wins === 2)) {
+            return true;
+        }
+        return false;
+    }
+
     class HallOfFameManager {
         constructor() {
             this.storageKey = 'waurimal_yutnori_hof_v7';
@@ -520,7 +532,7 @@
                 if (v7Raw) {
                     const parsed = JSON.parse(v7Raw);
                     if (Array.isArray(parsed)) {
-                        const clean = parsed.filter(r => r && !String(r.id || '').startsWith('hof_'));
+                        const clean = parsed.filter(r => r && !isLegacyDummyHOF(r));
                         localStorage.setItem('waurimal_yutnori_hof_v7', JSON.stringify(clean));
                     }
                 }
@@ -546,7 +558,7 @@
 
         handleCloudScoresUpdate(cloudScores) {
             if (!Array.isArray(cloudScores)) return;
-            this.cloudRecords = cloudScores.filter(r => r && !String(r.id || '').startsWith('hof_'));
+            this.cloudRecords = cloudScores.filter(r => r && !isLegacyDummyHOF(r));
 
             const localRecords = this.getLocalRecords();
             const merged = this.mergeRecords(this.cloudRecords, localRecords);
@@ -562,7 +574,7 @@
                 if (raw !== null) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed)) {
-                        return parsed.filter(r => r && !String(r.id || '').startsWith('hof_'));
+                        return parsed.filter(r => r && !isLegacyDummyHOF(r));
                     }
                 }
             } catch(e) {
@@ -574,16 +586,16 @@
         mergeRecords(cloudList = [], localList = []) {
             const map = new Map();
 
-            // 1. 로컬 레코드 병합 (더미 'hof_' 제외)
+            // 1. 로컬 레코드 병합 (더미 제외)
             (localList || []).forEach(r => {
-                if (!r || !r.name || String(r.id || '').startsWith('hof_')) return;
+                if (!r || !r.name || isLegacyDummyHOF(r)) return;
                 const k = `${r.grade || 6}_${r.classNum || 1}_${r.name.trim()}`;
                 map.set(k, { ...r });
             });
 
-            // 2. 클라우드 레코드 최우선 병합 (서버 클라우드가 최신 기준, 더미 'hof_' 제외)
+            // 2. 클라우드 레코드 최우선 병합 (서버 클라우드가 최신 기준, 더미 제외)
             (cloudList || []).forEach(r => {
-                if (!r || !r.name || String(r.id || '').startsWith('hof_')) return;
+                if (!r || !r.name || isLegacyDummyHOF(r)) return;
                 const k = `${r.grade || 6}_${r.classNum || 1}_${r.name.trim()}`;
                 const existing = map.get(k);
                 if (existing) {
@@ -844,7 +856,7 @@
                     existing.studentNum = sNum;
                 } else {
                     records.push({
-                        id: 'hof_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                        id: 'yut_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
                         grade: sGrade,
                         classNum: sClass,
                         studentNum: sNum,
