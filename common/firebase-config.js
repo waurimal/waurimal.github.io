@@ -31,7 +31,7 @@
 
         // [아케이드 & 슈팅 & 카드 뒤집기] 문장 타이핑 프로젝트(sentence-typing-race)로 통합 샤딩
         "jumpman": {
-            apiKey: "AIzaSyCer92ve-QWjTVKaoYbUJaoqqoTJKCz7yI",
+            apiKey: "AIzaSyCer92ve-QWjTVKaoYbUJaoqqoTJJCz7yI",
             authDomain: "sentence-typing-race.firebaseapp.com",
             projectId: "sentence-typing-race",
             storageBucket: "sentence-typing-race.firebasestorage.app",
@@ -39,7 +39,7 @@
             appId: "1:28750171446:web:8686d2c698bd5536cb3797"
         },
         "spelling_galaga": {
-            apiKey: "AIzaSyCer92ve-QWjTVKaoYbUJaoqqoTJKCz7yI",
+            apiKey: "AIzaSyCer92ve-QWjTVKaoYbUJaoqqoTJJCz7yI",
             authDomain: "sentence-typing-race.firebaseapp.com",
             projectId: "sentence-typing-race",
             storageBucket: "sentence-typing-race.firebasestorage.app",
@@ -47,7 +47,7 @@
             appId: "1:28750171446:web:8686d2c698bd5536cb3797"
         },
         "galaga": {
-            apiKey: "AIzaSyCer92ve-QWjTVKaoYbUJaoqqoTJKCz7yI",
+            apiKey: "AIzaSyCer92ve-QWjTVKaoYbUJaoqqoTJJCz7yI",
             authDomain: "sentence-typing-race.firebaseapp.com",
             projectId: "sentence-typing-race",
             storageBucket: "sentence-typing-race.firebasestorage.app",
@@ -55,7 +55,7 @@
             appId: "1:28750171446:web:8686d2c698bd5536cb3797"
         },
         "flip": {
-            apiKey: "AIzaSyCer92ve-QWjTVKaoYbUJaoqqoTJKCz7yI",
+            apiKey: "AIzaSyCer92ve-QWjTVKaoYbUJaoqqoTJJCz7yI",
             authDomain: "sentence-typing-race.firebaseapp.com",
             projectId: "sentence-typing-race",
             storageBucket: "sentence-typing-race.firebasestorage.app",
@@ -73,7 +73,7 @@
             appId: "1:528859753713:web:a1ed4a054380d181c10d50"
         },
         "sen_typing": {
-            apiKey: "AIzaSyCer92ve-QWjTVKaoYbUJaoqqoTJKCz7yI",
+            apiKey: "AIzaSyCer92ve-QWjTVKaoYbUJaoqqoTJJCz7yI",
             authDomain: "sentence-typing-race.firebaseapp.com",
             projectId: "sentence-typing-race",
             storageBucket: "sentence-typing-race.firebasestorage.app",

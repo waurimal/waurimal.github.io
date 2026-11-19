@@ -125,7 +125,7 @@ class JumpmanHallOfFame {
             const cfg = (window.WaurimalFirebase && typeof window.WaurimalFirebase.getConfig === 'function')
                 ? window.WaurimalFirebase.getConfig('jumpman')
                 : {
-                    apiKey: "AIzaSyCer92ve-QWjTVKaoYbUJaoqqoTJKCz7yI",
+                    apiKey: "AIzaSyCer92ve-QWjTVKaoYbUJaoqqoTJJCz7yI",
                     authDomain: "sentence-typing-race.firebaseapp.com",
                     projectId: "sentence-typing-race",
                     storageBucket: "sentence-typing-race.firebasestorage.app",
