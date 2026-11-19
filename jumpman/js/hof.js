@@ -1,7 +1,7 @@
 /**
  * 점프맨 게임 - 명예의 전당 및 학생 성적 관리 (Hall of Fame)
  * Firebase Firestore 연동 & LocalStorage 하이브리드 캐시
- * Waurimal Firebase Sharding System (tournament-267ab 프로젝트)
+ * Waurimal Firebase Sharding System (sentence-typing-race 프로젝트)
  */
 
 class JumpmanHallOfFame {
@@ -115,7 +115,7 @@ class JumpmanHallOfFame {
         return [];
     }
 
-    // Firebase Firestore 전용 인스턴스 획득 (tournament-267ab 샤딩)
+    // Firebase Firestore 전용 인스턴스 획득 (sentence-typing-race 샤딩)
     getFirestoreDb() {
         if (typeof firebase === 'undefined' || typeof firebase.firestore !== 'function') {
             return null;
@@ -125,12 +125,12 @@ class JumpmanHallOfFame {
             const cfg = (window.WaurimalFirebase && typeof window.WaurimalFirebase.getConfig === 'function')
                 ? window.WaurimalFirebase.getConfig('jumpman')
                 : {
-                    apiKey: "AIzaSyAaRTZlJ_fQAKl8j0lCJfaOdJyx8wMP5Zo",
-                    authDomain: "tournament-267ab.firebaseapp.com",
-                    projectId: "tournament-267ab",
-                    storageBucket: "tournament-267ab.firebasestorage.app",
-                    messagingSenderId: "401796751337",
-                    appId: "1:401796751337:web:6f3ba64fde25adf1a8f578"
+                    apiKey: "AIzaSyCer92ve-QWjTVKaoYbUJaoqqoTJKCz7yI",
+                    authDomain: "sentence-typing-race.firebaseapp.com",
+                    projectId: "sentence-typing-race",
+                    storageBucket: "sentence-typing-race.firebasestorage.app",
+                    messagingSenderId: "28750171446",
+                    appId: "1:28750171446:web:8686d2c698bd5536cb3797"
                 };
 
             if (window.WaurimalFirebase && window.WaurimalFirebase.isCircuitBroken && window.WaurimalFirebase.isCircuitBroken(cfg.projectId)) {
@@ -212,7 +212,7 @@ class JumpmanHallOfFame {
             }
         } catch (e) {
             if (window.WaurimalFirebase && window.WaurimalFirebase.tripCircuitBreaker && e && (e.code === 'resource-exhausted' || String(e).includes('429'))) {
-                window.WaurimalFirebase.tripCircuitBreaker('tournament-267ab');
+                window.WaurimalFirebase.tripCircuitBreaker('sentence-typing-race');
             }
             console.warn("[HOF] Firestore sync fallback:", e);
         }
@@ -257,7 +257,7 @@ class JumpmanHallOfFame {
             }
         } catch (e) {
             if (window.WaurimalFirebase && window.WaurimalFirebase.tripCircuitBreaker && e && (e.code === 'resource-exhausted' || String(e).includes('429'))) {
-                window.WaurimalFirebase.tripCircuitBreaker('tournament-267ab');
+                window.WaurimalFirebase.tripCircuitBreaker('sentence-typing-race');
             }
             console.warn("[HOF] fetchCloudRecords fallback:", e);
         }
