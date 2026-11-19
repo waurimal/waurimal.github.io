@@ -500,10 +500,10 @@
 
     class HallOfFameManager {
         constructor() {
-            this.storageKey = 'waurimal_yutnori_hof';
+            this.storageKey = 'waurimal_yutnori_hof_v7';
             this.cloudRecords = [];
             this.cloudHOF = null;
-            this.defaultRecords = this.getDefaultRecords();
+            this.defaultRecords = []; // 순수 학생 플레이 기록만 보관 (더미 샘플 전면 삭제)
             this.modalFilterGrade = 'all';
             this.modalFilterClass = 'all';
             this.modalPeriod = 'all';
@@ -513,24 +513,26 @@
             this.homeFilterGrade = 'all';
             this.homeFilterClass = 'all';
 
+            // 이전 버전 및 더미(hof_1~9) 로컬스토리지 정리
+            try {
+                localStorage.removeItem('waurimal_yutnori_hof');
+                const v7Raw = localStorage.getItem('waurimal_yutnori_hof_v7');
+                if (v7Raw) {
+                    const parsed = JSON.parse(v7Raw);
+                    if (Array.isArray(parsed)) {
+                        const clean = parsed.filter(r => r && !String(r.id || '').startsWith('hof_'));
+                        localStorage.setItem('waurimal_yutnori_hof_v7', JSON.stringify(clean));
+                    }
+                }
+            } catch (e) {}
+
             if (typeof window !== 'undefined' && window.YutnoriCloudHOF) {
                 this.attachCloudSync(window.YutnoriCloudHOF);
             }
         }
 
         getDefaultRecords() {
-            const today = new Date().toISOString().split('T')[0];
-            return [
-                { id: 'hof_1', grade: 6, classNum: 3, studentNum: 14, name: '세종대왕', wins: 12, totalGames: 14, score: 9850, correctCount: 58, wrongCount: 4, goalCount: 32, catchCount: 18, stackCount: 14, yutMoCount: 24, bestScore: 2150, lastPlayed: today },
-                { id: 'hof_2', grade: 6, classNum: 1, studentNum: 7, name: '이순신', wins: 10, totalGames: 12, score: 8400, correctCount: 46, wrongCount: 3, goalCount: 27, catchCount: 22, stackCount: 9, yutMoCount: 18, bestScore: 1980, lastPlayed: today },
-                { id: 'hof_3', grade: 6, classNum: 2, studentNum: 21, name: '신사임당', wins: 8, totalGames: 9, score: 7100, correctCount: 42, wrongCount: 2, goalCount: 21, catchCount: 12, stackCount: 12, yutMoCount: 15, bestScore: 1820, lastPlayed: today },
-                { id: 'hof_4', grade: 5, classNum: 4, studentNum: 9, name: '율곡이이', wins: 7, totalGames: 8, score: 6250, correctCount: 38, wrongCount: 5, goalCount: 19, catchCount: 10, stackCount: 8, yutMoCount: 12, bestScore: 1650, lastPlayed: today },
-                { id: 'hof_5', grade: 5, classNum: 2, studentNum: 18, name: '장영실', wins: 6, totalGames: 7, score: 5600, correctCount: 35, wrongCount: 3, goalCount: 16, catchCount: 9, stackCount: 7, yutMoCount: 10, bestScore: 1540, lastPlayed: today },
-                { id: 'hof_6', grade: 4, classNum: 3, studentNum: 5, name: '홍길동', wins: 5, totalGames: 6, score: 4750, correctCount: 28, wrongCount: 4, goalCount: 14, catchCount: 7, stackCount: 6, yutMoCount: 8, bestScore: 1420, lastPlayed: today },
-                { id: 'hof_7', grade: 4, classNum: 1, studentNum: 12, name: '김유신', wins: 4, totalGames: 5, score: 3900, correctCount: 24, wrongCount: 2, goalCount: 11, catchCount: 6, stackCount: 5, yutMoCount: 6, bestScore: 1310, lastPlayed: today },
-                { id: 'hof_8', grade: 3, classNum: 1, studentNum: 15, name: '강감찬', wins: 3, totalGames: 4, score: 3200, correctCount: 20, wrongCount: 2, goalCount: 9, catchCount: 5, stackCount: 4, yutMoCount: 5, bestScore: 1150, lastPlayed: today },
-                { id: 'hof_9', grade: 3, classNum: 2, studentNum: 8, name: '을지문덕', wins: 2, totalGames: 3, score: 2500, correctCount: 16, wrongCount: 1, goalCount: 7, catchCount: 4, stackCount: 3, yutMoCount: 4, bestScore: 980, lastPlayed: today }
-            ];
+            return []; // 순수 학생 플레이 기록만 남기기 위해 기본 샘플 비움
         }
 
         attachCloudSync(cloudHOF) {
@@ -544,19 +546,10 @@
 
         handleCloudScoresUpdate(cloudScores) {
             if (!Array.isArray(cloudScores)) return;
-            this.cloudRecords = cloudScores;
-
-            // 만약 클라우드 데이터가 아직 비어있다면, 첫 기기에서 기본 샘플 레코드 자동 시드
-            if (cloudScores.length === 0) {
-                const localRecords = this.getLocalRecords();
-                if (localRecords.length === 0) {
-                    this.resetToDefault(true);
-                    return;
-                }
-            }
+            this.cloudRecords = cloudScores.filter(r => r && !String(r.id || '').startsWith('hof_'));
 
             const localRecords = this.getLocalRecords();
-            const merged = this.mergeRecords(cloudScores, localRecords);
+            const merged = this.mergeRecords(this.cloudRecords, localRecords);
             try {
                 localStorage.setItem(this.storageKey, JSON.stringify(merged));
             } catch(e) {}
@@ -569,7 +562,7 @@
                 if (raw !== null) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed)) {
-                        return parsed;
+                        return parsed.filter(r => r && !String(r.id || '').startsWith('hof_'));
                     }
                 }
             } catch(e) {
@@ -581,22 +574,16 @@
         mergeRecords(cloudList = [], localList = []) {
             const map = new Map();
 
-            // 1. 기본 샘플 레코드 먼저 맵에 등록 (기본값)
-            this.getDefaultRecords().forEach(r => {
-                const k = `${r.grade}_${r.classNum}_${r.name.trim()}`;
-                map.set(k, { ...r });
-            });
-
-            // 2. 로컬 레코드 병합
+            // 1. 로컬 레코드 병합 (더미 'hof_' 제외)
             (localList || []).forEach(r => {
-                if (!r || !r.name) return;
+                if (!r || !r.name || String(r.id || '').startsWith('hof_')) return;
                 const k = `${r.grade || 6}_${r.classNum || 1}_${r.name.trim()}`;
                 map.set(k, { ...r });
             });
 
-            // 3. 클라우드 레코드 최우선 병합 (서버 클라우드가 최신 기준)
+            // 2. 클라우드 레코드 최우선 병합 (서버 클라우드가 최신 기준, 더미 'hof_' 제외)
             (cloudList || []).forEach(r => {
-                if (!r || !r.name) return;
+                if (!r || !r.name || String(r.id || '').startsWith('hof_')) return;
                 const k = `${r.grade || 6}_${r.classNum || 1}_${r.name.trim()}`;
                 const existing = map.get(k);
                 if (existing) {
@@ -805,11 +792,7 @@
         }
 
         resetToDefault(syncToCloud = true) {
-            const defs = this.getDefaultRecords();
-            this.saveRecords([...defs]);
-            if (syncToCloud && this.cloudHOF && typeof this.cloudHOF.seedDefaultRecords === 'function') {
-                this.cloudHOF.seedDefaultRecords(defs);
-            }
+            this.clearAll();
         }
 
         clearAll() {
