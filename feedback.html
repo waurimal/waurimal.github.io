@@ -7,7 +7,6 @@
     
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="common/waurimal-nav.js"></script>
     <style>
         @font-face {
             font-family: 'GmarketSansBold';
@@ -320,20 +319,14 @@
             { id: "hangman", title: "행맨 게임", icon: "fas fa-gamepad", theme: "#8B5CF6", bgTheme: "#F5F3FF" },
             { id: "alchemist", title: "연금술사", icon: "fas fa-flask", theme: "#F97316", bgTheme: "#FFF7ED" },
             { id: "reading", title: "영어 읽기", icon: "fas fa-glasses", theme: "#DB2777", bgTheme: "#FDF2F8" },
-            { id: "speaking", title: "영어 말하기", icon: "fas fa-comments", theme: "#0284C7", bgTheme: "#F0F9FF" },
-            { id: "sen_typing", title: "영어 문장", icon: "fas fa-book-open", theme: "#10B981", bgTheme: "#ECFDF5" },
-            { id: "sparkle", title: "Sparkle DIE", icon: "fas fa-bolt", theme: "#EC4899", bgTheme: "#FDF2F8" },
-            { id: "goldenbell", title: "도전 골든벨", icon: "fas fa-bell", theme: "#D97706", bgTheme: "#FEF3C7" },
             { id: "swarm", title: "Swarm 게임", icon: "fas fa-users", theme: "#0891B2", bgTheme: "#ECFEFF" },
             { id: "tictac", title: "Tic Tac Toe", icon: "fas fa-hashtag", theme: "#D97706", bgTheme: "#FEF3C7" },
-            { id: "tournament", title: "토너먼트 배정", icon: "fas fa-trophy", theme: "#D97706", bgTheme: "#FEF3C7" },
             { id: "file_upload", title: "파일 제출", icon: "fas fa-cloud-upload-alt", theme: "#6366F1", bgTheme: "#EEF2FF" },
             { id: "baseball", title: "야구게임", icon: "fas fa-baseball-ball", theme: "#14B8A6", bgTheme: "#CCFBF1" },
             { id: "where", title: "길 찾기 게임", icon: "fas fa-map-marker-alt", theme: "#84CC16", bgTheme: "#ECFCCB" },
             { id: "bingo", title: "빙고 게임", icon: "fas fa-star", theme: "#EC4899", bgTheme: "#FCE7F3" },
             { id: "skribble", title: "Skribble 게임", icon: "fas fa-pen-nib", theme: "#0EA5E9", bgTheme: "#E0F2FE" },
             { id: "bluemarble", title: "부루마불", icon: "fas fa-dice", theme: "#EAB308", bgTheme: "#FEF9C3" },
-            { id: "yutnori", title: "영어 윷놀이", icon: "fas fa-dice", theme: "#F59E0B", bgTheme: "#FEF3C7" },
             { id: "flip", title: "카드 뒤집기", icon: "fas fa-sync", theme: "#8B5CF6", bgTheme: "#EDE9FE" },
             { id: "sudoku", title: "스도쿠 게임", icon: "fas fa-th", theme: "#4F46E5", bgTheme: "#E0E7FF" },
             { id: "earthworm", title: "지렁이 게임", icon: "fas fa-worm", theme: "#16A34A", bgTheme: "#DCFCE7" },
@@ -351,7 +344,7 @@
         let clickCount = 0;
         let clickTimer = null;
 
-        const getAdminPassword = () => (window.WaurimalAuth ? window.WaurimalAuth.getPw() : (localStorage.getItem('waurimal_admin_pw') || "4657"));
+        const getAdminPassword = () => localStorage.getItem('admin_pw') || "1234";
 
         // 숨겨진 비밀 관리자 모드 (제목 5번 클릭)
         window.triggerAdminMode = function() {
@@ -371,7 +364,7 @@
                     alert("선생님(관리자) 모드가 종료되었습니다.");
                     renderPosts();
                 } else {
-                    const pw = prompt("선생님 전용 비밀번호를 입력하세요:");
+                    const pw = prompt("선생님 전용 비밀번호를 입력하세요 (기본값: 1234)");
                     if (pw === getAdminPassword()) {
                         isAdmin = true;
                         document.getElementById('admin-tools').style.display = 'flex'; // 도구 바 보이기
@@ -391,8 +384,6 @@
             if (newPw) {
                 const confirmPw = prompt("확인을 위해 새로운 비밀번호를 한 번 더 입력하세요:");
                 if (newPw === confirmPw) {
-                    if (window.WaurimalAuth) window.WaurimalAuth.setPw(newPw);
-                    localStorage.setItem('waurimal_admin_pw', newPw);
                     localStorage.setItem('admin_pw', newPw);
                     alert("비밀번호가 성공적으로 변경되었습니다!");
                 } else {
@@ -423,16 +414,6 @@
                 option.textContent = appItem.title;
                 selectBox.appendChild(option);
             });
-
-            // URL 파라미터로 특정 앱이 전달된 경우 자동 선택 및 개선점 탭 활성화
-            const urlParams = new URLSearchParams(window.location.search);
-            const targetAppParam = urlParams.get('app');
-            if (targetAppParam && appsData.some(a => a.id === targetAppParam)) {
-                selectBox.value = targetAppParam;
-                if (urlParams.get('tab') === 'board' || urlParams.has('app')) {
-                    switchTab('board');
-                }
-            }
 
             try {
                 app = initializeApp(firebaseConfig);

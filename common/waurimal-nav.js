@@ -717,22 +717,54 @@
             teacher: "1. 학급 명단 및 팀/개인전 참가자 명단을 입력하여 실시간 토너먼트 대진표를 자동으로 생성합니다.\n2. 부전승(BYE) 자동 계산, 룰렛/랜덤 추첨 애니메이션, 1라운드 자리 맞교환(Swap)을 지원합니다.\n3. 매치 카드 클릭으로 즉시 승자를 진출시키고 세부 점수를 기록할 수 있으며, 결승 종료 시 포디움 시상식 및 대진표 이미지(PNG) 다운로드를 제공합니다.", 
             student: "1. 랜덤 대진표에서 내 경기 상대와 대진 순서를 확인하세요.\n2. 경기를 치른 후 승리하면 다음 라운드로 진출하여 최종 우승 챔피언에 도전해 보세요! 🏆" 
         },
+        "mafia": { 
+            title: "영어 마피아 게임", 
+            icon: "🕵️‍♂️", 
+            teacher: "1. 가위바위보 및 질의응답 기반 마피아 추리 보드게임으로, 초등 3~6학년 교과서 핵심 대화(질문-대답)를 활용한 의사소통 연습 활동입니다.\n2. 개인 모드(AI 대전) 및 단체 모드(온라인 실시간 관전/동시 플레이)를 지원합니다.\n3. 오답 입력 시 3회 경고 후 감옥행, 마피아 단서 순서 셔플, 나를 제외한 지목 투표 시스템을 지원합니다.\n4. 교사 모드에서 단원별 질문-대답 세트 편집 및 학생 게임 현황 관제가 가능합니다.", 
+            student: "1. 가위바위보에서 승리하여 질문 기회를 획득하세요.\n2. 질문과 알맞은 영어 대답을 완성하여 시민들의 진술과 마피아의 거짓말 단서를 수집하세요.\n3. 바르지 않은 대답은 3번 경고를 받으면 감옥에 갇히게 됩니다!\n4. 단서들을 종합하여 거짓말을 하는 마피아를 지목해 검거하세요! 🕵️‍♂️" 
+        },
+        "seating": { 
+            title: "모둠 자리 배정", 
+            icon: "👥", 
+            teacher: "1. 6모둠 교실 좌석 배치 도구로, 25·26명 자동 확장 및 시각적 자리 배치를 지원합니다.\n2. 랜덤 섞기, 특정 학생 고정, 시각장애/건강 배려 학생 앞자리 우선 배치 등의 기능을 제공합니다.", 
+            student: "1. 선생님의 안내에 따라 새로 배정된 모둠 좌석을 확인하세요.\n2. 내 자리와 모둠원 친구들을 확인하고 바르게 이동하세요!" 
+        },
         "feedback": { title: "평가 및 의견", icon: "💬", teacher: "에듀테크 앱에 대한 의견과 건의사항을 남길 수 있습니다.", student: "좋았던 점이나 개선할 점을 자유롭게 남겨주세요!" },
         "portal": { title: "학습 놀이터", icon: "🏫", teacher: "전체 20종의 에듀테크 영어 놀이를 한눈에 탐색하고 수업에 활용하세요.", student: "다양한 영어 놀이를 골라 재미있게 학습해 보세요!" }
     };
 
     function detectApp() {
-        const path = window.location.pathname.toLowerCase();
-        if (path.includes('feedback.html')) return "feedback";
-        if (path.includes('waurimal.github.io') && (path.endsWith('index.html') || path.endsWith('/'))) return "portal";
-        for (const appId in APP_DATABASE) {
-            if (path.includes('/' + appId + '/') || path.endsWith('/' + appId) || path.includes('/' + appId)) return appId;
-        }
+        const path = (window.location.pathname || '').toLowerCase();
         const title = (document.title || '').toLowerCase();
+
+        if (path.includes('feedback.html')) return "feedback";
+
+        // 1. 등록된 게임 앱 식별 (URL 경로 기준 - 슬래시 및 역슬래시 완벽 대응)
         for (const appId in APP_DATABASE) {
-            if (title.includes(APP_DATABASE[appId].title.toLowerCase())) return appId;
+            if (appId === 'portal' || appId === 'feedback') continue;
+            if (path.includes('/' + appId + '/') || path.endsWith('/' + appId) || path.includes('/' + appId + '.') || path.includes('\\' + appId + '\\')) {
+                return appId;
+            }
         }
+
+        // 2. 문서 타이틀(document.title) 기준 식별
+        for (const appId in APP_DATABASE) {
+            if (appId === 'portal' || appId === 'feedback') continue;
+            if (title.includes(APP_DATABASE[appId].title.toLowerCase())) {
+                return appId;
+            }
+        }
+
+        // 3. 포털 메인 화면 식별
+        if (path.endsWith('/waurimal.github.io/') || path.endsWith('/waurimal.github.io/index.html') || path.endsWith('\\waurimal.github.io\\index.html') || path === '/' || path === '/index.html' || path.endsWith('/waurimal.github.io')) {
+            return "portal";
+        }
+
+        // 4. 안전 보장용 키워드 명시적 매칭
+        if (path.includes('mafia') || title.includes('마피아') || title.includes('mafia')) return "mafia";
         if (path.includes('jumpman') || title.includes('점프맨') || title.includes('jumpman')) return "jumpman";
+        if (path.includes('seating') || title.includes('자리 배정') || title.includes('seating')) return "seating";
+
         return "wordtyping";
     }
 

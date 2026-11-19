@@ -76,13 +76,15 @@ class JumpmanQuizManager {
         return [];
     }
 
-    // 부활 퀴즈 1문제 무작위 생성
-    generateQuestion() {
+    // 부활 및 아이템 획득 영어 퀴즈 생성
+    generateQuestion(options = {}) {
         const words = this.getWordPool();
         const sentences = this.getSentencePool();
 
-        // 80% 확률로 단어 퀴즈, 20% 확률로 문장 퀴즈(문장이 있을 때)
+        // 80% 단어, 20% 문장
         const useSentence = sentences.length >= 4 && Math.random() < 0.25;
+        // 단어 퀴즈 시 40% 확률로 뜻 -> 영단어 맞히기 (학습 효과 극대화)
+        const isReverseWord = !useSentence && Math.random() < 0.40;
 
         if (useSentence) {
             const target = sentences[Math.floor(Math.random() * sentences.length)];
@@ -105,6 +107,29 @@ class JumpmanQuizManager {
                 questionText: target.en,
                 ttsText: target.en,
                 answer: target.kr || target.en,
+                choices: choices
+            };
+        } else if (isReverseWord) {
+            const target = words[Math.floor(Math.random() * words.length)];
+            const distractors = [];
+            const tempPool = words.filter(w => w.en !== target.en);
+            while (distractors.length < 3 && tempPool.length > 0) {
+                const randIdx = Math.floor(Math.random() * tempPool.length);
+                distractors.push(tempPool.splice(randIdx, 1)[0]);
+            }
+
+            const choices = [
+                { text: target.en, isCorrect: true },
+                ...distractors.map(d => ({ text: d.en, isCorrect: false }))
+            ];
+            this.shuffle(choices);
+
+            this.currentQuestion = {
+                type: 'reverse_word',
+                prompt: '다음 뜻에 알맞은 영어 단어를 고르세요!',
+                questionText: target.kr,
+                ttsText: target.en,
+                answer: target.en,
                 choices: choices
             };
         } else {

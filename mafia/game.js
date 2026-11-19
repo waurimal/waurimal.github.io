@@ -32,6 +32,7 @@
     class MafiaGame {
         constructor() {
             this.mode = 'ai'; // 'ai' (개인) | 'online' (단체)
+            this.selectedUnit = '6G_L04'; // 기본: 6학년 4단원
             this.student = {
                 grade: 6,
                 classNum: 1,
@@ -75,6 +76,39 @@
 
             // 멀티플레이어 관리자 인스턴스
             this.multiplayer = null;
+            this.hostShowSecretRoles = true;
+            this.roundQuestionOrder = null;
+        }
+
+        generateRoundQuestionOrder() {
+            const indices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+            for (let i = indices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [indices[i], indices[j]] = [indices[j], indices[i]];
+            }
+            this.roundQuestionOrder = indices;
+            return indices;
+        }
+
+        getRoundQA(role = 'CITIZEN') {
+            const baseList = MafiaQuestions.getWorksheetQA(role);
+            if (!this.roundQuestionOrder || this.roundQuestionOrder.length !== baseList.length) {
+                this.generateRoundQuestionOrder();
+            }
+            return this.roundQuestionOrder.map((origIdx, idx) => {
+                const item = baseList[origIdx] || baseList[idx];
+                return {
+                    ...item,
+                    originalId: item.id,
+                    id: idx + 1,
+                    roundDisplayId: idx + 1
+                };
+            });
+        }
+
+        getRoundQAById(displayId, role = 'CITIZEN') {
+            const list = this.getRoundQA(role);
+            return list.find(q => q.id === Number(displayId)) || list[0];
         }
 
         /**
@@ -82,6 +116,7 @@
          */
         init() {
             this.loadStudentProfile();
+            this.setUnit(this.selectedUnit);
             this.bindEvents();
             this.renderHomeHof();
             this.initMultiplayer();
@@ -94,60 +129,172 @@
         // ────────────────────────────────────────────────────────
         loadStudentProfile() {
             try {
-                let saved = localStorage.getItem('WaurimalStudent') || localStorage.getItem('waurimal_student_profile');
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    if (parsed.name) this.student.name = parsed.name;
-                    if (parsed.grade) this.student.grade = Number(parsed.grade) || 6;
-                    if (parsed.classNum) this.student.classNum = Number(parsed.classNum) || 1;
-                    if (parsed.studentNum) this.student.studentNum = Number(parsed.studentNum) || 1;
+                if (window.WaurimalStudent && typeof window.WaurimalStudent.get === 'function') {
+                    const sso = window.WaurimalStudent.get();
+                    if (sso && sso.name) {
+                        this.student.name = sso.name;
+                        this.student.grade = Number(sso.grade) || 6;
+                        this.student.classNum = Number(sso.classNum) || 1;
+                        this.student.studentNum = Number(sso.studentNum) || 1;
+                    }
+                } else {
+                    let saved = localStorage.getItem('WaurimalStudent') || localStorage.getItem('waurimal_student_profile');
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        if (parsed.name) this.student.name = parsed.name;
+                        if (parsed.grade) this.student.grade = Number(parsed.grade) || 6;
+                        if (parsed.classNum) this.student.classNum = Number(parsed.classNum) || 1;
+                        if (parsed.studentNum) this.student.studentNum = Number(parsed.studentNum) || 1;
+                    }
                 }
             } catch (e) {}
 
-            // 화면 인풋 반영
-            const elName = document.getElementById('globalStudentNameInput');
-            const elGrade = document.getElementById('studentGradeSelect');
-            const elClass = document.getElementById('studentClassSelect');
-            const elNum = document.getElementById('studentNumInput');
-
-            if (elName && this.student.name && this.student.name !== '학생') elName.value = this.student.name;
-            if (elGrade) elGrade.value = String(this.student.grade);
-            if (elClass) elClass.value = String(this.student.classNum);
-            if (elNum && this.student.studentNum) elNum.value = String(this.student.studentNum);
+            // 상단 공통 네비게이션 학생 정보 변경 이벤트 수신
+            window.addEventListener('waurimal_student_updated', (e) => {
+                if (e.detail && e.detail.name) {
+                    this.student.name = e.detail.name;
+                    this.student.grade = Number(e.detail.grade) || this.student.grade;
+                    this.student.classNum = Number(e.detail.classNum) || this.student.classNum;
+                    this.student.studentNum = Number(e.detail.studentNum) || this.student.studentNum;
+                }
+            });
         }
 
         saveStudentProfile() {
-            const elName = document.getElementById('globalStudentNameInput');
-            const elGrade = document.getElementById('studentGradeSelect');
-            const elClass = document.getElementById('studentClassSelect');
-            const elNum = document.getElementById('studentNumInput');
+            if (window.WaurimalStudent && typeof window.WaurimalStudent.get === 'function') {
+                const sso = window.WaurimalStudent.get();
+                if (sso && sso.name && sso.name.trim()) {
+                    this.student.name = sso.name.trim();
+                    this.student.grade = Number(sso.grade) || 6;
+                    this.student.classNum = Number(sso.classNum) || 1;
+                    this.student.studentNum = Number(sso.studentNum) || 1;
+                    return true;
+                }
+            }
+            if (!this.student.name || this.student.name === '학생') {
+                const btn = document.getElementById('w-btn-student-profile');
+                if (btn) {
+                    alert("상단 메뉴의 [👤 학생 로그인]을 눌러 학년, 반, 번호, 이름을 먼저 설정해 주세요!");
+                    btn.click();
+                    return false;
+                }
+            }
+            return true;
+        }
 
-            const name = elName ? elName.value.trim() : '';
-            if (!name) {
-                alert("학생 본인의 실명을 입력해 주세요! (닉네임 불가)");
-                if (elName) elName.focus();
-                return false;
+        // ────────────────────────────────────────────────────────
+        // 2-B. 학습 단원 선택 (Unit Selection)
+        // ────────────────────────────────────────────────────────
+        setUnit(unitId) {
+            if (!MafiaQuestions.setCurrentUnit(unitId)) return;
+            this.selectedUnit = unitId;
+            this.roundQuestionOrder = null;
+
+            const unit = MafiaQuestions.getCurrentUnit();
+
+            // 상단 헤더 업데이트
+            const headerUnitBadge = document.getElementById('headerUnitBadge');
+            const headerUnitDesc = document.getElementById('headerUnitDesc');
+            if (headerUnitBadge) headerUnitBadge.textContent = `${unit.name} 추리`;
+            if (headerUnitDesc) headerUnitDesc.textContent = `초등 영어 ${unit.name} ${unit.title} (${unit.shortDesc})`;
+
+            // 단원 카드 활성화 스타일 업데이트
+            const unitBtns = document.querySelectorAll('.unit-card-btn');
+            unitBtns.forEach(btn => {
+                const uId = btn.dataset.unit;
+                const badge = btn.querySelector('.unit-card-badge');
+                if (uId === unitId) {
+                    btn.classList.add('active');
+                    btn.classList.remove('border-slate-800', 'bg-slate-900/60');
+                    if (badge) {
+                        badge.classList.remove('hidden', 'bg-slate-800', 'text-slate-400', 'border-slate-700');
+                        badge.classList.add('bg-rose-500/20', 'text-rose-300', 'border-rose-500/40', 'font-black');
+                        badge.textContent = '선택됨 ✔';
+                    }
+                } else {
+                    btn.classList.remove('active');
+                    btn.classList.add('border-slate-800', 'bg-slate-900/60');
+                    if (badge) {
+                        badge.classList.add('hidden');
+                        badge.textContent = '선택하기';
+                    }
+                }
+            });
+
+            // 인게임 학습지 제목 업데이트
+            const wsTitle = document.getElementById('worksheetPanelTitle');
+            if (wsTitle) wsTitle.textContent = `나의 비밀 학습지 (${unit.name} 10문항)`;
+
+            this.renderHomeHof();
+        }
+
+        // ────────────────────────────────────────────────────────
+        // 2-C. 로비 문제 읽기 & 말하기 연습 모달
+        // ────────────────────────────────────────────────────────
+        openUnitPracticeModal() {
+            const modal = document.getElementById('unitPracticeModal');
+            const list = document.getElementById('unitPracticeQuestionsList');
+            const title = document.getElementById('unitPracticeModalTitle');
+            const desc = document.getElementById('unitPracticeModalDesc');
+            const unit = MafiaQuestions.getCurrentUnit();
+
+            if (!modal) return;
+            if (title) title.innerHTML = `<i class="fa-solid fa-book-open-reader text-rose-400"></i> [${unit.name}] 10개 문항 읽기 & 말하기 연습`;
+            if (desc) desc.textContent = `${unit.title} - ${unit.shortDesc} (소리 내어 읽고 🔊 스피커로 발음을 들어보세요)`;
+
+            const qaList = MafiaQuestions.getWorksheetQA('CITIZEN');
+            if (list) {
+                list.innerHTML = qaList.map(qa => {
+                    const qText = MafiaQuestions.formatQuestion(qa);
+                    const aText = MafiaQuestions.formatAnswer(qa);
+
+                    return `
+                        <div class="practice-card-row p-3 rounded-2xl bg-slate-950 border border-slate-800 flex items-start justify-between gap-3">
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-[11px] font-black px-2 py-0.5 rounded-full bg-slate-800 text-amber-300 border border-slate-700">
+                                        Q${qa.id}
+                                    </span>
+                                    <span class="text-xs font-black text-white">${qText}</span>
+                                    ${qa.questionKr ? `<span class="text-[11px] text-slate-400 font-normal">(${qa.questionKr})</span>` : ''}
+                                </div>
+                                <div class="text-xs font-bold text-emerald-300 flex items-center gap-1.5 flex-wrap pl-6">
+                                    <span class="text-slate-500">A:</span>
+                                    <span>${aText}</span>
+                                    ${qa.answerKr ? `<span class="text-[11px] text-slate-400 font-normal">(${qa.answerKr})</span>` : ''}
+                                </div>
+                            </div>
+                            <button type="button" class="btn-tts-speaker p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-cyan-400 cursor-pointer flex-shrink-0" onclick="window.mafiaGame.speak('${qText.replace(/'/g, "\\'")} ... ${aText.replace(/'/g, "\\'")}')" title="원어민 발음 듣기">
+                                <i class="fa-solid fa-volume-high text-sm"></i>
+                            </button>
+                        </div>
+                    `;
+                }).join('');
             }
 
-            this.student.name = name;
-            this.student.grade = elGrade ? Number(elGrade.value) || 6 : 6;
-            this.student.classNum = elClass ? Number(elClass.value) || 1 : 1;
-            this.student.studentNum = elNum ? Number(elNum.value) || 1 : 1;
+            modal.classList.remove('hidden');
+        }
 
-            const profile = {
-                name: this.student.name,
-                grade: this.student.grade,
-                classNum: this.student.classNum,
-                studentNum: this.student.studentNum,
-                updatedAt: Date.now()
+        closeUnitPracticeModal() {
+            const modal = document.getElementById('unitPracticeModal');
+            if (modal) modal.classList.add('hidden');
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        }
+
+        playAllPracticeSequentially() {
+            const qaList = MafiaQuestions.getWorksheetQA('CITIZEN');
+            let idx = 0;
+            const playNext = () => {
+                const modal = document.getElementById('unitPracticeModal');
+                if (!modal || modal.classList.contains('hidden')) return;
+                if (idx >= qaList.length) return;
+                const qa = qaList[idx];
+                const text = `${MafiaQuestions.formatQuestion(qa)} ... ${MafiaQuestions.formatAnswer(qa)}`;
+                this.speak(text);
+                idx++;
+                setTimeout(playNext, 3800);
             };
-
-            try {
-                localStorage.setItem('WaurimalStudent', JSON.stringify(profile));
-                localStorage.setItem('waurimal_student_profile', JSON.stringify(profile));
-            } catch (e) {}
-
-            return true;
+            playNext();
         }
 
         // ────────────────────────────────────────────────────────
@@ -190,17 +337,24 @@
         showScreen(screenName) {
             const screenHome = document.getElementById('screen-home');
             const screenGame = document.getElementById('screen-game');
+            const screenHost = document.getElementById('screen-host');
+
+            if (this.timerInterval) clearInterval(this.timerInterval);
 
             if (screenName === 'home') {
-                if (this.timerInterval) clearInterval(this.timerInterval);
                 if (screenHome) screenHome.classList.remove('hidden');
                 if (screenGame) screenGame.classList.add('hidden');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                if (screenHost) screenHost.classList.add('hidden');
+            } else if (screenName === 'host') {
+                if (screenHome) screenHome.classList.add('hidden');
+                if (screenGame) screenGame.classList.add('hidden');
+                if (screenHost) screenHost.classList.remove('hidden');
             } else {
                 if (screenHome) screenHome.classList.add('hidden');
                 if (screenGame) screenGame.classList.remove('hidden');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                if (screenHost) screenHost.classList.add('hidden');
             }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         setMode(mode) {
@@ -243,6 +397,7 @@
             this.totalTimerDuration = timerSelect ? Number(timerSelect.value) || 180 : 180;
 
             this.round = 1;
+            this.generateRoundQuestionOrder();
             this.jailedPlayers = [];
             this.caughtMafias = [];
             this.userMemo = {};
@@ -282,6 +437,7 @@
                 role: roleAssignment[p.id],
                 isJailed: false,
                 jailedRound: 0,
+                warnings: 0,
                 escapeQuizSolved: false
             }));
 
@@ -323,12 +479,12 @@
                 roleBadge.className = 'px-3 py-1 rounded-full text-xs font-black role-badge-mafia border border-rose-400';
                 roleBadge.textContent = '🕶️ 마피아 팀';
                 roleIcon.className = 'fa-solid fa-user-secret text-5xl text-rose-500 my-2';
-                roleDesc.textContent = '학습지의 7번과 18번 대답이 일반 시민과 미세하게 다릅니다.';
+                roleDesc.textContent = '학습지 10개 문항 중 비밀 문항의 대답이 일반 시민과 미세하게 다릅니다.';
                 roleAdvice.innerHTML = `
                     <p class="text-xs text-rose-300 font-bold mb-1">💡 마피아 승리 전략:</p>
                     <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
-                        <li>시민들과 대화하며 다른 2개 답변(7번: helped my friend, 18번: my friend is sick)을 알아내세요!</li>
-                        <li>정체를 숨기고 시민인 척 거짓말을 하여 밤까지 살아남으세요.</li>
+                        <li>이어진 읽기 연습 시간에 내 비밀 답변과 시민 표준 답변의 차이를 미리 확인하세요!</li>
+                        <li>정체를 숨기고 시민인 척 거짓말(블러핑)을 하여 밤까지 살아남으세요.</li>
                         <li>밤마다 판사와 시민들의 눈을 피해 제거할 상대를 은밀히 고르세요.</li>
                     </ul>
                 `;
@@ -338,11 +494,11 @@
                 roleBadge.className = 'px-3 py-1 rounded-full text-xs font-black role-badge-judge border border-amber-400';
                 roleBadge.textContent = '⚖️ 정의의 판사';
                 roleIcon.className = 'fa-solid fa-gavel text-5xl text-amber-400 my-2';
-                roleDesc.textContent = '일반 시민과 동일한 20개 질문-대답을 가지고 있습니다.';
+                roleDesc.textContent = '일반 시민과 동일한 10개 질문-대답을 가지고 있습니다.';
                 roleAdvice.innerHTML = `
                     <p class="text-xs text-amber-300 font-bold mb-1">💡 판사 승리 전략:</p>
                     <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
-                        <li>대화 중 7번, 18번에 이상한 대답을 하는 마피아를 꼼꼼히 조사하세요.</li>
+                        <li>대화 중 10개 표준 정답과 다른 이상한 대답을 하는 마피아를 꼼꼼히 조사하세요.</li>
                         <li>저녁 투표 후 최종 법정에 오른 용의자 중 진짜 마피아를 판결봉으로 가두세요!</li>
                         <li>마피아 2~3명을 모두 체포하면 시민 팀의 압도적 승리입니다.</li>
                     </ul>
@@ -353,7 +509,7 @@
                 roleBadge.className = 'px-3 py-1 rounded-full text-xs font-black role-badge-citizen border border-emerald-400';
                 roleBadge.textContent = '🤝 무고한 시민';
                 roleIcon.className = 'fa-solid fa-users text-5xl text-emerald-400 my-2';
-                roleDesc.textContent = '학습지에 20개의 정답이 완벽하게 적혀 있습니다.';
+                roleDesc.textContent = '학습지에 10개의 정답이 완벽하게 적혀 있습니다.';
                 roleAdvice.innerHTML = `
                     <p class="text-xs text-emerald-300 font-bold mb-1">💡 시민 승리 전략:</p>
                     <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
@@ -392,9 +548,102 @@
                 }
                 if (tearBtn) tearBtn.disabled = false;
 
-                // 아침 조사 페이즈 시작
-                this.startMorningPhase();
+                // 신분 확인 후 아이들이 문제를 읽고 연습할 시간 제공!
+                this.startPracticePhase();
             }, 750);
+        }
+
+        // ────────────────────────────────────────────────────────
+        // 6-B. 인게임 학습지 확인 & 말하기 연습 시간 (Practice Phase)
+        // ────────────────────────────────────────────────────────
+        startPracticePhase() {
+            this.phase = 'PRACTICE';
+            const modal = document.getElementById('inGamePracticeModal');
+            const listContainer = document.getElementById('inGamePracticeList');
+            const adviceBox = document.getElementById('inGamePracticeAdviceBox');
+            const roleBadge = document.getElementById('inGamePracticeMyRoleBadge');
+            const roundBadge = document.getElementById('practiceRoundBadge');
+
+            if (!modal) {
+                this.startMorningPhase();
+                return;
+            }
+
+            if (roundBadge) roundBadge.textContent = `제 ${this.round}라운드 학습지 확인 & 말하기 연습`;
+
+            if (roleBadge) {
+                if (this.currentRole === 'MAFIA') {
+                    roleBadge.className = 'px-3 py-1 rounded-full text-xs font-black role-badge-mafia border border-rose-400';
+                    roleBadge.textContent = '🕶️ 내 신분: 마피아';
+                } else if (this.currentRole === 'JUDGE') {
+                    roleBadge.className = 'px-3 py-1 rounded-full text-xs font-black role-badge-judge border border-amber-400';
+                    roleBadge.textContent = '⚖️ 내 신분: 판사';
+                } else {
+                    roleBadge.className = 'px-3 py-1 rounded-full text-xs font-black role-badge-citizen border border-emerald-400';
+                    roleBadge.textContent = '🤝 내 신분: 시민';
+                }
+            }
+
+            if (adviceBox) {
+                if (this.currentRole === 'MAFIA') {
+                    adviceBox.innerHTML = `
+                        <div class="text-rose-400 font-black mb-1 flex items-center gap-1.5">
+                            <i class="fa-solid fa-user-secret"></i> 🕶️ 마피아 미션 안내:
+                        </div>
+                        <p class="text-slate-300 mb-1">당신의 학습지에는 일반 시민과 대답이 다른 <strong class="text-rose-300">비밀 문항</strong>이 포함되어 있습니다!</p>
+                        <p class="text-slate-400">아래 10개 질문과 대답을 미리 읽어보고, 조사 중 친구들에게 들키지 않도록 시민인 척 대답을 준비해 보세요.</p>
+                    `;
+                } else {
+                    adviceBox.innerHTML = `
+                        <div class="text-emerald-400 font-black mb-1 flex items-center gap-1.5">
+                            <i class="fa-solid fa-graduation-cap"></i> 🤝 ${this.currentRole === 'JUDGE' ? '판사' : '시민'} 미션 안내:
+                        </div>
+                        <p class="text-slate-300 mb-1">내 학습지의 10개 질문과 정답을 눈에 익히고 스피커(🔊)를 눌러 소리 내어 연습하세요.</p>
+                        <p class="text-slate-400">가위바위보 대결 후 상대방에게 질문했을 때, 아래 정답과 다른 대답을 하는 친구가 바로 <strong>마피아</strong>입니다!</p>
+                    `;
+                }
+            }
+
+            const qaList = this.getRoundQA(this.currentRole);
+            if (listContainer) {
+                listContainer.innerHTML = qaList.map(qa => {
+                    const qText = MafiaQuestions.formatQuestion(qa);
+                    const aText = MafiaQuestions.formatAnswer(qa);
+                    const isDiff = qa.isMafiaDifference;
+
+                    return `
+                        <div class="practice-card-row p-3 rounded-2xl bg-slate-950 border ${isDiff ? 'border-rose-500/60 bg-rose-950/20' : 'border-slate-800'} flex items-start justify-between gap-3">
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-[11px] font-black px-2 py-0.5 rounded-full ${isDiff ? 'bg-rose-500/30 text-rose-300 border border-rose-500/40' : 'bg-slate-800 text-amber-300'}">
+                                        Q${qa.id}
+                                    </span>
+                                    <span class="text-xs font-black text-white">${qText}</span>
+                                    ${qa.questionKr ? `<span class="text-[11px] text-slate-400 font-normal">(${qa.questionKr})</span>` : ''}
+                                    ${isDiff ? '<span class="text-[10px] font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/30">⚠️ 마피아 비밀 문항</span>' : ''}
+                                </div>
+                                <div class="text-xs font-bold text-emerald-300 flex items-center gap-1.5 flex-wrap pl-6">
+                                    <span class="text-slate-500">A:</span>
+                                    <span>${aText}</span>
+                                    ${qa.answerKr ? `<span class="text-[11px] text-slate-400 font-normal">(${qa.answerKr})</span>` : ''}
+                                </div>
+                            </div>
+                            <button type="button" class="btn-tts-speaker p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-cyan-400 cursor-pointer flex-shrink-0" onclick="window.mafiaGame.speak('${qText.replace(/'/g, "\\'")} ... ${aText.replace(/'/g, "\\'")}')" title="원어민 발음 듣기">
+                                <i class="fa-solid fa-volume-high text-sm"></i>
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        finishPracticeAndStartMorning() {
+            const modal = document.getElementById('inGamePracticeModal');
+            if (modal) modal.classList.add('hidden');
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            this.startMorningPhase();
         }
 
         // ────────────────────────────────────────────────────────
@@ -403,6 +652,9 @@
         startMorningPhase() {
             this.phase = 'MORNING';
             this.timerSeconds = this.totalTimerDuration;
+            if (!this.roundQuestionOrder) {
+                this.generateRoundQuestionOrder();
+            }
             this.renderIngameHeader();
             this.renderClassmatesArea();
             this.renderWorksheetTable();
@@ -487,6 +739,35 @@
                     badgeMyRole.className = 'px-3 py-1 rounded-full text-xs font-black role-badge-citizen border border-emerald-400';
                 }
             }
+
+            // 경고 배지 업데이트
+            const badgeWarning = document.getElementById('headerWarningBadge');
+            let currentWarnings = 0;
+            let isUserJailed = false;
+            if (this.multiplayer?.isMultiplayer && this.multiplayer?.roomData) {
+                const myP = this.multiplayer.roomData.players?.[this.multiplayer.mySessionId];
+                currentWarnings = myP?.warnings || 0;
+                isUserJailed = !!myP?.isJailed;
+            } else {
+                const userP = this.players.find(p => p.isUser);
+                currentWarnings = userP?.warnings || 0;
+                isUserJailed = !!userP?.isJailed;
+            }
+
+            if (badgeWarning) {
+                if (currentWarnings > 0 || isUserJailed) {
+                    badgeWarning.classList.remove('hidden');
+                    if (isUserJailed || currentWarnings >= 3) {
+                        badgeWarning.className = 'px-3 py-1 rounded-full text-xs font-black bg-rose-600 text-white border border-rose-400 animate-pulse';
+                        badgeWarning.textContent = `🚨 감옥 수감 (경고 ${Math.max(currentWarnings, 3)}/3)`;
+                    } else {
+                        badgeWarning.className = 'px-3 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-500/40';
+                        badgeWarning.textContent = `⚠️ 경고 ${currentWarnings}/3`;
+                    }
+                } else {
+                    badgeWarning.classList.add('hidden');
+                }
+            }
         }
 
         // ────────────────────────────────────────────────────────
@@ -496,6 +777,25 @@
             const container = document.getElementById('classmatesListContainer');
             if (!container) return;
             container.innerHTML = '';
+
+            const userPlayer = this.players.find(p => p.isUser);
+            const isUserJailed = userPlayer ? userPlayer.isJailed : false;
+
+            if (isUserJailed) {
+                const jailedNotice = document.createElement('div');
+                jailedNotice.className = 'col-span-full p-3.5 mb-2 rounded-2xl bg-rose-950/60 border border-rose-500/60 text-rose-200 text-xs font-black flex items-center justify-between shadow-lg';
+                jailedNotice.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">🔒</span>
+                        <div>
+                            <div>경고 3회 누적으로 감옥에 수감되어 있습니다!</div>
+                            <div class="text-[10px] text-rose-300 font-normal">수감 중에는 급우들과 대화/대결할 수 없습니다. 새벽 페이즈의 탈출 퀴즈를 기다리세요.</div>
+                        </div>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full bg-rose-600 text-white text-[10px] font-bold">대결 불가</span>
+                `;
+                container.appendChild(jailedNotice);
+            }
 
             const activeClassmates = this.players.filter(p => !p.isUser);
 
@@ -550,8 +850,8 @@
 
                     <!-- 대화 / 가위바위보 신청 버튼 -->
                     <div>
-                        <button type="button" class="btn-challenge-duel w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" ${isJailed || this.phase !== 'MORNING' ? 'disabled' : ''}>
-                            <i class="fa-solid fa-hand-fist"></i> 만나서 가위바위보 대결
+                        <button type="button" class="btn-challenge-duel w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" ${isJailed || isUserJailed || this.phase !== 'MORNING' ? 'disabled' : ''}>
+                            <i class="fa-solid fa-hand-fist"></i> ${isUserJailed ? '감옥 수감 중 (대결 불가)' : '만나서 가위바위보 대결'}
                         </button>
                     </div>
                 `;
@@ -597,7 +897,7 @@
 
             return list.map(item => `
                 <div class="flex items-center justify-between border-b border-slate-800/80 pb-0.5">
-                    <span>Q${item.qId}: Why are you ${item.emotion}?</span>
+                    <span class="truncate max-w-[150px]" title="${item.questionText || ''}">Q${item.qId}: ${item.questionText || item.emotion}</span>
                     <span class="${item.matched ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}">
                         ${item.matched ? '일치 ✔' : '불일치 ❌'}
                     </span>
@@ -689,24 +989,31 @@
             }, 1000);
         }
 
-        // 이긴 경우: 20문항 중 질문 선택
+        // 이긴 경우: 10문항 중 질문 선택
         openDuelAskStep() {
             const duelStepAsk = document.getElementById('duelStepAsk');
             const selectQ = document.getElementById('duelAskQuestionSelect');
             const qPreview = document.getElementById('duelAskQuestionPreview');
             if (!duelStepAsk || !selectQ) return;
 
-            selectQ.innerHTML = MafiaQuestions.CITIZEN_QA.map(q => `
-                <option value="${q.id}">
-                    [${q.id}번] Why are you ${q.emotion}? (${q.emotionKr})
-                </option>
-            `).join('');
+            const qaList = this.getRoundQA('CITIZEN');
+
+            selectQ.innerHTML = qaList.map(q => {
+                const qText = MafiaQuestions.formatQuestion(q);
+                const hint = q.questionKr || q.emotionKr || q.action || '';
+                return `
+                    <option value="${q.id}">
+                        [${q.id}번] ${qText} ${hint ? `(${hint})` : ''}
+                    </option>
+                `;
+            }).join('');
 
             const updatePreview = () => {
                 const curId = Number(selectQ.value);
-                const qa = MafiaQuestions.getQAById(curId);
+                const qa = this.getRoundQAById(curId, 'CITIZEN');
+                const qText = MafiaQuestions.formatQuestion(qa);
                 if (qPreview) {
-                    qPreview.textContent = `🗣️ "Why are you ${qa.emotion}?"`;
+                    qPreview.textContent = `🗣️ "${qText}"`;
                 }
             };
 
@@ -720,41 +1027,41 @@
             if (!this.activeDuel) return;
             const selectQ = document.getElementById('duelAskQuestionSelect');
             const qId = Number(selectQ ? selectQ.value : 1);
-            const qaCitizen = MafiaQuestions.getQAById(qId, 'CITIZEN');
+            const qaCitizen = this.getRoundQAById(qId, 'CITIZEN');
             const targetMate = this.activeDuel.target;
 
             // 영어 질문 음성 재생
-            const questionSentence = MafiaQuestions.formatQuestion(qaCitizen.emotion);
+            const questionSentence = MafiaQuestions.formatQuestion(qaCitizen);
             this.speak(questionSentence);
             this.stats.questionsAsked++;
 
             // AI 봇 대답 결정
-            // 봇이 마피아이고 7번 or 18번 질문이면 마피아 대답(helped my mom / my dad is sick)을 함
-            // 단, 난이도나 라운드에 따라 봇이 시민 답을 알아냈다면 블러핑 가능
             const botRole = targetMate.role;
             let botAnswer = '';
             let isMatched = true;
 
             if (botRole === 'MAFIA') {
-                const qaMafia = MafiaQuestions.getQAById(qId, 'MAFIA');
-                botAnswer = MafiaQuestions.formatAnswer(qaMafia.reason);
+                const qaMafia = this.getRoundQAById(qId, 'MAFIA');
+                botAnswer = MafiaQuestions.formatAnswer(qaMafia);
                 if (qaMafia.isMafiaDifference) {
                     isMatched = false; // 대답이 다름!
                 }
             } else {
-                botAnswer = MafiaQuestions.formatAnswer(qaCitizen.reason);
+                botAnswer = MafiaQuestions.formatAnswer(qaCitizen);
                 isMatched = true;
             }
 
             // 인터뷰 기록 저장
+            if (!this.userInterviews[targetMate.id]) this.userInterviews[targetMate.id] = [];
             this.userInterviews[targetMate.id].push({
                 qId: qId,
-                emotion: qaCitizen.emotion,
+                questionText: questionSentence,
+                emotion: qaCitizen.emotion || qaCitizen.action || questionSentence,
                 botAnswer: botAnswer,
                 matched: isMatched
             });
 
-            this.showDuelResultStep(questionSentence, botAnswer, isMatched);
+            this.showDuelResultStep(questionSentence, botAnswer, isMatched, false);
         }
 
         // 진 경우: 상대방이 나에게 질문 -> 내가 대답
@@ -763,30 +1070,30 @@
             const questionBubble = document.getElementById('botAskedQuestionBubble');
             const answerOptionsContainer = document.getElementById('userAnswerOptionsContainer');
 
-            // 봇이 20문항 중 무작위 질문 선택
-            const randId = Math.floor(1 + Math.random() * 20);
-            const qa = MafiaQuestions.getQAById(randId);
-            const botQuestion = MafiaQuestions.formatQuestion(qa.emotion);
+            const myWorksheetQA = this.getRoundQA(this.currentRole);
+            const randIdx = Math.floor(Math.random() * myWorksheetQA.length);
+            const myCorrectQA = myWorksheetQA[randIdx];
+            const randId = myCorrectQA.id;
+
+            const qaCitizen = this.getRoundQAById(randId, 'CITIZEN');
+            const botQuestion = MafiaQuestions.formatQuestion(qaCitizen);
 
             if (questionBubble) questionBubble.textContent = `🗣️ ${this.activeDuel.target.name}: "${botQuestion}"`;
             this.speak(botQuestion);
 
-            // 사용자가 선택할 대답 옵션 (내 역할에 맞는 정답 + 오답 보기들)
-            const myWorksheetQA = MafiaQuestions.getWorksheetQA(this.currentRole);
-            const myCorrectQA = myWorksheetQA.find(q => q.id === randId);
-            const myCorrectAnswer = MafiaQuestions.formatAnswer(myCorrectQA.reason);
+            const myCorrectAnswer = MafiaQuestions.formatAnswer(myCorrectQA);
 
             // 오답 보기 2개 무작위 추출
             const wrongCandidates = myWorksheetQA.filter(q => q.id !== randId);
             const shuffled = wrongCandidates.sort(() => Math.random() - 0.5);
             const optionAnswers = [
                 myCorrectAnswer,
-                MafiaQuestions.formatAnswer(shuffled[0].reason),
-                MafiaQuestions.formatAnswer(shuffled[1].reason)
+                MafiaQuestions.formatAnswer(shuffled[0]),
+                MafiaQuestions.formatAnswer(shuffled[1])
             ].sort(() => Math.random() - 0.5);
 
             answerOptionsContainer.innerHTML = optionAnswers.map(ans => `
-                <button type="button" class="btn-answer-choice w-full py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-left text-xs font-bold text-white transition flex items-center justify-between">
+                <button type="button" class="btn-answer-choice w-full py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-left text-xs font-bold text-white transition flex items-center justify-between cursor-pointer">
                     <span>${ans}</span>
                     <i class="fa-solid fa-volume-high text-slate-400"></i>
                 </button>
@@ -798,14 +1105,14 @@
                     const chosenText = b.querySelector('span').textContent;
                     this.speak(chosenText);
                     const isCorrect = (chosenText === myCorrectAnswer);
-                    this.showDuelResultStep(botQuestion, chosenText, isCorrect);
+                    this.showDuelResultStep(botQuestion, chosenText, isCorrect, true);
                 });
             });
 
             duelStepAnswer.classList.remove('hidden');
         }
 
-        showDuelResultStep(questionText, answerText, isSuccess) {
+        showDuelResultStep(questionText, answerText, isSuccess, isUserAnswer = false) {
             const duelStepAsk = document.getElementById('duelStepAsk');
             const duelStepAnswer = document.getElementById('duelStepAnswer');
             const duelStepResult = document.getElementById('duelStepResult');
@@ -814,27 +1121,85 @@
             if (duelStepAsk) duelStepAsk.classList.add('hidden');
             if (duelStepAnswer) duelStepAnswer.classList.add('hidden');
 
+            const userPlayer = this.players.find(p => p.isUser);
+            let warningBoxHtml = '';
+
+            if (isUserAnswer) {
+                if (!isSuccess && userPlayer) {
+                    userPlayer.warnings = (userPlayer.warnings || 0) + 1;
+                    this.playSound('wrong');
+
+                    if (userPlayer.warnings >= 3) {
+                        userPlayer.isJailed = true;
+                        userPlayer.jailedBy = '경고 3회 누적 (부적절한 대답)';
+                        userPlayer.jailedRound = this.round;
+                        if (!this.jailedPlayers.some(p => p.id === userPlayer.id)) {
+                            this.jailedPlayers.push(userPlayer);
+                        }
+                        this.logJournal(`🚨 [감옥 수감] ${userPlayer.name}(나) 학생이 바르지 않은 대답으로 경고 3회가 누적되어 즉시 감옥에 수감되었습니다!`);
+                        warningBoxHtml = `
+                            <div class="p-3.5 rounded-xl bg-rose-950/80 border-2 border-rose-500 text-rose-200 space-y-1">
+                                <div class="font-black text-xs flex items-center justify-between">
+                                    <span>🚨 [경고 3회 누적] 바르지 않은 대답을 하였습니다!</span>
+                                    <span class="px-2 py-0.5 rounded bg-rose-600 text-white font-black text-[10px] animate-pulse">🔒 감옥 수감</span>
+                                </div>
+                                <p class="text-[11px] text-rose-300">경고 3회가 누적되어 즉시 감옥에 수감되었습니다. 수감 중에는 아침 조사 및 대결이 불가능합니다.</p>
+                            </div>
+                        `;
+                    } else {
+                        this.logJournal(`⚠️ [경고 부여] ${userPlayer.name}(나) 학생이 바르지 않은 대답을 하여 경고를 받았습니다. (누적: ${userPlayer.warnings}/3회)`);
+                        warningBoxHtml = `
+                            <div class="p-3 rounded-xl bg-amber-950/60 border border-amber-500/50 text-amber-200 space-y-1">
+                                <div class="font-black text-xs flex items-center justify-between">
+                                    <span>⚠️ [경고 부여] 바르지 않은 대답을 하였습니다! (현재 경고: ${userPlayer.warnings}/3회)</span>
+                                </div>
+                                <p class="text-[11px] text-amber-300">경고 3회가 누적되면 감옥에 수감되니 올바른 표현을 확인하세요!</p>
+                            </div>
+                        `;
+                    }
+                } else if (isSuccess) {
+                    this.playSound('correct');
+                    warningBoxHtml = `
+                        <div class="p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-1.5">
+                            <i class="fa-solid fa-check"></i> 올바른 대답입니다! 학습지에 맞는 영어 표현을 잘 말했습니다.
+                        </div>
+                    `;
+                }
+            }
+
             resultBox.innerHTML = `
                 <div class="p-4 rounded-2xl bg-slate-900 border ${isSuccess ? 'border-emerald-500/50' : 'border-rose-500/50'} space-y-2">
                     <div class="text-xs text-slate-400">질문 (Question):</div>
                     <div class="text-sm font-black text-amber-300">"${questionText}"</div>
                     <div class="text-xs text-slate-400 mt-2">대답 (Answer):</div>
                     <div class="text-sm font-black ${isSuccess ? 'text-emerald-400' : 'text-rose-400'}">"${answerText}"</div>
-                    <div class="text-xs font-bold pt-2 border-t border-slate-800 ${isSuccess ? 'text-emerald-300' : 'text-rose-300'}">
-                        ${isSuccess ? '✔ 시민의 표준 답변과 일치합니다.' : '🚨 [경고] 시민의 표준 답변과 다릅니다! 마피아일 확률이 높습니다!'}
-                    </div>
+                    ${!isUserAnswer ? `
+                        <div class="text-xs font-bold pt-2 border-t border-slate-800 ${isSuccess ? 'text-emerald-300' : 'text-rose-300'}">
+                            ${isSuccess ? '✔ 시민의 표준 답변과 일치합니다.' : '🚨 [마피아 단서] 시민의 표준 답변과 다릅니다! 마피아일 확률이 매우 높습니다!'}
+                        </div>
+                    ` : ''}
+                    ${warningBoxHtml}
                 </div>
             `;
 
             duelStepResult.classList.remove('hidden');
             this.renderClassmatesArea();
-            this.logJournal(`💬 대화 기록: ${questionText} ➔ ${answerText} (${isSuccess ? '일치' : '불일치 ❌'})`);
+            this.renderIngameHeader();
+            this.logJournal(`💬 대화 기록: ${questionText} ➔ ${answerText} (${isSuccess ? '성공/일치' : '실패/불일치 ❌'})`);
         }
 
         closeDuelModal() {
             const modal = document.getElementById('duelModal');
             if (modal) modal.classList.add('hidden');
             this.activeDuel = null;
+
+            const userPlayer = this.players.find(p => p.isUser);
+            if (userPlayer && userPlayer.isJailed && userPlayer.warnings >= 3 && !userPlayer._jailAlertShown) {
+                userPlayer._jailAlertShown = true;
+                alert('🚨 경고가 3회 누적되어 감옥에 수감되었습니다!\n수감 중에는 아침 조사 및 대결 참여가 제한됩니다. 새벽에 영어 특별 탈출 퀴즈를 기대하세요!');
+                this.renderClassmatesArea();
+                this.renderIngameHeader();
+            }
         }
 
         // AI 봇들끼리의 조사 시뮬레이션 로그 생성
@@ -855,11 +1220,19 @@
                     bot2 = activeBots[Math.floor(Math.random() * activeBots.length)];
                 }
 
-                const randQ = MafiaQuestions.CITIZEN_QA[Math.floor(Math.random() * MafiaQuestions.CITIZEN_QA.length)];
-                const isDiff = (bot2.role === 'MAFIA' && (randQ.id === 7 || randQ.id === 18));
-                const ans = isDiff ? MafiaQuestions.getQAById(randQ.id, 'MAFIA').reason : randQ.reason;
+                const citizenQA = this.getRoundQA('CITIZEN');
+                const randQ = citizenQA[Math.floor(Math.random() * citizenQA.length)];
+                const qText = MafiaQuestions.formatQuestion(randQ);
+                let ansText = '';
 
-                this.logJournal(`👀 [주변 대화] ${bot1.name} ➔ ${bot2.name}: "Why are you ${randQ.emotion}?" | 대답: "${ans}"`);
+                if (bot2.role === 'MAFIA') {
+                    const mafiaQA = this.getRoundQAById(randQ.id, 'MAFIA');
+                    ansText = MafiaQuestions.formatAnswer(mafiaQA);
+                } else {
+                    ansText = MafiaQuestions.formatAnswer(randQ);
+                }
+
+                this.logJournal(`👀 [주변 대화] ${bot1.name} ➔ ${bot2.name}: "${qText}" | 대답: "${ansText}"`);
             }, 12000);
         }
 
@@ -883,7 +1256,8 @@
             desc.textContent = `주의: 이유는 말하지 않고 의심되는 친구 이름만 선택합니다. (최종 법정 용의자: ${targetCount}명 선출)`;
 
             container.innerHTML = '';
-            const eligiblePlayers = this.players.filter(p => !p.isJailed);
+            // 나를 제외하고 지목 대상 후보 표시 (수감자 및 본인 제외)
+            const eligiblePlayers = this.players.filter(p => !p.isJailed && !p.isUser);
 
             eligiblePlayers.forEach(p => {
                 const memo = this.userMemo[p.id] || {};
@@ -894,7 +1268,7 @@
                     <div class="flex items-center gap-3">
                         <span class="text-2xl">${p.avatar || '👦'}</span>
                         <div>
-                            <div class="text-sm font-black text-white">${p.name} ${p.isUser ? '(나)' : ''}</div>
+                            <div class="text-sm font-black text-white">${p.name}</div>
                             <div class="text-[10px] text-slate-400">${memo.note ? '메모: ' + memo.note : '특이사항 없음'}</div>
                         </div>
                     </div>
@@ -1250,6 +1624,8 @@
                 if (userPlayer) {
                     userPlayer.isJailed = false;
                     userPlayer.escapeQuizSolved = true;
+                    userPlayer.warnings = 0;
+                    userPlayer._jailAlertShown = false;
                 }
                 alert("🎉 정답입니다! 영어 특별 문제를 맞혀 기적적으로 감옥 탈출에 성공했습니다!");
                 this.logJournal(`🏃💨 [탈출 성공] 내가 영어 특별 문제를 맞혀 감옥에서 탈출했습니다!`);
@@ -1268,6 +1644,8 @@
                     this.finishGame();
                 } else {
                     this.round++;
+                    this.generateRoundQuestionOrder();
+                    this.renderWorksheetTable();
                     this.startMorningPhase();
                 }
             }, 1500);
@@ -1369,27 +1747,37 @@
         // ────────────────────────────────────────────────────────
         renderWorksheetTable() {
             const container = document.getElementById('myWorksheetList');
+            const titleEl = document.getElementById('worksheetPanelTitle');
+            const unit = MafiaQuestions.getCurrentUnit();
+
+            if (titleEl) titleEl.textContent = `나의 비밀 학습지 (${unit.name} 10문항)`;
             if (!container) return;
 
-            const qaList = MafiaQuestions.getWorksheetQA(this.currentRole);
-            container.innerHTML = qaList.map(qa => `
-                <div class="worksheet-item p-2.5 rounded-xl border border-slate-800 flex items-start justify-between text-xs gap-2 ${qa.isMafiaDifference ? 'is-mafia-diff' : ''}">
-                    <div class="flex-1">
-                        <div class="font-bold text-amber-300">
-                            [${qa.id}번] Why are you ${qa.emotion}?
-                            <span class="text-[10px] text-slate-400 font-normal">(${qa.emotionKr})</span>
+            const qaList = this.getRoundQA(this.currentRole);
+            container.innerHTML = qaList.map(qa => {
+                const qText = MafiaQuestions.formatQuestion(qa);
+                const aText = MafiaQuestions.formatAnswer(qa);
+                const isDiff = qa.isMafiaDifference;
+
+                return `
+                    <div class="worksheet-item p-2.5 rounded-xl border border-slate-800 flex items-start justify-between text-xs gap-2 ${isDiff ? 'is-mafia-diff' : ''}">
+                        <div class="flex-1">
+                            <div class="font-bold text-amber-300">
+                                [${qa.id}번] ${qText}
+                                ${qa.questionKr ? `<span class="text-[10px] text-slate-400 font-normal">(${qa.questionKr})</span>` : ''}
+                            </div>
+                            <div class="font-semibold text-slate-200 mt-0.5">
+                                ${aText}
+                                ${qa.answerKr ? `<span class="text-[10px] text-slate-400 font-normal">(${qa.answerKr})</span>` : ''}
+                            </div>
+                            ${isDiff ? '<div class="text-[10px] text-rose-400 font-bold mt-1">※ 일반 시민과 대답이 다른 비밀 문항입니다! 들키지 않게 주의하세요.</div>' : ''}
                         </div>
-                        <div class="font-semibold text-slate-200 mt-0.5">
-                            Because I ${qa.reason}.
-                            <span class="text-[10px] text-slate-400 font-normal">(${qa.reasonKr})</span>
-                        </div>
-                        ${qa.isMafiaDifference ? '<div class="text-[10px] text-rose-400 font-bold mt-1">※ 일반 시민과 대답이 다른 비밀 문항입니다! 들키지 않게 주의하세요.</div>' : ''}
+                        <button type="button" class="btn-listen-qa p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white cursor-pointer" onclick="window.mafiaGame.speak('${qText.replace(/'/g, "\\'")} ... ${aText.replace(/'/g, "\\'")}')" title="발음 듣기">
+                            <i class="fa-solid fa-volume-high"></i>
+                        </button>
                     </div>
-                    <button type="button" class="btn-listen-qa p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white" onclick="window.mafiaGame.speak('Why are you ${qa.emotion}? Because I ${qa.reason}.')" title="발음 듣기">
-                        <i class="fa-solid fa-volume-high"></i>
-                    </button>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         logJournal(msg) {
@@ -1598,7 +1986,8 @@
             try {
                 const roomId = await this.multiplayer.createRoom(this.student, {
                     mafiaCount: mCountSelect ? Number(mCountSelect.value) : 2,
-                    morningTimer: timerSelect ? Number(timerSelect.value) : 180
+                    morningTimer: timerSelect ? Number(timerSelect.value) : 180,
+                    unitId: this.selectedUnit || '6G_L04'
                 });
 
                 this.openWaitingRoomModal(roomId);
@@ -1645,49 +2034,760 @@
                 return;
             }
 
-            // 대기실 참가자 목록 갱신
-            const pList = document.getElementById('waitingRoomPlayersList');
-            if (pList && data.players) {
-                const countBadge = document.getElementById('waitingRoomCountBadge');
-                const playersArray = Object.values(data.players);
-                if (countBadge) countBadge.textContent = `${playersArray.length}명 참여 중`;
-
-                pList.innerHTML = playersArray.map(p => `
-                    <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-between text-xs">
-                        <div class="flex items-center gap-2">
-                            <span class="text-xl">👦</span>
-                            <span class="font-bold text-white">${p.name} ${p.id === this.multiplayer.mySessionId ? '(나)' : ''}</span>
-                        </div>
-                        ${p.isHost ? '<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">방장</span>' : '<span class="text-[10px] text-slate-400">준비 완료</span>'}
-                    </div>
-                `).join('');
+            // 단원 동기화
+            if (data.config && data.config.unitId && this.selectedUnit !== data.config.unitId) {
+                this.setUnit(data.config.unitId);
             }
 
-            // 게임 시작 페이즈 전환 동기화
-            if (data.state === 'ROLE_REVEAL' && this.phase === 'LOBBY') {
-                const waitModal = document.getElementById('waitingRoomModal');
-                if (waitModal) waitModal.classList.add('hidden');
+            // 대기실 상태인 경우
+            if (data.state === 'LOBBY') {
+                this.renderWaitingRoomParticipants(data);
+                return;
+            }
 
-                const myPlayer = data.players[this.multiplayer.mySessionId];
-                if (myPlayer) {
-                    this.currentRole = myPlayer.role;
+            // 게임 진행 중: 대기실 모달 닫기
+            const waitModal = document.getElementById('waitingRoomModal');
+            if (waitModal) waitModal.classList.add('hidden');
+
+            // 방장(관전 모드) vs 학생(플레이어 모드) 분기
+            if (this.multiplayer && this.multiplayer.isHost) {
+                this.handleHostState(data);
+            } else {
+                this.handleStudentState(data);
+            }
+        }
+
+        renderWaitingRoomParticipants(data) {
+            const pList = document.getElementById('waitingRoomPlayersList');
+            const countBadge = document.getElementById('waitingRoomCountBadge');
+            const startBtn = document.getElementById('waitingRoomStartBtn');
+
+            if (!pList || !data.players) return;
+
+            const playersArray = Object.values(data.players);
+            const studentCount = playersArray.filter(p => !p.isHost).length;
+            
+            if (countBadge) {
+                countBadge.textContent = `학생 ${studentCount}명 참가 (선생님 관전)`;
+            }
+
+            if (startBtn && this.multiplayer.isHost) {
+                startBtn.textContent = `🎮 전 학급 동시 게임 시작 (학생 ${studentCount}명)`;
+                startBtn.disabled = (studentCount < 2);
+                if (studentCount < 2) {
+                    startBtn.title = "최소 2명 이상의 학생이 참가해야 합니다.";
+                } else {
+                    startBtn.title = "클릭 시 모든 학생 화면에 신분 카드가 동시에 배정됩니다.";
                 }
-                this.players = Object.values(data.players).map(p => ({
+            }
+
+            pList.innerHTML = playersArray.map(p => `
+                <div class="p-3 rounded-xl bg-slate-900 border ${p.isHost ? 'border-amber-500/50 bg-amber-950/20' : 'border-slate-700'} flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-2.5">
+                        <span class="text-xl">${p.isHost ? '👑' : '👦'}</span>
+                        <div>
+                            <span class="font-bold text-white">${p.name} ${p.id === this.multiplayer.mySessionId ? '(나)' : ''}</span>
+                            ${!p.isHost ? `<span class="text-[10px] text-slate-400 block">${p.grade}학년 ${p.classNum}반 ${p.studentNum}번</span>` : '<span class="text-[10px] text-amber-300 block">진행 및 관전 통제</span>'}
+                        </div>
+                    </div>
+                    ${p.isHost ? '<span class="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">선생님 (관전)</span>' : '<span class="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">참여 완료 ✔</span>'}
+                </div>
+            `).join('');
+        }
+
+        // ────────────────────────────────────────────────────────
+        // [방장/교사 전용] 관전 대시보드 및 학급 전체 동기화 제어
+        // ────────────────────────────────────────────────────────
+        handleHostState(data) {
+            this.showScreen('host');
+            this.renderHostDashboard(data);
+        }
+
+        renderHostDashboard(data) {
+            const unit = MafiaQuestions.getCurrentUnit();
+
+            // 1. 헤더 배지 업데이트
+            const codeBadge = document.getElementById('hostRoomCodeBadge');
+            const unitBadge = document.getElementById('hostUnitBadge');
+            const roundBadge = document.getElementById('hostRoundBadge');
+            const phaseTitle = document.getElementById('hostCurrentPhaseTitle');
+            const actionInst = document.getElementById('hostPhaseActionInstruction');
+            const giantTimer = document.getElementById('hostGiantTimerDisplay');
+
+            if (codeBadge) codeBadge.textContent = `방 코드: ${data.roomId}`;
+            if (unitBadge) unitBadge.textContent = `${unit.name}: ${unit.title}`;
+            if (roundBadge) roundBadge.textContent = `제 ${data.round || 1}라운드`;
+
+            // 2. 단계별 타이틀 및 안내 문구 매핑
+            const phaseMap = {
+                'ROLE_REVEAL': { title: '🎲 1단계: 신분 확인 시간', desc: '학생들이 각자의 화면에서 신분 카드를 뒤집고 찢어 확인하고 있습니다.' },
+                'PRACTICE': { title: '📖 2단계: 학습지 읽기 & 말하기 연습 시간', desc: '학생들이 10개 질문과 정답을 소리 내어 읽고 TTS 원어민 발음을 듣고 있습니다.' },
+                'MORNING': { title: '🌅 3단계: 3분 아침 조사 시간 (실시간 대결)', desc: '학생들이 교실에서 자유롭게 이동하며 가위바위보 & 10개 영어 질문 대결을 진행합니다.' },
+                'EVENING_NOMINATION': { title: '🌆 4단계: 저녁 용의자 지목 & 투표 시간', desc: '모든 학생이 의심스러운 친구 1명을 비밀리에 지목하고 있습니다. 실시간 득표수를 확인하세요.' },
+                'NIGHT_TRIAL': { title: '⚖️ 5단계: 판사 재판 및 마피아 밤 진행', desc: '판사 학생은 유죄/무죄를 판결하고, 마피아 학생은 오늘 밤 암살할 시민을 고르고 있습니다.' },
+                'DAWN_RESULTS': { title: '🌞 6단계: 새벽 정산 및 수감 결과 발표', desc: '판결 및 습격 결과가 전 학급에 발표되었습니다. 수감된 학생은 탈출 퀴즈를 풀 수 있습니다.' },
+                'FINISHED': { title: `🏆 게임 종료: ${data.winner === 'CITIZEN' ? '🤝 시민 승리!' : '🕶️ 마피아 승리!'}`, desc: '모든 결과가 정산되었습니다. 학생들과 함께 축하해 주세요!' }
+            };
+
+            const info = phaseMap[data.state] || { title: data.state, desc: '' };
+            if (phaseTitle) phaseTitle.textContent = info.title;
+            if (actionInst) actionInst.textContent = info.desc;
+
+            // 3. 중앙 대형 타이머 제어
+            if (data.state === 'MORNING' && data.morningStartedAt) {
+                const elapsed = Math.floor((Date.now() - data.morningStartedAt) / 1000);
+                const remaining = Math.max(0, (data.morningTimerDuration || 180) - elapsed);
+                const mins = String(Math.floor(remaining / 60)).padStart(2, '0');
+                const secs = String(remaining % 60).padStart(2, '0');
+                if (giantTimer) giantTimer.textContent = `${mins}:${secs}`;
+
+                // 1초 타이머 인터벌 유지
+                if (!this.hostTimerInterval) {
+                    this.hostTimerInterval = setInterval(() => {
+                        if (this.multiplayer?.roomData?.state === 'MORNING') {
+                            this.renderHostDashboard(this.multiplayer.roomData);
+                        } else {
+                            clearInterval(this.hostTimerInterval);
+                            this.hostTimerInterval = null;
+                        }
+                    }, 1000);
+                }
+            } else {
+                if (this.hostTimerInterval) {
+                    clearInterval(this.hostTimerInterval);
+                    this.hostTimerInterval = null;
+                }
+                if (giantTimer) {
+                    giantTimer.textContent = (data.state === 'FINISHED') ? 'CLEAR' : '--:--';
+                }
+            }
+
+            // 4. 방장 컨트롤 버튼 바 동적 렌더링
+            this.renderHostControlButtons(data);
+
+            // 5. 학급 학생 실시간 상태 그리드 렌더링
+            this.renderHostStudentsGrid(data);
+
+            // 6. 실시간 투표 집계 렌더링
+            this.renderHostVotingSummary(data);
+
+            // 7. 실시간 학급 피드 렌더링
+            this.renderHostLiveFeed(data);
+        }
+
+        renderHostControlButtons(data) {
+            const bar = document.getElementById('hostControlButtonsBar');
+            if (!bar) return;
+
+            let html = '';
+            switch (data.state) {
+                case 'ROLE_REVEAL':
+                    html = `
+                        <button type="button" id="btnHostActionStartPractice" class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-sm shadow-xl shadow-amber-500/25 flex items-center gap-2 cursor-pointer transition transform hover:scale-105">
+                            <i class="fa-solid fa-book-open"></i> 2단계: 학습지 확인 & 말하기 연습 시작 <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    `;
+                    break;
+                case 'PRACTICE':
+                    html = `
+                        <button type="button" id="btnHostActionStartMorning" class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-400 to-emerald-500 hover:from-emerald-300 hover:to-emerald-400 text-slate-950 font-black text-sm shadow-xl shadow-emerald-500/25 flex items-center gap-2 cursor-pointer transition transform hover:scale-105">
+                            <i class="fa-solid fa-play"></i> 3단계: 3분 아침 조사 시작 (타이머 동기화) <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    `;
+                    break;
+                case 'MORNING':
+                    html = `
+                        <button type="button" id="btnHostActionEndMorning" class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 text-white font-black text-sm shadow-xl shadow-rose-500/25 flex items-center gap-2 cursor-pointer transition transform hover:scale-105">
+                            <i class="fa-solid fa-stop"></i> 4단계: 아침 조사 종료 & 저녁 투표 시작 <i class="fa-solid fa-check-to-slot"></i>
+                        </button>
+                    `;
+                    break;
+                case 'EVENING_NOMINATION':
+                    const nomCount = Object.keys(data.nominations || {}).length;
+                    const studentCount = Object.values(data.players || {}).filter(p => !p.isHost && !p.isJailed).length;
+                    html = `
+                        <button type="button" id="btnHostActionStartNight" class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white font-black text-sm shadow-xl shadow-indigo-500/25 flex items-center gap-2 cursor-pointer transition transform hover:scale-105">
+                            <i class="fa-solid fa-gavel"></i> 5단계: 투표 마감 & 밤/재판 페이즈 진행 (${nomCount}/${studentCount}명 투표 완료) <i class="fa-solid fa-moon"></i>
+                        </button>
+                    `;
+                    break;
+                case 'NIGHT_TRIAL':
+                    html = `
+                        <button type="button" id="btnHostActionResolveDawn" class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-sm shadow-xl shadow-amber-500/25 flex items-center gap-2 cursor-pointer transition transform hover:scale-105">
+                            <i class="fa-solid fa-sun"></i> 6단계: 새벽 결과 발표 (판결 & 암살 정산) <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    `;
+                    break;
+                case 'DAWN_RESULTS':
+                    html = `
+                        <button type="button" id="btnHostActionNextRound" class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-400 to-emerald-500 hover:from-emerald-300 hover:to-emerald-400 text-slate-950 font-black text-sm shadow-xl shadow-emerald-500/25 flex items-center gap-2 cursor-pointer transition transform hover:scale-105">
+                            <i class="fa-solid fa-rotate-right"></i> 다음 라운드 (제 ${(data.round || 1) + 1}라운드) 진행 <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    `;
+                    break;
+                case 'FINISHED':
+                    html = `
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-black text-amber-300">승리팀: ${data.winner === 'CITIZEN' ? '🤝 시민 승리' : '🕶️ 마피아 승리'}</span>
+                            <button type="button" id="btnHostActionLeave" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-600 cursor-pointer">
+                                방 종료하고 홈으로
+                            </button>
+                        </div>
+                    `;
+                    break;
+            }
+
+            bar.innerHTML = html;
+
+            // 버튼 이벤트 바인딩
+            const btnPractice = document.getElementById('btnHostActionStartPractice');
+            const btnMorning = document.getElementById('btnHostActionStartMorning');
+            const btnNomination = document.getElementById('btnHostActionEndMorning');
+            const btnNight = document.getElementById('btnHostActionStartNight');
+            const btnDawn = document.getElementById('btnHostActionResolveDawn');
+            const btnNextRound = document.getElementById('btnHostActionNextRound');
+            const btnLeave = document.getElementById('btnHostActionLeave');
+
+            if (btnPractice) btnPractice.onclick = () => { this.playSound('click'); this.multiplayer.startPracticePhase(); };
+            if (btnMorning) btnMorning.onclick = () => { this.playSound('complete'); this.multiplayer.startMorningPhase(); };
+            if (btnNomination) btnNomination.onclick = () => { this.playSound('click'); this.multiplayer.startEveningNominationPhase(); };
+            if (btnNight) btnNight.onclick = () => { this.playSound('gavel'); this.multiplayer.startNightTrialPhase(); };
+            if (btnDawn) btnDawn.onclick = () => { this.playSound('fanfare'); this.multiplayer.resolveDawnAndResults(); };
+            if (btnNextRound) btnNextRound.onclick = () => { this.playSound('complete'); this.multiplayer.advanceToNextRound(); };
+            if (btnLeave) btnLeave.onclick = () => { this.multiplayer.leaveRoom(); this.showScreen('home'); };
+        }
+
+        renderHostStudentsGrid(data) {
+            const container = document.getElementById('hostStudentsGrid');
+            const badge = document.getElementById('hostStudentCountBadge');
+            if (!container || !data.players) return;
+
+            const students = Object.values(data.players).filter(p => !p.isHost);
+            if (badge) badge.textContent = `${students.length}명`;
+
+            const noms = data.nominations || {};
+            // 투표 득표수 계산
+            const voteCounts = {};
+            Object.values(noms).forEach(tid => {
+                if (tid) voteCounts[tid] = (voteCounts[tid] || 0) + 1;
+            });
+
+            container.innerHTML = students.map(s => {
+                const isJailed = s.isJailed;
+                const vCount = voteCounts[s.id] || 0;
+                const hasVoted = (s.id in noms);
+
+                // 역할 표시 (공개/비공개 토글 반영)
+                let roleHtml = '';
+                if (this.hostShowSecretRoles) {
+                    if (s.role === 'MAFIA') {
+                        roleHtml = '<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40">🕶️ 마피아</span>';
+                    } else if (s.role === 'JUDGE') {
+                        roleHtml = '<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">⚖️ 판사</span>';
+                    } else {
+                        roleHtml = '<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">🤝 시민</span>';
+                    }
+                } else {
+                    roleHtml = '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">❓ 비공개</span>';
+                }
+
+                // 행동 상태 텍스트
+                let statusBadge = '';
+                if (isJailed) {
+                    statusBadge = `<span class="text-[10px] font-bold text-rose-400 bg-rose-950/40 px-2 py-0.5 rounded-full border border-rose-500/30">🔒 감옥 수감 (${s.jailedBy || ''})</span>`;
+                } else if (data.state === 'EVENING_NOMINATION') {
+                    statusBadge = hasVoted ? '<span class="text-[10px] text-emerald-400 font-bold">투표완료 ✔</span>' : '<span class="text-[10px] text-amber-400 font-bold">투표 중...</span>';
+                } else if (data.state === 'NIGHT_TRIAL') {
+                    if (s.id === data.judgeDecision?.targetSessionId) {
+                        statusBadge = '<span class="text-[10px] font-bold text-amber-300 bg-amber-950/40 px-2 py-0.5 rounded-full border border-amber-500/30">⚖️ 재판 피고인</span>';
+                    } else if (s.id === data.mafiaTarget) {
+                        statusBadge = '<span class="text-[10px] font-bold text-rose-400 bg-rose-950/40 px-2 py-0.5 rounded-full border border-rose-500/30">🎯 마피아 타깃</span>';
+                    } else {
+                        statusBadge = '<span class="text-[10px] text-slate-400">대기 중</span>';
+                    }
+                } else {
+                    statusBadge = '<span class="text-[10px] text-emerald-400 font-bold">활동 중</span>';
+                }
+
+                const warnings = s.warnings || 0;
+                let warningBadge = '';
+                if (warnings > 0) {
+                    warningBadge = `<span class="text-[10px] font-black px-1.5 py-0.5 rounded-md ${warnings >= 3 ? 'bg-rose-500 text-white animate-pulse' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'}">⚠️ 경고 ${warnings}/3</span>`;
+                }
+
+                return `
+                    <div class="p-3 rounded-2xl bg-slate-950 border ${isJailed ? 'border-rose-900 bg-rose-950/20' : 'border-slate-800'} flex flex-col justify-between gap-2 transition hover:border-slate-700">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xl">👦</span>
+                            ${roleHtml}
+                        </div>
+                        <div>
+                            <div class="text-xs font-black text-white truncate">${s.name}</div>
+                            <div class="text-[10px] text-slate-400">${s.grade}학년 ${s.classNum}반 ${s.studentNum}번</div>
+                        </div>
+                        <div class="pt-1.5 border-t border-slate-800/80 flex items-center justify-between gap-1 flex-wrap">
+                            <div class="flex items-center gap-1 flex-wrap">
+                                ${statusBadge}
+                                ${warningBadge}
+                            </div>
+                            <div class="flex items-center gap-1">
+                                ${(data.state === 'EVENING_NOMINATION' && vCount > 0) ? `<span class="text-[10px] font-black text-rose-300 bg-rose-500/20 px-1.5 py-0.5 rounded-md border border-rose-500/30">${vCount}표</span>` : ''}
+                                ${!isJailed ? `
+                                    <button type="button" class="btn-host-warn-student px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 border border-amber-500/40 cursor-pointer" data-sid="${s.id}" title="바르지 않은 대답 시 경고 1회 부여 (3회 시 감옥행)">
+                                        ⚠️ +1
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.querySelectorAll('.btn-host-warn-student').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    const sid = btn.dataset.sid;
+                    const st = data.players[sid];
+                    if (sid && confirm(`${st?.name || '해당'} 학생에게 바르지 않은 대답/행동에 대한 경고 1회를 부여하시겠습니까?\n(3회 누적 시 즉시 감옥에 수감됩니다)`)) {
+                        this.multiplayer.giveStudentWarning(sid);
+                    }
+                };
+            });
+        }
+
+        renderHostVotingSummary(data) {
+            const box = document.getElementById('hostVotingSummaryBox');
+            if (!box) return;
+
+            if (data.state !== 'EVENING_NOMINATION' && data.state !== 'NIGHT_TRIAL') {
+                box.innerHTML = `<p class="text-slate-400 text-center py-4">저녁 투표 단계에서 실시간 득표수가 여기에 집계됩니다.</p>`;
+                return;
+            }
+
+            const noms = data.nominations || {};
+            const counts = {};
+            Object.values(noms).forEach(tid => {
+                if (tid) counts[tid] = (counts[tid] || 0) + 1;
+            });
+
+            const sorted = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+            if (sorted.length === 0) {
+                box.innerHTML = `<p class="text-slate-400 text-center py-4">아직 투표된 표가 없습니다.</p>`;
+                return;
+            }
+
+            const totalVotes = Object.values(counts).reduce((a, b) => a + b, 0);
+
+            box.innerHTML = sorted.map((tid, idx) => {
+                const p = data.players[tid] || { name: '알 수 없음' };
+                const c = counts[tid];
+                const pct = totalVotes > 0 ? Math.round((c / totalVotes) * 100) : 0;
+                return `
+                    <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                        <div class="flex items-center justify-between text-xs mb-1">
+                            <span class="font-bold text-white flex items-center gap-1.5">
+                                <span class="w-4 h-4 rounded-full ${idx === 0 ? 'bg-rose-500 text-white' : 'bg-slate-800 text-slate-400'} text-[10px] flex items-center justify-center font-black">${idx + 1}</span>
+                                ${p.name}
+                            </span>
+                            <span class="font-black text-amber-300">${c}표 (${pct}%)</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full ${idx === 0 ? 'bg-rose-500' : 'bg-amber-400'}" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        renderHostLiveFeed(data) {
+            const list = document.getElementById('hostLiveFeedList');
+            if (!list || !data.chatLogs) return;
+
+            const logs = [...data.chatLogs].reverse().slice(0, 8);
+            list.innerHTML = logs.map(l => {
+                const timeStr = new Date(l.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                return `
+                    <div class="p-2 rounded-xl bg-slate-950 border border-slate-800/80 flex items-start gap-2">
+                        <span class="text-[10px] text-slate-500 whitespace-nowrap pt-0.5">${timeStr}</span>
+                        <span class="text-slate-300 text-xs">${l.msg}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        toggleHostRoleVisibility() {
+            this.hostShowSecretRoles = !this.hostShowSecretRoles;
+            const txt = document.getElementById('hostToggleRoleVisibilityText');
+            const icon = document.getElementById('hostToggleRoleIcon');
+            if (txt) txt.textContent = this.hostShowSecretRoles ? '학생 신분: 공개 중' : '학생 신분: 비공개 (스포방지)';
+            if (icon) icon.className = this.hostShowSecretRoles ? 'fa-solid fa-eye text-amber-400' : 'fa-solid fa-eye-slash text-slate-400';
+            if (this.multiplayer?.roomData) {
+                this.renderHostStudentsGrid(this.multiplayer.roomData);
+            }
+        }
+
+        // ────────────────────────────────────────────────────────
+        // [학생 클라이언트] 전 학급 실시간 동기화 페이즈 핸들러
+        // ────────────────────────────────────────────────────────
+        handleStudentState(data) {
+            this.showScreen('game');
+
+            const mySessionId = this.multiplayer.mySessionId;
+            const myPlayer = data.players[mySessionId];
+            if (!myPlayer) return;
+
+            this.currentRole = myPlayer.role;
+            this.round = data.round || 1;
+            if (data.roundQuestionOrder && Array.isArray(data.roundQuestionOrder)) {
+                this.roundQuestionOrder = data.roundQuestionOrder;
+            }
+            this.players = Object.values(data.players)
+                .filter(p => !p.isHost)
+                .map(p => ({
                     ...p,
-                    isUser: (p.id === this.multiplayer.mySessionId)
+                    isUser: (p.id === mySessionId),
+                    avatar: (p.id === mySessionId) ? '🎓' : '👦'
                 }));
 
-                this.showScreen('game');
-                this.renderIngameHeader();
-                this.renderWorksheetTable();
-                this.openRoleRevealModal();
+            // 상단 인게임 헤더 및 학습지 테이블 동기화
+            this.renderIngameHeader();
+            this.renderWorksheetTable();
+
+            // 단계별 UI 동기화
+            switch (data.state) {
+                case 'ROLE_REVEAL':
+                    this.syncStudentRoleReveal(data);
+                    break;
+                case 'PRACTICE':
+                    this.syncStudentPractice(data);
+                    break;
+                case 'MORNING':
+                    this.syncStudentMorning(data);
+                    break;
+                case 'EVENING_NOMINATION':
+                    this.syncStudentNomination(data);
+                    break;
+                case 'NIGHT_TRIAL':
+                    this.syncStudentNightTrial(data);
+                    break;
+                case 'DAWN_RESULTS':
+                    this.syncStudentDawnResults(data);
+                    break;
+                case 'FINISHED':
+                    this.syncStudentVictory(data);
+                    break;
             }
+        }
+
+        syncStudentRoleReveal(data) {
+            // 다른 모달 닫기
+            const pracModal = document.getElementById('inGamePracticeModal');
+            if (pracModal) pracModal.classList.add('hidden');
+            const nomModal = document.getElementById('nominationModal');
+            if (nomModal) nomModal.classList.add('hidden');
+
+            this.openRoleRevealModal();
+        }
+
+        syncStudentPractice(data) {
+            const roleModal = document.getElementById('roleRevealModal');
+            if (roleModal) roleModal.classList.add('hidden');
+            const nomModal = document.getElementById('nominationModal');
+            if (nomModal) nomModal.classList.add('hidden');
+
+            this.startPracticePhase();
+        }
+
+        syncStudentMorning(data) {
+            // 연습 모달 및 투표 모달 닫기
+            const pracModal = document.getElementById('inGamePracticeModal');
+            if (pracModal) pracModal.classList.add('hidden');
+            const nomModal = document.getElementById('nominationModal');
+            if (nomModal) nomModal.classList.add('hidden');
+            const nightModal = document.getElementById('nightTrialModal');
+            if (nightModal) nightModal.classList.add('hidden');
+
+            // 동기화 타이머 계산 및 적용
+            if (data.morningStartedAt) {
+                const elapsed = Math.floor((Date.now() - data.morningStartedAt) / 1000);
+                this.timerSeconds = Math.max(0, (data.morningTimerDuration || 180) - elapsed);
+            } else {
+                this.timerSeconds = data.morningTimerDuration || 180;
+            }
+
+            this.phase = 'MORNING';
+            this.renderIngameHeader();
+            this.renderClassmatesArea();
+
+            // 타이머 실행 (동기화 보정)
+            if (!this.studentSyncedTimer) {
+                this.studentSyncedTimer = setInterval(() => {
+                    if (this.multiplayer?.roomData?.state === 'MORNING' && this.multiplayer?.roomData?.morningStartedAt) {
+                        const el = Math.floor((Date.now() - this.multiplayer.roomData.morningStartedAt) / 1000);
+                        this.timerSeconds = Math.max(0, (this.multiplayer.roomData.morningTimerDuration || 180) - el);
+                        this.updateTimerDisplay();
+                    } else {
+                        clearInterval(this.studentSyncedTimer);
+                        this.studentSyncedTimer = null;
+                    }
+                }, 1000);
+            }
+        }
+
+        syncStudentNomination(data) {
+            if (this.studentSyncedTimer) {
+                clearInterval(this.studentSyncedTimer);
+                this.studentSyncedTimer = null;
+            }
+
+            const pracModal = document.getElementById('inGamePracticeModal');
+            if (pracModal) pracModal.classList.add('hidden');
+            const duelModal = document.getElementById('duelModal');
+            if (duelModal) duelModal.classList.add('hidden');
+            const nightModal = document.getElementById('nightTrialModal');
+            if (nightModal) nightModal.classList.add('hidden');
+
+            this.phase = 'EVENING';
+            this.renderIngameHeader();
+
+            const modal = document.getElementById('nominationModal');
+            const container = document.getElementById('nominationCandidatesList');
+            const title = document.getElementById('nominationModalTitle');
+            const desc = document.getElementById('nominationModalDesc');
+
+            if (!modal || !container) return;
+
+            title.textContent = `제 ${data.round || 1}라운드 저녁 용의자 지목 & 투표`;
+            desc.textContent = `주의: 이유는 말하지 않고 마피아로 의심되는 친구 1명을 선택하세요!`;
+
+            const mySessionId = this.multiplayer.mySessionId;
+            const myVote = data.nominations ? data.nominations[mySessionId] : null;
+
+            // 투표 대상 학생 목록 (방장 및 수감된 학생, 그리고 본인 제외)
+            const eligible = Object.values(data.players).filter(p => !p.isHost && !p.isJailed && p.id !== mySessionId);
+
+            container.innerHTML = eligible.map(p => {
+                const isSelected = (myVote === p.id);
+                const isMe = (p.id === mySessionId);
+
+                return `
+                    <button type="button" 
+                            class="w-full p-3 rounded-2xl ${isSelected ? 'bg-rose-950/40 border-2 border-rose-500' : 'bg-slate-900 border border-slate-700 hover:border-amber-400'} text-left transition flex items-center justify-between cursor-pointer"
+                            data-candidate="${p.id}" ${myVote ? 'disabled' : ''}>
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">${isMe ? '🎓' : '👦'}</span>
+                            <div>
+                                <div class="text-sm font-black text-white">${p.name} ${isMe ? '(나)' : ''}</div>
+                                <div class="text-[10px] text-slate-400">${p.grade}학년 ${p.classNum}반 ${p.studentNum}번</div>
+                            </div>
+                        </div>
+                        <div class="text-xs font-bold ${isSelected ? 'text-rose-300' : 'text-amber-400'}">
+                            ${isSelected ? '지목 완료 ✔' : (myVote ? '투표 완료' : '지목하기 <i class="fa-solid fa-crosshairs"></i>')}
+                        </div>
+                    </button>
+                `;
+            }).join('');
+
+            // 투표 버튼 클릭 이벤트
+            container.querySelectorAll('button[data-candidate]').forEach(btn => {
+                btn.onclick = () => {
+                    const candId = btn.dataset.candidate;
+                    if (candId && !myVote) {
+                        this.playSound('click');
+                        this.multiplayer.submitNomination(candId);
+                    }
+                };
+            });
+
+            modal.classList.remove('hidden');
+        }
+
+        syncStudentNightTrial(data) {
+            const nomModal = document.getElementById('nominationModal');
+            if (nomModal) nomModal.classList.add('hidden');
+
+            const modal = document.getElementById('nightTrialModal');
+            const judgeSec = document.getElementById('nightJudgeActionSection');
+            const mafiaSec = document.getElementById('nightMafiaActionSection');
+            const specSec = document.getElementById('nightSpectatorSection');
+
+            if (!modal) return;
+
+            const mySessionId = this.multiplayer.mySessionId;
+            const myPlayer = data.players[mySessionId];
+            if (!myPlayer) return;
+
+            if (myPlayer.role === 'JUDGE') {
+                if (judgeSec) judgeSec.classList.remove('hidden');
+                if (mafiaSec) mafiaSec.classList.add('hidden');
+                if (specSec) specSec.classList.add('hidden');
+
+                const suspectsList = document.getElementById('judgeSuspectsList');
+                const suspects = data.currentSuspects || [];
+
+                if (suspectsList) {
+                    if (data.judgeDecision) {
+                        suspectsList.innerHTML = `<p class="text-emerald-300 font-bold text-xs py-3 text-center">판결이 성공적으로 제출되었습니다. 결과를 기다리세요.</p>`;
+                    } else {
+                        suspectsList.innerHTML = suspects.map(sid => {
+                            const p = data.players[sid] || { name: '피고인' };
+                            return `
+                                <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xl">⚖️</span>
+                                        <span class="font-bold text-white text-xs">${p.name}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" class="btn-judge-verdict px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs cursor-pointer" data-sid="${sid}" data-verdict="guilty">
+                                            유죄 (감옥 수감)
+                                        </button>
+                                        <button type="button" class="btn-judge-verdict px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs cursor-pointer" data-sid="${sid}" data-verdict="innocent">
+                                            무죄 (방면)
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+
+                        suspectsList.querySelectorAll('.btn-judge-verdict').forEach(b => {
+                            b.onclick = () => {
+                                const sid = b.dataset.sid;
+                                const verd = b.dataset.verdict;
+                                this.playSound('gavel');
+                                this.multiplayer.submitJudgeDecision(verd, sid);
+                            };
+                        });
+                    }
+                }
+            } else if (myPlayer.role === 'MAFIA') {
+                if (judgeSec) judgeSec.classList.add('hidden');
+                if (mafiaSec) mafiaSec.classList.remove('hidden');
+                if (specSec) specSec.classList.add('hidden');
+
+                const victimsList = document.getElementById('mafiaVictimsList');
+                // 마피아가 아닌 생존 시민들
+                const citizens = Object.values(data.players).filter(p => !p.isHost && p.role !== 'MAFIA' && !p.isJailed);
+
+                if (victimsList) {
+                    if (data.mafiaTarget) {
+                        const targetP = data.players[data.mafiaTarget];
+                        victimsList.innerHTML = `<p class="text-rose-300 font-bold text-xs py-3 text-center">오늘 밤 제거 목표로 [${targetP?.name || '시민'}]을 지목했습니다. 결과를 기다리세요.</p>`;
+                    } else {
+                        victimsList.innerHTML = citizens.map(c => `
+                            <button type="button" class="btn-mafia-target w-full p-2.5 rounded-xl bg-slate-950 hover:bg-rose-950/40 border border-slate-800 hover:border-rose-500 text-left transition flex items-center justify-between cursor-pointer" data-tid="${c.id}">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-lg">🎯</span>
+                                    <span class="text-xs font-bold text-white">${c.name}</span>
+                                </div>
+                                <span class="text-[10px] text-rose-400 font-bold">지목하기</span>
+                            </button>
+                        `).join('');
+
+                        victimsList.querySelectorAll('.btn-mafia-target').forEach(b => {
+                            b.onclick = () => {
+                                const tid = b.dataset.tid;
+                                this.playSound('click');
+                                this.multiplayer.submitMafiaTarget(tid);
+                            };
+                        });
+                    }
+                }
+            } else {
+                if (judgeSec) judgeSec.classList.add('hidden');
+                if (mafiaSec) mafiaSec.classList.add('hidden');
+                if (specSec) specSec.classList.remove('hidden');
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        syncStudentDawnResults(data) {
+            const nightModal = document.getElementById('nightTrialModal');
+            if (nightModal) nightModal.classList.add('hidden');
+
+            const rep = data.dawnReport;
+            if (rep && !this.lastReportSeenTime || this.lastReportSeenTime !== rep.round) {
+                this.lastReportSeenTime = rep.round;
+                const msg = `🌅 [제 ${rep.round}라운드 새벽 결과 발표]\n\n` +
+                    `⚖️ 판사 판결: ${rep.judgeJailedName ? `[${rep.judgeJailedName}] 감옥 수감` : '없음'}\n` +
+                    `🕶️ 마피아 습격: ${rep.mafiaJailedName ? `[${rep.mafiaJailedName}] 감옥 수감` : '없음'}`;
+                alert(msg);
+            }
+
+            // 내가 수감된 경우 감옥 탈출 모달 열기
+            const myPlayer = data.players[this.multiplayer.mySessionId];
+            if (myPlayer && myPlayer.isJailed && !myPlayer.escapeQuizSolved) {
+                this.openPrisonEscapeModal();
+            }
+        }
+
+        syncStudentVictory(data) {
+            const nightModal = document.getElementById('nightTrialModal');
+            if (nightModal) nightModal.classList.add('hidden');
+            const nomModal = document.getElementById('nominationModal');
+            if (nomModal) nomModal.classList.add('hidden');
+
+            this.showVictoryModal(data.winner);
         }
 
         // ────────────────────────────────────────────────────────
         // 18. UI 이벤트 리스너 바인딩
         // ────────────────────────────────────────────────────────
         bindEvents() {
+            // 단원 선택 버튼 그룹
+            document.querySelectorAll('.unit-card-btn').forEach(btn => {
+                btn.onclick = () => {
+                    const unitId = btn.dataset.unit;
+                    if (unitId) {
+                        this.playSound('click');
+                        this.setUnit(unitId);
+                    }
+                };
+            });
+
+            // 학기별 단원 필터 버튼 그룹
+            document.querySelectorAll('.unit-filter-btn').forEach(btn => {
+                btn.onclick = () => {
+                    const filter = btn.dataset.filter;
+                    this.playSound('click');
+                    document.querySelectorAll('.unit-filter-btn').forEach(b => {
+                        b.classList.remove('active', 'bg-rose-500/20', 'text-rose-300', 'border-rose-500/40');
+                        b.classList.add('bg-slate-900', 'text-slate-400', 'border-slate-800');
+                    });
+                    btn.classList.add('active', 'bg-rose-500/20', 'text-rose-300', 'border-rose-500/40');
+                    btn.classList.remove('bg-slate-900', 'text-slate-400', 'border-slate-800');
+
+                    document.querySelectorAll('.unit-card-btn').forEach(card => {
+                        const sem = card.dataset.semester;
+                        if (filter === 'all') {
+                            card.style.display = 'flex';
+                        } else if (filter === 'sem1') {
+                            card.style.display = (sem === '1') ? 'flex' : 'none';
+                        } else if (filter === 'sem2') {
+                            card.style.display = (sem === '2') ? 'flex' : 'none';
+                        }
+                    });
+                };
+            });
+
+            // 로비 문제 읽기 & 말하기 연습 모달
+            const previewPracticeBtn = document.getElementById('previewUnitQuestionsBtn');
+            const closePracticeBtn = document.getElementById('closeUnitPracticeModalBtn');
+            const closePracticeBottomBtn = document.getElementById('closeUnitPracticeModalBottomBtn');
+            const playAllPracticeBtn = document.getElementById('btnPracticePlayAll');
+
+            if (previewPracticeBtn) previewPracticeBtn.onclick = () => this.openUnitPracticeModal();
+            if (closePracticeBtn) closePracticeBtn.onclick = () => this.closeUnitPracticeModal();
+            if (closePracticeBottomBtn) closePracticeBottomBtn.onclick = () => this.closeUnitPracticeModal();
+            if (playAllPracticeBtn) playAllPracticeBtn.onclick = () => this.playAllPracticeSequentially();
+
+            // 인게임 연습 시간 & 학습지 열기 버튼
+            const finishPracticeBtn = document.getElementById('btnFinishPracticeAndStartMorning');
+            const ingamePracticeBtn = document.getElementById('ingameOpenPracticeBtn');
+
+            if (finishPracticeBtn) finishPracticeBtn.onclick = () => this.finishPracticeAndStartMorning();
+            if (ingamePracticeBtn) ingamePracticeBtn.onclick = () => this.startPracticePhase();
+
             // 모드 탭
             const btnAi = document.getElementById('startAiModeBtn');
             const btnOnline = document.getElementById('selectOnlineTabBtn');
@@ -1739,6 +2839,17 @@
             if (headerHome) headerHome.onclick = goHomeConfirm;
             if (ingameHome) ingameHome.onclick = goHomeConfirm;
             if (victoryHome) victoryHome.onclick = () => this.showScreen('home');
+
+            // 방장(관전 모드) 전용 버튼 바인딩
+            const hostRoleToggleBtn = document.getElementById('hostToggleRoleVisibilityBtn');
+            const hostExitBtn = document.getElementById('hostExitRoomBtn');
+            if (hostRoleToggleBtn) hostRoleToggleBtn.onclick = () => this.toggleHostRoleVisibility();
+            if (hostExitBtn) hostExitBtn.onclick = () => {
+                if (confirm("방을 종료하고 홈으로 돌아가시겠습니까?")) {
+                    if (this.multiplayer) this.multiplayer.leaveRoom();
+                    this.showScreen('home');
+                }
+            };
 
             // 신분 카드 플립 & 찢기
             const flipBtn = document.getElementById('roleCardContainer');

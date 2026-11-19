@@ -508,14 +508,39 @@
                     <!-- JavaScript renderTournament()에 의해 라운드별 컬럼이 동적 생성됩니다 -->
                 </div>
 
-                <!-- 3·4위전 (동메달 결정전) 전용 하단 영역 -->
-                <div id="bronzeMatchSection" class="mt-10 pt-8 border-t flex flex-col items-center relative" style="border-color: var(--border-card); z-index: 15;">
-                    <div class="text-xs font-black px-4 py-1.5 rounded-full border mb-4 flex items-center gap-2 shadow-sm" style="background: linear-gradient(135deg, rgba(217, 119, 6, 0.2), rgba(180, 83, 9, 0.1)); color: #F59E0B; border-color: rgba(245, 158, 11, 0.4);">
-                        <span class="text-base">🥉</span>
-                        <span>3·4위전 (동메달 결정전)</span>
+                <!-- 순위 결정전 (3·4위전 및 5·6위전) 영역 -->
+                <div id="placementMatchesSection" class="mt-10 pt-8 border-t flex flex-col items-center relative" style="border-color: var(--border-card); z-index: 15;">
+                    <div class="flex items-center gap-2 mb-6">
+                        <span class="h-px w-8 bg-slate-500/30"></span>
+                        <div class="text-xs font-black px-4 py-1.5 rounded-full border flex items-center gap-2 shadow-sm" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">
+                            <span class="text-base">🎖️</span>
+                            <span>순위 결정전 (Placement Matches)</span>
+                        </div>
+                        <span class="h-px w-8 bg-slate-500/30"></span>
                     </div>
-                    <div id="bronzeMatchCardWrap" class="w-72">
-                        <!-- JavaScript renderBronzeSection()에 의해 렌더링됩니다 -->
+
+                    <div class="flex flex-wrap items-start justify-center gap-8 w-full max-w-4xl">
+                        <!-- 3·4위전 (동메달 결정전) -->
+                        <div id="bronzeMatchWrap" class="flex flex-col items-center w-72">
+                            <div class="text-xs font-black px-3.5 py-1 rounded-full border mb-3 flex items-center gap-1.5 shadow-sm" style="background: linear-gradient(135deg, rgba(217, 119, 6, 0.2), rgba(180, 83, 9, 0.1)); color: #F59E0B; border-color: rgba(245, 158, 11, 0.4);">
+                                <span>🥉</span>
+                                <span>3·4위전 (동메달 결정전)</span>
+                            </div>
+                            <div id="bronzeMatchCardWrap" class="w-full">
+                                <!-- renderBronzeSection() -->
+                            </div>
+                        </div>
+
+                        <!-- 5·6위전 (순위 결정전) -->
+                        <div id="fifthMatchWrap" class="flex flex-col items-center w-72">
+                            <div class="text-xs font-black px-3.5 py-1 rounded-full border mb-3 flex items-center gap-1.5 shadow-sm" style="background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(2, 132, 199, 0.1)); color: #0284C7; border-color: rgba(14, 165, 233, 0.4);">
+                                <span>🏅</span>
+                                <span>5·6위전 (순위 결정전)</span>
+                            </div>
+                            <div id="fifthMatchCardWrap" class="w-full">
+                                <!-- renderFifthSection() -->
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -587,7 +612,7 @@
                         <div class="text-[11px] font-bold" style="color: var(--text-sub);">빠른 인원 프리셋:</div>
                         <div class="flex flex-wrap gap-1.5">
                             <button type="button" onclick="applyPresetNumbers(4)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">4명</button>
-                            <button type="button" onclick="applyPresetNumbers(6)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">6명 (부전승 2)</button>
+                            <button type="button" onclick="applyPresetNumbers(6)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">6명 (3·4위/5·6위전)</button>
                             <button type="button" onclick="applyPresetNumbers(8)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">8명 (8강)</button>
                             <button type="button" onclick="applyPresetNumbers(12)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">12명</button>
                             <button type="button" onclick="applyPresetNumbers(16)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">16명 (16강)</button>
@@ -596,7 +621,7 @@
                             <button type="button" onclick="applyPresetNumbers(25)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">25명 (1학급)</button>
                             <button type="button" onclick="applyPresetNumbers(26)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition" style="background: var(--slot-bg); color: var(--text-main); border-color: var(--border-card);">26명</button>
                             <button type="button" onclick="applyPresetTeams(4)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition text-amber-400 border-amber-500/40" style="background: rgba(245, 158, 11, 0.1);">4모둠(팀)</button>
-                            <button type="button" onclick="applyPresetTeams(6)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition text-amber-400 border-amber-500/40" style="background: rgba(245, 158, 11, 0.1);">6모둠(팀)</button>
+                            <button type="button" onclick="applyPresetTeams(6)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition text-amber-400 border-amber-500/40" style="background: rgba(245, 158, 11, 0.1);">6모둠(팀) (3·4위/5·6위전)</button>
                             <button type="button" onclick="applyPresetTeams(8)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border hover:scale-105 transition text-amber-400 border-amber-500/40" style="background: rgba(245, 158, 11, 0.1);">8모둠(팀)</button>
                         </div>
                     </div>
@@ -634,6 +659,10 @@
                     <label class="flex items-center gap-2.5 cursor-pointer">
                         <input type="checkbox" id="checkBronzeMatch" checked class="w-4 h-4 rounded text-sky-600 focus:ring-sky-500">
                         <span class="text-xs font-bold" style="color: var(--text-main);">🥉 3·4위전 (동메달 결정전) 자동 연동하기</span>
+                    </label>
+                    <label id="wrapCheckFifthMatch" class="flex items-center gap-2.5 cursor-pointer">
+                        <input type="checkbox" id="checkFifthMatch" checked class="w-4 h-4 rounded text-sky-600 focus:ring-sky-500">
+                        <span class="text-xs font-bold" style="color: var(--text-main);">🏅 5·6위전 (순위 결정전) 자동 연동하기 <span class="text-[10px] text-sky-400 font-extrabold">(6팀 대진 추천)</span></span>
                     </label>
                     <label class="flex items-center gap-2.5 cursor-pointer">
                         <input type="checkbox" id="checkSoundEffects" checked class="w-4 h-4 rounded text-sky-600 focus:ring-sky-500">
@@ -937,6 +966,22 @@
                 </div>
             </div>
 
+            <!-- 6팀 대진 순위 결정전 요약 (4위, 5위, 6위) -->
+            <div id="extendedRankWrap" class="hidden mb-5 p-3 rounded-2xl border text-xs flex flex-wrap items-center justify-around gap-2 shadow-inner" style="background: var(--slot-bg); border-color: var(--border-card);">
+                <div class="flex items-center gap-1.5">
+                    <span class="font-bold text-slate-400">4위:</span>
+                    <span id="rank4thName" class="font-black" style="color: var(--text-main);">-</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="font-bold text-sky-400">5위:</span>
+                    <span id="rank5thName" class="font-black" style="color: var(--text-main);">-</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="font-bold text-slate-400">6위:</span>
+                    <span id="rank6thName" class="font-black" style="color: var(--text-main);">-</span>
+                </div>
+            </div>
+
             <!-- 모달 버튼 -->
             <div class="flex gap-2">
                 <button type="button" onclick="closeChampionModal()" class="flex-1 py-3 text-xs font-bold rounded-xl border hover:bg-white/10 transition" style="color: var(--text-sub); border-color: var(--border-card);">
@@ -959,21 +1004,26 @@
             title: "우리 반 챔피언십 토너먼트",
             icon: "🏆",
             hasBronzeMatch: true,
+            hasFifthMatch: false,
             soundEnabled: true,
             participants: [],
             bracketSize: 8,
             rounds: [], // [ { roundIndex, roundName, matches: [ { id, p1, p2, winner, p1Score, p2Score, isBye } ] } ]
             bronzeMatch: null, // { id: "bronze", p1, p2, winner, p1Score, p2Score }
+            fifthMatch: null, // { id: "fifth", p1, p2, winner, p1Score, p2Score }
             champion: null,
             runnerUp: null,
-            thirdPlace: null
+            thirdPlace: null,
+            fourthPlace: null,
+            fifthPlace: null,
+            sixthPlace: null
         };
 
         let currentTheme = localStorage.getItem('waurimal_tournament_theme') || 'golden';
         let zoomLevel = 1.0;
         let isSwapMode = false;
         let swapSelectedSlot = null; // { roundIndex: 0, matchIndex, participantIndex: 1|2 }
-        let currentScoreTarget = null; // { roundIndex, matchIndex, isBronze }
+        let currentScoreTarget = null; // { roundIndex, matchIndex, isBronze, isFifth }
 
         // 추첨 쇼 상태
         let drawShowState = {
@@ -1322,6 +1372,14 @@
                 }
             }
 
+            // 6팀 대진 여부 확인
+            const isSixTeams = (ordered.length === 6);
+            if (isSixTeams) {
+                // 6팀 대진일 때는 3, 4위전과 5, 6위전을 기본 활성화
+                tournamentData.hasBronzeMatch = true;
+                tournamentData.hasFifthMatch = true;
+            }
+
             tournamentData.participants = ordered;
             tournamentData.bracketSize = bracketSize;
             tournamentData.rounds = rounds;
@@ -1333,9 +1391,20 @@
                 p2Score: null,
                 winner: null
             } : null;
+            tournamentData.fifthMatch = (tournamentData.hasFifthMatch && isSixTeams) ? {
+                id: "fifth",
+                p1: null,
+                p2: null,
+                p1Score: null,
+                p2Score: null,
+                winner: null
+            } : null;
             tournamentData.champion = null;
             tournamentData.runnerUp = null;
             tournamentData.thirdPlace = null;
+            tournamentData.fourthPlace = null;
+            tournamentData.fifthPlace = null;
+            tournamentData.sixthPlace = null;
 
             saveTournamentState();
             renderTournament();
@@ -1350,7 +1419,8 @@
             document.getElementById('tournamentIconDisplay').innerText = tournamentData.icon;
 
             const sizeText = `${tournamentData.bracketSize}강`;
-            const countText = `총 ${tournamentData.participants.length}명 참가 • ${sizeText} 토너먼트 대진표`;
+            const isSix = (tournamentData.participants && tournamentData.participants.length === 6);
+            const countText = `총 ${tournamentData.participants.length}명 참가 • ${sizeText} 토너먼트 대진표${isSix && tournamentData.hasFifthMatch ? ' (3·4위전 & 5·6위전 포함)' : ''}`;
             document.getElementById('headerRoundCountBadge').innerText = sizeText;
             document.getElementById('tournamentSubtitle').innerText = countText;
 
@@ -1366,6 +1436,10 @@
             if (tournamentData.hasBronzeMatch && tournamentData.bronzeMatch) {
                 totalMatches++;
                 if (tournamentData.bronzeMatch.winner) finishedMatches++;
+            }
+            if (tournamentData.hasFifthMatch && tournamentData.fifthMatch) {
+                totalMatches++;
+                if (tournamentData.fifthMatch.winner) finishedMatches++;
             }
             const progressPercent = totalMatches > 0 ? Math.round((finishedMatches / totalMatches) * 100) : 0;
             document.getElementById('headerProgressPercentText').innerText = `진행률 ${progressPercent}% (${finishedMatches}/${totalMatches})`;
@@ -1480,30 +1554,49 @@
                 container.appendChild(roundCol);
             });
 
-            // 3·4위전 렌더링
-            renderBronzeSection();
+            // 3·4위전 및 5·6위전 순위 결정전 렌더링
+            renderPlacementSections();
 
             // SVG 브래킷 연결선 동적 렌더링
             requestAnimationFrame(drawConnectorLines);
         }
 
-        // ── 3·4위전 (동메달 결정전) 렌더링 ──
-        function renderBronzeSection() {
-            const bronzeSec = document.getElementById('bronzeMatchSection');
-            if (!tournamentData.hasBronzeMatch) {
-                bronzeSec.classList.add('hidden');
+        // ── 순위 결정전 (3·4위전 및 5·6위전) 렌더링 ──
+        function renderPlacementSections() {
+            const placementSec = document.getElementById('placementMatchesSection');
+            if (!placementSec) return;
+
+            const hasBronze = tournamentData.hasBronzeMatch;
+            const hasFifth = tournamentData.hasFifthMatch && tournamentData.fifthMatch;
+
+            if (!hasBronze && !hasFifth) {
+                placementSec.classList.add('hidden');
                 return;
             }
-            bronzeSec.classList.remove('hidden');
+            placementSec.classList.remove('hidden');
 
-            const wrap = document.getElementById('bronzeMatchCardWrap');
+            renderBronzeSection();
+            renderFifthSection();
+        }
+
+        // ── 3·4위전 (동메달 결정전) 렌더링 ──
+        function renderBronzeSection() {
+            const wrap = document.getElementById('bronzeMatchWrap');
+            if (!wrap) return;
+            if (!tournamentData.hasBronzeMatch) {
+                wrap.classList.add('hidden');
+                return;
+            }
+            wrap.classList.remove('hidden');
+
+            const cardWrap = document.getElementById('bronzeMatchCardWrap');
             const bm = tournamentData.bronzeMatch;
             if (!bm) return;
 
             const p1Won = bm.winner && bm.winner === bm.p1;
             const p2Won = bm.winner && bm.winner === bm.p2;
 
-            wrap.innerHTML = `
+            cardWrap.innerHTML = `
                 <div class="match-card p-3.5" style="border-color: rgba(245, 158, 11, 0.4);">
                     <div class="flex items-center justify-between text-[11px] font-black pb-2 mb-2 border-b" style="color: #F59E0B; border-color: var(--border-card);">
                         <span>BRONZE MATCH 🥉</span>
@@ -1518,7 +1611,7 @@
                         <div class="flex items-center gap-2.5 truncate">
                             <span class="w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-black" style="background: rgba(245, 158, 11, 0.2); color: #F59E0B;">A</span>
                             <span class="truncate" style="color: var(--text-main);">${bm.p1 || '<span style="color: var(--text-muted); font-weight: normal;">준결승 패자 1</span>'}</span>
-                            <span class="winner-crown hidden text-amber-400 text-xs">🥉</span>
+                            <span class="winner-crown ${p1Won ? '' : 'hidden'} text-amber-400 text-xs">🥉</span>
                         </div>
                         <span class="font-black text-xs ml-2">${bm.p1Score !== null ? bm.p1Score : ''}</span>
                     </div>
@@ -1531,9 +1624,62 @@
                         <div class="flex items-center gap-2.5 truncate">
                             <span class="w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-black" style="background: rgba(245, 158, 11, 0.2); color: #F59E0B;">B</span>
                             <span class="truncate" style="color: var(--text-main);">${bm.p2 || '<span style="color: var(--text-muted); font-weight: normal;">준결승 패자 2</span>'}</span>
-                            <span class="winner-crown hidden text-amber-400 text-xs">🥉</span>
+                            <span class="winner-crown ${p2Won ? '' : 'hidden'} text-amber-400 text-xs">🥉</span>
                         </div>
                         <span class="font-black text-xs ml-2">${bm.p2Score !== null ? bm.p2Score : ''}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ── 5·6위전 (순위 결정전) 렌더링 ──
+        function renderFifthSection() {
+            const wrap = document.getElementById('fifthMatchWrap');
+            if (!wrap) return;
+            if (!tournamentData.hasFifthMatch || !tournamentData.fifthMatch) {
+                wrap.classList.add('hidden');
+                return;
+            }
+            wrap.classList.remove('hidden');
+
+            const cardWrap = document.getElementById('fifthMatchCardWrap');
+            const fm = tournamentData.fifthMatch;
+            if (!fm) return;
+
+            const p1Won = fm.winner && fm.winner === fm.p1;
+            const p2Won = fm.winner && fm.winner === fm.p2;
+
+            cardWrap.innerHTML = `
+                <div class="match-card p-3.5" style="border-color: rgba(14, 165, 233, 0.4);">
+                    <div class="flex items-center justify-between text-[11px] font-black pb-2 mb-2 border-b" style="color: #0284C7; border-color: var(--border-card);">
+                        <span>5TH / 6TH PLACE MATCH 🏅</span>
+                        ${(fm.p1 && fm.p2) ? `
+                            <button type="button" onclick="openScoreModal(-2, -1)" class="hover:text-sky-400 transition" title="점수 기록">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <div onclick="handleFifthParticipantClick(1)" class="participant-slot flex items-center justify-between p-2.5 rounded-xl text-xs font-bold ${p1Won ? 'winner' : (p2Won ? 'loser' : '')}">
+                        <div class="flex items-center gap-2.5 truncate">
+                            <span class="w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-black" style="background: rgba(14, 165, 233, 0.2); color: #0284C7;">1</span>
+                            <span class="truncate" style="color: var(--text-main);">${fm.p1 || '<span style="color: var(--text-muted); font-weight: normal;">1라운드 패자 1</span>'}</span>
+                            <span class="winner-crown ${p1Won ? '' : 'hidden'} text-sky-400 text-xs">🏅</span>
+                        </div>
+                        <span class="font-black text-xs ml-2">${fm.p1Score !== null ? fm.p1Score : ''}</span>
+                    </div>
+
+                    <div class="flex items-center justify-center my-1.5">
+                        <span class="vs-badge">VS</span>
+                    </div>
+
+                    <div onclick="handleFifthParticipantClick(2)" class="participant-slot flex items-center justify-between p-2.5 rounded-xl text-xs font-bold ${p2Won ? 'winner' : (p1Won ? 'loser' : '')}">
+                        <div class="flex items-center gap-2.5 truncate">
+                            <span class="w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-black" style="background: rgba(14, 165, 233, 0.2); color: #0284C7;">2</span>
+                            <span class="truncate" style="color: var(--text-main);">${fm.p2 || '<span style="color: var(--text-muted); font-weight: normal;">1라운드 패자 2</span>'}</span>
+                            <span class="winner-crown ${p2Won ? '' : 'hidden'} text-sky-400 text-xs">🏅</span>
+                        </div>
+                        <span class="font-black text-xs ml-2">${fm.p2Score !== null ? fm.p2Score : ''}</span>
                     </div>
                 </div>
             `;
@@ -1657,6 +1803,15 @@
                         const bronzeSlot = (matchIdx === 0) ? 'p1' : 'p2';
                         tournamentData.bronzeMatch[bronzeSlot] = opponentParticipant;
                     }
+
+                    // 1라운드(8강)이고 5·6위전이 활성화된 경우 -> 0경기, 1경기 패자를 5·6위전으로 보냄!
+                    if (roundIdx === 0 && tournamentData.hasFifthMatch && tournamentData.fifthMatch) {
+                        if (matchIdx === 0) {
+                            tournamentData.fifthMatch.p1 = opponentParticipant;
+                        } else if (matchIdx === 1) {
+                            tournamentData.fifthMatch.p2 = opponentParticipant;
+                        }
+                    }
                 }
             }
 
@@ -1669,15 +1824,42 @@
             const bm = tournamentData.bronzeMatch;
             if (!bm) return;
             const selected = (slotIndex === 1) ? bm.p1 : bm.p2;
+            const opponent = (slotIndex === 1) ? bm.p2 : bm.p1;
             if (!selected) return;
 
             if (bm.winner === selected) {
                 bm.winner = null;
                 tournamentData.thirdPlace = null;
+                tournamentData.fourthPlace = null;
                 AudioEngine.playTick();
             } else {
                 bm.winner = selected;
                 tournamentData.thirdPlace = selected;
+                tournamentData.fourthPlace = opponent || null;
+                AudioEngine.playWin();
+            }
+
+            saveTournamentState();
+            renderTournament();
+        };
+
+        // 5·6위전 참가자 클릭
+        window.handleFifthParticipantClick = (slotIndex) => {
+            const fm = tournamentData.fifthMatch;
+            if (!fm) return;
+            const selected = (slotIndex === 1) ? fm.p1 : fm.p2;
+            const opponent = (slotIndex === 1) ? fm.p2 : fm.p1;
+            if (!selected) return;
+
+            if (fm.winner === selected) {
+                fm.winner = null;
+                tournamentData.fifthPlace = null;
+                tournamentData.sixthPlace = null;
+                AudioEngine.playTick();
+            } else {
+                fm.winner = selected;
+                tournamentData.fifthPlace = selected;
+                tournamentData.sixthPlace = opponent || null;
                 AudioEngine.playWin();
             }
 
@@ -1691,6 +1873,31 @@
                 tournamentData.champion = null;
                 tournamentData.runnerUp = null;
                 return;
+            }
+
+            // 준결승(4강) 승자 취소 시 3·4위전 슬롯 비우기
+            const isSemiFinal = (roundIdx === tournamentData.rounds.length - 2);
+            if (isSemiFinal && tournamentData.bronzeMatch) {
+                const bronzeSlot = (matchIdx === 0) ? 'p1' : 'p2';
+                tournamentData.bronzeMatch[bronzeSlot] = null;
+                tournamentData.bronzeMatch.winner = null;
+                tournamentData.thirdPlace = null;
+                tournamentData.fourthPlace = null;
+            }
+
+            // 1라운드(8강) 승자 취소 시 5·6위전 슬롯 비우기
+            if (roundIdx === 0 && tournamentData.fifthMatch) {
+                if (matchIdx === 0) {
+                    tournamentData.fifthMatch.p1 = null;
+                    tournamentData.fifthMatch.winner = null;
+                    tournamentData.fifthPlace = null;
+                    tournamentData.sixthPlace = null;
+                } else if (matchIdx === 1) {
+                    tournamentData.fifthMatch.p2 = null;
+                    tournamentData.fifthMatch.winner = null;
+                    tournamentData.fifthPlace = null;
+                    tournamentData.sixthPlace = null;
+                }
             }
 
             const nextRound = tournamentData.rounds[roundIdx + 1];
@@ -2042,7 +2249,7 @@
 
         // ── 스코어보드 모달 (Scorekeeper) ──
         window.openScoreModal = (rIdx, mIdx) => {
-            currentScoreTarget = { roundIndex: rIdx, matchIndex: mIdx, isBronze: (rIdx === -1) };
+            currentScoreTarget = { roundIndex: rIdx, matchIndex: mIdx, isBronze: (rIdx === -1), isFifth: (rIdx === -2) };
             let p1Name = "", p2Name = "", p1Score = 0, p2Score = 0, title = "";
 
             if (currentScoreTarget.isBronze) {
@@ -2052,6 +2259,13 @@
                 p1Score = bm.p1Score || 0;
                 p2Score = bm.p2Score || 0;
                 title = "🥉 3·4위전 점수 입력";
+            } else if (currentScoreTarget.isFifth) {
+                const fm = tournamentData.fifthMatch;
+                p1Name = fm.p1 || "1라운드 패자 1";
+                p2Name = fm.p2 || "1라운드 패자 2";
+                p1Score = fm.p1Score || 0;
+                p2Score = fm.p2Score || 0;
+                title = "🏅 5·6위전 점수 입력";
             } else {
                 const match = tournamentData.rounds[rIdx].matches[mIdx];
                 p1Name = match.p1 || "선수 1";
@@ -2093,9 +2307,28 @@
                 const bm = tournamentData.bronzeMatch;
                 bm.p1Score = p1s;
                 bm.p2Score = p2s;
-                if (p1s > p2s) bm.winner = bm.p1;
-                else if (p2s > p1s) bm.winner = bm.p2;
-                tournamentData.thirdPlace = bm.winner;
+                if (p1s > p2s) {
+                    bm.winner = bm.p1;
+                    tournamentData.thirdPlace = bm.p1;
+                    tournamentData.fourthPlace = bm.p2;
+                } else if (p2s > p1s) {
+                    bm.winner = bm.p2;
+                    tournamentData.thirdPlace = bm.p2;
+                    tournamentData.fourthPlace = bm.p1;
+                }
+            } else if (currentScoreTarget.isFifth) {
+                const fm = tournamentData.fifthMatch;
+                fm.p1Score = p1s;
+                fm.p2Score = p2s;
+                if (p1s > p2s) {
+                    fm.winner = fm.p1;
+                    tournamentData.fifthPlace = fm.p1;
+                    tournamentData.sixthPlace = fm.p2;
+                } else if (p2s > p1s) {
+                    fm.winner = fm.p2;
+                    tournamentData.fifthPlace = fm.p2;
+                    tournamentData.sixthPlace = fm.p1;
+                }
             } else {
                 const match = tournamentData.rounds[currentScoreTarget.roundIndex].matches[currentScoreTarget.matchIndex];
                 match.p1Score = p1s;
@@ -2131,6 +2364,23 @@
             document.getElementById('podium2ndName').innerText = tournamentData.runnerUp || "준우승";
             document.getElementById('podium3rdName').innerText = tournamentData.thirdPlace || (tournamentData.hasBronzeMatch ? "3위전 진행중" : "-");
 
+            // 6팀 대진 시 4위, 5위, 6위 순위 표시
+            const extRankWrap = document.getElementById('extendedRankWrap');
+            if (extRankWrap) {
+                if (tournamentData.participants && tournamentData.participants.length === 6) {
+                    extRankWrap.classList.remove('hidden');
+                    const rank4 = tournamentData.fourthPlace || (tournamentData.bronzeMatch && tournamentData.bronzeMatch.winner ? (tournamentData.bronzeMatch.winner === tournamentData.bronzeMatch.p1 ? tournamentData.bronzeMatch.p2 : tournamentData.bronzeMatch.p1) : "3위전 진행중");
+                    const rank5 = tournamentData.fifthPlace || (tournamentData.hasFifthMatch ? "5위전 진행중" : "-");
+                    const rank6 = tournamentData.sixthPlace || (tournamentData.fifthMatch && tournamentData.fifthMatch.winner ? (tournamentData.fifthMatch.winner === tournamentData.fifthMatch.p1 ? tournamentData.fifthMatch.p2 : tournamentData.fifthMatch.p1) : (tournamentData.hasFifthMatch ? "5위전 진행중" : "-"));
+
+                    document.getElementById('rank4thName').innerText = rank4;
+                    document.getElementById('rank5thName').innerText = rank5;
+                    document.getElementById('rank6thName').innerText = rank6;
+                } else {
+                    extRankWrap.classList.add('hidden');
+                }
+            }
+
             setTimeout(() => {
                 document.getElementById('championModal').classList.remove('hidden');
             }, 600);
@@ -2146,6 +2396,10 @@
             document.getElementById('inputTournamentIcon').value = tournamentData.icon;
             document.getElementById('inputParticipantsText').value = tournamentData.participants.join('\n');
             document.getElementById('checkBronzeMatch').checked = tournamentData.hasBronzeMatch;
+            const checkFifth = document.getElementById('checkFifthMatch');
+            if (checkFifth) {
+                checkFifth.checked = (tournamentData.hasFifthMatch !== undefined) ? tournamentData.hasFifthMatch : (tournamentData.participants.length === 6);
+            }
             document.getElementById('checkSoundEffects').checked = tournamentData.soundEnabled;
 
             updateParticipantCountDisplay();
@@ -2162,6 +2416,18 @@
                 .map(n => n.trim())
                 .filter(n => n.length > 0);
             document.getElementById('participantCountLabel').innerText = `(${lines.length}명)`;
+
+            const wrapFifth = document.getElementById('wrapCheckFifthMatch');
+            const checkFifth = document.getElementById('checkFifthMatch');
+            if (wrapFifth && checkFifth) {
+                if (lines.length === 6) {
+                    wrapFifth.classList.remove('hidden');
+                    checkFifth.checked = true;
+                } else {
+                    wrapFifth.classList.add('hidden');
+                    checkFifth.checked = false;
+                }
+            }
         };
 
         window.clearParticipantsInput = () => {
@@ -2191,6 +2457,8 @@
             const title = document.getElementById('inputTournamentTitle').value.trim() || "우리 반 챔피언십 토너먼트";
             const icon = document.getElementById('inputTournamentIcon').value;
             const hasBronze = document.getElementById('checkBronzeMatch').checked;
+            const checkFifth = document.getElementById('checkFifthMatch');
+            const hasFifth = checkFifth ? checkFifth.checked : (names.length === 6);
             const soundEnabled = document.getElementById('checkSoundEffects').checked;
 
             const names = document.getElementById('inputParticipantsText').value
@@ -2208,6 +2476,7 @@
             tournamentData.title = title;
             tournamentData.icon = icon;
             tournamentData.hasBronzeMatch = hasBronze;
+            tournamentData.hasFifthMatch = (names.length === 6) ? hasFifth : false;
             tournamentData.soundEnabled = soundEnabled;
 
             closeSetupModal();

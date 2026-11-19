@@ -84,7 +84,7 @@
                                 <span>부활 퀴즈 출제 학년</span>
                             </span>
                             <span class="text-[10px] font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30">
-                                2026 교육과정
+                                2022 개정 교육과정
                             </span>
                         </div>
                         <select id="homeSelectGrade" class="w-full p-2.5 bg-slate-950/90 border border-slate-700 rounded-xl text-xs font-bold text-sky-200 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
@@ -268,11 +268,21 @@
                 </div>
                 <div class="h-3.5 w-px bg-slate-700"></div>
 
+                <!-- 영어 학습수 (단어 및 퀴즈) -->
+                <div class="flex items-center gap-1" title="학습한 영어 단어 & 맞힌 퀴즈">
+                    <span class="text-xs">🔤</span>
+                    <span id="hudWords" class="font-bold text-xs text-sky-300">0</span>
+                </div>
+                <div class="h-3.5 w-px bg-slate-700"></div>
+
                 <!-- 점수 -->
                 <div class="flex items-center gap-1" title="현재 점수">
                     <i class="fa-solid fa-star text-yellow-400 text-xs"></i>
                     <span id="hudScore" class="font-black text-xs sm:text-sm text-yellow-300">0</span>
                 </div>
+
+                <!-- 활성 아이템 상태 배지 -->
+                <div id="hudActiveItemBadge" class="hidden items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-500/30 text-indigo-200 border border-indigo-400/50 text-[11px] font-black animate-pulse" title="현재 적용 중인 아이템 효과"></div>
             </div>
 
             <!-- 우측: 제어 및 설정 버튼 -->
@@ -362,6 +372,47 @@
 
             <!-- 결과 피드백 토스트 -->
             <div id="reviveFeedback" class="text-center font-bold text-xs py-1.5 hidden rounded-lg"></div>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 3-B. 모달: 럭키 아이템 영어 퀴즈 상자 (신규 기능!) -->
+    <!-- ─────────────────────────────────────────── -->
+    <div id="itemQuizModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="item-modal-box max-w-md w-full bg-slate-900 border-2 border-amber-500/80 rounded-2xl p-6 shadow-2xl relative">
+            <!-- 상단 안내 -->
+            <div class="text-center mb-4">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-black mb-2 animate-bounce">
+                    🎁 럭키 아이템 상자 발견!
+                </div>
+                <h2 class="text-xl font-black text-white flex items-center justify-center gap-2">
+                    영어 퀴즈 맞히고 아이템 획득!
+                </h2>
+                <p class="text-xs text-sky-300 mt-1">
+                    정답을 맞히면 <strong class="text-yellow-300 underline">보호막 / 자석 부스트 / 스타 대시 / 하트</strong> 중 1개를 획득합니다!
+                </p>
+            </div>
+
+            <!-- 퀴즈 문제 영역 -->
+            <div class="bg-slate-950/90 rounded-xl p-4 border border-slate-800 mb-4 text-center">
+                <span id="itemPrompt" class="text-xs text-slate-400 block mb-1.5">다음 영어 문제의 알맞은 답을 고르세요!</span>
+                <div class="flex items-center justify-center gap-2">
+                    <span id="itemQuestionText" class="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-amber-300">
+                        question
+                    </span>
+                    <button type="button" id="itemTtsBtn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-sky-400 flex items-center justify-center transition cursor-pointer" title="발음 듣기">
+                        <i class="fa-solid fa-volume-high text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4지 선다 선택지 그리드 -->
+            <div id="itemChoicesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3">
+                <!-- 동적으로 4개 버튼 삽입 -->
+            </div>
+
+            <!-- 결과 피드백 토스트 -->
+            <div id="itemFeedback" class="text-center font-bold text-xs py-2 hidden rounded-lg"></div>
         </div>
     </div>
 
@@ -566,12 +617,25 @@
             </div>
             <div class="space-y-3 text-xs text-slate-300 leading-relaxed max-h-[60vh] overflow-y-auto pr-1">
                 <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
-                    <span class="font-bold text-sky-300 block mb-1">🎮 기본 조작</span>
+                    <span class="font-bold text-sky-300 block mb-1">🎮 기본 조작 & 3단 점프</span>
                     <ul class="list-disc pl-4 space-y-0.5 text-slate-400">
                         <li>좌우 이동: <strong class="text-white">A / D 키</strong> 또는 <strong class="text-white">← / →</strong></li>
                         <li>점프: <strong class="text-white">Space</strong> 또는 <strong class="text-white">마우스 좌클릭</strong></li>
-                        <li>공중에서 한 번 더 점프하면 <strong class="text-yellow-300">2단 점프</strong>가 발동합니다!</li>
+                        <li>공중에서 연속 점프 시 <strong class="text-yellow-300">2단 점프</strong> 및 화려한 <strong class="text-cyan-300">3단 점프(Triple Jump!)</strong>가 발동합니다!</li>
                     </ul>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                    <span class="font-bold text-amber-300 block mb-1">🎁 럭키 아이템 퀴즈 상자</span>
+                    <p class="text-slate-400">
+                        필드에 떠다니는 <strong class="text-amber-300">럭키 상자(🎁)</strong>를 획득하면 영어 퀴즈가 출제됩니다.<br>
+                        정답을 맞히면 <strong class="text-emerald-300">에너지 쉴드(보호막), 코인 자석, 스타 대시, 하트 회복</strong> 등 강력한 아이템을 획득합니다!
+                    </p>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                    <span class="font-bold text-emerald-300 block mb-1">🔤 영어 단어 버블 & 원어민 발음</span>
+                    <p class="text-slate-400">
+                        하늘에 떠다니는 <strong class="text-cyan-300">영어 단어 버블</strong>을 점프로 획득하면 원어민 TTS 발음 듣기와 함께 뜻을 배우고 보너스 점수를 얻습니다!
+                    </p>
                 </div>
                 <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
                     <span class="font-bold text-rose-300 block mb-1">🚨 부활 찬스 3회 (핵심 룰)</span>
@@ -655,7 +719,7 @@
                 }
 
                 // 열려있는 모든 모달 닫기
-                const modalIds = ['reviveModal', 'gameOverModal', 'stageClearModal', 'hofModal', 'guideModal', 'profileModal'];
+                const modalIds = ['reviveModal', 'itemQuizModal', 'gameOverModal', 'stageClearModal', 'hofModal', 'guideModal', 'profileModal'];
                 modalIds.forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.classList.add('hidden');
@@ -1011,6 +1075,94 @@
                 });
 
                 reviveModal.classList.remove('hidden');
+            };
+
+            // ==========================================
+            // 럭키 아이템 획득 영어 퀴즈 모달 핸들러
+            // ==========================================
+            const itemQuizModal = document.getElementById('itemQuizModal');
+            let currentItemQuizCallback = null;
+
+            window.openItemQuizModal = (callback) => {
+                currentItemQuizCallback = callback;
+
+                // 퀴즈 문제 생성
+                const q = window.JumpmanQuiz.generateQuestion();
+                document.getElementById('itemPrompt').textContent = q.prompt;
+                document.getElementById('itemQuestionText').textContent = q.questionText;
+
+                // TTS 버튼 바인딩
+                const ttsBtn = document.getElementById('itemTtsBtn');
+                ttsBtn.onclick = () => {
+                    if (window.JumpmanAudio && q.ttsText) {
+                        window.JumpmanAudio.speak(q.ttsText);
+                    }
+                };
+                if (window.JumpmanAudio && q.ttsText) {
+                    window.JumpmanAudio.speak(q.ttsText);
+                }
+
+                // 4지 선다 선택지 버튼 렌더링
+                const grid = document.getElementById('itemChoicesGrid');
+                grid.innerHTML = '';
+                const feedbackEl = document.getElementById('itemFeedback');
+                feedbackEl.classList.add('hidden');
+
+                q.choices.forEach(choice => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'quiz-choice-btn py-3 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-100 font-bold text-xs sm:text-sm text-center cursor-pointer transition';
+                    btn.textContent = choice.text;
+
+                    btn.addEventListener('click', () => {
+                        Array.from(grid.children).forEach(b => b.disabled = true);
+
+                        if (choice.isCorrect) {
+                            btn.classList.remove('bg-slate-800', 'border-slate-700');
+                            btn.classList.add('bg-emerald-600', 'border-emerald-400', 'text-white');
+
+                            // 랜덤 아이템 추첨
+                            const itemTypes = ['shield', 'magnet', 'starDash', 'heart', 'gold'];
+                            const wonItem = itemTypes[Math.floor(Math.random() * itemTypes.length)];
+                            const itemNames = {
+                                shield: '🛡️ 에너지 쉴드 (1회 충돌 방어)',
+                                magnet: '🧲 코인 자석 (12초간 코인 자동 흡수)',
+                                starDash: '🚀 스타 대시 (6초간 무적 & 장애물 파괴)',
+                                heart: '💖 찬스 하트 (+1 부활 찬스 회복)',
+                                gold: '🪙 황금 보따리 (+500점 & 코인 10개)'
+                            };
+
+                            feedbackEl.className = 'text-center font-bold text-xs py-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 rounded-lg block mt-2';
+                            feedbackEl.innerHTML = `🎉 정답입니다!<br><strong class="text-amber-300 text-sm">${itemNames[wonItem]}</strong> 획득!`;
+
+                            if (window.JumpmanAudio) {
+                                window.JumpmanAudio.playCorrect();
+                                window.JumpmanAudio.playItemGet();
+                            }
+
+                            setTimeout(() => {
+                                itemQuizModal.classList.add('hidden');
+                                if (currentItemQuizCallback) currentItemQuizCallback({ success: true, item: wonItem });
+                            }, 1100);
+                        } else {
+                            btn.classList.remove('bg-slate-800', 'border-slate-700');
+                            btn.classList.add('bg-rose-600', 'border-rose-400', 'text-white');
+                            feedbackEl.className = 'text-center font-bold text-xs py-2 bg-rose-500/20 text-rose-300 border border-rose-500/40 rounded-lg block mt-2';
+                            feedbackEl.innerHTML = `❌ 아쉽습니다! 정답은 [${q.answer}] 입니다.`;
+
+                            if (window.JumpmanAudio) window.JumpmanAudio.playWrong();
+
+                            setTimeout(() => {
+                                itemQuizModal.classList.add('hidden');
+                                if (currentItemQuizCallback) currentItemQuizCallback({ success: false });
+                            }, 1300);
+                        }
+                    });
+
+                    grid.appendChild(btn);
+                });
+
+                itemQuizModal.classList.remove('hidden');
             };
 
             // ==========================================

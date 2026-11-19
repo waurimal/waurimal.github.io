@@ -31,6 +31,7 @@ class JumpmanGame {
             speed: 5.5,
             jumpPower: -12.8,
             doubleJumpPower: -11.5,
+            tripleJumpPower: -11.0, // 3단 점프 (트리플 점프!)
             gravity: 0.58,
             onGround: true,
             jumpCount: 0,
@@ -47,14 +48,29 @@ class JumpmanGame {
         this.totalDistance = 0;
         this.coins = 0;
         this.quizzesSolved = 0;
+        this.wordsCollected = 0; // 수집한 영어 단어 버블 수
+        this.itemsAcquired = 0; // 획득한 아이템 수
         this.survivalTime = 0; // 초
         this.chances = 3; // 기본 찬스 3회 (❤️ ❤️ ❤️)
+
+        // 활성 아이템 상태 버프 (에너지 쉴드, 코인 자석, 스타 대시)
+        this.activeItems = {
+            shield: false,
+            magnetTimer: 0,
+            starDashTimer: 0
+        };
 
         // 장애물 및 아이템 목록
         this.obstacles = [];
         this.collectibles = [];
+        this.itemBoxes = []; // 럭키 아이템 상자 [?]
+        this.wordOrbs = []; // 공중에 떠다니는 영어 단어 버블
+        this.floatingTexts = []; // 플로팅 점수 및 알림 텍스트
         this.particles = [];
         this.backgroundStars = [];
+
+        this.itemBoxSpawnTimer = 200; // 약 3.5초 후 첫 스폰
+        this.wordOrbSpawnTimer = 110; // 약 2초 후 첫 스폰
 
         // 배경 패럴랙스 교육용 영어 단어 & 문장 플로팅 시스템
         this.backgroundTexts = [];
@@ -507,9 +523,17 @@ class JumpmanGame {
         this.totalDistance = 0;
         this.coins = 0;
         this.quizzesSolved = 0;
+        this.wordsCollected = 0;
+        this.itemsAcquired = 0;
         this.survivalTime = 0;
         this.chances = 3; // 찬스 3회 완충!
         this.gameSpeed = 5.0 + (mode === 'stage' ? (stage - 1) * 0.4 : 0);
+
+        this.activeItems = {
+            shield: false,
+            magnetTimer: 0,
+            starDashTimer: 0
+        };
 
         this.player.x = 160;
         this.player.y = this.FLOOR_Y - this.player.height;
@@ -521,9 +545,14 @@ class JumpmanGame {
 
         this.obstacles = [];
         this.collectibles = [];
+        this.itemBoxes = [];
+        this.wordOrbs = [];
+        this.floatingTexts = [];
         this.particles = [];
         this.spawnTimer = 40;
         this.coinSpawnTimer = 30;
+        this.itemBoxSpawnTimer = 220;
+        this.wordOrbSpawnTimer = 110;
         this.screenShake = 0;
 
         this.updateHUD();
@@ -546,10 +575,16 @@ class JumpmanGame {
         this.gameSpeed = 5.0 + (this.currentStage - 1) * 0.4;
         this.chances = 3; // 다음 스테이지를 위해 찬스 3회 충전!
 
+        this.activeItems = {
+            shield: false,
+            magnetTimer: 0,
+            starDashTimer: 0
+        };
+
         this.isRunning = true;
         this.isPaused = false;
 
-        // 점수(this.score), 총 누적거리(this.totalDistance), 코인(this.coins), 퀴즈풀이(this.quizzesSolved), 생존시간(this.survivalTime)은 누적 유지!
+        // 점수(this.score), 총 누적거리(this.totalDistance), 코인(this.coins), 퀴즈풀이(this.quizzesSolved), 생존시간(this.survivalTime), 단어수집(this.wordsCollected)은 누적 유지!
 
         this.player.x = 160;
         this.player.y = this.FLOOR_Y - this.player.height;
@@ -561,9 +596,14 @@ class JumpmanGame {
 
         this.obstacles = [];
         this.collectibles = [];
+        this.itemBoxes = [];
+        this.wordOrbs = [];
+        this.floatingTexts = [];
         this.particles = [];
         this.spawnTimer = 40;
         this.coinSpawnTimer = 30;
+        this.itemBoxSpawnTimer = 200;
+        this.wordOrbSpawnTimer = 110;
         this.screenShake = 0;
 
         this.updateHUD();
@@ -595,7 +635,106 @@ class JumpmanGame {
             this.player.scaleX = 0.85;
             this.createStarPuff(this.player.x + this.player.width / 2, this.player.y + this.player.height);
             if (window.JumpmanAudio) window.JumpmanAudio.playDoubleJump();
+        } else if (this.player.jumpCount === 2) {
+            // 3단 점프 (트리플 점프! 화려한 파티클 & 버스트)
+            this.player.vy = this.player.tripleJumpPower || -11.0;
+            this.player.jumpCount = 3;
+            this.player.scaleY = 1.45;
+            this.player.scaleX = 0.75;
+            this.createTripleJumpBurst(this.player.x + this.player.width / 2, this.player.y + this.player.height);
+            this.addFloatingText('3단 점프! ✨', this.player.x + this.player.width / 2, this.player.y - 12, '#38BDF8');
+            if (window.JumpmanAudio && window.JumpmanAudio.playTripleJump) {
+                window.JumpmanAudio.playTripleJump();
+            }
         }
+    }
+
+    createTripleJumpBurst(x, y) {
+        const colors = ['#38BDF8', '#818CF8', '#C084FC', '#F472B6', '#FBBF24'];
+        for (let i = 0; i < 14; i++) {
+            const angle = (Math.PI * 2 * i) / 14 + (Math.random() - 0.5) * 0.4;
+            const spd = Math.random() * 3.5 + 2.0;
+            this.particles.push({
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * spd,
+                vy: Math.sin(angle) * spd + 1,
+                radius: Math.random() * 3 + 2,
+                color: colors[i % colors.length],
+                alpha: 1,
+                decay: 0.045
+            });
+        }
+    }
+
+    addFloatingText(text, x, y, color = '#FBBF24') {
+        this.floatingTexts.push({
+            text: text,
+            x: x,
+            y: y,
+            color: color,
+            alpha: 1.0,
+            vy: -1.2,
+            life: 60
+        });
+    }
+
+    spawnWordOrb() {
+        const pool = this.getBackgroundItemPool().filter(i => i.type === 'word');
+        const item = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : { en: 'JUMP', kr: '점프하다' };
+        const y = this.FLOOR_Y - 55 - Math.random() * 90;
+        this.wordOrbs.push({
+            en: item.en,
+            kr: item.kr || '',
+            x: this.WIDTH + 40,
+            y: y,
+            baseY: y,
+            width: 75,
+            height: 28,
+            collected: false,
+            floatPhase: Math.random() * Math.PI * 2
+        });
+    }
+
+    spawnItemBox() {
+        const y = this.FLOOR_Y - 60 - Math.random() * 80;
+        this.itemBoxes.push({
+            x: this.WIDTH + 35,
+            y: y,
+            baseY: y,
+            size: 28,
+            floatPhase: Math.random() * Math.PI * 2,
+            collected: false
+        });
+    }
+
+    handleItemQuizResult(res) {
+        this.isPaused = false;
+        if (!res || !res.success) return;
+
+        this.itemsAcquired++;
+        this.quizzesSolved++;
+
+        const wonItem = res.item;
+        if (wonItem === 'shield') {
+            this.activeItems.shield = true;
+            this.addFloatingText('🛡️ 에너지 쉴드 장착!', this.player.x + 20, this.player.y - 15, '#38BDF8');
+        } else if (wonItem === 'magnet') {
+            this.activeItems.magnetTimer = 12 * 60; // 12초
+            this.addFloatingText('🧲 코인 자석 발동! (12s)', this.player.x + 20, this.player.y - 15, '#F59E0B');
+        } else if (wonItem === 'starDash') {
+            this.activeItems.starDashTimer = 6 * 60; // 6초
+            this.addFloatingText('🚀 스타 대시! 무적 돌진 (6s)', this.player.x + 20, this.player.y - 15, '#F43F5E');
+        } else if (wonItem === 'heart') {
+            this.chances = Math.min(3, this.chances + 1);
+            this.addFloatingText('💖 부활 찬스 +1 회복!', this.player.x + 20, this.player.y - 15, '#EC4899');
+        } else if (wonItem === 'gold') {
+            this.score += 500;
+            this.coins += 10;
+            this.addFloatingText('🪙 황금 보따리! +500점 +10코인', this.player.x + 20, this.player.y - 15, '#FBBF24');
+        }
+
+        this.updateHUD();
     }
 
     createDustParticles(x, y, count = 6) {
@@ -781,6 +920,42 @@ class JumpmanGame {
             return;
         }
 
+        // 활성 아이템 타이머 감소
+        if (this.activeItems.magnetTimer > 0) this.activeItems.magnetTimer--;
+        if (this.activeItems.starDashTimer > 0) {
+            this.activeItems.starDashTimer--;
+            if (Math.random() < 0.35) {
+                this.particles.push({
+                    x: this.player.x + Math.random() * this.player.width,
+                    y: this.player.y + Math.random() * this.player.height,
+                    vx: -this.gameSpeed * 0.8 - Math.random() * 2,
+                    vy: (Math.random() - 0.5) * 2,
+                    radius: Math.random() * 4 + 2,
+                    color: Math.random() < 0.5 ? '#FBBF24' : '#F43F5E',
+                    alpha: 1,
+                    decay: 0.05
+                });
+            }
+        }
+
+        // 단어 버블 생성 타이머
+        this.wordOrbSpawnTimer--;
+        if (this.wordOrbSpawnTimer <= 0) {
+            if (this.wordOrbs.length < 3) {
+                this.spawnWordOrb();
+            }
+            this.wordOrbSpawnTimer = Math.floor(Math.random() * 100) + 120; // 2 ~ 3.5초 주기
+        }
+
+        // 아이템 퀴즈 상자 생성 타이머
+        this.itemBoxSpawnTimer--;
+        if (this.itemBoxSpawnTimer <= 0) {
+            if (this.itemBoxes.length < 2) {
+                this.spawnItemBox();
+            }
+            this.itemBoxSpawnTimer = Math.floor(Math.random() * 150) + 240; // 4 ~ 6.5초 주기
+        }
+
         // 플레이어 좌우 이동
         if (this.keys.left) {
             this.player.vx = -this.player.speed;
@@ -846,6 +1021,116 @@ class JumpmanGame {
             this.coinSpawnTimer = Math.floor(Math.random() * 90) + 70;
         }
 
+        // 영어 단어 버블 업데이트 및 수집 검사
+        for (let i = this.wordOrbs.length - 1; i >= 0; i--) {
+            const orb = this.wordOrbs[i];
+            orb.x -= this.gameSpeed * 0.95;
+            orb.floatPhase += 0.05;
+            orb.y = orb.baseY + Math.sin(orb.floatPhase) * 6;
+
+            // 자석 효과 (자석 활성화 시 플레이어 방향으로 당겨짐)
+            if (this.activeItems.magnetTimer > 0) {
+                const dx = (this.player.x + this.player.width / 2) - orb.x;
+                const dy = (this.player.y + this.player.height / 2) - orb.y;
+                const dist = Math.hypot(dx, dy);
+                if (dist < 260) {
+                    orb.x += (dx / dist) * 7.5;
+                    orb.y += (dy / dist) * 7.5;
+                }
+            }
+
+            // 플레이어와 충돌 (수집) 검사
+            const pBox = {
+                x: this.player.x,
+                y: this.player.y,
+                width: this.player.width,
+                height: this.player.height
+            };
+            const oBox = {
+                x: orb.x - orb.width / 2,
+                y: orb.y - orb.height / 2,
+                width: orb.width,
+                height: orb.height
+            };
+
+            if (pBox.x < oBox.x + oBox.width &&
+                pBox.x + pBox.width > oBox.x &&
+                pBox.y < oBox.y + oBox.height &&
+                pBox.y + pBox.height > oBox.y &&
+                !orb.collected) {
+                orb.collected = true;
+                this.wordsCollected++;
+                this.score += 150;
+                this.createBlastEffect(orb.x, orb.y);
+                const popText = `+150 ${orb.en.toUpperCase()}${orb.kr ? ' (' + orb.kr + ')' : ''}`;
+                this.addFloatingText(popText, orb.x, orb.y - 12, '#4ADE80');
+
+                // 발음 TTS 자동 재생 & 수집 음향
+                if (window.JumpmanAudio) {
+                    window.JumpmanAudio.playWordCollect();
+                    window.JumpmanAudio.speak(orb.en);
+                }
+
+                this.wordOrbs.splice(i, 1);
+                continue;
+            }
+
+            if (orb.x < -100) {
+                this.wordOrbs.splice(i, 1);
+            }
+        }
+
+        // 럭키 아이템 상자 업데이트 및 충돌 검사
+        for (let i = this.itemBoxes.length - 1; i >= 0; i--) {
+            const box = this.itemBoxes[i];
+            box.x -= this.gameSpeed;
+            box.floatPhase += 0.06;
+            box.y = box.baseY + Math.sin(box.floatPhase) * 7;
+
+            // 플레이어 충돌 검사
+            const pBox = {
+                x: this.player.x,
+                y: this.player.y,
+                width: this.player.width,
+                height: this.player.height
+            };
+            const bBox = {
+                x: box.x - box.size / 2,
+                y: box.y - box.size / 2,
+                width: box.size,
+                height: box.size
+            };
+
+            if (pBox.x < bBox.x + bBox.width &&
+                pBox.x + pBox.width > bBox.x &&
+                pBox.y < bBox.y + bBox.height &&
+                pBox.y + pBox.height > bBox.y &&
+                !box.collected) {
+                box.collected = true;
+                this.createBlastEffect(box.x, box.y);
+                this.itemBoxes.splice(i, 1);
+
+                if (window.JumpmanAudio) {
+                    window.JumpmanAudio.playItemBoxTouch();
+                }
+
+                // 게임 루프 일시 정지 후 퀴즈 모달 오픈
+                this.isPaused = true;
+                if (window.openItemQuizModal) {
+                    window.openItemQuizModal((res) => {
+                        this.handleItemQuizResult(res);
+                    });
+                } else {
+                    this.isPaused = false;
+                }
+                return;
+            }
+
+            if (box.x < -60) {
+                this.itemBoxes.splice(i, 1);
+            }
+        }
+
         // 장애물 업데이트 및 충돌 검사
         for (let i = this.obstacles.length - 1; i >= 0; i--) {
             const obs = this.obstacles[i];
@@ -881,11 +1166,33 @@ class JumpmanGame {
 
             // 충돌 검사
             if (this.checkCollision(this.player, obs)) {
-                if (this.player.invulnerableTimer > 0) {
+                if (this.activeItems.starDashTimer > 0) {
+                    // 스타 대시 돌진 중: 장애물 완파 & 보너스 점수!
+                    this.createBlastEffect(obs.x + obs.width / 2, obs.y + obs.height / 2);
+                    this.obstacles.splice(i, 1);
+                    this.score += 100;
+                    this.addFloatingText('대시 격파! +100', obs.x, obs.y, '#FBBF24');
+                    if (window.JumpmanAudio && window.JumpmanAudio.playItemGet) {
+                        window.JumpmanAudio.playItemGet();
+                    }
+                    continue;
+                } else if (this.player.invulnerableTimer > 0) {
                     // 무적 상태일 때 충돌한 장애물 파괴
                     this.createBlastEffect(obs.x + obs.width / 2, obs.y + obs.height / 2);
                     this.obstacles.splice(i, 1);
                     this.score += 50;
+                    continue;
+                } else if (this.activeItems.shield) {
+                    // 에너지 쉴드가 충돌 피해를 1회 막아주고 소멸!
+                    this.activeItems.shield = false;
+                    this.player.invulnerableTimer = 60; // 1초간 보호막
+                    this.createBlastEffect(obs.x + obs.width / 2, obs.y + obs.height / 2);
+                    this.obstacles.splice(i, 1);
+                    this.addFloatingText('쉴드 방어! (세이프)', this.player.x, this.player.y - 15, '#38BDF8');
+                    if (window.JumpmanAudio && window.JumpmanAudio.playShieldBreak) {
+                        window.JumpmanAudio.playShieldBreak();
+                    }
+                    this.updateHUD();
                     continue;
                 } else {
                     // 충돌 발생! 찬스 검사 및 부활 퀴즈 트리거
@@ -905,10 +1212,15 @@ class JumpmanGame {
             const c = this.collectibles[i];
             c.x -= this.gameSpeed;
 
-            // 자석 효과 (플레이어와 가까워지면 당겨짐)
+            // 자석 효과 (자석 아이템 활성화 시 최대 280px까지 끌어당김, 기본 상태는 42px)
             const dx = (this.player.x + this.player.width / 2) - c.x;
             const dy = (this.player.y + this.player.height / 2) - c.y;
             const dist = Math.hypot(dx, dy);
+
+            if (this.activeItems.magnetTimer > 0 && dist < 280) {
+                c.x += (dx / dist) * 8.5;
+                c.y += (dy / dist) * 8.5;
+            }
 
             if (dist < 42 && !c.collected) {
                 c.collected = true;
@@ -922,6 +1234,17 @@ class JumpmanGame {
 
             if (c.x < -30) {
                 this.collectibles.splice(i, 1);
+            }
+        }
+
+        // 플로팅 텍스트 업데이트
+        for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+            const ft = this.floatingTexts[i];
+            ft.y += ft.vy;
+            ft.life--;
+            ft.alpha = Math.max(0, ft.life / 60);
+            if (ft.life <= 0) {
+                this.floatingTexts.splice(i, 1);
             }
         }
 
@@ -1040,6 +1363,8 @@ class JumpmanGame {
                 survivalTime: Math.floor(this.survivalTime),
                 coins: this.coins,
                 quizzesSolved: this.quizzesSolved,
+                wordsCollected: this.wordsCollected || 0,
+                itemsAcquired: this.itemsAcquired || 0,
                 gameMode: this.gameMode,
                 stage: this.currentStage,
                 reason: reason
@@ -1066,6 +1391,8 @@ class JumpmanGame {
                 clearBonus: clearBonus,
                 coins: this.coins,
                 quizzesSolved: this.quizzesSolved,
+                wordsCollected: this.wordsCollected || 0,
+                itemsAcquired: this.itemsAcquired || 0,
                 survivalTime: Math.floor(this.survivalTime),
                 distance: this.totalDistance || this.distance
             });
@@ -1105,6 +1432,30 @@ class JumpmanGame {
 
         const hudCoins = document.getElementById('hudCoins');
         if (hudCoins) hudCoins.textContent = this.coins;
+
+        const hudWords = document.getElementById('hudWords');
+        if (hudWords) {
+            hudWords.textContent = `${this.wordsCollected}개 / 퀴즈 ${this.quizzesSolved}회`;
+        }
+
+        const hudActiveItemBadge = document.getElementById('hudActiveItemBadge');
+        if (hudActiveItemBadge) {
+            if (this.activeItems.starDashTimer > 0) {
+                const sec = Math.ceil(this.activeItems.starDashTimer / 60);
+                hudActiveItemBadge.textContent = `🚀 스타 대시 (${sec}s)`;
+                hudActiveItemBadge.className = 'px-2 py-0.5 rounded-full text-[11px] font-black bg-rose-500/25 text-rose-300 border border-rose-500/50 animate-pulse';
+            } else if (this.activeItems.shield) {
+                hudActiveItemBadge.textContent = '🛡️ 에너지 쉴드 ON';
+                hudActiveItemBadge.className = 'px-2 py-0.5 rounded-full text-[11px] font-black bg-cyan-500/25 text-cyan-300 border border-cyan-500/50';
+            } else if (this.activeItems.magnetTimer > 0) {
+                const sec = Math.ceil(this.activeItems.magnetTimer / 60);
+                hudActiveItemBadge.textContent = `🧲 코인 자석 (${sec}s)`;
+                hudActiveItemBadge.className = 'px-2 py-0.5 rounded-full text-[11px] font-black bg-amber-500/25 text-amber-300 border border-amber-500/50 animate-pulse';
+            } else {
+                hudActiveItemBadge.textContent = '일반 상태';
+                hudActiveItemBadge.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-800 text-slate-400 border border-slate-700';
+            }
+        }
 
         const hudStageBadge = document.getElementById('hudStageBadge');
         if (hudStageBadge) {
@@ -1208,6 +1559,72 @@ class JumpmanGame {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText('★', 0, 1);
+            ctx.restore();
+        });
+
+        // 5-B. 공중 영어 단어 버블 (Word Orbs)
+        this.wordOrbs.forEach(orb => {
+            ctx.save();
+            ctx.translate(orb.x, orb.y);
+
+            // 반짝이는 네온 필 배경
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+            ctx.strokeStyle = '#4ADE80';
+            ctx.lineWidth = 2;
+            ctx.shadowColor = '#4ADE80';
+            ctx.shadowBlur = 8;
+
+            const w = orb.width;
+            const h = orb.height;
+            this.drawRoundedRect(ctx, -w / 2, -h / 2, w, h, h / 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // 단어 텍스트
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#86EFAC';
+            ctx.font = 'bold 13px "Pretendard Variable", Pretendard, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(orb.en, 0, 0);
+
+            // 상단 미니 배지 🔤
+            ctx.font = '10px sans-serif';
+            ctx.fillText('🔤', -w / 2 + 10, -h / 2 + 3);
+
+            ctx.restore();
+        });
+
+        // 5-C. 럭키 아이템 상자 (Item Boxes)
+        this.itemBoxes.forEach(box => {
+            ctx.save();
+            ctx.translate(box.x, box.y);
+
+            // 황금 큐브 렌더링
+            const s = box.size;
+            ctx.shadowColor = '#F59E0B';
+            ctx.shadowBlur = 12;
+
+            const boxGrad = ctx.createLinearGradient(-s / 2, -s / 2, s / 2, s / 2);
+            boxGrad.addColorStop(0, '#FDE047');
+            boxGrad.addColorStop(0.5, '#F59E0B');
+            boxGrad.addColorStop(1, '#B45309');
+            ctx.fillStyle = boxGrad;
+            ctx.strokeStyle = '#FEF08A';
+            ctx.lineWidth = 2;
+
+            this.drawRoundedRect(ctx, -s / 2, -s / 2, s, s, 6);
+            ctx.fill();
+            ctx.stroke();
+
+            // 물음표 마크
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('?', 0, 1);
+
             ctx.restore();
         });
 
@@ -1320,6 +1737,21 @@ class JumpmanGame {
         // 8. 플레이어 (Jumpman 캐릭터 렌더링)
         this.renderPlayer(ctx);
 
+        // 8-B. 플로팅 알림 텍스트 (+150 점수, 3단 점프 등)
+        this.floatingTexts.forEach(ft => {
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, ft.alpha);
+            ctx.fillStyle = ft.color;
+            ctx.strokeStyle = 'rgba(15, 23, 42, 0.9)';
+            ctx.lineWidth = 3;
+            ctx.font = 'black 14px "Pretendard Variable", Pretendard, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.strokeText(ft.text, ft.x, ft.y);
+            ctx.fillText(ft.text, ft.x, ft.y);
+            ctx.restore();
+        });
+
         // 9. 목적지 깃발 (스테이지 모드일 때)
         if (this.gameMode === 'stage') {
             const remainDist = this.stageGoalDistance - this.distance;
@@ -1356,6 +1788,58 @@ class JumpmanGame {
 
             ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
             ctx.fill();
+        }
+
+        // 쉴드 아이템 에너지 배리어 아우라
+        if (this.activeItems.shield) {
+            ctx.save();
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.9)';
+            ctx.lineWidth = 3.5;
+            ctx.shadowColor = '#38BDF8';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(0, -p.height / 2, p.height * 0.85, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.18)';
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // 스타 대시 무적 돌진 황금 아우라
+        if (this.activeItems.starDashTimer > 0) {
+            ctx.save();
+            ctx.strokeStyle = 'rgba(251, 191, 36, 0.95)';
+            ctx.lineWidth = 4;
+            ctx.shadowColor = '#F59E0B';
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.arc(0, -p.height / 2, p.height * 0.95, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // 3단 점프 날개 연출
+        if (p.jumpCount === 3) {
+            ctx.save();
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.85)';
+            ctx.shadowColor = '#38BDF8';
+            ctx.shadowBlur = 8;
+            // 좌측 날개
+            ctx.beginPath();
+            ctx.moveTo(-12, -p.height / 2);
+            ctx.lineTo(-26, -p.height / 2 - 12);
+            ctx.lineTo(-18, -p.height / 2 + 6);
+            ctx.closePath();
+            ctx.fill();
+            // 우측 날개
+            ctx.beginPath();
+            ctx.moveTo(12, -p.height / 2);
+            ctx.lineTo(26, -p.height / 2 - 12);
+            ctx.lineTo(18, -p.height / 2 + 6);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
         }
 
         // Jumpman 캐릭터 본체 (복고풍 플랫포머 히어로)
