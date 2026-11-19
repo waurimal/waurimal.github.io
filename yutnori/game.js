@@ -502,13 +502,13 @@
         constructor() {
             this.storageKey = 'waurimal_yutnori_hof';
             this.defaultRecords = [
-                { id: 'hof_1', grade: 6, classNum: 1, studentNum: 1, name: '세종대왕', wins: 12, totalGames: 14, score: 9850, correctCount: 58, wrongCount: 4, goalCount: 32, catchCount: 18, stackCount: 14, yutMoCount: 24, bestScore: 2150, lastPlayed: '2026-10-24' },
-                { id: 'hof_2', grade: 6, classNum: 1, studentNum: 2, name: '이순신', wins: 10, totalGames: 12, score: 8400, correctCount: 46, wrongCount: 3, goalCount: 27, catchCount: 22, stackCount: 9, yutMoCount: 18, bestScore: 1980, lastPlayed: '2026-10-23' },
-                { id: 'hof_3', grade: 6, classNum: 2, studentNum: 3, name: '신사임당', wins: 8, totalGames: 9, score: 7100, correctCount: 42, wrongCount: 2, goalCount: 21, catchCount: 12, stackCount: 12, yutMoCount: 15, bestScore: 1820, lastPlayed: '2026-10-22' },
-                { id: 'hof_4', grade: 5, classNum: 1, studentNum: 4, name: '율곡이이', wins: 7, totalGames: 8, score: 6250, correctCount: 38, wrongCount: 5, goalCount: 19, catchCount: 10, stackCount: 8, yutMoCount: 12, bestScore: 1650, lastPlayed: '2026-10-21' },
-                { id: 'hof_5', grade: 5, classNum: 2, studentNum: 5, name: '장영실', wins: 6, totalGames: 7, score: 5600, correctCount: 35, wrongCount: 3, goalCount: 16, catchCount: 9, stackCount: 7, yutMoCount: 10, bestScore: 1540, lastPlayed: '2026-10-20' },
-                { id: 'hof_6', grade: 4, classNum: 1, studentNum: 6, name: '홍길동', wins: 5, totalGames: 6, score: 4750, correctCount: 28, wrongCount: 4, goalCount: 14, catchCount: 7, stackCount: 6, yutMoCount: 8, bestScore: 1420, lastPlayed: '2026-10-19' },
-                { id: 'hof_7', grade: 4, classNum: 2, studentNum: 7, name: '김유신', wins: 4, totalGames: 5, score: 3900, correctCount: 24, wrongCount: 2, goalCount: 11, catchCount: 6, stackCount: 5, yutMoCount: 6, bestScore: 1310, lastPlayed: '2026-10-18' }
+                { id: 'hof_1', grade: 6, classNum: 3, studentNum: 14, name: '세종대왕', wins: 12, totalGames: 14, score: 9850, correctCount: 58, wrongCount: 4, goalCount: 32, catchCount: 18, stackCount: 14, yutMoCount: 24, bestScore: 2150, lastPlayed: '2026-10-24' },
+                { id: 'hof_2', grade: 6, classNum: 1, studentNum: 7, name: '이순신', wins: 10, totalGames: 12, score: 8400, correctCount: 46, wrongCount: 3, goalCount: 27, catchCount: 22, stackCount: 9, yutMoCount: 18, bestScore: 1980, lastPlayed: '2026-10-23' },
+                { id: 'hof_3', grade: 6, classNum: 2, studentNum: 21, name: '신사임당', wins: 8, totalGames: 9, score: 7100, correctCount: 42, wrongCount: 2, goalCount: 21, catchCount: 12, stackCount: 12, yutMoCount: 15, bestScore: 1820, lastPlayed: '2026-10-22' },
+                { id: 'hof_4', grade: 5, classNum: 4, studentNum: 9, name: '율곡이이', wins: 7, totalGames: 8, score: 6250, correctCount: 38, wrongCount: 5, goalCount: 19, catchCount: 10, stackCount: 8, yutMoCount: 12, bestScore: 1650, lastPlayed: '2026-10-21' },
+                { id: 'hof_5', grade: 5, classNum: 2, studentNum: 18, name: '장영실', wins: 6, totalGames: 7, score: 5600, correctCount: 35, wrongCount: 3, goalCount: 16, catchCount: 9, stackCount: 7, yutMoCount: 10, bestScore: 1540, lastPlayed: '2026-10-20' },
+                { id: 'hof_6', grade: 4, classNum: 3, studentNum: 5, name: '홍길동', wins: 5, totalGames: 6, score: 4750, correctCount: 28, wrongCount: 4, goalCount: 14, catchCount: 7, stackCount: 6, yutMoCount: 8, bestScore: 1420, lastPlayed: '2026-10-19' },
+                { id: 'hof_7', grade: 4, classNum: 1, studentNum: 12, name: '김유신', wins: 4, totalGames: 5, score: 3900, correctCount: 24, wrongCount: 2, goalCount: 11, catchCount: 6, stackCount: 5, yutMoCount: 6, bestScore: 1310, lastPlayed: '2026-10-18' }
             ];
             this.modalFilterGrade = 'all';
             this.modalFilterClass = 'all';
@@ -526,16 +526,38 @@
                 if (raw !== null) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed)) {
-                        // 자가 치유(Self-healing): 로컬에 저장된 실제 학생 프로필과 대조하여 과거 기본값(6-1)으로 저장되었던 본인 기록 자동 보정
+                        let updated = false;
+
+                        // 1. 과거 1반 기본값으로 저장되었던 기본 인물 기록(hof_1 ~ hof_7 등)을 최신 다양화 학적으로 갱신
+                        parsed.forEach(r => {
+                            const defMatch = this.defaultRecords.find(d => d.id === r.id || d.name === r.name);
+                            if (defMatch && (String(r.id).startsWith('hof_') || ['세종대왕', '이순신', '신사임당', '율곡이이', '장영실', '홍길동', '김유신'].includes(r.name))) {
+                                if (r.classNum === 1 && defMatch.classNum !== 1) {
+                                    r.classNum = defMatch.classNum;
+                                    updated = true;
+                                }
+                                if (r.studentNum === 1 && defMatch.studentNum !== 1) {
+                                    r.studentNum = defMatch.studentNum;
+                                    updated = true;
+                                }
+                            }
+                        });
+
+                        // 2. 자가 치유(Self-healing): 로컬에 저장된 실제 학생 프로필과 대조하여 과거 기본값(6-1)으로 저장되었던 본인 기록 자동 보정
                         try {
-                            const localRealName = localStorage.getItem('yutnori_real_name');
-                            const localGrade = localStorage.getItem('yutnori_grade');
-                            const localClass = localStorage.getItem('yutnori_class');
-                            const localNum = localStorage.getItem('yutnori_num');
-                            if (localRealName) {
-                                let updated = false;
+                            const localRealName = localStorage.getItem('yutnori_real_name') || 
+                                (window.WaurimalStudent && window.WaurimalStudent.get && window.WaurimalStudent.get() && window.WaurimalStudent.get().name);
+                            const localGrade = localStorage.getItem('yutnori_grade') || 
+                                (window.WaurimalStudent && window.WaurimalStudent.get && window.WaurimalStudent.get() && window.WaurimalStudent.get().grade);
+                            const localClass = localStorage.getItem('yutnori_class') || 
+                                (window.WaurimalStudent && window.WaurimalStudent.get && window.WaurimalStudent.get() && window.WaurimalStudent.get().classNum);
+                            const localNum = localStorage.getItem('yutnori_num') || 
+                                (window.WaurimalStudent && window.WaurimalStudent.get && window.WaurimalStudent.get() && window.WaurimalStudent.get().studentNum);
+
+                            if (localRealName && String(localRealName).trim()) {
+                                const cleanRealName = String(localRealName).trim();
                                 parsed.forEach(r => {
-                                    if (r.name === localRealName) {
+                                    if (r.name && r.name.trim() === cleanRealName) {
                                         if (localClass && Number(localClass) !== r.classNum) {
                                             r.classNum = Number(localClass);
                                             updated = true;
@@ -544,24 +566,25 @@
                                             r.grade = Number(localGrade);
                                             updated = true;
                                         }
-                                        if (localNum && !isNaN(Number(localNum))) {
+                                        if (localNum && !isNaN(Number(localNum)) && String(localNum).trim() !== '') {
                                             if (r.studentNum !== Number(localNum)) {
                                                 r.studentNum = Number(localNum);
                                                 updated = true;
                                             }
-                                        } else if (!localNum && r.studentNum === 1) {
-                                            // 과거 번호 미입력 시 1번으로 자동 강제 부여되던 버그 치유
+                                        } else if ((!localNum || String(localNum).trim() === '') && r.studentNum !== null) {
+                                            // 번호 미입력 학생의 경우 강제 1번 부여 제거 및 null 정리
                                             r.studentNum = null;
                                             updated = true;
                                         }
                                     }
                                 });
-                                if (updated) {
-                                    localStorage.setItem(this.storageKey, JSON.stringify(parsed));
-                                }
                             }
                         } catch(err) {
                             console.warn("Self-healing HOF records warning:", err);
+                        }
+
+                        if (updated) {
+                            localStorage.setItem(this.storageKey, JSON.stringify(parsed));
                         }
                         return this.normalizeRecords(parsed);
                     }
@@ -570,6 +593,32 @@
                 console.warn("HOF load error:", e);
             }
             return this.normalizeRecords([...this.defaultRecords]);
+        }
+
+        syncUserProfile(prof) {
+            if (!prof || !prof.name || !String(prof.name).trim()) return;
+            const cleanName = String(prof.name).trim();
+            const g = Number(prof.grade) || 6;
+            const c = (prof.classNum !== undefined && prof.classNum !== null && prof.classNum !== '' && !isNaN(Number(prof.classNum))) ? Number(prof.classNum) : 1;
+            const n = (prof.studentNum !== undefined && prof.studentNum !== null && prof.studentNum !== '' && !isNaN(Number(prof.studentNum))) ? Number(prof.studentNum) : null;
+
+            const records = this.getRecords();
+            let changed = false;
+            records.forEach(r => {
+                if (r.name && r.name.trim() === cleanName) {
+                    if (r.grade !== g || r.classNum !== c || r.studentNum !== n) {
+                        r.grade = g;
+                        r.classNum = c;
+                        r.studentNum = n;
+                        changed = true;
+                    }
+                }
+            });
+            if (changed) {
+                this.saveRecords(records);
+            } else {
+                this.renderAllViews();
+            }
         }
 
         normalizeRecords(records) {
@@ -708,9 +757,7 @@
                 const sNum = (stat.studentNum !== undefined && stat.studentNum !== null && stat.studentNum !== '' && !isNaN(Number(stat.studentNum))) ? Number(stat.studentNum) : null;
 
                 let existing = records.find(r => {
-                    if ((r.name || '').trim() !== pName) return false;
-                    // 같은 이름인 경우, 학년이 같고 (반이 일치하거나 기존 기록이 1반 기본값이었던 경우 최신 학적으로 갱신)
-                    return (!r.grade || r.grade === sGrade) && (!r.classNum || r.classNum === sClass || r.classNum === 1);
+                    return (r.name || '').trim() === pName;
                 });
 
                 if (existing) {
@@ -729,10 +776,10 @@
                     if (!existing.bestScore || stat.matchScore > existing.bestScore) {
                         existing.bestScore = stat.matchScore;
                     }
-                    // 최신 학적 정보로 갱신 (1반 기본값 탈피)
+                    // 최신 학적 정보로 갱신 (1반 기본값 및 번호 탈피)
                     existing.grade = sGrade;
                     existing.classNum = sClass;
-                    if (sNum !== null) existing.studentNum = sNum;
+                    existing.studentNum = sNum;
                 } else {
                     records.push({
                         id: 'hof_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -4516,14 +4563,14 @@
                     if (pObj) {
                         if (pObj.grade) stat.grade = Number(pObj.grade);
                         if (pObj.classNum) stat.classNum = Number(pObj.classNum);
-                        if (pObj.studentNum !== undefined && pObj.studentNum !== null && pObj.studentNum !== '') {
-                            stat.studentNum = Number(pObj.studentNum);
-                        }
+                        stat.studentNum = (pObj.studentNum !== undefined && pObj.studentNum !== null && pObj.studentNum !== '' && !isNaN(Number(pObj.studentNum))) 
+                            ? Number(pObj.studentNum) 
+                            : null;
                     }
                 } else if (this.currentStudentInfo && (stat.name === this.currentStudentInfo.name || !stat.grade)) {
                     stat.grade = this.currentStudentInfo.grade || 6;
-                    stat.classNum = this.currentStudentInfo.classNum || 1;
-                    if (this.currentStudentInfo.studentNum) stat.studentNum = this.currentStudentInfo.studentNum;
+                    stat.classNum = (this.currentStudentInfo.classNum !== undefined && this.currentStudentInfo.classNum !== null && this.currentStudentInfo.classNum !== '') ? Number(this.currentStudentInfo.classNum) : 1;
+                    stat.studentNum = (this.currentStudentInfo.studentNum !== undefined && this.currentStudentInfo.studentNum !== null && this.currentStudentInfo.studentNum !== '' && !isNaN(Number(this.currentStudentInfo.studentNum))) ? Number(this.currentStudentInfo.studentNum) : null;
                 }
                 participants.push(stat);
             });

@@ -62,8 +62,8 @@ class YutnoriMultiplayerManager {
                 roomId: String(info.roomId).trim(),
                 name: (info.name || '').trim(),
                 grade: Number(info.grade) || 6,
-                classNum: Number(info.classNum) || 1,
-                studentNum: Number(info.studentNum) || 1,
+                classNum: (info.classNum !== undefined && info.classNum !== null && info.classNum !== '' && !isNaN(Number(info.classNum))) ? Number(info.classNum) : 1,
+                studentNum: (info.studentNum !== undefined && info.studentNum !== null && info.studentNum !== '' && !isNaN(Number(info.studentNum))) ? Number(info.studentNum) : null,
                 savedAt: Date.now()
             };
             localStorage.setItem('yutnori_active_multi_session', JSON.stringify(payload));
@@ -213,8 +213,8 @@ class YutnoriMultiplayerManager {
             roomId: code,
             name: cleanName,
             grade: Number(grade) || 6,
-            classNum: Number(classNum) || 1,
-            studentNum: Number(studentNum) || 1
+            classNum: cleanClassNum,
+            studentNum: cleanStudentNum
         });
         return code;
     }

@@ -1753,7 +1753,7 @@
                 const cleanName = (prof.name || '').trim();
                 const cleanGrade = String(prof.grade || '6');
                 const cleanClass = String(prof.classNum || '1');
-                const cleanNum = (prof.studentNum !== undefined && prof.studentNum !== null) ? String(prof.studentNum).trim() : '';
+                const cleanNum = (prof.studentNum !== undefined && prof.studentNum !== null && String(prof.studentNum).trim() !== '') ? String(prof.studentNum).trim() : '';
 
                 if (cleanName) localStorage.setItem('yutnori_real_name', cleanName);
                 localStorage.setItem('yutnori_grade', cleanGrade);
@@ -1810,6 +1810,9 @@
                 const classNum = studentClassSelect ? studentClassSelect.value : '1';
                 const studentNum = studentNumInput ? studentNumInput.value.trim() : '';
                 saveStudentProfile({ name, grade, classNum, studentNum });
+                if (window.YutnoriHOF && typeof window.YutnoriHOF.syncUserProfile === 'function') {
+                    window.YutnoriHOF.syncUserProfile({ name, grade, classNum, studentNum });
+                }
             }
             if (studentClassSelect) studentClassSelect.addEventListener('change', syncCurrentInputsToProfile);
             if (studentNumInput) studentNumInput.addEventListener('input', syncCurrentInputsToProfile);
@@ -1821,8 +1824,16 @@
                 if (!p) return;
                 if (p.grade && studentGradeSelect) studentGradeSelect.value = String(p.grade);
                 if (p.classNum && studentClassSelect) studentClassSelect.value = String(p.classNum);
-                if (studentNumInput) studentNumInput.value = (p.studentNum !== undefined && p.studentNum !== null) ? String(p.studentNum) : '';
+                if (studentNumInput) studentNumInput.value = (p.studentNum !== undefined && p.studentNum !== null && String(p.studentNum).trim() !== '') ? String(p.studentNum) : '';
                 if (p.name && globalStudentNameInput) globalStudentNameInput.value = p.name;
+                if (window.YutnoriHOF && typeof window.YutnoriHOF.syncUserProfile === 'function') {
+                    window.YutnoriHOF.syncUserProfile({
+                        name: p.name || (globalStudentNameInput ? globalStudentNameInput.value : ''),
+                        grade: p.grade || (studentGradeSelect ? studentGradeSelect.value : '6'),
+                        classNum: p.classNum || (studentClassSelect ? studentClassSelect.value : '1'),
+                        studentNum: p.studentNum || (studentNumInput ? studentNumInput.value : '')
+                    });
+                }
             });
 
             // 첫 화면 공통 출제범위와 온라인 방 만들기 출제범위 양방향 동기화

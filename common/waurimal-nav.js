@@ -259,8 +259,8 @@
                 const urlProfile = {
                     school: WaurimalSanitize(qSchool || "이의초등학교").slice(0, 30),
                     grade: String(qGrade || "6").replace(/\D/g, '').slice(0, 2),
-                    classNum: String(qClass || "1").replace(/\D/g, '').slice(0, 3),
-                    studentNum: String(qNum || "1").replace(/\D/g, '').slice(0, 3),
+                    classNum: qClass ? String(qClass).replace(/\D/g, '').slice(0, 3) : "1",
+                    studentNum: (qNum !== undefined && qNum !== null && qNum !== '') ? String(qNum).replace(/\D/g, '').slice(0, 3) : "",
                     name: WaurimalSanitize(String(qName).trim()).slice(0, 20)
                 };
                 this.save(urlProfile);
@@ -276,8 +276,8 @@
                         return {
                             school: WaurimalSanitize(parsed.school || "이의초등학교").slice(0, 30),
                             grade: String(parsed.grade || "6").replace(/\D/g, '').slice(0, 2),
-                            classNum: String(parsed.classNum || "1").replace(/\D/g, '').slice(0, 3),
-                            studentNum: String(parsed.studentNum || "1").replace(/\D/g, '').slice(0, 3),
+                            classNum: (parsed.classNum !== undefined && parsed.classNum !== null && parsed.classNum !== '') ? String(parsed.classNum).replace(/\D/g, '').slice(0, 3) : "1",
+                            studentNum: (parsed.studentNum !== undefined && parsed.studentNum !== null && parsed.studentNum !== '') ? String(parsed.studentNum).replace(/\D/g, '').slice(0, 3) : "",
                             name: WaurimalSanitize(String(parsed.name || '').trim()).slice(0, 20)
                         };
                     }
@@ -293,8 +293,8 @@
             const cleanProfile = {
                 school: WaurimalSanitize(profile.school || "이의초등학교").slice(0, 30),
                 grade: String(profile.grade || "6").replace(/\D/g, '').slice(0, 2),
-                classNum: String(profile.classNum || "1").replace(/\D/g, '').slice(0, 3),
-                studentNum: String(profile.studentNum || "1").replace(/\D/g, '').slice(0, 3),
+                classNum: (profile.classNum !== undefined && profile.classNum !== null && profile.classNum !== '') ? String(profile.classNum).replace(/\D/g, '').slice(0, 3) : "1",
+                studentNum: (profile.studentNum !== undefined && profile.studentNum !== null && profile.studentNum !== '') ? String(profile.studentNum).replace(/\D/g, '').slice(0, 3) : "",
                 name: WaurimalSanitize(String(profile.name || '').trim()).slice(0, 20)
             };
 
@@ -385,10 +385,11 @@
             };
 
             function fillField(list, val) {
-                if (!val) return;
+                if (val === undefined || val === null || val === '') return;
                 list.forEach(sel => {
                     const elements = document.querySelectorAll(sel);
                     elements.forEach(el => {
+                        if (document.activeElement === el) return;
                         if (el && el.value !== String(val)) {
                             el.value = val;
                             el.dispatchEvent(new Event('input', { bubbles: true }));
@@ -1494,22 +1495,26 @@
             WaurimalStudent.renderQuickStartBox();
         }, 1500);
 
-        // 화면 전환 감지 (MutationObserver)
+        // 화면 전환 감지 (MutationObserver - 디바운스 적용 및 활성 입력 포커스 보호)
+        let _mutationTimer = null;
         const observer = new MutationObserver(() => {
-            WaurimalStudent.autoFillForms();
-            WaurimalStudent.renderQuickStartBox();
+            if (_mutationTimer) clearTimeout(_mutationTimer);
+            _mutationTimer = setTimeout(() => {
+                WaurimalStudent.autoFillForms();
+                WaurimalStudent.renderQuickStartBox();
+            }, 300);
         });
-        observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
+        observer.observe(document.body, { childList: true, attributes: true, attributeFilter: ['class', 'style'] });
 
         // 로컬 폼 제출 자동 캡처
         document.addEventListener('click', (e) => {
             const btn = e.target.closest('button, input[type="button"], input[type="submit"]');
             if (!btn || btn.closest('#waurimal-gnb-wrapper') || btn.closest('#w-student-modal')) return;
 
-            const nameEl = document.querySelector('#studentName, #p-name, #st-name, #loginName, #student-name, #input-name, #name-input, #inp-name, #uploaderName');
-            const gradeEl = document.querySelector('#grade, #p-grade, #loginGrade, #student-grade, #grade-select, #grade-input, #st-grade, #inp-grade, #input-grade');
-            const classEl = document.querySelector('#classNum, #p-class, #loginClass, #student-class, #class-select, #class-input, #st-class, #inp-class, #input-class');
-            const numEl = document.querySelector('#studentNum, #p-num, #st-num, #loginNumber, #student-num, #input-num, #input-number, #number-input, #inp-num');
+            const nameEl = document.querySelector('#studentName, #p-name, #st-name, #loginName, #student-name, #input-name, #name-input, #inp-name, #uploaderName, #globalStudentNameInput');
+            const gradeEl = document.querySelector('#grade, #p-grade, #loginGrade, #student-grade, #grade-select, #grade-input, #st-grade, #inp-grade, #input-grade, #studentGradeSelect');
+            const classEl = document.querySelector('#classNum, #p-class, #loginClass, #student-class, #class-select, #class-input, #st-class, #inp-class, #input-class, #studentClassSelect');
+            const numEl = document.querySelector('#studentNum, #p-num, #st-num, #loginNumber, #student-num, #input-num, #input-number, #number-input, #inp-num, #studentNumInput');
 
             if (nameEl && nameEl.value && nameEl.value.trim().length > 0) {
                 const rawName = nameEl.value.trim();
@@ -1519,10 +1524,10 @@
                     school: current.school || "이의초등학교",
                     grade: (gradeEl && gradeEl.value) || current.grade || "6",
                     classNum: (classEl && classEl.value) || current.classNum || "1",
-                    studentNum: (numEl && numEl.value) || current.studentNum || "1",
+                    studentNum: (numEl && numEl.value) ? numEl.value.trim() : (current.studentNum || ""),
                     name: rawName
                 };
-                if (!current.name || current.name !== captured.name) {
+                if (!current.name || current.name !== captured.name || current.classNum !== captured.classNum || current.studentNum !== captured.studentNum) {
                     WaurimalStudent.save(captured);
                     const chip = document.getElementById('w-btn-student-profile');
                     if (chip) chip.classList.remove('empty');
