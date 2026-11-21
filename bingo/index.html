@@ -1,0 +1,2778 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>학교 빙고 게임 (1:1 & 반 전체) - 와우리말 에듀테크</title>
+
+    <!-- Pretendard 웹폰트 -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <!-- FontAwesome 아이콘 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- 와우리말 공통 테마 -->
+    <link rel="stylesheet" href="../common/waurimal-theme.css">
+    <script src="../common/firebase-config.js"></script>
+    <script src="../common/curriculum.js?v=20261121_authentic44_v7"></script>
+
+    <style>
+        :root {
+            --app-font: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            --primary-emerald: #059669;
+            --primary-emerald-hover: #047857;
+            --card-bg: #FFFFFF;
+            --border-color: #D1FAE5;
+            --shadow-soft: 0 10px 25px -5px rgba(5, 150, 105, 0.08), 0 8px 10px -6px rgba(5, 150, 105, 0.04);
+        }
+
+        body {
+            font-family: var(--app-font);
+            background-color: #F8FAFC;
+            color: #1E293B;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* 50:50 대칭 분할 레이아웃 */
+        .hidden {
+            display: none !important;
+        }
+
+        .home-split-grid.hidden {
+            display: none !important;
+        }
+
+        .home-left, .home-right {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .home-split-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.5rem;
+            align-items: stretch;
+            width: 100%;
+        }
+
+        @media (max-width: 960px) {
+            .home-split-grid {
+                grid-template-columns: 1fr;
+                gap: 1.2rem;
+            }
+        }
+
+        /* 공통 카드 컴포넌트 */
+        .bingo-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-soft);
+            transition: all 0.2s ease;
+        }
+
+        /* 상단 서브타이틀 박스 */
+        .hdr-sub-box {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            border: 1px solid #A7F3D0;
+            border-radius: 14px;
+            padding: 0.6rem 1.2rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.06);
+        }
+
+        /* 히어로 버튼 */
+        .hero-btn {
+            background: linear-gradient(135deg, #059669 0%, #0D9488 100%);
+            color: #FFFFFF;
+            border-radius: 16px;
+            padding: 1.25rem 1.5rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 10px 20px -3px rgba(5, 150, 105, 0.35);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .hero-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 24px -2px rgba(5, 150, 105, 0.45);
+        }
+
+        /* 보조 버튼 */
+        .secondary-btn {
+            background: #FFFFFF;
+            border: 2px solid #D1FAE5;
+            color: #047857;
+            border-radius: 14px;
+            padding: 0.9rem 1.2rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .secondary-btn:hover {
+            background: #ECFDF5;
+            border-color: #A7F3D0;
+            transform: translateY(-1px);
+        }
+
+        /* 빙고판 스타일 */
+        .bingo-board-grid {
+            display: grid;
+            gap: 6px;
+            margin-top: 15px;
+            background: #E2E8F0;
+            padding: 8px;
+            border-radius: 16px;
+            user-select: none;
+        }
+
+        .bingo-cell {
+            background: #FFFFFF;
+            border: 2px solid #E2E8F0;
+            border-radius: 12px;
+            min-height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 14px;
+            word-break: keep-all;
+            text-align: center;
+            padding: 4px;
+            transition: all 0.15s ease;
+        }
+
+        .bingo-cell:hover {
+            border-color: #10B981;
+            transform: scale(0.98);
+        }
+
+        .bingo-cell.marked {
+            background: #10B981 !important;
+            color: #FFFFFF !important;
+            border-color: #047857 !important;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.2);
+            text-decoration: line-through;
+        }
+
+        .bingo-cell.drag-over {
+            background: #FEF08A;
+            border-color: #EAB308;
+            transform: scale(1.05);
+        }
+
+        .word-btn {
+            background: #FEF08A;
+            color: #854D0E;
+            border: 1px solid #FDE047;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 800;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .word-btn:hover {
+            background: #FDE047;
+            transform: translateY(-1px);
+        }
+
+        .word-btn.called {
+            background: #E2E8F0;
+            color: #94A3B8;
+            border-color: #CBD5E1;
+            text-decoration: line-through;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .word-btn.used {
+            background: #F1F5F9;
+            color: #94A3B8;
+            border-color: #E2E8F0;
+            cursor: not-allowed;
+            opacity: 0.55;
+            pointer-events: none;
+            transform: none;
+        }
+
+        /* 커스텀 스크롤바 */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #F1F5F9;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
+        }
+    
+        /* ════════════════════════════════════════════════════════════════════
+           ── 와우리말 단어 타자 연습(Wordtyping) 표준 규격 스타일 ──
+           ════════════════════════════════════════════════════════════════════ */
+        :root {
+            --primary: #059669;
+            --primary-hover: #047857;
+            --primary-light: #ECFDF5;
+            --accent: #10B981;
+            --accent-glow: rgba(5, 150, 105, 0.22);
+            --border-color: #D1FAE5;
+            --text-main: #0F172A;
+            --text-sub: #475569;
+            --card-bg: #FFFFFF;
+        }
+
+        /* 통일된 상단 타이틀 헤더 */
+        .hdr {
+            text-align: center;
+            padding: 0.2rem 0 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .hdr h1 {
+            font-size: clamp(1.45rem, 3vw, 2.1rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #064E3B 0%, #059669 50%, #10B981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.25rem;
+            line-height: 1.2;
+        }
+
+        .hdr-sub {
+            font-size: clamp(0.84rem, 1.8vw, 0.95rem);
+            color: var(--text-sub);
+            font-weight: 500;
+        }
+
+        /* 게임 특징 및 규칙 안내 (Wordtyping 표준) */
+        .home-features {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+            margin-top: 1rem;
+            background: #F8FAFC;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 0.9rem 1rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.7rem;
+        }
+
+        .feat-icon {
+            font-size: 1.15rem;
+            line-height: 1.2;
+            flex-shrink: 0;
+        }
+
+        .feat-title {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .feat-desc {
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            margin-top: 0.1rem;
+            line-height: 1.35;
+        }
+
+        /* 하단 교사 모드 진입 링크 */
+        .teacher-link-wrap {
+            margin-top: 1.4rem;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--border-color);
+            text-align: center;
+        }
+
+        .btn-teacher-link {
+            background: none;
+            border: none;
+            color: #64748B;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-teacher-link:hover {
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .hof-header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            margin-bottom: 0.7rem;
+        }
+
+        .hof-title {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .hof-live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: #ECFDF5;
+            color: #059669;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 0.2rem 0.55rem;
+            border-radius: 20px;
+            border: 1px solid #A7F3D0;
+            letter-spacing: 0.04em;
+        }
+
+        .pulse-dot {
+            width: 6px;
+            height: 6px;
+            background: #059669;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(5, 150, 105, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
+        }
+
+        .hof-subtitle {
+            font-size: 0.78rem;
+            color: var(--text-sub);
+            font-weight: 500;
+        }
+
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+    <!-- 상단 와우리말 통합 GNB 네비게이션 -->
+    <script src="../common/waurimal-nav.js"></script>
+
+    <!-- 메인 컨테이너 -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-4 md:py-6 flex flex-col gap-4">
+
+        <!-- 헤더 영역: 게임 타이틀 & 시인성 서브타이틀 박스 -->
+        <!-- 통일된 상단 타이틀 헤더 (단어타자연습 표준 동일 규격) -->
+        <div class="hdr">
+            <h1>학교 빙고 게임 (School Bingo Battle)</h1>
+            <p class="hdr-sub" id="hsub">단어를 맞추고 빙고 줄을 완성하는 신나는 실시간 빙고 배틀!</p>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- 1. 홈 화면 (screen-home: 50% vs 50% 대칭 분할) -->
+        <!-- ─────────────────────────────────────────── -->
+        <div id="screen-home" class="home-split-grid">
+            <!-- [좌측 50%]: 게임 모드 선택 (1:1 대결 & 반 전체) -->
+            <div class="home-left flex flex-col gap-4">
+                <div class="bingo-card">
+                    <!-- 본문 내 중복 학생 정보 바 없음 (단어타자/행맨/스크리블 표준 준수) -->
+
+                    <!-- 모드 전환 탭 버튼 (1:1 대결 vs 반 전체) -->
+                    <div class="flex bg-slate-100 p-1 rounded-xl mb-4 text-xs font-bold">
+                        <button type="button" id="tab-btn-1v1" onclick="switchHomeTab('1v1')" class="flex-1 py-2.5 rounded-lg bg-white text-emerald-700 shadow-2xs font-black transition">
+                            ⚔️ 1:1 대결 모드
+                        </button>
+                        <button type="button" id="tab-btn-class" onclick="switchHomeTab('class')" class="flex-1 py-2.5 rounded-lg text-slate-500 hover:text-slate-800 font-black transition">
+                            👨‍👩‍👧‍👦 반 전체 게임 모드
+                        </button>
+                    </div>
+
+                    <!-- 1:1 대결 탭 내용 -->
+                    <div id="home-tab-1v1" class="space-y-4">
+                        <!-- 방 만들기 영역 -->
+                        <div class="p-4 bg-emerald-50/70 border border-emerald-200 rounded-2xl space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-black text-emerald-800">👑 [1] 새 방 만들기 (내가 호스트)</span>
+                                <span class="text-[10px] text-emerald-600 font-bold">단원 & 판 크기 설정</span>
+                            </div>
+                            <!-- 1) 빙고 모드 선택 (단어 vs 문장) -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">빙고 매치 모드</label>
+                                <div class="grid grid-cols-2 gap-1.5 bg-slate-100 p-1 rounded-xl" id="bingoModeToggleWrap">
+                                    <button type="button" id="bingoModeWordBtn" onclick="setBingoMatchMode('word')" class="py-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1 bg-emerald-600 text-white shadow-xs">
+                                        <span>🔤</span> 단어 빙고
+                                    </button>
+                                    <button type="button" id="bingoModeSentenceBtn" onclick="setBingoMatchMode('sentence')" class="py-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1 text-slate-600 hover:text-slate-800">
+                                        <span>💬</span> 문장 빙고
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 2) 학년 탭 버튼 (3, 4, 5, 6학년) -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">학년 선택</label>
+                                <div class="grid grid-cols-2 gap-1.5" id="bingoGradeTabsWrap">
+                                    <button type="button" class="bingo-grade-btn py-1.5 px-2 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-emerald-50 border-emerald-500 text-emerald-700 shadow-xs" data-grade="3" onclick="setBingoSelectedGrade(3)" id="bingoGradeBtn3">
+                                        <div class="flex items-center gap-1 font-black text-xs">
+                                            <i class="fas fa-graduation-cap"></i> 3학년
+                                        </div>
+                                        <span class="text-[10px] text-emerald-600 font-medium">YBM (최희경)</span>
+                                    </button>
+                                    <button type="button" class="bingo-grade-btn py-1.5 px-2 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-white border-slate-200 text-slate-600 hover:bg-slate-50" data-grade="4" onclick="setBingoSelectedGrade(4)" id="bingoGradeBtn4">
+                                        <div class="flex items-center gap-1 font-black text-xs">
+                                            <i class="fas fa-graduation-cap"></i> 4학년
+                                        </div>
+                                        <span class="text-[10px] text-slate-400 font-medium">YBM (최희경)</span>
+                                    </button>
+                                    <button type="button" class="bingo-grade-btn py-1.5 px-2 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-white border-slate-200 text-slate-600 hover:bg-slate-50" data-grade="5" onclick="setBingoSelectedGrade(5)" id="bingoGradeBtn5">
+                                        <div class="flex items-center gap-1 font-black text-xs">
+                                            <i class="fas fa-graduation-cap"></i> 5학년
+                                        </div>
+                                        <span class="text-[10px] text-slate-400 font-medium">천재 (함순애)</span>
+                                    </button>
+                                    <button type="button" class="bingo-grade-btn py-1.5 px-2 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-white border-slate-200 text-slate-600 hover:bg-slate-50" data-grade="6" onclick="setBingoSelectedGrade(6)" id="bingoGradeBtn6">
+                                        <div class="flex items-center gap-1 font-black text-xs">
+                                            <i class="fas fa-graduation-cap"></i> 6학년
+                                        </div>
+                                        <span class="text-[10px] text-slate-400 font-medium">천재 (함순애)</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 3) 학기 탭 버튼 (전체 / 1학기 / 2학기) -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">학기 범위</label>
+                                <div class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl" id="bingoSemTabsWrap">
+                                    <button type="button" class="bingo-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-emerald-700 shadow-xs" data-sem="all" onclick="setBingoSelectedSemester('all')" id="bingoSemAllBtn">
+                                        전체 (1~10단원)
+                                    </button>
+                                    <button type="button" class="bingo-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-800" data-sem="1" onclick="setBingoSelectedSemester(1)" id="bingoSem1Btn">
+                                        1학기 (1~5단원)
+                                    </button>
+                                    <button type="button" class="bingo-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-800" data-sem="2" onclick="setBingoSelectedSemester(2)" id="bingoSem2Btn">
+                                        2학기 (6~10단원)
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 4) 세부 학습 단원 선택 -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">세부 학습 단원 선택</label>
+                                <select id="studentUnitSelect" class="w-full p-2.5 bg-white border border-emerald-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <!-- 동적 로드 -->
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 mb-1">빙고판 크기</label>
+                                    <select id="boardSize1v1" class="w-full p-2 bg-white border border-emerald-200 rounded-xl text-xs font-bold text-slate-700 outline-none">
+                                        <option value="3">3x3 (9칸)</option>
+                                        <option value="4">4x4 (16칸)</option>
+                                        <option value="5" selected>5x5 (25칸, 표준)</option>
+                                        <option value="6">6x6 (36칸)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 mb-1">목표 빙고 줄 수</label>
+                                    <select id="targetLines1v1" class="w-full p-2 bg-white border border-emerald-200 rounded-xl text-xs font-bold text-slate-700 outline-none">
+                                        <option value="1">1줄 완성</option>
+                                        <option value="2">2줄 완성</option>
+                                        <option value="3" selected>3줄 완성 (표준)</option>
+                                        <option value="4">4줄 완성</option>
+                                        <option value="5">5줄 완성</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="button" onclick="create1v1Room()" class="hero-btn">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xl">🚀</span>
+                                    <span>1:1 대결 방 만들기</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-right text-emerald-200"></i>
+                            </button>
+                        </div>
+
+                        <!-- 친구 방 코드로 입장 -->
+                        <div class="p-4 bg-amber-50/70 border border-amber-200 rounded-2xl space-y-2.5">
+                            <span class="text-xs font-black text-amber-800">🚪 [2] 친구 방 코드로 참여하기</span>
+                            <div class="flex gap-2">
+                                <input type="text" id="join1v1CodeInput" placeholder="4자리 코드" maxlength="4" class="flex-1 text-center font-black text-lg tracking-widest p-2.5 bg-white border border-amber-300 rounded-xl outline-none focus:ring-2 focus:ring-amber-500" onkeydown="if(event.key==='Enter') join1v1Room()">
+                                <button type="button" onclick="join1v1Room()" class="px-5 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs rounded-xl shadow-xs transition">
+                                    입장하기
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 반 전체 게임 탭 내용 -->
+                    <div id="home-tab-class" class="hidden space-y-4">
+                        <div class="p-5 bg-purple-50/80 border border-purple-200 rounded-2xl space-y-3 text-center">
+                            <div class="text-3xl">👨‍👩‍👧‍👦</div>
+                            <h3 class="text-sm font-black text-purple-900">선생님이 화면에 띄운 수업 코드 입력</h3>
+                            <p class="text-xs text-slate-600 font-medium leading-relaxed">
+                                우리 반 친구들 모두 함께 즐기는 라이브 빙고 수업입니다.<br>
+                                칠판 또는 화면에 표시된 4자리 코드를 입력하세요.
+                            </p>
+                            <input type="text" id="classCodeInput" placeholder="수업 코드 4자리" maxlength="4" class="w-full text-center font-black text-2xl tracking-widest p-3 bg-white border border-purple-300 rounded-xl outline-none focus:ring-2 focus:ring-purple-500" onkeydown="if(event.key==='Enter') joinClassRoom()">
+                            <button type="button" onclick="joinClassRoom()" class="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-black text-sm rounded-xl shadow-md transition">
+                                수업 빙고 참여하기 ✨
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 게임 규칙 카드 -->
+
+                <!-- 게임 규칙 및 특징 안내 카드 (Wordtyping 표준 규격) -->
+                <div class="bingo-card bg-linear-to-br from-white to-emerald-50/30">
+                    <div class="flex items-center gap-2 mb-2.5">
+                        <span class="text-base">📜</span>
+                        <h3 class="font-black text-slate-800 text-sm">학교 빙고 게임 규칙 & 꿀팁</h3>
+                    </div>
+                    <ul class="text-xs text-slate-600 space-y-1.5 leading-relaxed">
+                        <li>• <strong>빙고판 채우기</strong>: 단어 풀에서 단어를 클릭하거나 직접 입력하여 판을 채웁니다.</li>
+                        <li>• <strong>1:1 대전 선공</strong>: 가위바위보 승자가 선공을 가져가 먼저 단어를 부릅니다.</li>
+                        <li>• <strong>실시간 체크</strong>: 상대방이 부른 단어도 내 판에 자동으로 체크됩니다.</li>
+                        <li>• <strong>빙고 완성</strong>: 가로, 세로, 대각선으로 목표 줄 수를 먼저 완성하면 승리합니다!</li>
+                    </ul>
+
+                    <!-- 게임 특징 및 규칙 안내 (Wordtyping 표준 3개 항목) -->
+                    <div class="home-features">
+                        <div class="feature-item">
+                            <span class="feat-icon">🎯</span>
+                            <div>
+                                <div class="feat-title">실시간 빙고 대결</div>
+                                <div class="feat-desc">선택한 단어장의 핵심 영단어로 빙고판을 채우고 대결을 펼칩니다.</div>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feat-icon">⚡</span>
+                            <div>
+                                <div class="feat-title">1:1 및 반 전체 동시 플레이</div>
+                                <div class="feat-desc">친구와 둘이서 또는 학급 친구들 모두 함께 라이브 빙고를 즐길 수 있습니다.</div>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feat-icon">🏆</span>
+                            <div>
+                                <div class="feat-title">실시간 명예의 전당 등재</div>
+                                <div class="feat-desc">빙고를 먼저 완성하고 승점과 최고 점수를 획득해 랭킹 1위에 도전하세요!</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 교사 모드 진입 링크 (Wordtyping 표준 하단 점선 아래 배치) -->
+                    <div class="teacher-link-wrap">
+                        <button type="button" class="btn-teacher-link" onclick="openAdminLoginModal()">
+                            <i class="fas fa-cog"></i> 교사 설정 모드 (단어장 목록 및 클라우드 DB 관리)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [우측 50%]: 실시간 명예의 전당 (Top 30) -->
+            <div class="home-right">
+                <div class="bingo-card hall-of-fame-card flex flex-col h-full">
+                    <div class="hof-header">
+                        <div class="hof-title">
+                            <span style="font-size:1.3rem;">🏆</span>
+                            <span>명예의 전당</span>
+                            <span class="hof-live-badge"><span class="pulse-dot"></span> LIVE</span>
+                        </div>
+                        <div class="hof-subtitle">단원별·학급별 실시간 랭킹 순위표 (Top 30)</div>
+                    </div>
+
+                    <!-- 1. 기간 선택 탭 (단어타자연습 표준 동일) -->
+                    <div class="hof-period-tabs flex gap-1 mb-2.5 p-1 bg-slate-100 rounded-xl">
+                        <button type="button" class="hof-period-tab flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-emerald-700 shadow-2xs" id="hof-tab-all" onclick="setHofPeriod('all')">
+                            <i class="fas fa-infinity"></i> 전체
+                        </button>
+                        <button type="button" class="hof-period-tab flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800" id="hof-tab-month" onclick="setHofPeriod('month')">
+                            <i class="fas fa-calendar-alt"></i> 이번 달
+                        </button>
+                        <button type="button" class="hof-period-tab flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800" id="hof-tab-week" onclick="setHofPeriod('week')">
+                            <i class="fas fa-fire"></i> 이번 주
+                        </button>
+                    </div>
+
+                    <!-- 2. 단원별 필터 -->
+                    <div class="mb-2">
+                        <select id="hof-filter-unit" onchange="filterHofList()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="ALL">전체 단원</option>
+                        </select>
+                    </div>
+
+                    <!-- 3. 학년 및 반 필터 -->
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <select id="hof-filter-grade" onchange="filterHofList()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="ALL">전체 학년</option>
+                            <option value="3">3학년</option>
+                            <option value="4">4학년</option>
+                            <option value="5">5학년</option>
+                            <option value="6">6학년</option>
+                        </select>
+                        <select id="hof-filter-class" onchange="filterHofList()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="ALL">전체 반</option>
+                            <option value="1">1반</option><option value="2">2반</option>
+                            <option value="3">3반</option><option value="4">4반</option>
+                            <option value="5">5반</option><option value="6">6반</option>
+                            <option value="7">7반</option><option value="8">8반</option>
+                            <option value="9">9반</option><option value="10">10반</option>
+                            <option value="11">11반</option><option value="12">12반</option>
+                            <option value="13">13반</option><option value="14">14반</option>
+                            <option value="15">15반</option>
+                        </select>
+                    </div>
+
+                    <!-- 실시간 랭킹 목록 컨테이너 -->
+                    <div id="hof-records-container" class="flex-1 overflow-y-auto custom-scrollbar max-h-[460px] space-y-2 pr-1">
+                        <div class="text-center py-16 text-slate-400 text-xs font-bold">
+                            <i class="fa-solid fa-spinner fa-spin text-emerald-600 text-base mb-2 block"></i>
+                            명예의 전당 기록을 불러오는 중입니다...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- 2. 1:1 대기실 화면 (screen-waiting) -->
+        <!-- ─────────────────────────────────────────── -->
+        <div  class="hidden max-w-lg mx-auto w-full">
+            <div class="bingo-card text-center space-y-4">
+                <span class="text-xs font-black text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full">1:1 대기실</span>
+                <h2 class="text-xl font-black text-slate-800">친구 접속을 기다리는 중입니다</h2>
+                <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl">
+                    <span class="text-xs text-slate-500 font-bold block mb-1">상대방에게 알려줄 방 코드</span>
+                    <span id="display-room-code" class="text-4xl font-black text-emerald-600 tracking-widest">0000</span>
+                </div>
+                <p id="waiting-status-text" class="text-xs text-slate-400 font-bold animate-pulse">친구의 입장을 대기하고 있습니다...</p>
+                <button type="button" onclick="cancelWaiting()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl transition">
+                    나가기
+                </button>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- 3. 빙고판 세팅 화면 (screen-setup) -->
+        <!-- ─────────────────────────────────────────── -->
+        <div id="screen-setup" class="hidden max-w-2xl mx-auto w-full">
+            <div class="bingo-card space-y-4">
+                <div class="flex justify-between items-center pb-3 border-b border-emerald-100">
+                    <div>
+                        <h2 class="text-lg font-black text-slate-800">빙고판 단어 배치하기</h2>
+                        <span id="setup-unit-name" class="text-xs font-bold text-emerald-600">단원명</span>
+                    </div>
+                    <span id="setup-help-text" class="text-xs text-slate-500 font-medium">단어를 클릭하여 칸을 채우세요.</span>
+                </div>
+
+                <!-- 단어 풀 영역 -->
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-slate-700">단어 보관함 (클릭하여 빈 칸 자동 배치)</span>
+                        <button type="button" onclick="randomFillBoard()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 rounded-lg transition">
+                            🎲 자동 랜덤 배치
+                        </button>
+                    </div>
+                    <div id="word-pool" class="flex flex-wrap gap-1.5 max-h-[140px] overflow-y-auto custom-scrollbar p-1">
+                        <!-- 단어 버튼들 -->
+                    </div>
+                </div>
+
+                <!-- 빙고판 그리드 -->
+                <div id="setup-board" class="bingo-board-grid">
+                    <!-- 셀 동적 생성 -->
+                </div>
+
+                <div class="flex gap-2">
+                    <button type="button" onclick="confirmExitGame()" class="py-3.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl transition">
+                        나가기
+                    </button>
+                    <button type="button" id="ready-btn" onclick="setReady()" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-xl shadow-md transition">
+                        준비 완료! 🚀
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- 4. 가위바위보 선공 결정 화면 (screen-rps) -->
+        <!-- ─────────────────────────────────────────── -->
+        <div id="screen-rps" class="hidden max-w-md mx-auto w-full">
+            <div class="bingo-card text-center space-y-5 py-8">
+                <span class="text-xs font-black text-amber-700 bg-amber-100 px-3 py-1 rounded-full">선공 결정전</span>
+                <h2 class="text-xl font-black text-slate-800">✌️ ✊ 🖐️ 가위바위보!</h2>
+                <p class="text-xs text-slate-500 font-bold">
+                    상대방: <span id="rps-opponent-name" class="text-emerald-700 font-black">-</span>
+                </p>
+
+                <div id="rps-buttons-container" class="flex justify-center gap-4 py-2">
+                    <button type="button" onclick="selectRPS('scissors')" class="w-20 h-20 text-3xl bg-white border-2 border-emerald-300 rounded-full hover:bg-emerald-50 hover:scale-105 transition shadow-sm">✌️</button>
+                    <button type="button" onclick="selectRPS('rock')" class="w-20 h-20 text-3xl bg-white border-2 border-emerald-300 rounded-full hover:bg-emerald-50 hover:scale-105 transition shadow-sm">✊</button>
+                    <button type="button" onclick="selectRPS('paper')" class="w-20 h-20 text-3xl bg-white border-2 border-emerald-300 rounded-full hover:bg-emerald-50 hover:scale-105 transition shadow-sm">🖐️</button>
+                </div>
+
+                <p id="rps-wait-msg" class="text-xs text-slate-400 font-medium">선택 후 잠시만 기다려주세요...</p>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- 5. 인게임 실시간 대전 화면 (screen-game) -->
+        <!-- ─────────────────────────────────────────── -->
+        <div id="screen-game" class="hidden max-w-2xl mx-auto w-full">
+            <div class="bingo-card space-y-4">
+                <!-- 상단 게임 상태 바 -->
+                <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-2xl flex-wrap gap-2">
+                    <div>
+                        <span id="game-title" class="text-sm font-black text-emerald-800 block">게임 진행 중</span>
+                        <span id="status-message" class="text-xs text-slate-500 font-bold">내 차례를 기다리는 중...</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="text-center px-3 py-1 bg-white border border-emerald-200 rounded-xl shadow-2xs">
+                            <span class="text-[10px] text-slate-400 font-bold block">내 빙고</span>
+                            <span id="my-bingo-count" class="text-base font-black text-emerald-600">0줄</span>
+                        </div>
+                        <div id="opp-bingo-container" class="text-center px-3 py-1 bg-white border border-slate-200 rounded-xl shadow-2xs">
+                            <span class="text-[10px] text-slate-400 font-bold block">상대 빙고</span>
+                            <span id="opp-bingo-count" class="text-base font-black text-slate-700">0줄</span>
+                        </div>
+                        <div class="text-center px-3 py-1 bg-emerald-100/70 border border-emerald-300 rounded-xl">
+                            <span class="text-[10px] text-emerald-800 font-bold block">목표</span>
+                            <span id="game-target-text" class="text-base font-black text-emerald-800">3줄</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 빙고판 그리드 -->
+                <div id="game-board" class="bingo-board-grid">
+                    <!-- 인게임 셀 동적 생성 -->
+                </div>
+
+                <button type="button" onclick="confirmExitGame()" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold text-xs rounded-xl transition">
+                    게임 나가기
+                </button>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- 6. 반 전체 교사 호스트 화면 (screen-host) -->
+        <!-- ─────────────────────────────────────────── -->
+        <div id="screen-host" class="hidden max-w-4xl mx-auto w-full">
+            <div class="bingo-card space-y-4">
+                <div class="flex justify-between items-center pb-3 border-b border-purple-100">
+                    <div>
+                        <span class="text-xs font-black text-purple-700 bg-purple-100 px-2.5 py-0.5 rounded-full">교사 호스트 진행 화면</span>
+                        <h2 class="text-xl font-black text-slate-800 mt-1">반 전체 라이브 빙고 수업</h2>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-slate-400 font-bold block">학생 입장 코드</span>
+                        <span id="host-room-code" class="text-3xl font-black text-purple-600 tracking-wider">0000</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- 좌측: 단어 호출 보드 -->
+                    <div class="p-3 bg-purple-50/50 border border-purple-100 rounded-2xl space-y-2">
+                        <span class="text-xs font-black text-purple-900 block">호출할 단어를 클릭하세요 (취소선 표시됨)</span>
+                        <div id="host-word-pool" class="flex flex-wrap gap-1.5 max-h-[360px] overflow-y-auto custom-scrollbar p-1">
+                            <!-- 단어 버튼 -->
+                        </div>
+                    </div>
+
+                    <!-- 우측: 실시간 학생 순위표 -->
+                    <div class="p-3 bg-white border border-slate-200 rounded-2xl space-y-2 flex flex-col">
+                        <span class="text-xs font-black text-slate-800 block">실시간 학생 달성 현황</span>
+                        <div id="host-ranking" class="flex-1 max-h-[360px] overflow-y-auto custom-scrollbar space-y-1.5 pr-1">
+                            <!-- 실시간 랭킹 목록 -->
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" onclick="backToHome()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl transition">
+                    수업 종료 및 메인으로
+                </button>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- 7. 게임 결과 화면 (screen-result) -->
+        <!-- ─────────────────────────────────────────── -->
+        <div id="screen-result" class="hidden max-w-md mx-auto w-full">
+            <div class="bingo-card text-center space-y-5 py-8">
+                <div class="text-5xl animate-bounce">🏆</div>
+                <h2 id="result-message" class="text-2xl font-black text-emerald-700">빙고 완성! 승리하셨습니다!</h2>
+                <p class="text-xs text-slate-500 font-medium">멋진 승부였습니다! 명예의 전당에 점수가 기록되었습니다.</p>
+                <button type="button" onclick="backToHome()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-xl shadow-md transition">
+                    메인 홈으로 돌아가기
+                </button>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- 8. 교사 관리자 모드 (screen-admin) -->
+        <!-- ─────────────────────────────────────────── -->
+        <div id="screen-admin" class="hidden max-w-4xl mx-auto w-full">
+            <div class="bingo-card space-y-4">
+                <div class="flex justify-between items-center pb-3 border-b border-slate-200">
+                    <div>
+                        <h2 class="text-xl font-black text-slate-800">학교 빙고 교사 관리자 모드</h2>
+                        <p class="text-xs text-slate-500 font-semibold">15개 단원 관리, 성적표 CSV 다운로드, 학급별 일괄 삭제</p>
+                    </div>
+                    <button type="button" onclick="backToHome()" class="text-xs font-bold text-slate-500 hover:bg-slate-200 bg-slate-100 px-3 py-1.5 rounded-lg transition">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> 메인으로
+                    </button>
+                </div>
+
+                <!-- 관리자 탭 메뉴 -->
+                <div class="flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                    <button type="button" id="adm-tab-btn-units" onclick="switchAdminTab('units')" class="flex-1 py-2 rounded-lg bg-white text-emerald-700 shadow-2xs">
+                        📚 단원/단어 관리 (15개)
+                    </button>
+                    <button type="button" id="adm-tab-btn-classgame" onclick="switchAdminTab('classgame')" class="flex-1 py-2 rounded-lg text-slate-500 hover:text-slate-800">
+                        👨‍👩‍👧‍👦 반 전체 수업 개설
+                    </button>
+                    <button type="button" id="adm-tab-btn-scores" onclick="switchAdminTab('scores')" class="flex-1 py-2 rounded-lg text-slate-500 hover:text-slate-800">
+                        📊 성적표 & CSV 다운로드
+                    </button>
+                    <button type="button" id="adm-tab-btn-security" onclick="switchAdminTab('security')" class="flex-1 py-2 rounded-lg text-slate-500 hover:text-slate-800">
+                        🔒 보안 & 학급 삭제
+                    </button>
+                </div>
+
+                <!-- 탭 1: 단원/단어 관리 -->
+                <div id="adm-tab-units" class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <label class="text-xs font-black text-slate-700">단원 선택 및 편집</label>
+                        <div class="flex gap-1.5">
+                            <button type="button" onclick="addNewUnit()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg shadow-2xs transition">
+                                <i class="fa-solid fa-plus mr-1"></i> 새 단원 추가
+                            </button>
+                            <button type="button" onclick="deleteUnit()" class="text-xs bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-1.5 rounded-lg shadow-2xs transition">
+                                삭제
+                            </button>
+                        </div>
+                    </div>
+
+                    <select id="admin-unit-select" onchange="loadAdminUnitData()" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none">
+                        <!-- 15개 단원 옵션 -->
+                    </select>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">단원명 (주제):</label>
+                            <input type="text" id="unitNameInput" placeholder="예: 1단원. 과일(FRUIT)" class="w-full p-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">빙고칸 채우기 방식:</label>
+                            <select id="fillModeInput" class="w-full p-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none">
+                                <option value="pool">버튼 제공 (화면에서 클릭/배치)</option>
+                                <option value="type">직접 입력 (주제 확인 후 타이핑)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-[11px] font-bold text-slate-600">빙고 단어 / 정답 리스트 (쉼표로 구분):</label>
+                            <span id="word-count-info" class="text-[10px] text-slate-400 font-bold">0개 단어</span>
+                        </div>
+                        <textarea id="wordListInput" rows="4" placeholder="apple, banana, grape, orange..." class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium outline-none leading-relaxed"></textarea>
+                    </div>
+
+                    <button type="button" onclick="saveAdminUnit()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow transition">
+                        <i class="fa-solid fa-check mr-1"></i> 현재 단원 저장하기
+                    </button>
+                </div>
+
+                <!-- 탭 2: 반 전체 수업 개설 -->
+                <div id="adm-tab-classgame" class="hidden space-y-4">
+                    <div class="p-4 bg-purple-50/70 border border-purple-200 rounded-2xl space-y-3">
+                        <h3 class="text-xs font-black text-purple-900">선생님이 호스트가 되어 반 전체 빙고 수업을 시작합니다</h3>
+                        <p class="text-xs text-slate-600 font-medium">현재 선택된 단원: <strong id="admin-selected-unit-display" class="text-purple-700">-</strong></p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">빙고판 크기</label>
+                                <select id="boardSizeClass" class="w-full p-2 bg-white border border-purple-200 rounded-xl text-xs font-bold outline-none">
+                                    <option value="3">3x3</option>
+                                    <option value="4">4x4</option>
+                                    <option value="5" selected>5x5 (표준)</option>
+                                    <option value="6">6x6</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">목표 줄 수</label>
+                                <select id="targetLinesClass" class="w-full p-2 bg-white border border-purple-200 rounded-xl text-xs font-bold outline-none">
+                                    <option value="1">1줄 완성</option>
+                                    <option value="2">2줄 완성</option>
+                                    <option value="3" selected>3줄 완성</option>
+                                    <option value="4">4줄 완성</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="button" onclick="createClassRoom()" class="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-black text-xs rounded-xl shadow-md transition">
+                            반 전체 수업 방 개설 및 시작 ✨
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 탭 3: 학생 성적표 & CSV -->
+                <div id="adm-tab-scores" class="hidden space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-slate-600">전체 누적 빙고 랭킹 성적표</span>
+                        <button type="button" onclick="downloadBingoScoresCSV()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg shadow-2xs transition">
+                            <i class="fa-solid fa-file-excel mr-1"></i> 엑셀/CSV 다운로드
+                        </button>
+                    </div>
+                    <div class="max-h-[360px] overflow-y-auto custom-scrollbar border border-slate-200 rounded-xl bg-white">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
+                                <tr>
+                                    <th class="p-2.5">순위</th>
+                                    <th class="p-2.5">이름</th>
+                                    <th class="p-2.5">학적</th>
+                                    <th class="p-2.5">단원</th>
+                                    <th class="p-2.5">모드</th>
+                                    <th class="p-2.5">빙고줄/점수</th>
+                                    <th class="p-2.5">달성일시</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bingoScoresTbody" class="divide-y divide-slate-100">
+                                <!-- 테이블 목록 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 탭 4: 보안 & 학급 삭제 -->
+                <div id="adm-tab-security" class="hidden space-y-5">
+                    <!-- 비밀번호 변경 -->
+                    <div class="p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl">
+                        <h4 class="text-xs font-black text-slate-800 mb-2">교사 관리자 비밀번호 변경</h4>
+                        <div class="flex gap-2">
+                            <input type="password" id="newAdminPw" placeholder="새 비밀번호 입력" class="flex-1 p-2 bg-white border border-emerald-200 rounded-xl text-xs font-bold outline-none">
+                            <button type="button" onclick="changeAdminPw()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-2xs transition">
+                                비밀번호 변경
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 학급 랭킹 일괄 삭제 -->
+                    <div class="p-4 bg-red-50/50 border border-red-100 rounded-2xl">
+                        <h4 class="text-xs font-black text-red-800 mb-1">학급별 랭킹 기록 일괄 정리/삭제</h4>
+                        <p class="text-[11px] text-red-600 mb-3">학기말 또는 시험 후 특정 학년/반의 데이터를 일괄 삭제합니다. (복구 불가)</p>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <select id="delete-target-grade" class="p-2 bg-white border border-red-200 rounded-lg text-xs font-bold text-slate-700">
+                                <option value="ALL">전체 학년</option>
+                                <option value="3">3학년</option>
+                                <option value="4">4학년</option>
+                                <option value="5">5학년</option>
+                                <option value="6">6학년</option>
+                            </select>
+                            <select id="delete-target-class" class="p-2 bg-white border border-red-200 rounded-lg text-xs font-bold text-slate-700">
+                                <option value="ALL">전체 반</option>
+                                <option value="1">1반</option>
+                                <option value="2">2반</option>
+                                <option value="3">3반</option>
+                                <option value="4">4반</option>
+                                <option value="5">5반</option>
+                            </select>
+                            <button type="button" onclick="deleteClassBingoScores()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-2xs transition">
+                                일괄 삭제 실행
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 모달: 교사 비밀번호 인증 모달 -->
+    <!-- ─────────────────────────────────────────── -->
+    <div id="modal-admin-auth" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 border border-emerald-100 shadow-xl space-y-4">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">🔒</span>
+                <h3 class="text-base font-black text-slate-800">교사 인증</h3>
+            </div>
+            <p class="text-xs text-slate-500 font-medium">교사 전용 비밀번호를 입력해주세요.</p>
+            <input type="password" id="adminPwInput" placeholder="비밀번호 입력" class="w-full p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500">
+            <div class="flex gap-2">
+                <button type="button" onclick="closeAdminLoginModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl transition">취소</button>
+                <button type="button" onclick="verifyAdmin()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 모달: 셀 단어 직접 입력 모달 (type 모드용) -->
+    <!-- ─────────────────────────────────────────── -->
+    <div id="word-input-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 border border-emerald-100 shadow-xl text-center space-y-4">
+            <h3 class="text-sm font-black text-slate-800">단어 직접 입력</h3>
+            <input type="text" id="cell-word-input" onkeypress="if(event.key === 'Enter') confirmInputWord()" class="w-full text-center text-lg font-bold p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl outline-none" placeholder="단어 입력">
+            <div class="flex gap-2">
+                <button type="button" onclick="closeInputModal()" class="flex-1 py-2 bg-slate-100 text-slate-600 font-bold text-xs rounded-xl">취소</button>
+                <button type="button" onclick="confirmInputWord()" class="flex-1 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl">입력 완료</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 커스텀 알림 모달 -->
+    <!-- ─────────────────────────────────────────── -->
+    <div id="custom-alert" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 border border-emerald-100 shadow-xl text-center space-y-3">
+            <div class="text-3xl">⚠️</div>
+            <h4 class="text-sm font-black text-slate-800">알림</h4>
+            <p id="alert-msg" class="text-xs text-slate-600 font-medium leading-relaxed"></p>
+            <button type="button" onclick="closeAlert()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition">
+                확인
+            </button>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- FIREBASE & 빙고 게임 엔진 스크립트 (ES Module) -->
+    <!-- ─────────────────────────────────────────── -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, collection, doc, setDoc, getDoc, updateDoc, onSnapshot, 
+            getDocs, addDoc, query, where, orderBy, limit 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = (window.WaurimalFirebase && typeof window.WaurimalFirebase.getConfig === 'function')
+            ? window.WaurimalFirebase.getConfig("bingo")
+            : {
+                apiKey: atob("QUl6YVN5QzlRYXMzcHQ5RFpJVE01VVpyMkd4S0VRdnlrSnFfS2gw"),
+                authDomain: "bingo-1707f.firebaseapp.com",
+                projectId: "bingo-1707f",
+                storageBucket: "bingo-1707f.firebasestorage.app",
+                messagingSenderId: "995876035744",
+                appId: "1:995876035744:web:84917aa4beb54a86ab7dc5"
+            };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // ── 전역 상태 변수 ──
+        let myInfo = { name: "학생", room: "", id: "", mode: "1v1", isHost: false, lastReportedBingo: -1, lastReportedCompleted: false };
+        // ── 주제별 기본 단원 4세트 + 초등 3~6학년 44단원 정규 교과과정 ──
+        const THEME_PRESET_UNITS = [
+            {
+                id: "preset_animals",
+                code: "THEME_ANIMALS",
+                category: "theme",
+                unitName: "동물 (Animals)",
+                fillMode: "pool",
+                wordList: ["Dog", "Cat", "Elephant", "Lion", "Tiger", "Monkey", "Rabbit", "Bear", "Horse", "Duck", "Pig", "Cow"],
+                words: [
+                    { word: "Dog", meaning: "개" }, { word: "Cat", meaning: "고양이" },
+                    { word: "Elephant", meaning: "코끼리" }, { word: "Lion", meaning: "사자" },
+                    { word: "Tiger", meaning: "호랑이" }, { word: "Monkey", meaning: "원숭이" },
+                    { word: "Rabbit", meaning: "토끼" }, { word: "Bear", meaning: "곰" },
+                    { word: "Horse", meaning: "말" }, { word: "Duck", meaning: "오리" },
+                    { word: "Pig", meaning: "돼지" }, { word: "Cow", meaning: "소" }
+                ],
+                sentences: []
+            },
+            {
+                id: "preset_food",
+                code: "THEME_FOOD",
+                category: "theme",
+                unitName: "음식 (Food)",
+                fillMode: "pool",
+                wordList: ["Apple", "Banana", "Bread", "Milk", "Water", "Rice", "Egg", "Cheese", "Pizza", "Chicken", "Fish", "Cake"],
+                words: [
+                    { word: "Apple", meaning: "사과" }, { word: "Banana", meaning: "바나나" },
+                    { word: "Bread", meaning: "빵" }, { word: "Milk", meaning: "우유" },
+                    { word: "Water", meaning: "물" }, { word: "Rice", meaning: "밥/쌀" },
+                    { word: "Egg", meaning: "달걀" }, { word: "Cheese", meaning: "치즈" },
+                    { word: "Pizza", meaning: "피자" }, { word: "Chicken", meaning: "닭고기" },
+                    { word: "Fish", meaning: "생선" }, { word: "Cake", meaning: "케이크" }
+                ],
+                sentences: []
+            },
+            {
+                id: "preset_school",
+                code: "THEME_SCHOOL",
+                category: "theme",
+                unitName: "학교 및 학용품 (School)",
+                fillMode: "pool",
+                wordList: ["School", "Teacher", "Student", "Book", "Pencil", "Eraser", "Desk", "Chair", "Bag", "Ruler", "Notebook", "Classroom"],
+                words: [
+                    { word: "School", meaning: "학교" }, { word: "Teacher", meaning: "선생님" },
+                    { word: "Student", meaning: "학생" }, { word: "Book", meaning: "책" },
+                    { word: "Pencil", meaning: "연필" }, { word: "Eraser", meaning: "지우개" },
+                    { word: "Desk", meaning: "책상" }, { word: "Chair", meaning: "의자" },
+                    { word: "Bag", meaning: "가방" }, { word: "Ruler", meaning: "자" },
+                    { word: "Notebook", meaning: "공책" }, { word: "Classroom", meaning: "교실" }
+                ],
+                sentences: []
+            },
+            {
+                id: "preset_actions",
+                code: "THEME_ACTIONS",
+                category: "theme",
+                unitName: "행동 및 동작 (Actions)",
+                fillMode: "pool",
+                wordList: ["Run", "Jump", "Swim", "Sleep", "Eat", "Drink", "Read", "Write", "Play", "Sing", "Walk", "Dance"],
+                words: [
+                    { word: "Run", meaning: "달리다" }, { word: "Jump", meaning: "뛰다" },
+                    { word: "Swim", meaning: "수영하다" }, { word: "Sleep", meaning: "자다" },
+                    { word: "Eat", meaning: "먹다" }, { word: "Drink", meaning: "마시다" },
+                    { word: "Read", meaning: "읽다" }, { word: "Write", meaning: "쓰다" },
+                    { word: "Play", meaning: "놀다" }, { word: "Sing", meaning: "노래하다" },
+                    { word: "Walk", meaning: "걷다" }, { word: "Dance", meaning: "춤추다" }
+                ],
+                sentences: []
+            }
+        ];
+
+        let curriculumUnits = [];
+        let teacherUnits = [];
+        let unitsData = [...THEME_PRESET_UNITS];
+
+        function applyLessonsToUnits(lessonsList) {
+            if (!Array.isArray(lessonsList) || lessonsList.length === 0) return;
+            curriculumUnits = lessonsList.map(l => {
+                const g = Number(l.grade) || 3;
+                const numMatch = (l.code || '').match(/L0?(\d+)/i) || (l.name || '').match(/Lesson\s*0?(\d+)/i);
+                const lessonNum = l.lessonNumber ? Number(l.lessonNumber) : (numMatch ? parseInt(numMatch[1], 10) : 1);
+
+                let sem = l.semester ? Number(l.semester) : null;
+                if (!sem) {
+                    if (g <= 4) sem = (lessonNum <= 5) ? 1 : 2;
+                    else sem = (lessonNum <= 6) ? 1 : 2;
+                }
+
+                const words = (l.words || []).map(w => ({ word: w.word || w.en, meaning: w.meaning || w.kr }));
+                const sentences = (l.sentences || []).map(s => ({ sentence: s.sentence || s.en, meaning: s.meaning || s.kr }));
+                const wordList = words.map(w => w.word);
+
+                return {
+                    id: 'lesson_' + (l.code || l.name || '').toLowerCase().replace(/[^a-z0-9_]/g, '_'),
+                    code: l.code || '',
+                    category: 'curriculum',
+                    grade: g,
+                    semester: sem,
+                    lessonNumber: lessonNum,
+                    unitName: l.name || l.title || l.code,
+                    fillMode: 'pool',
+                    wordList: wordList,
+                    words: words,
+                    sentences: sentences
+                };
+            });
+            unitsData = [...curriculumUnits, ...THEME_PRESET_UNITS, ...teacherUnits];
+        }
+
+        // 스크립트 평가 시 전역 WaurimalCurriculum이 있으면 즉시 등록
+        try {
+            if (typeof window !== 'undefined' && window.WaurimalCurriculum && typeof window.WaurimalCurriculum.getLessons === 'function') {
+                applyLessonsToUnits(window.WaurimalCurriculum.getLessons());
+            }
+        } catch (e) {}
+
+        // ── 빙고 모드 및 학년/학기 필터 상태 ──
+        let currentBingoMatchMode = 'word'; // 'word' | 'sentence'
+        let currentBingoGrade = 3; // 3, 4, 5, 6
+        let currentBingoSemester = 'all'; // 'all' | 1 | 2
+
+        window.setBingoMatchMode = (mode) => {
+            currentBingoMatchMode = mode;
+            const wordBtn = document.getElementById('bingoModeWordBtn');
+            const senBtn = document.getElementById('bingoModeSentenceBtn');
+            if (wordBtn && senBtn) {
+                if (mode === 'word') {
+                    wordBtn.className = "py-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1 bg-emerald-600 text-white shadow-xs";
+                    senBtn.className = "py-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1 text-slate-600 hover:text-slate-800";
+                } else {
+                    senBtn.className = "py-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1 bg-emerald-600 text-white shadow-xs";
+                    wordBtn.className = "py-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1 text-slate-600 hover:text-slate-800";
+                }
+            }
+            renderUnitSelects();
+        };
+
+        window.setBingoSelectedGrade = (grade) => {
+            currentBingoGrade = Number(grade);
+            [3, 4, 5, 6].forEach(g => {
+                const btn = document.getElementById('bingoGradeBtn' + g);
+                if (btn) {
+                    const sub = btn.querySelector('span');
+                    if (g === currentBingoGrade) {
+                        btn.className = "bingo-grade-btn py-1.5 px-2 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-emerald-50 border-emerald-500 text-emerald-700 shadow-xs";
+                        if (sub) sub.className = "text-[10px] text-emerald-600 font-medium";
+                    } else {
+                        btn.className = "bingo-grade-btn py-1.5 px-2 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-white border-slate-200 text-slate-600 hover:bg-slate-50";
+                        if (sub) sub.className = "text-[10px] text-slate-400 font-medium";
+                    }
+                }
+            });
+
+            // 학기 범위 탭 라벨 업데이트
+            const allBtn = document.getElementById('bingoSemAllBtn');
+            const s1Btn = document.getElementById('bingoSem1Btn');
+            const s2Btn = document.getElementById('bingoSem2Btn');
+            if (currentBingoGrade <= 4) {
+                if (allBtn) allBtn.innerText = '전체 (1~10단원)';
+                if (s1Btn) s1Btn.innerText = '1학기 (1~5단원)';
+                if (s2Btn) s2Btn.innerText = '2학기 (6~10단원)';
+            } else {
+                if (allBtn) allBtn.innerText = '전체 (1~12단원)';
+                if (s1Btn) s1Btn.innerText = '1학기 (1~6단원)';
+                if (s2Btn) s2Btn.innerText = '2학기 (7~12단원)';
+            }
+
+            renderUnitSelects();
+        };
+
+        window.setBingoSelectedSemester = (sem) => {
+            currentBingoSemester = (sem === 'all' ? 'all' : Number(sem));
+            ['all', 1, 2].forEach(s => {
+                const btnId = s === 'all' ? 'bingoSemAllBtn' : (s === 1 ? 'bingoSem1Btn' : 'bingoSem2Btn');
+                const btn = document.getElementById(btnId);
+                if (btn) {
+                    if (currentBingoSemester === s) {
+                        btn.className = "bingo-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-emerald-700 shadow-xs";
+                    } else {
+                        btn.className = "bingo-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-800";
+                    }
+                }
+            });
+            renderUnitSelects();
+        };
+
+        let currentWords = [];
+        let currentFillMode = 'pool';
+        let maxWordUsage = 5;
+        let myBoard = [];
+        let isMyTurn = false;
+        let myBingoCount = 0;
+        let isSetupCompleted = false;
+        let isGameOver = false;
+        let hasSetupBoard = false;
+        let unsubscribeRoom = null;
+
+        // 판 크기 및 목표 빙고 줄 수
+        let currentGridSize = 5; // 기본 5x5
+        let totalCells = 25;
+        let currentTargetLines = 3;
+
+        let hofAllScores = [];
+        let hofCurrentPeriod = 'all';
+        let unsubscribeHof = null;
+
+        // 익명 인증 후 단원 로드 및 명예의 전당 구독
+        signInAnonymously(auth).then(() => {
+            const stu = getStudentInfo();
+            if (stu && stu.grade && [3, 4, 5, 6].includes(Number(stu.grade))) {
+                currentBingoGrade = Number(stu.grade);
+            }
+            loadUnits();
+            listenToHallOfFame();
+        }).catch(err => {
+            console.warn("익명 로그인 에러 (오프라인 폴백)", err);
+            const stu = getStudentInfo();
+            if (stu && stu.grade && [3, 4, 5, 6].includes(Number(stu.grade))) {
+                currentBingoGrade = Number(stu.grade);
+            }
+            loadUnits();
+        });
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── 유틸: 이름 마스킹 (홍O동 표준) ──
+        // ════════════════════════════════════════════════════════════════════
+        function maskStudentName(nameStr) {
+            if (!nameStr) return '학생';
+            let str = String(nameStr).trim();
+            str = str.replace(/\*/g, 'O');
+            if (str.includes('선생님') || str.includes('관리자')) return str;
+
+            const parts = str.split(/\s+/);
+            if (parts.length > 1) {
+                const rawName = parts[parts.length - 1];
+                if (!rawName.endsWith('반') && !rawName.endsWith('번') && !rawName.endsWith('학년')) {
+                    const prefix = parts.slice(0, -1).join(' ');
+                    return prefix + ' ' + maskSingleName(rawName);
+                }
+            }
+            return maskSingleName(str);
+        }
+
+        function maskSingleName(name) {
+            if (!name) return '';
+            const s = name.trim();
+            if (s.length <= 1) return s;
+            if (s.length === 2) return s[0] + 'O';
+            if (s.length === 3) return s[0] + 'O' + s[2];
+            return s[0] + 'O'.repeat(s.length - 2) + s[s.length - 1];
+        }
+
+        // GNB 프로필 연동
+        function getStudentInfo() {
+            let info = { grade: '', class: '', number: '', name: '학생', school: '이의초등학교' };
+            try {
+                let p = null;
+                if (window.WaurimalStudent && typeof window.WaurimalStudent.get === 'function') {
+                    p = window.WaurimalStudent.get();
+                }
+                if (!p) {
+                    const saved = localStorage.getItem('waurimal_student_profile');
+                    if (saved) p = JSON.parse(saved);
+                }
+                if (p) {
+                    info.grade = String(p.grade || '');
+                    info.class = String(p.classNum || p.class || '');
+                    info.number = String(p.studentNum || p.number || '');
+                    info.name = (p.name || '').trim() || '학생';
+                    info.school = p.school || '이의초등학교';
+                }
+            } catch(e) {}
+            return info;
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── 단원 목록 로드 & 선택박스 렌더 ──
+        // ════════════════════════════════════════════════════════════════════
+        async function loadUnits() {
+            let loaded = false;
+            // 1. WaurimalCurriculum 44개 교과과정 로드
+            try {
+                if (window.WaurimalCurriculum && typeof window.WaurimalCurriculum.getLessons === 'function') {
+                    const cLessons = window.WaurimalCurriculum.getLessons();
+                    if (Array.isArray(cLessons) && cLessons.length === 44) {
+                        applyLessonsToUnits(cLessons);
+                        loaded = true;
+                        console.log('[Bingo] WaurimalCurriculum 44개 정규 단원 연동 완료');
+                    }
+                }
+            } catch (e) {}
+
+            // 2. config.json 폴백 로드
+            if (!loaded) {
+                try {
+                    const res = await fetch('config.json?t=' + Date.now(), { cache: 'no-store' });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.lessons && Array.isArray(data.lessons) && data.lessons.length > 0) {
+                            applyLessonsToUnits(data.lessons);
+                            console.log('[Bingo] config.json 단원 로드 완료 (' + data.lessons.length + '개)');
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            // 3. Firestore 선생님 등록 단원 로드
+            try {
+                const snap = await getDoc(doc(db, "bingo_settings", "main"));
+                if (snap.exists() && snap.data().units) {
+                    teacherUnits = snap.data().units;
+                    unitsData = [...curriculumUnits, ...THEME_PRESET_UNITS, ...teacherUnits];
+                }
+            } catch(e) {
+                console.warn("선생님 단원 로드 실패 (오프라인 폴백)", e);
+            }
+
+            // 학생 프로필 학년으로 버튼 및 탭 동기화
+            setBingoSelectedGrade(currentBingoGrade);
+            setBingoSelectedSemester('all');
+            renderUnitSelects();
+        }
+
+        function renderUnitSelects() {
+            // 1. 학생 1:1 방 만들기 선택박스
+            const studentSel = document.getElementById('studentUnitSelect');
+            if (studentSel) {
+                const curVal = studentSel.value;
+                studentSel.innerHTML = '';
+
+                // 현재 선택된 학년 및 학기의 교과서 단원
+                const modeLabel = currentBingoMatchMode === 'sentence' ? '문장' : '단어';
+                const gradeLabel = currentBingoGrade <= 4 
+                    ? `${currentBingoGrade}학년 (YBM 최희경)` 
+                    : `${currentBingoGrade}학년 (천재 함순애)`;
+
+                const filteredCurriculum = [];
+                unitsData.forEach((u, i) => {
+                    if (u.category === 'curriculum') {
+                        if (Number(u.grade) !== currentBingoGrade) return;
+                        if (currentBingoSemester !== 'all' && Number(u.semester) !== Number(currentBingoSemester)) return;
+                        filteredCurriculum.push({ unit: u, idx: i });
+                    }
+                });
+
+                if (filteredCurriculum.length > 0) {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = `📚 ${gradeLabel} [${modeLabel} 빙고]`;
+                    filteredCurriculum.forEach(item => {
+                        const count = currentBingoMatchMode === 'sentence'
+                            ? (item.unit.sentences ? item.unit.sentences.length : 0)
+                            : (item.unit.words ? item.unit.words.length : item.unit.wordList.length);
+                        const opt = document.createElement('option');
+                        opt.value = item.idx;
+                        opt.textContent = `${item.unit.unitName} (${modeLabel} ${count}개)`;
+                        optgroup.appendChild(opt);
+                    });
+                    studentSel.appendChild(optgroup);
+                }
+
+                // 주제별 추천 단원
+                const themeGroup = document.createElement('optgroup');
+                themeGroup.label = '🌟 주제별 추천 단원 (단어 10~12개)';
+                unitsData.forEach((u, i) => {
+                    if (u.category === 'theme') {
+                        const opt = document.createElement('option');
+                        opt.value = i;
+                        opt.textContent = `${u.unitName} (단어 ${u.wordList.length}개)`;
+                        themeGroup.appendChild(opt);
+                    }
+                });
+                if (themeGroup.children.length > 0) {
+                    studentSel.appendChild(themeGroup);
+                }
+
+                // 선생님 등록 단원
+                if (teacherUnits.length > 0) {
+                    const tGroup = document.createElement('optgroup');
+                    tGroup.label = '🏫 선생님 등록 단원';
+                    unitsData.forEach((u, i) => {
+                        if (u.category !== 'curriculum' && u.category !== 'theme') {
+                            const opt = document.createElement('option');
+                            opt.value = i;
+                            opt.textContent = `${u.unitName} (${u.wordList ? u.wordList.length : 0}단어)`;
+                            tGroup.appendChild(opt);
+                        }
+                    });
+                    if (tGroup.children.length > 0) studentSel.appendChild(tGroup);
+                }
+
+                // 복원 또는 첫 번째 옵션 선택
+                if (curVal && studentSel.querySelector(`option[value="${curVal}"]`)) {
+                    studentSel.value = curVal;
+                } else if (filteredCurriculum.length > 0) {
+                    studentSel.value = filteredCurriculum[0].idx;
+                }
+            }
+
+            // 2. 명예의 전당 단원 필터 선택박스
+            const hofSel = document.getElementById('hof-filter-unit');
+            if (hofSel) {
+                const cur = hofSel.value;
+                hofSel.innerHTML = '<option value="ALL">전체 단원/주제</option>';
+                unitsData.forEach(u => {
+                    const opt = document.createElement('option');
+                    opt.value = u.unitName;
+                    opt.textContent = u.unitName;
+                    hofSel.appendChild(opt);
+                });
+                if (cur) hofSel.value = cur;
+            }
+
+            // 3. 교사 관리자 선택박스
+            const adminSel = document.getElementById('admin-unit-select');
+            if (adminSel) {
+                const curAdmin = adminSel.value;
+                adminSel.innerHTML = '';
+
+                // 학년별 optgroup 구성
+                [3, 4, 5, 6].forEach(g => {
+                    const gGroup = document.createElement('optgroup');
+                    const gLabel = g <= 4 ? `${g}학년 (YBM 최희경)` : `${g}학년 (천재 함순애)`;
+                    gGroup.label = `📚 ${gLabel}`;
+
+                    unitsData.forEach((u, i) => {
+                        if (u.category === 'curriculum' && Number(u.grade) === g) {
+                            const opt = document.createElement('option');
+                            opt.value = i;
+                            opt.textContent = `${u.unitName} (${u.wordList ? u.wordList.length : 0}단어)`;
+                            gGroup.appendChild(opt);
+                        }
+                    });
+
+                    if (gGroup.children.length > 0) adminSel.appendChild(gGroup);
+                });
+
+                // 주제별
+                const themeGroup = document.createElement('optgroup');
+                themeGroup.label = '🌟 주제별 추천 단원';
+                unitsData.forEach((u, i) => {
+                    if (u.category === 'theme') {
+                        const opt = document.createElement('option');
+                        opt.value = i;
+                        opt.textContent = `${u.unitName} (${u.wordList.length}단어)`;
+                        themeGroup.appendChild(opt);
+                    }
+                });
+                if (themeGroup.children.length > 0) adminSel.appendChild(themeGroup);
+
+                // 선생님 단원
+                const tGroup = document.createElement('optgroup');
+                tGroup.label = '🏫 선생님 등록 단원';
+                unitsData.forEach((u, i) => {
+                    if (u.category !== 'curriculum' && u.category !== 'theme') {
+                        const opt = document.createElement('option');
+                        opt.value = i;
+                        opt.textContent = `${u.unitName} (${u.wordList ? u.wordList.length : 0}단어)`;
+                        tGroup.appendChild(opt);
+                    }
+                });
+                if (tGroup.children.length > 0) adminSel.appendChild(tGroup);
+
+                if (curAdmin && adminSel.querySelector(`option[value="${curAdmin}"]`)) {
+                    adminSel.value = curAdmin;
+                } else if (unitsData.length > 0) {
+                    adminSel.value = 0;
+                }
+                loadAdminUnitData();
+            }
+        }
+
+        window.loadAdminUnitData = () => {
+            const idx = parseInt(document.getElementById('admin-unit-select').value, 10);
+            if (isNaN(idx) || !unitsData[idx]) return;
+            const u = unitsData[idx];
+
+            document.getElementById('unitNameInput').value = u.unitName || '';
+            document.getElementById('fillModeInput').value = u.fillMode || 'pool';
+            const words = u.wordList || [];
+            document.getElementById('wordListInput').value = words.join(', ');
+            document.getElementById('word-count-info').innerText = `총 ${words.length}개 단어`;
+
+            const disp = document.getElementById('admin-selected-unit-display');
+            if (disp) disp.innerText = u.unitName;
+        };
+
+        window.openAdminLoginModal = () => {
+            if (window.WaurimalAuth && window.WaurimalAuth.isAuthenticated()) {
+                window.showScreen('screen-admin');
+                switchAdminTab('units');
+                return;
+            }
+            document.getElementById('adminPwInput').value = '';
+            document.getElementById('modal-admin-auth').classList.remove('hidden');
+        };
+        window.closeAdminLoginModal = () => {
+            document.getElementById('modal-admin-auth').classList.add('hidden');
+        };
+
+        window.verifyAdmin = async () => {
+            const pw = document.getElementById('adminPwInput').value.trim();
+            try {
+                let realPw = "4657";
+                try {
+                    const snap = await getDoc(doc(db, "bingo_settings", "main"));
+                    if (snap.exists() && snap.data().password) realPw = snap.data().password;
+                } catch(e) {}
+
+                const authOk = window.WaurimalAuth ? window.WaurimalAuth.authenticate(pw) : (pw === realPw || pw === (localStorage.getItem('waurimal_admin_pw') || "4657"));
+                if (authOk) {
+                    closeAdminLoginLoginModalSafe();
+                    window.showScreen('screen-admin');
+                    switchAdminTab('units');
+                } else {
+                    showAlert("비밀번호가 일치하지 않습니다.");
+                }
+            } catch(e) {
+                showAlert("인증 에러: " + e.message);
+            }
+        };
+
+        function closeAdminLoginLoginModalSafe() {
+            const m = document.getElementById('modal-admin-auth');
+            if (m) m.classList.add('hidden');
+        }
+
+        window.switchAdminTab = (tab) => {
+            ['units', 'classgame', 'scores', 'security'].forEach(t => {
+                const el = document.getElementById('adm-tab-' + t);
+                const btn = document.getElementById('adm-tab-btn-' + t);
+                if (t === tab) {
+                    el.classList.remove('hidden');
+                    btn.className = "flex-1 py-2 rounded-lg bg-white text-emerald-700 shadow-2xs font-bold";
+                } else {
+                    el.classList.add('hidden');
+                    btn.className = "flex-1 py-2 rounded-lg text-slate-500 hover:text-slate-800 font-bold";
+                }
+            });
+            if (tab === 'scores') renderBingoScoresTable();
+        };
+
+        window.addNewUnit = () => {
+            const name = prompt("새로운 단원명을 입력하세요:");
+            if (!name || !name.trim()) return;
+            const newObj = {
+                id: 'unit_' + Date.now(),
+                unitName: name.trim(),
+                fillMode: 'pool',
+                wordList: []
+            };
+            unitsData.push(newObj);
+            renderUnitSelects();
+            document.getElementById('admin-unit-select').value = unitsData.length - 1;
+            loadAdminUnitData();
+        };
+
+        window.deleteUnit = () => {
+            if (unitsData.length <= 1) {
+                showAlert("최소 1개의 단원은 남겨두어야 합니다.");
+                return;
+            }
+            const idx = parseInt(document.getElementById('admin-unit-select').value, 10);
+            if (!confirm(`'${unitsData[idx].unitName}' 단원을 정말 삭제하시겠습니까?`)) return;
+
+            unitsData.splice(idx, 1);
+            saveAllUnitsToDB();
+            renderUnitSelects();
+        };
+
+        window.saveAdminUnit = async () => {
+            const idx = parseInt(document.getElementById('admin-unit-select').value, 10);
+            if (isNaN(idx) || !unitsData[idx]) return;
+
+            const name = document.getElementById('unitNameInput').value.trim();
+            const fill = document.getElementById('fillModeInput').value;
+            const raw = document.getElementById('wordListInput').value;
+            const words = raw.split(',').map(s => s.trim()).filter(s => s.length > 0);
+
+            if (!name) return showAlert("단원명을 입력해주세요.");
+            if (words.length === 0) return showAlert("단어를 1개 이상 입력해주세요.");
+
+            unitsData[idx].unitName = name;
+            unitsData[idx].fillMode = fill;
+            unitsData[idx].wordList = words;
+
+            await saveAllUnitsToDB();
+            showAlert("단원 정보가 성공적으로 저장되었습니다!");
+            renderUnitSelects();
+            document.getElementById('admin-unit-select').value = idx;
+        };
+
+        async function saveAllUnitsToDB() {
+            try {
+                await setDoc(doc(db, "bingo_settings", "main"), { units: unitsData }, { merge: true });
+            } catch(e) {
+                showAlert("DB 저장 실패: " + e.message);
+            }
+        }
+
+        window.changeAdminPw = async () => {
+            const np = document.getElementById('newAdminPw').value.trim();
+            if (np.length < 4) return showAlert("새 비밀번호는 4자리 이상이어야 합니다.");
+            try {
+                await setDoc(doc(db, "bingo_settings", "main"), { password: np }, { merge: true });
+                if (window.WaurimalAuth) {
+                    window.WaurimalAuth.setPw(np);
+                } else {
+                    localStorage.setItem('waurimal_admin_pw', np);
+                }
+                document.getElementById('newAdminPw').value = '';
+                showAlert("비밀번호가 변경되었습니다.");
+            } catch(e) {
+                showAlert("비밀번호 변경 실패: " + e.message);
+            }
+        };
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── [게임 방 개설 및 참여 로직] ──
+        // ════════════════════════════════════════════════════════════════════
+        function generateRoomCode() {
+            return Math.floor(1000 + Math.random() * 9000).toString();
+        }
+
+        window.create1v1Room = async () => {
+            const studentInfo = getStudentInfo();
+            const sName = studentInfo.name || '학생';
+            const sSchool = (studentInfo.grade && studentInfo.class) ? `${studentInfo.grade}학년 ${studentInfo.class}반` : '';
+
+            const unitIdx = parseInt(document.getElementById('studentUnitSelect').value, 10);
+            const unit = unitsData[unitIdx];
+            if (!unit) {
+                return showAlert("선택한 단원을 찾을 수 없습니다.");
+            }
+
+            let activeWords = [];
+            let unitTitle = unit.unitName;
+            if (currentBingoMatchMode === 'sentence') {
+                if (unit.sentences && unit.sentences.length > 0) {
+                    activeWords = unit.sentences.map(s => s.sentence || s.en);
+                    unitTitle += " [문장]";
+                } else {
+                    activeWords = unit.wordList || (unit.words || []).map(w => w.word || w.en);
+                    unitTitle += " [단어]";
+                }
+            } else {
+                activeWords = unit.wordList || (unit.words || []).map(w => w.word || w.en);
+                unitTitle += " [단어]";
+            }
+
+            if (!activeWords || activeWords.length === 0) {
+                return showAlert("선택한 단원에 등록된 단어가 없습니다.");
+            }
+
+            const code = generateRoomCode();
+            myInfo = {
+                name: (sSchool ? sSchool + ' ' : '') + sName,
+                schoolInfo: sSchool,
+                grade: studentInfo.grade,
+                classNum: studentInfo.class,
+                room: code,
+                id: 'player1',
+                mode: '1v1',
+                isHost: true,
+                lastReportedBingo: -1,
+                lastReportedCompleted: false
+            };
+            hasSetupBoard = false;
+            isSetupCompleted = false;
+            isGameOver = false;
+            myBoard = [];
+
+            const size = parseInt(document.getElementById('boardSize1v1').value, 10);
+            const lines = parseInt(document.getElementById('targetLines1v1').value, 10);
+
+            const roomRef = doc(db, "bingo_rooms", code);
+            await setDoc(roomRef, {
+                type: "1v1",
+                unitName: unitTitle,
+                fillMode: unit.fillMode || 'pool',
+                wordList: activeWords,
+                gridSize: size,
+                targetLines: lines,
+                status: "waiting",
+                player1: { name: myInfo.name, ready: false, rps: null },
+                player2: null,
+                currentTurn: null,
+                calledWords: [],
+                winner: null,
+                createdAt: Date.now()
+            });
+
+            document.getElementById('display-room-code').innerText = code;
+            document.getElementById('waiting-status-text').innerText = "친구의 접속을 대기하고 있습니다...";
+            window.showScreen('screen-waiting');
+            listenRoomChanges();
+        };
+
+        window.cancelWaiting = () => {
+            window.backToHome();
+        };
+
+        window.join1v1Room = async () => {
+            const studentInfo = getStudentInfo();
+            const sName = studentInfo.name || '학생';
+            const sSchool = (studentInfo.grade && studentInfo.class) ? `${studentInfo.grade}학년 ${studentInfo.class}반` : '';
+
+            const code = document.getElementById('join1v1CodeInput').value.trim();
+            if (code.length !== 4) return showAlert("4자리 코드를 올바르게 입력하세요.");
+
+            const roomRef = doc(db, "bingo_rooms", code);
+            const snap = await getDoc(roomRef);
+
+            if (!snap.exists() || snap.data().type !== "1v1") {
+                return showAlert("존재하지 않는 1:1 대결 방 코드입니다.");
+            }
+            if (snap.data().status !== "waiting") {
+                return showAlert("이미 진행 중이거나 인원이 가득 찬 방입니다.");
+            }
+
+            myInfo = {
+                name: (sSchool ? sSchool + ' ' : '') + sName,
+                schoolInfo: sSchool,
+                grade: studentInfo.grade,
+                classNum: studentInfo.class,
+                room: code,
+                id: 'player2',
+                mode: '1v1',
+                isHost: false,
+                lastReportedBingo: -1,
+                lastReportedCompleted: false
+            };
+            hasSetupBoard = false;
+            isSetupCompleted = false;
+            isGameOver = false;
+            myBoard = [];
+
+            await updateDoc(roomRef, {
+                player2: { name: myInfo.name, ready: false, rps: null },
+                status: "setup"
+            });
+
+            listenRoomChanges();
+        };
+
+        window.createClassRoom = async () => {
+            const unitIdx = parseInt(document.getElementById('admin-unit-select').value, 10);
+            const unit = unitsData[unitIdx];
+            if (!unit || !unit.wordList || unit.wordList.length === 0) {
+                return showAlert("선택한 단원에 등록된 단어가 없습니다.");
+            }
+
+            const code = generateRoomCode();
+            myInfo = {
+                name: "선생님",
+                room: code,
+                id: 'host',
+                mode: 'class',
+                isHost: true,
+                lastReportedBingo: -1,
+                lastReportedCompleted: false
+            };
+            hasSetupBoard = false;
+            isSetupCompleted = false;
+            isGameOver = false;
+            myBoard = [];
+
+            const size = parseInt(document.getElementById('boardSizeClass').value, 10);
+            const lines = parseInt(document.getElementById('targetLinesClass').value, 10);
+
+            const roomRef = doc(db, "bingo_rooms", code);
+            await setDoc(roomRef, {
+                type: "class",
+                unitName: unit.unitName,
+                fillMode: unit.fillMode || 'pool',
+                wordList: unit.wordList,
+                gridSize: size,
+                targetLines: lines,
+                status: "setup",
+                calledWords: [],
+                players: {},
+                createdAt: Date.now()
+            });
+
+            document.getElementById('host-room-code').innerText = code;
+            window.showScreen('screen-host');
+            currentWords = unit.wordList;
+            renderHostWords();
+            listenClassRoomHost();
+        };
+
+        window.joinClassRoom = async () => {
+            const studentInfo = getStudentInfo();
+            const sName = studentInfo.name || '학생';
+            const sSchool = (studentInfo.grade && studentInfo.class) ? `${studentInfo.grade}학년 ${studentInfo.class}반` : '';
+
+            const code = document.getElementById('classCodeInput').value.trim();
+            if (code.length !== 4) return showAlert("4자리 수업 코드를 입력하세요.");
+
+            const roomRef = doc(db, "bingo_rooms", code);
+            const snap = await getDoc(roomRef);
+
+            if (!snap.exists() || snap.data().type !== "class") {
+                return showAlert("존재하지 않는 수업 코드입니다.");
+            }
+
+            myInfo = {
+                name: (sSchool ? sSchool + ' ' : '') + sName,
+                schoolInfo: sSchool,
+                grade: studentInfo.grade,
+                classNum: studentInfo.class,
+                room: code,
+                id: 'student_' + Math.random().toString(36).substring(2, 8),
+                mode: 'class',
+                isHost: false,
+                lastReportedBingo: -1,
+                lastReportedCompleted: false
+            };
+            hasSetupBoard = false;
+            isSetupCompleted = false;
+            isGameOver = false;
+            myBoard = [];
+
+            await updateDoc(roomRef, {
+                [`players.${myInfo.id}`]: {
+                    name: myInfo.name,
+                    bingoCount: 0,
+                    completed: false,
+                    ready: false,
+                    joinedAt: Date.now()
+                }
+            });
+
+            listenRoomChanges();
+        };
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── [빙고판 세팅 엔진] ──
+        // ════════════════════════════════════════════════════════════════════
+        function initSetupBoard() {
+            myBoard = new Array(totalCells).fill("");
+
+            // 칸 수와 단어 수에 맞춰 단어당 최대 배치 횟수 계산 (골고루 배치 강제)
+            maxWordUsage = (currentWords && currentWords.length > 0) ? Math.max(1, Math.ceil(totalCells / currentWords.length)) : 1;
+
+            const isTypeMode = (currentFillMode === 'type');
+            const helpEl = document.getElementById('setup-help-text');
+            if (helpEl) {
+                let ruleMsg = "";
+                if (totalCells >= currentWords.length) {
+                    ruleMsg = "모든 단어를 최소 1번씩 골고루 배치하세요. (중복 불가)";
+                } else {
+                    ruleMsg = `단어당 최대 ${maxWordUsage}번까지 골고루 배치할 수 있습니다.`;
+                }
+                if (isTypeMode) {
+                    helpEl.innerText = `칸을 클릭하여 단어를 직접 입력하세요. (${ruleMsg})`;
+                } else {
+                    helpEl.innerText = `단어를 클릭하거나 자동 랜덤 배치 버튼을 누르세요. (${ruleMsg})`;
+                }
+            }
+
+            renderSetupBoard();
+        }
+
+        window.randomFillBoard = () => {
+            if (!currentWords || currentWords.length === 0) return showAlert("단어 목록이 없습니다.");
+            const shuffled = [...currentWords].sort(() => 0.5 - Math.random());
+            for (let i = 0; i < totalCells; i++) {
+                myBoard[i] = shuffled[i % shuffled.length];
+            }
+            renderSetupBoard();
+        };
+
+        function renderSetupBoard() {
+            const boardDiv = document.getElementById('setup-board');
+            boardDiv.innerHTML = '';
+            boardDiv.style.gridTemplateColumns = `repeat(${currentGridSize}, 1fr)`;
+
+            for (let i = 0; i < totalCells; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'bingo-cell';
+                if (myBoard[i]) {
+                    const w = myBoard[i];
+                    cell.innerText = w;
+                    cell.classList.add('marked');
+                    if (w.length > 20) {
+                        cell.style.fontSize = '10px';
+                        cell.style.lineHeight = '1.15';
+                        cell.style.padding = '2px';
+                    } else if (w.length > 12) {
+                        cell.style.fontSize = '12px';
+                        cell.style.lineHeight = '1.2';
+                    }
+                } else {
+                    cell.innerText = '';
+                }
+
+                if (currentFillMode === 'type') {
+                    cell.onclick = () => {
+                        if (myBoard[i]) {
+                            myBoard[i] = "";
+                            renderSetupBoard();
+                        } else {
+                            openInputModal(i);
+                        }
+                    };
+                } else {
+                    cell.ondragover = (e) => { e.preventDefault(); cell.classList.add('drag-over'); };
+                    cell.ondragleave = () => cell.classList.remove('drag-over');
+                    cell.ondrop = (e) => {
+                        e.preventDefault();
+                        cell.classList.remove('drag-over');
+                        const w = e.dataTransfer.getData("text");
+                        if (w) processAddWord(w, i);
+                    };
+                    cell.onclick = () => {
+                        if (myBoard[i]) {
+                            myBoard[i] = "";
+                            renderSetupBoard();
+                        }
+                    };
+                }
+                boardDiv.appendChild(cell);
+            }
+
+            // 단어 보관함 동기화 (풀 모드일 때 각 단어 사용량 표시 및 한도 초과 시 비활성화)
+            const poolDiv = document.getElementById('word-pool');
+            if (poolDiv) {
+                poolDiv.innerHTML = '';
+                currentWords.forEach(word => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    const usedCount = myBoard.filter(w => w && w.toLowerCase() === word.toLowerCase()).length;
+                    const isLimitReached = (usedCount >= maxWordUsage);
+
+                    if (isLimitReached) {
+                        btn.className = 'word-btn used';
+                        btn.disabled = true;
+                        btn.innerText = (maxWordUsage > 1) ? `${word} (${usedCount}/${maxWordUsage})` : `${word} ✓`;
+                    } else {
+                        btn.className = 'word-btn';
+                        btn.draggable = true;
+                        btn.ondragstart = (e) => e.dataTransfer.setData("text", word);
+                        btn.onclick = () => processAddWord(word);
+                        btn.innerText = (maxWordUsage > 1) ? `${word} (${usedCount}/${maxWordUsage})` : word;
+                    }
+                    poolDiv.appendChild(btn);
+                });
+            }
+
+            // 준비 완료 버튼 동적 갱신
+            const readyBtn = document.getElementById('ready-btn');
+            const filledCount = myBoard.filter(w => w && w.trim() !== "").length;
+            if (readyBtn) {
+                if (filledCount === totalCells) {
+                    readyBtn.disabled = false;
+                    readyBtn.className = "flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-xl shadow-md transition cursor-pointer";
+                    readyBtn.innerText = "준비 완료! 🚀";
+                } else {
+                    readyBtn.disabled = true;
+                    readyBtn.className = "flex-1 py-3.5 bg-slate-200 text-slate-400 font-black text-sm rounded-xl cursor-not-allowed shadow-none transition";
+                    readyBtn.innerText = `단어 채우기 (${filledCount}/${totalCells})`;
+                }
+            }
+        }
+
+        window.processAddWord = (word, targetIndex = -1) => {
+            if (!word) return false;
+            const cleanWord = String(word).trim();
+            const matchedWord = currentWords.find(w => w.toLowerCase() === cleanWord.toLowerCase()) || cleanWord;
+
+            // 중복 횟수 계산 (targetIndex 칸의 기존 단어가 같은 단어라면 교체이므로 제외)
+            const currentCount = myBoard.filter((w, idx) => idx !== targetIndex && w && w.toLowerCase() === matchedWord.toLowerCase()).length;
+            if (currentCount >= maxWordUsage) {
+                if (maxWordUsage === 1) {
+                    showAlert(`'${matchedWord}' 단어는 이미 빙고판에 배치되었습니다. (중복 불가)`);
+                } else {
+                    showAlert(`'${matchedWord}' 단어는 골고루 배치를 위해\n최대 ${maxWordUsage}번까지만 넣을 수 있습니다.`);
+                }
+                return false;
+            }
+
+            if (targetIndex !== -1) {
+                myBoard[targetIndex] = matchedWord;
+                renderSetupBoard();
+                return true;
+            }
+
+            const emptyIdx = myBoard.indexOf("");
+            if (emptyIdx !== -1) {
+                myBoard[emptyIdx] = matchedWord;
+                renderSetupBoard();
+                return true;
+            } else {
+                showAlert("빙고판이 꽉 찼습니다! 수정하려면 지울 칸을 클릭하세요.");
+                return false;
+            }
+        };
+
+        window.openInputModal = (index) => {
+            targetCellIndex = index;
+            document.getElementById('cell-word-input').value = myBoard[index] || '';
+            document.getElementById('word-input-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('cell-word-input').focus(), 100);
+        };
+        window.closeInputModal = () => {
+            document.getElementById('word-input-modal').classList.add('hidden');
+            targetCellIndex = -1;
+        };
+        window.confirmInputWord = () => {
+            const w = document.getElementById('cell-word-input').value.trim();
+            if (!w) {
+                closeInputModal();
+                return;
+            }
+
+            // 단원 단어 목록 대조
+            const matched = currentWords.find(item => item.toLowerCase() === w.toLowerCase());
+            if (!matched) {
+                return showAlert("❌ 해당 단원에 등록되지 않은 단어이거나 철자가 틀렸습니다.\n단어 목록을 확인하고 다시 입력해주세요!");
+            }
+
+            const ok = processAddWord(matched, targetCellIndex);
+            if (ok) {
+                closeInputModal();
+            }
+        };
+
+        window.setReady = async () => {
+            const filledCount = myBoard.filter(w => w && w.trim() !== "").length;
+            if (filledCount < totalCells || myBoard.includes("")) {
+                return showAlert(`빙고판의 모든 칸(${totalCells}칸)을 채워주세요! (현재 ${filledCount}/${totalCells})`);
+            }
+
+            // 제공된 단어 필수 사용 검사 (단어 수가 칸 수 이하일 때 모든 단어 최소 1회 사용 강제)
+            if (totalCells >= currentWords.length) {
+                const missingWords = currentWords.filter(word => !myBoard.some(w => w && w.toLowerCase() === word.toLowerCase()));
+                if (missingWords.length > 0) {
+                    return showAlert(`⚠️ 제공된 모든 단어를 최소 한 번씩은 꼭 사용해야 합니다!\n\n[빠진 단어]\n${missingWords.slice(0, 6).join(', ')}${missingWords.length > 6 ? ' 외 ' + (missingWords.length - 6) + '개' : ''}`);
+                }
+            }
+
+            // 단어별 최대 허용 횟수 초과 검사
+            for (const word of currentWords) {
+                const count = myBoard.filter(w => w && w.toLowerCase() === word.toLowerCase()).length;
+                if (count > maxWordUsage) {
+                    return showAlert(`'${word}' 단어가 허용 횟수(${maxWordUsage}번)를 초과하여 ${count}번 배치되었습니다.\n골고루 다시 배치해주세요.`);
+                }
+            }
+
+            const btn = document.getElementById('ready-btn');
+            if (btn) {
+                btn.disabled = true;
+                btn.className = "flex-1 py-3.5 bg-slate-400 text-white font-black text-sm rounded-xl shadow-none transition";
+                btn.innerText = "준비 완료됨! (대기중)";
+            }
+            isSetupCompleted = true;
+
+            const roomRef = doc(db, "bingo_rooms", myInfo.room);
+
+            if (myInfo.mode === '1v1') {
+                await updateDoc(roomRef, {
+                    [`${myInfo.id}.ready`]: true
+                });
+            } else {
+                window.showScreen('screen-game');
+                document.getElementById('game-title').innerText = "반 전체 라이브 빙고";
+                document.getElementById('status-message').innerText = "선생님이 단어를 부를 때까지 대기하세요! 👂";
+                const oppBingoCont = document.getElementById('opp-bingo-container');
+                if (oppBingoCont) oppBingoCont.style.display = 'none';
+                renderGameBoard([]);
+
+                if (myInfo.id && myInfo.id.startsWith('student_')) {
+                    try {
+                        await updateDoc(roomRef, {
+                            [`players.${myInfo.id}.ready`]: true
+                        });
+                    } catch(e) {
+                        console.error("Ready update error", e);
+                    }
+                }
+            }
+        };
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── [실시간 방 상태 리스너] ──
+        // ════════════════════════════════════════════════════════════════════
+        function listenRoomChanges() {
+            if (roomUnsubscribe) roomUnsubscribe();
+            const roomRef = doc(db, "bingo_rooms", myInfo.room);
+
+            roomUnsubscribe = onSnapshot(roomRef, (snap) => {
+                if (!snap.exists()) {
+                    showAlert("방이 종료되었거나 삭제되었습니다.");
+                    backToHome();
+                    return;
+                }
+                const room = snap.data();
+                if (room.type === '1v1') {
+                    handle1v1RoomState(room, roomRef);
+                } else {
+                    handleClassRoomState(room, roomRef);
+                }
+            });
+        }
+
+        function handle1v1RoomState(room, roomRef) {
+            currentGridSize = room.gridSize || 5;
+            totalCells = currentGridSize * currentGridSize;
+            currentTargetLines = room.targetLines || 3;
+            const targetEl = document.getElementById('game-target-text');
+            if (targetEl) targetEl.innerText = `${currentTargetLines}줄`;
+
+            if (room.status === "setup") {
+                if (!hasSetupBoard) {
+                    hasSetupBoard = true;
+                    currentWords = room.wordList || [];
+                    currentFillMode = room.fillMode || 'pool';
+                    document.getElementById('setup-unit-name').innerText = room.unitName || '';
+                    initSetupBoard();
+                    window.showScreen('screen-setup');
+                }
+            }
+
+            if (room.player1?.ready && room.player2?.ready && room.status === "setup") {
+                if (myInfo.isHost) {
+                    updateDoc(roomRef, { status: "rps" });
+                }
+            }
+
+            if (room.status === "rps") {
+                window.showScreen('screen-rps');
+                const oppId = myInfo.id === 'player1' ? 'player2' : 'player1';
+                document.getElementById('rps-opponent-name').innerText = maskStudentName(room[oppId]?.name || '상대방');
+
+                if (room.player1.rps && room.player2.rps) {
+                    const r1 = room.player1.rps;
+                    const r2 = room.player2.rps;
+                    if (r1 === r2) {
+                        document.getElementById('rps-wait-msg').innerText = "비겼습니다! 다시 가위바위보를 선택하세요.";
+                        if (myInfo.isHost) {
+                            setTimeout(() => {
+                                updateDoc(roomRef, { 'player1.rps': null, 'player2.rps': null });
+                            }, 1200);
+                        }
+                    } else {
+                        let p1Win = (r1==='scissors'&&r2==='paper') || (r1==='rock'&&r2==='scissors') || (r1==='paper'&&r2==='rock');
+                        let starter = p1Win ? 'player1' : 'player2';
+                        if (myInfo.isHost) {
+                            updateDoc(roomRef, {
+                                status: "playing",
+                                currentTurn: starter,
+                                calledWords: []
+                            });
+                        }
+                    }
+                }
+            }
+
+            if (room.status === "playing") {
+                window.showScreen('screen-game');
+                isMyTurn = (room.currentTurn === myInfo.id);
+
+                if (isMyTurn) {
+                    document.getElementById('status-message').innerText = "👉 나의 차례입니다! 부를 단어를 클릭하세요.";
+                    document.getElementById('game-title').innerText = "🔥 내 차례!";
+                } else {
+                    document.getElementById('status-message').innerText = "⏳ 상대방 차례... 상대방의 선택을 기다립니다.";
+                    document.getElementById('game-title').innerText = "💤 상대방 대기중";
+                }
+
+                renderGameBoard(room.calledWords || []);
+
+                // 빙고 계산
+                let myBingo = calculateBingo(room.calledWords || [], myBoard);
+                document.getElementById('my-bingo-count').innerText = `${myBingo}줄`;
+
+                if (myBingo >= currentTargetLines && !isGameOver) {
+                    isGameOver = true;
+                    updateDoc(roomRef, { winner: myInfo.name, status: "ended" });
+                    saveBingoScore(room.unitName, myBingo, true);
+                    showResult("🎉 축하합니다! 목표 빙고를 달성하여 승리하셨습니다!");
+                }
+            }
+
+            if (room.status === "ended" && !isGameOver) {
+                isGameOver = true;
+                if (room.winner === myInfo.name) {
+                    showResult("🎉 축하합니다! 승리하셨습니다!");
+                } else {
+                    let myBingo = calculateBingo(room.calledWords || [], myBoard);
+                    saveBingoScore(room.unitName, myBingo, false);
+                    showResult(`아쉽네요! [${maskStudentName(room.winner)}]님이 먼저 빙고를 완성했습니다.`);
+                }
+            }
+        }
+
+        function handleClassRoomState(room, roomRef) {
+            currentGridSize = room.gridSize || 5;
+            totalCells = currentGridSize * currentGridSize;
+            currentTargetLines = room.targetLines || 3;
+            const targetEl = document.getElementById('game-target-text');
+            if (targetEl) targetEl.innerText = `${currentTargetLines}줄`;
+
+            // 최초 1회만 단어 세팅 화면으로 이동
+            if (!hasSetupBoard) {
+                hasSetupBoard = true;
+                currentWords = room.wordList || [];
+                currentFillMode = room.fillMode || 'pool';
+                document.getElementById('setup-unit-name').innerText = room.unitName || '';
+                initSetupBoard();
+                window.showScreen('screen-setup');
+                return;
+            }
+
+            // 준비 완료 후에는 게임 화면 유지 및 단어 호명/빙고 체크
+            if (isSetupCompleted) {
+                window.showScreen('screen-game');
+                const oppBingoCont = document.getElementById('opp-bingo-container');
+                if (oppBingoCont) oppBingoCont.style.display = 'none';
+
+                const calledWords = Array.isArray(room.calledWords) ? room.calledWords : [];
+                renderGameBoard(calledWords);
+
+                let myBingo = calculateBingo(calledWords, myBoard);
+                const myBingoCountEl = document.getElementById('my-bingo-count');
+                if (myBingoCountEl) myBingoCountEl.innerText = `${myBingo}줄`;
+
+                const isCompleted = (myBingo >= currentTargetLines);
+
+                // 점수 또는 완료 여부가 실제로 변경되었을 때만 updateDoc 호출 (무한 스냅샷 루프 방지)
+                if (myInfo.id && myInfo.id.startsWith('student_')) {
+                    if (myInfo.lastReportedBingo !== myBingo || myInfo.lastReportedCompleted !== isCompleted) {
+                        myInfo.lastReportedBingo = myBingo;
+                        myInfo.lastReportedCompleted = isCompleted;
+                        updateDoc(roomRef, {
+                            [`players.${myInfo.id}.bingoCount`]: myBingo,
+                            [`players.${myInfo.id}.completed`]: isCompleted
+                        }).catch(e => console.error("Error updating bingo status:", e));
+                    }
+
+                    if (isCompleted && !isGameOver) {
+                        isGameOver = true;
+                        saveBingoScore(room.unitName, myBingo, true);
+                        showResult(`🎉 축하합니다! ${currentTargetLines}줄 빙고를 완성하셨습니다!`);
+                    }
+                }
+            }
+        }
+
+        window.selectRPS = (choice) => {
+            document.getElementById('rps-wait-msg').innerText = "상대방의 가위바위보를 기다리는 중입니다...";
+            const roomRef = doc(db, "bingo_rooms", myInfo.room);
+            updateDoc(roomRef, {
+                [`${myInfo.id}.rps`]: choice
+            });
+        };
+
+        function renderGameBoard(calledWords = []) {
+            const wordsList = Array.isArray(calledWords) ? calledWords : [];
+            const boardDiv = document.getElementById('game-board');
+            boardDiv.innerHTML = '';
+            boardDiv.style.gridTemplateColumns = `repeat(${currentGridSize}, 1fr)`;
+
+            for (let i = 0; i < totalCells; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'bingo-cell';
+                const word = myBoard[i] || '';
+                cell.innerText = word;
+                if (word.length > 20) {
+                    cell.style.fontSize = '10px';
+                    cell.style.lineHeight = '1.15';
+                    cell.style.padding = '2px';
+                } else if (word.length > 12) {
+                    cell.style.fontSize = '12px';
+                    cell.style.lineHeight = '1.2';
+                }
+
+                const isCalled = wordsList.includes(word);
+                if (isCalled && word !== "") {
+                    cell.classList.add('marked');
+                }
+
+                if (isMyTurn && myInfo.mode === '1v1' && !isCalled && word !== "") {
+                    cell.style.cursor = "pointer";
+                    cell.onclick = async () => {
+                        const roomRef = doc(db, "bingo_rooms", myInfo.room);
+                        const nextTurn = (myInfo.id === 'player1') ? 'player2' : 'player1';
+                        await updateDoc(roomRef, {
+                            calledWords: [...wordsList, word],
+                            currentTurn: nextTurn
+                        });
+                    };
+                } else {
+                    cell.style.cursor = "default";
+                }
+                boardDiv.appendChild(cell);
+            }
+        }
+
+        function calculateBingo(calledWords, board) {
+            const size = currentGridSize;
+            let lines = 0;
+
+            const isMarked = (idx) => {
+                const w = board[idx];
+                return w && calledWords.includes(w);
+            };
+
+            // 가로 줄 검사
+            for (let r = 0; r < size; r++) {
+                let rowFull = true;
+                for (let c = 0; c < size; c++) {
+                    if (!isMarked(r * size + c)) { rowFull = false; break; }
+                }
+                if (rowFull) lines++;
+            }
+
+            // 세로 줄 검사
+            for (let c = 0; c < size; c++) {
+                let colFull = true;
+                for (let r = 0; r < size; r++) {
+                    if (!isMarked(r * size + c)) { colFull = false; break; }
+                }
+                if (colFull) lines++;
+            }
+
+            // 대각선 1 (좌상 -> 우하)
+            let diag1 = true;
+            for (let i = 0; i < size; i++) {
+                if (!isMarked(i * size + i)) { diag1 = false; break; }
+            }
+            if (diag1) lines++;
+
+            // 대각선 2 (우상 -> 좌하)
+            let diag2 = true;
+            for (let i = 0; i < size; i++) {
+                if (!isMarked(i * size + (size - 1 - i))) { diag2 = false; break; }
+            }
+            if (diag2) lines++;
+
+            return lines;
+        }
+
+        function showResult(msg) {
+            document.getElementById('result-message').innerText = msg;
+            window.showScreen('screen-result');
+        }
+
+        window.confirmExitGame = () => {
+            if (confirm("정말로 게임을 나가시겠습니까?")) {
+                backToHome();
+            }
+        };
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── [반 전체 교사 호스트 관리 엔진] ──
+        // ════════════════════════════════════════════════════════════════════
+        function renderHostWords() {
+            const poolDiv = document.getElementById('host-word-pool');
+            poolDiv.innerHTML = '';
+            currentWords.forEach(word => {
+                const btn = document.createElement('button');
+                btn.className = 'word-btn';
+                btn.innerText = word;
+                btn.onclick = async () => {
+                    const roomRef = doc(db, "bingo_rooms", myInfo.room);
+                    const snap = await getDoc(roomRef);
+                    if (snap.exists()) {
+                        const cur = snap.data().calledWords || [];
+                        if (!cur.includes(word)) {
+                            await updateDoc(roomRef, { calledWords: [...cur, word] });
+                            btn.classList.add('called');
+                        }
+                    }
+                };
+                poolDiv.appendChild(btn);
+            });
+        }
+
+        function listenClassRoomHost() {
+            const roomRef = doc(db, "bingo_rooms", myInfo.room);
+            onSnapshot(roomRef, (snap) => {
+                if (!snap.exists()) return;
+                const r = snap.data();
+                const players = r.players || {};
+                const rankingDiv = document.getElementById('host-ranking');
+                rankingDiv.innerHTML = '';
+
+                const sorted = Object.values(players).sort((a,b) => (b.bingoCount || 0) - (a.bingoCount || 0));
+                if (sorted.length === 0) {
+                    rankingDiv.innerHTML = '<p class="text-xs text-slate-400 text-center py-6 font-bold">학생들이 접속 중입니다...</p>';
+                    return;
+                }
+
+                sorted.forEach(p => {
+                    const item = document.createElement('div');
+                    let statusBadge = '';
+                    if (p.completed) {
+                        statusBadge = '<span class="text-[11px] font-black text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">완성 🏆</span>';
+                    } else if (p.ready) {
+                        statusBadge = '<span class="text-[11px] font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">준비 완료 ✅</span>';
+                    } else {
+                        statusBadge = '<span class="text-[11px] font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">배치 중 ⏳</span>';
+                    }
+
+                    item.className = `flex items-center justify-between p-2 rounded-xl border ${p.completed ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-slate-50 border-slate-100'}`;
+                    item.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-black">${maskStudentName(p.name)}</span>
+                            ${statusBadge}
+                        </div>
+                        <span class="text-xs font-bold">${p.bingoCount || 0}줄</span>
+                    `;
+                    rankingDiv.appendChild(item);
+                });
+            });
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── [명예의 전당 저장 및 실시간 랭킹 (Top 30 + 홍O동)] ──
+        // ════════════════════════════════════════════════════════════════════
+        async function saveBingoScore(unitName, bingoLines, isWinner) {
+            if (!myInfo.name || myInfo.name === '선생님') return;
+            const studentInfo = getStudentInfo();
+            const sName = studentInfo.name || '학생';
+            const sGrade = studentInfo.grade || '';
+            const sClass = studentInfo.class || '';
+
+            const record = {
+                name: sName,
+                maskedName: maskStudentName(sName),
+                schoolInfo: (sGrade && sClass) ? `${sGrade}학년 ${sClass}반` : '',
+                grade: String(sGrade),
+                classNum: String(sClass),
+                unit: unitName || '기본 단원',
+                lines: bingoLines,
+                score: (bingoLines * 100) + (isWinner ? 200 : 50),
+                mode: myInfo.mode,
+                timestamp: Date.now()
+            };
+
+            try {
+                await addDoc(collection(db, "bingo_scores"), record);
+                console.log("Saved bingo score:", record);
+            } catch(e) {
+                console.error("Score save error", e);
+            }
+        }
+
+        window.setHofPeriod = (period) => {
+            hofCurrentPeriod = period;
+            ['all', 'month', 'week'].forEach(p => {
+                const tab = document.getElementById('hof-tab-' + p);
+                if (tab) {
+                    if (p === period) {
+                        tab.className = "hof-period-tab flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-emerald-700 shadow-2xs";
+                    } else {
+                        tab.className = "hof-period-tab flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800";
+                    }
+                }
+            });
+            filterHofList();
+        };
+
+        function listenToHallOfFame() {
+            const q = query(collection(db, "bingo_scores"), orderBy("score", "desc"), limit(200));
+            if (unsubscribeHof) unsubscribeHof();
+
+            unsubscribeHof = onSnapshot(q, (snap) => {
+                hofAllScores = [];
+                snap.forEach(d => {
+                    const data = d.data();
+                    let rawName = data.name || data.maskedName || '학생';
+                    let cleanName = String(rawName).replace(/\*/g, 'O');
+
+                    let ts = data.timestamp || Date.now();
+                    if (typeof ts === 'object' && ts.toMillis) ts = ts.toMillis();
+
+                    hofAllScores.push({
+                        id: d.id,
+                        name: rawName,
+                        maskedName: maskStudentName(cleanName),
+                        schoolInfo: data.schoolInfo || '',
+                        grade: data.grade || '',
+                        classNum: data.classNum || '',
+                        unit: data.unit || '기본 단원',
+                        lines: data.lines || 0,
+                        score: parseInt(data.score, 10) || 0,
+                        mode: data.mode || '1v1',
+                        timestamp: ts
+                    });
+                });
+                filterHofList();
+            }, (err) => {
+                console.error("HOF subscribe error", err);
+                filterHofList();
+            });
+        }
+
+        window.filterHofList = () => {
+            const container = document.getElementById('hof-records-container');
+            if (!container) return;
+
+            const g = document.getElementById('hof-filter-grade') ? document.getElementById('hof-filter-grade').value : 'ALL';
+            const c = document.getElementById('hof-filter-class') ? document.getElementById('hof-filter-class').value : 'ALL';
+            const u = document.getElementById('hof-filter-unit') ? document.getElementById('hof-filter-unit').value : 'ALL';
+
+            const now = new Date();
+            const curYear = now.getFullYear();
+            const curMonth = now.getMonth();
+            const oneWeekAgoMs = now.getTime() - 7 * 24 * 60 * 60 * 1000;
+
+            let filtered = hofAllScores.filter(item => {
+                if (g !== 'ALL') {
+                    if (item.grade && item.grade !== g) return false;
+                    if (!item.grade && !item.maskedName.includes(g + '학년')) return false;
+                }
+
+                if (c !== 'ALL') {
+                    if (item.classNum && item.classNum !== c) return false;
+                    if (!item.classNum && !item.maskedName.includes(c + '반')) return false;
+                }
+
+                if (u !== 'ALL' && item.unit !== u) return false;
+
+                if (hofCurrentPeriod !== 'all' && item.timestamp) {
+                    const t = new Date(item.timestamp);
+                    if (hofCurrentPeriod === 'month') {
+                        if (t.getFullYear() !== curYear || t.getMonth() !== curMonth) return false;
+                    } else if (hofCurrentPeriod === 'week') {
+                        if (t.getTime() < oneWeekAgoMs) return false;
+                    }
+                }
+                return true;
+            });
+
+            // 1인 1최고점수
+            const uniqueMap = new Map();
+            filtered.forEach(item => {
+                const key = item.name + '_' + item.schoolInfo;
+                if (!uniqueMap.has(key) || uniqueMap.get(key).score < item.score) {
+                    uniqueMap.set(key, item);
+                }
+            });
+            const displayList = Array.from(uniqueMap.values()).sort((a,b) => b.score - a.score).slice(0, 30);
+
+            if (displayList.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16 text-slate-400 text-xs font-bold">
+                        선택한 조건에 해당하는 명예의 전당 기록이 없습니다.<br>
+                        새로운 빙고 게임을 플레이하여 첫 랭킹에 도전해 보세요!
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = displayList.map((item, index, arr) => {
+                // 동점자 동일 순위 및 차순위 건너뛰기 (1등 2명이면 1등, 1등, 3등)
+                const rank = arr.findIndex(x => Number(x.score || 0) <= Number(item.score || 0)) + 1;
+                let rankBadge = `<span class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 font-black text-xs">${rank}</span>`;
+                if (rank === 1) rankBadge = '<span class="text-xl">🥇</span>';
+                else if (rank === 2) rankBadge = '<span class="text-xl">🥈</span>';
+                else if (rank === 3) rankBadge = '<span class="text-xl">🥉</span>';
+
+                const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleDateString('ko-KR', { year: '2-digit', month: 'numeric', day: 'numeric' }) : '-';
+                const safeName = window.WaurimalSanitize ? window.WaurimalSanitize(item.maskedName || maskStudentName(item.name || '학생')) : (item.maskedName || maskStudentName(item.name || '학생'));
+                const safeUnit = window.WaurimalSanitize ? window.WaurimalSanitize(item.unit || '') : (item.unit || '');
+                const safeSchool = window.WaurimalSanitize ? window.WaurimalSanitize(item.schoolInfo || '') : (item.schoolInfo || '');
+
+                return `
+                    <div class="flex items-center justify-between p-2.5 bg-white border border-emerald-100 rounded-xl hover:border-emerald-300 transition shadow-2xs">
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center justify-center w-8 text-center flex-shrink-0">
+                                ${rankBadge}
+                            </div>
+                            <div>
+                                <div class="font-black text-slate-800 text-xs flex items-center gap-1.5">
+                                    <span>${safeName}</span>
+                                    <span class="text-[10px] bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded font-bold">${safeUnit}</span>
+                                </div>
+                                <div class="text-[10px] text-slate-400 font-medium">
+                                    ${safeSchool ? safeSchool + ' • ' : ''}${dateStr}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm font-black text-emerald-600">${item.score.toLocaleString()}</span>
+                            <span class="text-[10px] text-slate-500 font-bold ml-0.5">점 (${item.lines}줄)</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        };
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── [교사 관리자 성적표 & CSV & 학급 삭제] ──
+        // ════════════════════════════════════════════════════════════════════
+        function renderBingoScoresTable() {
+            const tbody = document.getElementById('bingoScoresTbody');
+            if (!tbody) return;
+
+            if (hofAllScores.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400 text-xs">누적된 성적 데이터가 없습니다.</td></tr>';
+                return;
+            }
+
+            const sorted = [...hofAllScores].sort((a,b) => b.score - a.score);
+            tbody.innerHTML = sorted.map((s, idx) => {
+                const safeName = window.WaurimalSanitize ? window.WaurimalSanitize(s.maskedName || '') : (s.maskedName || '');
+                const safeSchool = window.WaurimalSanitize ? window.WaurimalSanitize(s.schoolInfo || '-') : (s.schoolInfo || '-');
+                const safeUnit = window.WaurimalSanitize ? window.WaurimalSanitize(s.unit || '') : (s.unit || '');
+                return `
+                <tr class="hover:bg-emerald-50/50 transition">
+                    <td class="p-2.5 font-bold">${idx + 1}</td>
+                    <td class="p-2.5 font-black text-slate-800">${safeName}</td>
+                    <td class="p-2.5 font-semibold text-slate-600">${safeSchool}</td>
+                    <td class="p-2.5 font-semibold text-emerald-700">${safeUnit}</td>
+                    <td class="p-2.5 font-medium text-slate-500">${s.mode === '1v1' ? '1:1대결' : '반전체'}</td>
+                    <td class="p-2.5 font-black text-emerald-600">${s.score.toLocaleString()}점 (${s.lines}줄)</td>
+                    <td class="p-2.5 text-slate-400 text-[11px]">${s.timestamp ? new Date(s.timestamp).toLocaleDateString('ko-KR') : '-'}</td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        window.downloadBingoScoresCSV = () => {
+            if (hofAllScores.length === 0) {
+                return showAlert("다운로드할 데이터가 없습니다.");
+            }
+
+            const sorted = [...hofAllScores].sort((a,b) => b.score - a.score);
+            let csv = "\uFEFF순위,이름,학적,단원/주제,모드,빙고줄수,점수,달성일시\n";
+            sorted.forEach((item, idx) => {
+                const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleString('ko-KR') : '';
+                csv += `"${idx + 1}","${item.maskedName}","${item.schoolInfo || ''}","${item.unit || ''}","${item.mode}","${item.lines}","${item.score}","${dateStr}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `빙고_성적표_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        window.deleteClassBingoScores = async () => {
+            const g = document.getElementById('delete-target-grade').value;
+            const c = document.getElementById('delete-target-class').value;
+
+            if (!confirm(`정말로 [${g === 'ALL' ? '전체 학년' : g + '학년'} ${c === 'ALL' ? '전체 반' : c + '반'}]의 빙고 기록을 일괄 삭제하시겠습니까?`)) {
+                return;
+            }
+
+            try {
+                let count = 0;
+                for (const item of hofAllScores) {
+                    if (g !== 'ALL' && item.grade !== g) continue;
+                    if (c !== 'ALL' && item.classNum !== c) continue;
+                    await deleteDoc(doc(db, "bingo_scores", item.id));
+                    count++;
+                }
+                showAlert(`총 ${count}건의 학급 성적 기록이 삭제되었습니다.`);
+                renderBingoScoresTable();
+            } catch(e) {
+                showAlert("삭제 중 오류가 발생했습니다: " + e.message);
+            }
+        };
+
+    </script>
+</body>
+</html>
