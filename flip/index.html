@@ -1323,7 +1323,7 @@
                 }
             } catch (e) {}
 
-            await loadHofData();
+            await loadHallOfFame();
         });
 
         // ════════════════════════════════════════════════════════════════════
@@ -1341,23 +1341,27 @@
             let userGrade = Number(studentProfile.grade);
             if (![3, 4, 5, 6].includes(userGrade)) userGrade = 3;
 
-            showLoading();
-
-            // Firebase 선생님 등록 단원 캐싱
-            cachedDbUnits = [];
-            try {
-                const snap = await getDocs(getCollection('units'));
-                snap.forEach(d => cachedDbUnits.push({ id: d.id, ...d.data() }));
-            } catch (e) {}
-
-            hideLoading();
-
-            // 모달 초기 탭 및 옵션 설정
+            // 모달 초기 탭 및 옵션 즉시 설정 및 표시 (지연 없는 쾌속 오픈)
             setFlipMatchMode(currentFlipMatchMode || 'word');
             setFlipSelectedGrade(userGrade);
             setFlipSelectedSemester('all');
 
             document.getElementById('unitSelectModal').classList.remove('hidden');
+
+            // Firebase 선생님 등록 단원은 백그라운드에서 비동기 갱신
+            if (cachedDbUnits.length === 0) {
+                try {
+                    const snap = await Promise.race([
+                        getDocs(getCollection('units')),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000))
+                    ]);
+                    if (snap && snap.docs) {
+                        cachedDbUnits = [];
+                        snap.forEach(d => cachedDbUnits.push({ id: d.id, ...d.data() }));
+                        renderFlipUnitSelectOptions();
+                    }
+                } catch (e) {}
+            }
         };
 
         window.closeUnitSelectModal = () => {
@@ -1442,7 +1446,7 @@
             }
         };
 
-        function setupBoardLayoutfunction setupBoardLayout(count) {
+        function setupBoardLayout(count) {
             const grid = document.getElementById('cardGrid');
             grid.className = 'w-full h-full grid gap-2.5 place-items-center';
             if (count <= 12) grid.classList.add('grid-cols-3', 'md:grid-cols-4');
