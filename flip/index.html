@@ -15,6 +15,7 @@
     <!-- Waurimal 통합 테마 및 GNB 내비게이션, Firebase 샤딩 설정 -->
     <link rel="stylesheet" href="../common/waurimal-theme.css">
     <script src="../common/firebase-config.js"></script>
+    <script src="../common/curriculum.js?v=20261121_authentic44_v7"></script>
     <script src="../common/waurimal-nav.js"></script>
 
     <style>
@@ -685,16 +686,81 @@
         </div>
     </div>
 
-    <!-- 3. 단원 선택 모달 (게임 시작용) -->
+    <!-- 3. 단원 선택 모달 (게임 시작용 - 단어/문장 모드 및 3~6학년 44단원 지원) -->
     <div id="unitSelectModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-        <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl modal-enter">
-            <h3 class="text-lg font-black text-center text-purple-700 mb-1">단원 선택</h3>
-            <p class="text-center text-xs text-slate-500 mb-4">게임에 사용할 영어 단원을 선택하세요.</p>
+        <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl modal-enter max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-black text-center text-purple-700 mb-1">단원 및 뒤집기 모드 선택</h3>
+            <p class="text-center text-xs text-slate-500 mb-4">학년, 단원 및 뒤집을 대상(단어/문장)을 선택하세요.</p>
+
+            <!-- 1) 뒤집기 매치 모드 토글 (단어 vs 문장) -->
+            <div class="mb-4">
+                <label class="block text-[11px] font-bold text-slate-500 mb-1.5">뒤집기 매치 모드</label>
+                <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1.5 rounded-2xl" id="flipModeToggleWrap">
+                    <button type="button" id="flipModeWordBtn" onclick="setFlipMatchMode('word')" class="py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 bg-purple-600 text-white shadow-md">
+                        <span class="text-sm">🔤</span> 단어 뒤집기
+                    </button>
+                    <button type="button" id="flipModeSentenceBtn" onclick="setFlipMatchMode('sentence')" class="py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-800">
+                        <span class="text-sm">💬</span> 문장 뒤집기
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2) 학년 탭 버튼 (3, 4, 5, 6학년 + 교과서 출판사 표시) -->
+            <div class="mb-3">
+                <label class="block text-[11px] font-bold text-slate-500 mb-1.5">학년 선택</label>
+                <div class="grid grid-cols-2 gap-2" id="flipGradeTabsWrap">
+                    <button type="button" class="flip-grade-btn py-2 px-3 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-purple-50 border-purple-500 text-purple-700 shadow-sm" data-grade="3" onclick="setFlipSelectedGrade(3)" id="flipGradeBtn3">
+                        <div class="flex items-center gap-1.5 font-black text-xs">
+                            <i class="fas fa-graduation-cap"></i> 3학년
+                        </div>
+                        <span class="text-[10px] text-purple-600 font-medium">YBM (최희경)</span>
+                    </button>
+                    <button type="button" class="flip-grade-btn py-2 px-3 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100" data-grade="4" onclick="setFlipSelectedGrade(4)" id="flipGradeBtn4">
+                        <div class="flex items-center gap-1.5 font-black text-xs">
+                            <i class="fas fa-graduation-cap"></i> 4학년
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-medium">YBM (최희경)</span>
+                    </button>
+                    <button type="button" class="flip-grade-btn py-2 px-3 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100" data-grade="5" onclick="setFlipSelectedGrade(5)" id="flipGradeBtn5">
+                        <div class="flex items-center gap-1.5 font-black text-xs">
+                            <i class="fas fa-graduation-cap"></i> 5학년
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-medium">천재 (함순애)</span>
+                    </button>
+                    <button type="button" class="flip-grade-btn py-2 px-3 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100" data-grade="6" onclick="setFlipSelectedGrade(6)" id="flipGradeBtn6">
+                        <div class="flex items-center gap-1.5 font-black text-xs">
+                            <i class="fas fa-graduation-cap"></i> 6학년
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-medium">천재 (함순애)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3) 학기 탭 버튼 (전체 / 1학기 / 2학기) -->
+            <div class="mb-3">
+                <label class="block text-[11px] font-bold text-slate-500 mb-1.5">학기 범위</label>
+                <div class="grid grid-cols-3 gap-1.5 bg-slate-100 p-1 rounded-xl" id="flipSemTabsWrap">
+                    <button type="button" class="flip-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-purple-700 shadow-sm" data-sem="all" onclick="setFlipSelectedSemester('all')" id="flipSemAllBtn">
+                        전체 (1~10단원)
+                    </button>
+                    <button type="button" class="flip-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-800" data-sem="1" onclick="setFlipSelectedSemester(1)" id="flipSem1Btn">
+                        1학기 (1~5단원)
+                    </button>
+                    <button type="button" class="flip-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-800" data-sem="2" onclick="setFlipSelectedSemester(2)" id="flipSem2Btn">
+                        2학기 (6~10단원)
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4) 세부 단원 선택 드롭다운 -->
             <div class="mb-5">
+                <label class="block text-[11px] font-bold text-slate-500 mb-1.5">세부 단원 선택</label>
                 <select id="gameUnitSelect" class="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-purple-400 font-bold text-xs text-slate-800">
                     <option value="">단원 선택</option>
                 </select>
             </div>
+
+            <!-- 하단 버튼 -->
             <div class="flex gap-2">
                 <button type="button" onclick="closeUnitSelectModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition">취소</button>
                 <button type="button" onclick="confirmUnitSelection()" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 rounded-xl shadow text-xs transition">선택 완료</button>
@@ -798,261 +864,8 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-// 기본 추천 단원 세트 (단어 타자 연습 연동 교과서 단원 13개 + 주제별 추천 단원 4개)
-        const DEFAULT_PRESET_UNITS = [
-            {
-                id: "lesson_3g_l07",
-                code: "3G_L07",
-                category: "curriculum",
-                name: "3학년 Lesson 07 - 학용품",
-                words: [
-                    { word: "crayon", meaning: "크레용" },
-                    { word: "eraser", meaning: "지우개" },
-                    { word: "glue stick", meaning: "풀" },
-                    { word: "notebook", meaning: "공책" },
-                    { word: "pencil", meaning: "연필" },
-                    { word: "pencil case", meaning: "필통" },
-                    { word: "ruler", meaning: "자" },
-                    { word: "scissors", meaning: "가위" }
-                ]
-            },
-            {
-                id: "lesson_l01",
-                code: "L01",
-                category: "curriculum",
-                name: "6학년 Lesson 01 - 서수와 학교생활",
-                words: [
-                    { word: "first", meaning: "첫 번째의" },
-                    { word: "second", meaning: "두 번째의" },
-                    { word: "third", meaning: "세 번째의" },
-                    { word: "fourth", meaning: "네 번째의" },
-                    { word: "fifth", meaning: "다섯 번째의" },
-                    { word: "sixth", meaning: "여섯 번째의" },
-                    { word: "grade", meaning: "학년" },
-                    { word: "spell", meaning: "철자를 쓰다" },
-                    { word: "join", meaning: "가입하다" },
-                    { word: "club", meaning: "동아리" },
-                    { word: "dance", meaning: "춤추다, 춤" },
-                    { word: "draw", meaning: "그리다" },
-                    { word: "play", meaning: "놀다, 연주하다" },
-                    { word: "listen", meaning: "듣다" },
-                    { word: "read", meaning: "읽다" },
-                    { word: "ride", meaning: "(자전거 등을) 타다" }
-                ]
-            },
-            {
-                id: "lesson_l02",
-                code: "L02",
-                category: "curriculum",
-                name: "6학년 Lesson 02 - 계절과 날씨",
-                words: [
-                    { word: "season", meaning: "계절" },
-                    { word: "spring", meaning: "봄" },
-                    { word: "summer", meaning: "여름" },
-                    { word: "fall", meaning: "가을" },
-                    { word: "winter", meaning: "겨울" },
-                    { word: "beautiful", meaning: "아름다운" },
-                    { word: "flower", meaning: "꽃" },
-                    { word: "cold", meaning: "추운" },
-                    { word: "warm", meaning: "따뜻한" },
-                    { word: "delicious", meaning: "맛있는" },
-                    { word: "also", meaning: "또한" },
-                    { word: "colorful", meaning: "다채로운" },
-                    { word: "swim", meaning: "수영하다" },
-                    { word: "field trip", meaning: "현장학습" },
-                    { word: "clear", meaning: "맑은" },
-                    { word: "bright", meaning: "밝은" }
-                ]
-            },
-            {
-                id: "lesson_l03",
-                code: "L03",
-                category: "curriculum",
-                name: "6학년 Lesson 03 - 환경과 지구 보호",
-                words: [
-                    { word: "campaign", meaning: "홍보활동" },
-                    { word: "earth", meaning: "지구" },
-                    { word: "paper", meaning: "종이" },
-                    { word: "poster", meaning: "포스터" },
-                    { word: "save", meaning: "구하다" },
-                    { word: "shirt", meaning: "셔츠" },
-                    { word: "turn off", meaning: "끄다" },
-                    { word: "when", meaning: "언제" },
-                    { word: "world", meaning: "세계" }
-                ]
-            },
-            {
-                id: "lesson_l04",
-                code: "L04",
-                category: "curriculum",
-                name: "6학년 Lesson 04 - 감정과 이유 묻기",
-                words: [
-                    { word: "because", meaning: "~ 때문에" },
-                    { word: "belt", meaning: "띠" },
-                    { word: "birdhouse", meaning: "새집, 새장" },
-                    { word: "break", meaning: "부수다, 깨다" },
-                    { word: "congratulations", meaning: "축하" },
-                    { word: "test", meaning: "시험" },
-                    { word: "why", meaning: "왜" },
-                    { word: "worry", meaning: "걱정하다" },
-                    { word: "wrong", meaning: "나쁜, 틀린" }
-                ]
-            },
-            {
-                id: "lesson_l05",
-                code: "L05",
-                category: "curriculum",
-                name: "6학년 Lesson 05 - 길 찾기와 장소",
-                words: [
-                    { word: "bank", meaning: "은행" },
-                    { word: "block", meaning: "구역" },
-                    { word: "hospital", meaning: "병원" },
-                    { word: "hungry", meaning: "배고픈" },
-                    { word: "restaurant", meaning: "식당" },
-                    { word: "left", meaning: "왼쪽" },
-                    { word: "restroom", meaning: "화장실" },
-                    { word: "stop", meaning: "정류장" },
-                    { word: "store", meaning: "가게" },
-                    { word: "straight", meaning: "똑바로, 일직선으로" },
-                    { word: "town", meaning: "마을" }
-                ]
-            },
-            {
-                id: "lesson_l06",
-                code: "L06",
-                category: "curriculum",
-                name: "6학년 Lesson 06 - 가족과 묘사하기",
-                words: [
-                    { word: "aunt", meaning: "고모" },
-                    { word: "daughter", meaning: "딸" },
-                    { word: "dress", meaning: "드레스" },
-                    { word: "eye", meaning: "눈" },
-                    { word: "hair", meaning: "머리카락" },
-                    { word: "long", meaning: "긴" },
-                    { word: "of", meaning: "…의" },
-                    { word: "same", meaning: "같은" },
-                    { word: "sand", meaning: "모래" },
-                    { word: "short", meaning: "짧은" }
-                ]
-            },
-            {
-                id: "lesson_l07",
-                code: "L07",
-                category: "curriculum",
-                name: "6학년 Lesson 07 - 경험과 과거",
-                words: [
-                    { word: "after", meaning: "~후에" },
-                    { word: "biscuit", meaning: "비스킷" },
-                    { word: "laser", meaning: "레이저" },
-                    { word: "light", meaning: "빛" },
-                    { word: "number", meaning: "숫자" },
-                    { word: "soft drink", meaning: "청량음료" },
-                    { word: "tell", meaning: "말하다" }
-                ]
-            },
-            {
-                id: "lesson_l08",
-                code: "L08",
-                category: "curriculum",
-                name: "6학년 Lesson 08 - 비교하기",
-                words: [
-                    { word: "always", meaning: "항상, 언제나" },
-                    { word: "baby", meaning: "아기" },
-                    { word: "catch", meaning: "잡다" },
-                    { word: "clock", meaning: "시계" },
-                    { word: "dribble", meaning: "공을 몰다" },
-                    { word: "fast", meaning: "빠른" },
-                    { word: "giraffe", meaning: "기린" },
-                    { word: "give", meaning: "주다" },
-                    { word: "goal", meaning: "득점" },
-                    { word: "heavy", meaning: "무거운" },
-                    { word: "race", meaning: "경주" },
-                    { word: "side", meaning: "쪽" },
-                    { word: "strong", meaning: "힘 센" },
-                    { word: "than", meaning: "~보다" },
-                    { word: "tower", meaning: "탑" },
-                    { word: "win", meaning: "이기다" }
-                ]
-            },
-            {
-                id: "lesson_l09",
-                code: "L09",
-                category: "curriculum",
-                name: "6학년 Lesson 09 - 방학 계획과 미래",
-                words: [
-                    { word: "any", meaning: "어떤" },
-                    { word: "children", meaning: "아이들" },
-                    { word: "forest", meaning: "숲" },
-                    { word: "hamburger", meaning: "햄버거" },
-                    { word: "plan", meaning: "계획" },
-                    { word: "program", meaning: "프로그램" },
-                    { word: "room", meaning: "방" },
-                    { word: "stay", meaning: "머무르다" },
-                    { word: "tent", meaning: "텐트" },
-                    { word: "village", meaning: "마을" },
-                    { word: "zoo", meaning: "동물원" }
-                ]
-            },
-            {
-                id: "lesson_l10",
-                code: "L10",
-                category: "curriculum",
-                name: "6학년 Lesson 10 - 가격 묻기와 쇼핑",
-                words: [
-                    { word: "shirt", meaning: "셔츠" },
-                    { word: "pants", meaning: "바지" },
-                    { word: "shoes", meaning: "신발" },
-                    { word: "dollar", meaning: "달러" },
-                    { word: "cent", meaning: "센트" },
-                    { word: "cheap", meaning: "값싼" },
-                    { word: "expensive", meaning: "비싼" },
-                    { word: "buy", meaning: "사다" },
-                    { word: "sell", meaning: "팔다" },
-                    { word: "money", meaning: "돈" },
-                    { word: "market", meaning: "시장" },
-                    { word: "present", meaning: "선물" }
-                ]
-            },
-            {
-                id: "lesson_l11",
-                code: "L11",
-                category: "curriculum",
-                name: "6학년 Lesson 11 - 건강 상태와 조언",
-                words: [
-                    { word: "headache", meaning: "두통, 머리 아픔" },
-                    { word: "stomachache", meaning: "복통, 배 아픔" },
-                    { word: "toothache", meaning: "치통, 이 아픔" },
-                    { word: "fever", meaning: "열" },
-                    { word: "cold", meaning: "감기, 추운" },
-                    { word: "matter", meaning: "문제, 일" },
-                    { word: "doctor", meaning: "의사" },
-                    { word: "hospital", meaning: "병원" },
-                    { word: "medicine", meaning: "약" },
-                    { word: "rest", meaning: "휴식, 쉬다" },
-                    { word: "warm", meaning: "따뜻한" },
-                    { word: "healthy", meaning: "건강한" }
-                ]
-            },
-            {
-                id: "lesson_l12",
-                code: "L12",
-                category: "curriculum",
-                name: "6학년 Lesson 12 - 제안하기와 여가 활동",
-                words: [
-                    { word: "idea", meaning: "생각, 아이디어" },
-                    { word: "together", meaning: "함께" },
-                    { word: "park", meaning: "공원" },
-                    { word: "movie", meaning: "영화" },
-                    { word: "sound", meaning: "들리다" },
-                    { word: "wonderful", meaning: "멋진" },
-                    { word: "badminton", meaning: "배드민턴" },
-                    { word: "afternoon", meaning: "오후" },
-                    { word: "tomorrow", meaning: "내일" },
-                    { word: "weekend", meaning: "주말" },
-                    { word: "busy", meaning: "바쁜" },
-                    { word: "finish", meaning: "끝내다" }
-                ]
-            },
+// ── 추천 단원 세트 (주제별 기본 4세트 + 초등 3~6학년 44단원 동적 연동) ──
+        const THEME_PRESET_UNITS = [
             {
                 id: "preset_animals",
                 category: "theme",
@@ -1070,50 +883,53 @@
                     { word: "Duck", meaning: "오리" },
                     { word: "Pig", meaning: "돼지" },
                     { word: "Cow", meaning: "소" }
-                ]
+                ],
+                sentences: []
             },
             {
                 id: "preset_food",
                 category: "theme",
-                name: "과일과 음식 (Food)",
+                name: "음식 (Food)",
                 words: [
                     { word: "Apple", meaning: "사과" },
                     { word: "Banana", meaning: "바나나" },
-                    { word: "Orange", meaning: "오렌지" },
-                    { word: "Water", meaning: "물" },
-                    { word: "Milk", meaning: "우유" },
                     { word: "Bread", meaning: "빵" },
-                    { word: "Juice", meaning: "주스" },
-                    { word: "Grape", meaning: "포도" },
-                    { word: "Rice", meaning: "밥" },
+                    { word: "Milk", meaning: "우유" },
+                    { word: "Water", meaning: "물" },
+                    { word: "Rice", meaning: "밥/쌀" },
                     { word: "Egg", meaning: "달걀" },
+                    { word: "Cheese", meaning: "치즈" },
                     { word: "Pizza", meaning: "피자" },
-                    { word: "Cheese", meaning: "치즈" }
-                ]
+                    { word: "Chicken", meaning: "닭고기" },
+                    { word: "Fish", meaning: "생선" },
+                    { word: "Cake", meaning: "케이크" }
+                ],
+                sentences: []
             },
             {
                 id: "preset_school",
                 category: "theme",
-                name: "학교와 교실 (School)",
+                name: "학교 및 학용품 (School)",
                 words: [
-                    { word: "Book", meaning: "책" },
-                    { word: "Desk", meaning: "책상" },
-                    { word: "Chair", meaning: "의자" },
-                    { word: "Pencil", meaning: "연필" },
-                    { word: "Eraser", meaning: "지우개" },
+                    { word: "School", meaning: "학교" },
                     { word: "Teacher", meaning: "선생님" },
                     { word: "Student", meaning: "학생" },
-                    { word: "School", meaning: "학교" },
+                    { word: "Book", meaning: "책" },
+                    { word: "Pencil", meaning: "연필" },
+                    { word: "Eraser", meaning: "지우개" },
+                    { word: "Desk", meaning: "책상" },
+                    { word: "Chair", meaning: "의자" },
                     { word: "Bag", meaning: "가방" },
-                    { word: "Friend", meaning: "친구" },
-                    { word: "Clock", meaning: "시계" },
-                    { word: "Door", meaning: "문" }
-                ]
+                    { word: "Ruler", meaning: "자" },
+                    { word: "Notebook", meaning: "공책" },
+                    { word: "Classroom", meaning: "교실" }
+                ],
+                sentences: []
             },
             {
                 id: "preset_actions",
                 category: "theme",
-                name: "동작과 일상 (Actions)",
+                name: "행동 및 동작 (Actions)",
                 words: [
                     { word: "Run", meaning: "달리다" },
                     { word: "Jump", meaning: "뛰다" },
@@ -1127,9 +943,54 @@
                     { word: "Sing", meaning: "노래하다" },
                     { word: "Walk", meaning: "걷다" },
                     { word: "Dance", meaning: "춤추다" }
-                ]
+                ],
+                sentences: []
             }
         ];
+
+        let DEFAULT_PRESET_UNITS = [...THEME_PRESET_UNITS];
+
+        function applyLessonsToPresets(lessonsList) {
+            if (!Array.isArray(lessonsList) || lessonsList.length === 0) return;
+            const curriculumPresets = lessonsList.map(l => {
+                const unitId = 'lesson_' + (l.code || l.name || '').toLowerCase().replace(/[^a-z0-9_]/g, '_');
+                const parsedWords = (l.words || []).map(w => ({ word: w.word || w.en, meaning: w.meaning || w.kr }));
+                const parsedSentences = (l.sentences || []).map(s => ({ sentence: s.sentence || s.en, meaning: s.meaning || s.kr }));
+
+                const g = Number(l.grade) || 3;
+                const numMatch = (l.code || '').match(/L0?(\d+)/i) || (l.name || '').match(/Lesson\s*0?(\d+)/i);
+                const lessonNum = l.lessonNumber ? Number(l.lessonNumber) : (numMatch ? parseInt(numMatch[1], 10) : 1);
+
+                let sem = l.semester ? Number(l.semester) : null;
+                if (!sem) {
+                    if (g <= 4) {
+                        sem = (lessonNum <= 5) ? 1 : 2;
+                    } else {
+                        sem = (lessonNum <= 6) ? 1 : 2;
+                    }
+                }
+
+                return {
+                    id: unitId,
+                    code: l.code || '',
+                    category: 'curriculum',
+                    grade: g,
+                    semester: sem,
+                    lessonNumber: lessonNum,
+                    name: l.name || l.title || l.code,
+                    words: parsedWords,
+                    sentences: parsedSentences
+                };
+            });
+            DEFAULT_PRESET_UNITS = [...curriculumPresets, ...THEME_PRESET_UNITS];
+        }
+
+        // 스크립트 평가 시 전역 WaurimalCurriculum이 이미 있으면 즉시 사전 등록
+        try {
+            if (typeof window !== 'undefined' && window.WaurimalCurriculum && typeof window.WaurimalCurriculum.getLessons === 'function') {
+                applyLessonsToPresets(window.WaurimalCurriculum.getLessons());
+            }
+        } catch (e) {}
 
         // ════════════════════════════════════════════════════════════════════
         // ── 전역 상태 ──
@@ -1277,43 +1138,171 @@
         // ════════════════════════════════════════════════════════════════════
         // ── 초기화 ──
         // ════════════════════════════════════════════════════════════════════
-        // config.json 비동기 로드 및 단원 동기화 (단어 타자 연습 연동)
-        async function loadConfigJson() {
-            try {
-                const res = await fetch('config.json?t=' + Date.now(), { cache: 'no-store' });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.lessons && Array.isArray(data.lessons)) {
-                        data.lessons.forEach(l => {
-                            const unitId = 'lesson_' + (l.code || l.name).toLowerCase();
-                            let existing = DEFAULT_PRESET_UNITS.find(u => u.id === unitId || u.code === l.code);
-                            let parsedWords = [];
-                            if (typeof l.words === 'string') {
-                                parsedWords = l.words.split('\n').filter(line => line.trim()).map(line => {
-                                    const parts = line.split(':');
-                                    return { word: parts[0].trim(), meaning: parts.slice(1).join(':').trim() };
-                                });
-                            } else if (Array.isArray(l.words)) {
-                                parsedWords = l.words.map(w => ({ word: w.word || w.en, meaning: w.meaning || w.kr }));
-                            }
-                            if (parsedWords.length >= 2) {
-                                if (existing) {
-                                    existing.words = parsedWords;
-                                    if (l.name) existing.name = l.name;
-                                } else {
-                                    DEFAULT_PRESET_UNITS.push({
-                                        id: unitId,
-                                        code: l.code,
-                                        category: 'curriculum',
-                                        name: l.name || l.code,
-                                        words: parsedWords
-                                    });
-                                }
-                            }
-                        });
+        // ── 뒤집기 모드 및 학년/학기 필터 상태 ──
+        let currentFlipMatchMode = 'word'; // 'word' | 'sentence'
+        let currentFlipGrade = 3; // 3, 4, 5, 6
+        let currentFlipSemester = 'all'; // 'all' | 1 | 2
+        let cachedDbUnits = [];
+
+        window.setFlipMatchMode = (mode) => {
+            currentFlipMatchMode = mode;
+            const wordBtn = document.getElementById('flipModeWordBtn');
+            const senBtn = document.getElementById('flipModeSentenceBtn');
+            if (wordBtn && senBtn) {
+                if (mode === 'word') {
+                    wordBtn.className = "py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 bg-purple-600 text-white shadow-md";
+                    senBtn.className = "py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-800";
+                } else {
+                    senBtn.className = "py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 bg-purple-600 text-white shadow-md";
+                    wordBtn.className = "py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-800";
+                }
+            }
+            renderFlipUnitSelectOptions();
+        };
+
+        window.setFlipSelectedGrade = (grade) => {
+            currentFlipGrade = Number(grade);
+            [3, 4, 5, 6].forEach(g => {
+                const btn = document.getElementById('flipGradeBtn' + g);
+                if (btn) {
+                    const sub = btn.querySelector('span');
+                    if (g === currentFlipGrade) {
+                        btn.className = "flip-grade-btn py-2 px-3 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-purple-50 border-purple-500 text-purple-700 shadow-sm";
+                        if (sub) sub.className = "text-[10px] text-purple-600 font-medium";
+                    } else {
+                        btn.className = "flip-grade-btn py-2 px-3 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100";
+                        if (sub) sub.className = "text-[10px] text-slate-400 font-medium";
                     }
                 }
-            } catch (e) {}
+            });
+
+            // 학기 범위 탭 라벨 업데이트
+            const allBtn = document.getElementById('flipSemAllBtn');
+            const s1Btn = document.getElementById('flipSem1Btn');
+            const s2Btn = document.getElementById('flipSem2Btn');
+            if (currentFlipGrade <= 4) {
+                if (allBtn) allBtn.innerText = '전체 (1~10단원)';
+                if (s1Btn) s1Btn.innerText = '1학기 (1~5단원)';
+                if (s2Btn) s2Btn.innerText = '2학기 (6~10단원)';
+            } else {
+                if (allBtn) allBtn.innerText = '전체 (1~12단원)';
+                if (s1Btn) s1Btn.innerText = '1학기 (1~6단원)';
+                if (s2Btn) s2Btn.innerText = '2학기 (7~12단원)';
+            }
+
+            renderFlipUnitSelectOptions();
+        };
+
+        window.setFlipSelectedSemester = (sem) => {
+            currentFlipSemester = (sem === 'all' ? 'all' : Number(sem));
+            ['all', 1, 2].forEach(s => {
+                const btnId = s === 'all' ? 'flipSemAllBtn' : (s === 1 ? 'flipSem1Btn' : 'flipSem2Btn');
+                const btn = document.getElementById(btnId);
+                if (btn) {
+                    if (currentFlipSemester === s) {
+                        btn.className = "flip-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-purple-700 shadow-sm";
+                    } else {
+                        btn.className = "flip-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-800";
+                    }
+                }
+            });
+            renderFlipUnitSelectOptions();
+        };
+
+        function renderFlipUnitSelectOptions() {
+            const selectEl = document.getElementById('gameUnitSelect');
+            if (!selectEl) return;
+            const currentSelected = selectEl.value;
+            let html = '<option value="">단원을 선택하세요</option>';
+
+            // 1. 선택된 학년 및 학기의 교과서 단원
+            const curriculumUnits = DEFAULT_PRESET_UNITS.filter(p => {
+                if (p.category !== 'curriculum') return false;
+                if (Number(p.grade) !== currentFlipGrade) return false;
+                if (currentFlipSemester !== 'all' && Number(p.semester) !== Number(currentFlipSemester)) return false;
+                return true;
+            });
+
+            const modeLabel = currentFlipMatchMode === 'sentence' ? '문장' : '단어';
+            const gradeName = currentFlipGrade <= 4 ? `${currentFlipGrade}학년 (YBM 최희경)` : `${currentFlipGrade}학년 (천재 함순애)`;
+
+            if (curriculumUnits.length > 0) {
+                html += `<optgroup label="📚 ${gradeName} [${modeLabel} 뒤집기]">`;
+                curriculumUnits.forEach(p => {
+                    const count = currentFlipMatchMode === 'sentence' 
+                        ? (p.sentences ? p.sentences.length : 0) 
+                        : (p.words ? p.words.length : 0);
+                    html += `<option value="preset:${p.id}">${p.name} (${modeLabel} ${count}개)</option>`;
+                });
+                html += '</optgroup>';
+            }
+
+            // 2. 주제별 추천 단원 (4개)
+            const themeUnits = DEFAULT_PRESET_UNITS.filter(p => p.category !== 'curriculum');
+            if (themeUnits.length > 0) {
+                html += `<optgroup label="🌟 주제별 추천 단원 (단어 10~12개)">`;
+                themeUnits.forEach(p => {
+                    const wCount = p.words ? p.words.length : 0;
+                    html += `<option value="preset:${p.id}">${p.name} (단어 ${wCount}개)</option>`;
+                });
+                html += '</optgroup>';
+            }
+
+            // 3. 선생님 등록 단원
+            if (cachedDbUnits.length > 0) {
+                html += '<optgroup label="🏫 선생님 등록 단원">';
+                cachedDbUnits.forEach(u => {
+                    html += `<option value="db:${u.id}">${u.name}</option>`;
+                });
+                html += '</optgroup>';
+            }
+
+            selectEl.innerHTML = html;
+
+            // 기존 선택 유지 가능 시 복원, 아니면 첫 번째 교과서 단원 자동 선택
+            if (currentSelected && selectEl.querySelector(`option[value="${currentSelected}"]`)) {
+                selectEl.value = currentSelected;
+            } else if (curriculumUnits.length > 0) {
+                selectEl.value = `preset:${curriculumUnits[0].id}`;
+            }
+        }
+
+        // config.json 및 공통 커리큘럼 로드 (WaurimalCurriculum 44단원 최우선 연동)
+        async function loadConfigJson() {
+            let loaded = false;
+            // 1) window.WaurimalCurriculum 44개 정규 교과과정 로드
+            try {
+                if (window.WaurimalCurriculum && typeof window.WaurimalCurriculum.getLessons === 'function') {
+                    const cLessons = window.WaurimalCurriculum.getLessons();
+                    if (Array.isArray(cLessons) && cLessons.length === 44) {
+                        applyLessonsToPresets(cLessons);
+                        loaded = true;
+                        console.log('[Flip] WaurimalCurriculum 44개 정규 단원 동기화 완료');
+                    }
+                }
+            } catch (e) {
+                console.warn('[Flip] WaurimalCurriculum 로드 실패:', e);
+            }
+
+            // 2) config.json 백업 로드
+            if (!loaded) {
+                try {
+                    const res = await fetch('config.json?t=' + Date.now(), { cache: 'no-store' });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.lessons && Array.isArray(data.lessons) && data.lessons.length > 0) {
+                            applyLessonsToPresets(data.lessons);
+                            console.log('[Flip] config.json 단원 로드 성공 (' + data.lessons.length + '단원)');
+                        }
+                    }
+                } catch (e) {
+                    console.warn('[Flip] config.json 로드 실패:', e);
+                }
+            }
+
+            if (typeof updateHofUnitSelect === 'function') {
+                updateHofUnitSelect();
+            }
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
@@ -1328,13 +1317,13 @@
 
             // 설정 가져오기
             try {
-                const setSnap = await getDoc(getDocRef('settings', 'main'));
-                if (setSnap.exists()) {
-                    teacherSettings = setSnap.data();
+                const docSnap = await getDoc(getDocRef('settings', 'global'));
+                if (docSnap.exists()) {
+                    teacherSettings = { ...teacherSettings, ...docSnap.data() };
                 }
             } catch (e) {}
 
-            loadHallOfFame();
+            await loadHofData();
         });
 
         // ════════════════════════════════════════════════════════════════════
@@ -1348,47 +1337,25 @@
             pendingGameAction = action;
             selectedUnitId = null;
 
-            showLoading();
-            const selectEl = document.getElementById('gameUnitSelect');
-            let html = '<option value="">단원을 선택하세요</option>';
+            // 학생 프로필의 학년으로 자동 초기화 (3, 4, 5, 6)
+            let userGrade = Number(studentProfile.grade);
+            if (![3, 4, 5, 6].includes(userGrade)) userGrade = 3;
 
-            // 1. Firebase에서 단원 목록 불러오기
-            let dbUnits = [];
+            showLoading();
+
+            // Firebase 선생님 등록 단원 캐싱
+            cachedDbUnits = [];
             try {
                 const snap = await getDocs(getCollection('units'));
-                snap.forEach(d => dbUnits.push({ id: d.id, ...d.data() }));
+                snap.forEach(d => cachedDbUnits.push({ id: d.id, ...d.data() }));
             } catch (e) {}
 
-            if (dbUnits.length > 0) {
-                html += '<optgroup label="선생님 등록 단원">';
-                dbUnits.forEach(u => {
-                    html += `<option value="db:${u.id}">${u.name}</option>`;
-                });
-                html += '</optgroup>';
-            }
-
-            // 2. 교과서 단원 (단어 타자 연습 연동)
-            const textbookUnits = DEFAULT_PRESET_UNITS.filter(p => p.category === 'curriculum');
-            if (textbookUnits.length > 0) {
-                html += '<optgroup label="📚 교과서 단원 (단어 타자 연습 연동)">';
-                textbookUnits.forEach(p => {
-                    html += `<option value="preset:${p.id}">${p.name}</option>`;
-                });
-                html += '</optgroup>';
-            }
-
-            // 3. 주제별 추천 단원
-            const themeUnits = DEFAULT_PRESET_UNITS.filter(p => p.category !== 'curriculum');
-            if (themeUnits.length > 0) {
-                html += '<optgroup label="🌟 주제별 추천 단원">';
-                themeUnits.forEach(p => {
-                    html += `<option value="preset:${p.id}">${p.name}</option>`;
-                });
-                html += '</optgroup>';
-            }
-
-            selectEl.innerHTML = html;
             hideLoading();
+
+            // 모달 초기 탭 및 옵션 설정
+            setFlipMatchMode(currentFlipMatchMode || 'word');
+            setFlipSelectedGrade(userGrade);
+            setFlipSelectedSemester('all');
 
             document.getElementById('unitSelectModal').classList.remove('hidden');
         };
@@ -1417,7 +1384,19 @@
                     const found = DEFAULT_PRESET_UNITS.find(p => p.id === presetId);
                     if (found) {
                         unitTitle = found.name;
-                        loadedWords = found.words.map((w, idx) => ({ id: `w_${idx}`, word: w.word || w.en, meaning: w.meaning || w.kr }));
+                        if (currentFlipMatchMode === 'sentence') {
+                            if (found.sentences && found.sentences.length >= 2) {
+                                loadedWords = found.sentences.map((s, idx) => ({ id: `s_${idx}`, word: s.sentence || s.en, meaning: s.meaning || s.kr }));
+                                unitTitle += " [문장]";
+                            } else {
+                                // 문장 데이터가 없는 경우 단어로 대체
+                                loadedWords = (found.words || []).map((w, idx) => ({ id: `w_${idx}`, word: w.word || w.en, meaning: w.meaning || w.kr }));
+                                unitTitle += " [단어]";
+                            }
+                        } else {
+                            loadedWords = (found.words || []).map((w, idx) => ({ id: `w_${idx}`, word: w.word || w.en, meaning: w.meaning || w.kr }));
+                            unitTitle += " [단어]";
+                        }
                     }
                 } else if (selectVal.startsWith('db:')) {
                     const dbUnitId = selectVal.replace('db:', '');
@@ -1429,7 +1408,7 @@
 
                 if (loadedWords.length < 2) {
                     hideLoading();
-                    showAlert("이 단원에는 카드를 만들 단어가 부족합니다. (최소 2개 이상 필요)", "알림", "😥");
+                    showAlert("이 단원에는 카드를 만들 데이터가 부족합니다. (최소 2개 이상 필요)", "알림", "😥");
                     return;
                 }
 
@@ -1440,7 +1419,7 @@
                 // 단어 섞고 개수만큼 뽑기
                 loadedWords = loadedWords.sort(() => 0.5 - Math.random()).slice(0, maxPairs);
 
-                // 덱 생성 (단어 카드 + 뜻 카드)
+                // 덱 생성 (앞면 카드 + 뒷면 뜻 매칭)
                 let deck = [];
                 loadedWords.forEach(w => {
                     deck.push({ pairId: w.id, text: w.word, type: 'word', flipped: false, matched: false, matchedBy: '' });
@@ -1459,11 +1438,11 @@
                 }
             } catch (e) {
                 hideLoading();
-                showAlert("단어 로딩 중 오류가 발생했습니다.", "오류", "❌");
+                showAlert("단원 로딩 중 오류가 발생했습니다.", "오류", "❌");
             }
         };
 
-        function setupBoardLayout(count) {
+        function setupBoardLayoutfunction setupBoardLayout(count) {
             const grid = document.getElementById('cardGrid');
             grid.className = 'w-full h-full grid gap-2.5 place-items-center';
             if (count <= 12) grid.classList.add('grid-cols-3', 'md:grid-cols-4');
@@ -1671,6 +1650,13 @@
                 const isFlippedOrMatched = c.flipped || c.matched;
                 const hoverClass = isFlippedOrMatched ? '' : 'hover:scale-105 cursor-pointer';
                 const borderColor = c.matched ? 'border-amber-400 shadow-amber-200 shadow-md' : 'border-purple-300';
+                const textLen = (c.text || '').length;
+                let fontClass = 'text-base md:text-lg leading-snug font-black';
+                if (textLen > 28) {
+                    fontClass = 'text-[11px] md:text-xs leading-tight font-extrabold';
+                } else if (textLen > 16) {
+                    fontClass = 'text-xs md:text-sm leading-snug font-black';
+                }
 
                 html += `
                 <div class="relative w-full h-full perspective-1000 transition-transform duration-300 min-h-[90px] max-h-[140px]">
@@ -1681,8 +1667,8 @@
                             <span class="text-[10px] font-black tracking-widest mt-1 opacity-70">FLIP</span>
                         </div>
                         <!-- 앞면 (단어 또는 뜻) -->
-                        <div class="absolute w-full h-full backface-hidden rotate-y-180 bg-white rounded-2xl shadow-md border-4 ${borderColor} flex flex-col items-center justify-center p-2 text-center">
-                            <span class="text-base md:text-lg font-black text-slate-800 break-words leading-snug">${c.text}</span>
+                        <div class="absolute w-full h-full backface-hidden rotate-y-180 bg-white rounded-2xl shadow-md border-4 ${borderColor} flex flex-col items-center justify-center p-2 text-center select-none overflow-hidden">
+                            <span class="${fontClass} text-slate-800 break-keep break-words w-full px-1">${c.text}</span>
                             ${c.matched ? `<div class="absolute bottom-1 bg-amber-400 text-[10px] px-2 py-0.5 rounded-full text-white font-extrabold shadow-xs">${c.matchedBy}</div>` : ''}
                         </div>
                     </div>
