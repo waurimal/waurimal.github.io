@@ -361,7 +361,7 @@
 
     <!-- 상단 와우리말 통합 GNB 네비게이션 -->
     <script src="../common/waurimal-nav.js"></script>
-    <script src="../common/curriculum.js"></script>
+    <script src="../common/curriculum.js?v=20261121_full48_v5"></script>
 
     <!-- 메인 컨테이너 -->
     <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-4 md:py-6 flex flex-col gap-4">
@@ -1129,23 +1129,53 @@
 
         function renderHomeLessonSelect() {
             const homeSel = document.getElementById('homeLessonSelect');
-            if (!homeSel || !lessons || lessons.length === 0) return;
+            if (!homeSel) return;
 
-            // 해당 학년 단원만 필터링 (없으면 전체)
+            if (!lessons || lessons.length < 48) {
+                if (window.WaurimalCurriculum && typeof window.WaurimalCurriculum.getLessons === 'function') {
+                    const cl = window.WaurimalCurriculum.getLessons();
+                    if (Array.isArray(cl) && cl.length === 48) {
+                        lessons = cl.map(l => {
+                            const sentsStr = (l.sentences || []).map(s => {
+                                const en = (s.en || s.sentence || '').trim();
+                                const kr = (s.kr || s.meaning || '').trim();
+                                return kr ? `${en} : ${kr}` : en;
+                            }).join('\n');
+                            return {
+                                code: l.code,
+                                grade: Number(l.grade),
+                                publisher: l.publisher || '',
+                                name: l.name,
+                                words: sentsStr
+                            };
+                        });
+                    }
+                }
+            }
+            if (!lessons || lessons.length === 0) return;
+
+            // 해당 학년 단원만 정확하게 필터링
             let filtered = lessons.filter(l => {
                 if (l.grade && Number(l.grade) === currentSenGrade) return true;
                 if (l.code && l.code.startsWith(`${currentSenGrade}G_`)) return true;
                 return false;
             });
-            if (filtered.length === 0) filtered = lessons;
 
             homeSel.innerHTML = '';
             filtered.forEach(l => {
                 const globalIdx = lessons.indexOf(l);
                 const parsed = parseLessonSentences(l.words);
+                const m = l.code.match(/_L?(\d+)$/) || (l.name && l.name.match(/Lesson\s*(\d+)/i));
+                const unitNum = m ? parseInt(m[1], 10) : 1;
+                let cleanTitle = l.name || l.code;
+                if (cleanTitle.includes(' - ')) {
+                    cleanTitle = cleanTitle.split(' - ').slice(1).join(' - ').trim();
+                } else {
+                    cleanTitle = cleanTitle.replace(/^\[.*?\]\s*/, '');
+                }
                 const opt = document.createElement('option');
                 opt.value = globalIdx;
-                opt.textContent = `[${l.code}] ${l.name} (${parsed.length}문장)`;
+                opt.textContent = `${unitNum}단원 - ${cleanTitle} (${parsed.length}문장)`;
                 homeSel.appendChild(opt);
             });
             updateSelectedLessonInfo();

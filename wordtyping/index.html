@@ -12,7 +12,7 @@
     <!-- 와우리말 공통 통합 테마 및 내비게이션 -->
     <link rel="stylesheet" href="../common/waurimal-theme.css">
     <script src="../common/waurimal-nav.js"></script>
-    <script src="../common/curriculum.js"></script>
+    <script src="../common/curriculum.js?v=20261121_full48_v5"></script>
     <script src="../common/firebase-config.js?v=20261111_db_restore"></script>
 
     <!-- Firebase SDK (v10 compat) -->
@@ -412,8 +412,8 @@
             line-height: 1.5;
         }
 
-        /* 학년 필터 탭 버튼 */
-        .wt-grade-tab {
+        /* 학년 및 학기 필터 탭 버튼 */
+        .wt-grade-tab, .wt-sem-tab {
             padding: 0.45rem 0.85rem;
             font-size: 0.82rem;
             font-weight: 700;
@@ -427,7 +427,7 @@
             align-items: center;
             gap: 0.35rem;
         }
-        .wt-grade-tab:hover {
+        .wt-grade-tab:hover, .wt-sem-tab:hover {
             border-color: var(--primary);
             color: var(--primary);
         }
@@ -437,12 +437,18 @@
             border-color: var(--primary);
             box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
         }
+        .wt-sem-tab.active {
+            background: #10B981;
+            color: #ffffff;
+            border-color: #10B981;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+        }
 
         /* 단원 선택 버튼 그리드 (컴팩트 & 크롬북 최적화) */
         .lsel-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 0.55rem;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 0.65rem;
             margin-top: 0.75rem;
         }
 
@@ -450,46 +456,75 @@
             background: #ffffff;
             border: 1.5px solid var(--border-color);
             border-radius: 12px;
-            padding: 0.65rem 0.6rem;
+            padding: 0.75rem 0.7rem;
             cursor: pointer;
-            text-align: center;
+            text-align: left;
             transition: all 0.18s ease;
             display: flex;
             flex-direction: column;
-            gap: 0.2rem;
-            align-items: center;
+            gap: 0.35rem;
             position: relative;
         }
 
         .lsel-card:hover {
             border-color: var(--primary);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
+            box-shadow: 0 6px 14px rgba(37, 99, 235, 0.12);
         }
 
         .lsel-card.sel {
             border-color: var(--primary);
             background: #EFF6FF;
-            box-shadow: 0 0 0 2.5px rgba(37, 99, 235, 0.25);
+            box-shadow: 0 0 0 2.5px rgba(37, 99, 235, 0.3);
         }
 
-        .lsel-code {
-            font-size: 0.95rem;
+        .lsel-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .lsel-badge {
+            font-size: 0.88rem;
             font-weight: 800;
             color: var(--primary);
             letter-spacing: -0.01em;
-            line-height: 1.2;
         }
 
-        .lsel-name {
-            font-size: 0.78rem;
+        .lsel-sem-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.1rem 0.4rem;
+            border-radius: 6px;
+            background: #F1F5F9;
+            color: #64748B;
+        }
+
+        .lsel-card.sel .lsel-sem-badge {
+            background: #DBEAFE;
+            color: #1D4ED8;
+        }
+
+        .lsel-title {
+            font-size: 0.85rem;
             color: var(--text-main);
-            font-weight: 600;
-            line-height: 1.2;
-            white-space: nowrap;
+            font-weight: 700;
+            line-height: 1.3;
             overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 100%;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            word-break: break-word;
+            min-height: 2.2em;
+        }
+
+        .lsel-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 0.15rem;
         }
 
         .lsel-cnt {
@@ -497,9 +532,22 @@
             color: var(--text-sub);
             font-weight: 700;
             background: rgba(37, 99, 235, 0.08);
-            padding: 0.12rem 0.5rem;
+            padding: 0.15rem 0.45rem;
             border-radius: 9999px;
-            margin-top: 0.1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .lsel-check {
+            font-size: 0.72rem;
+            color: var(--primary);
+            display: none;
+            font-weight: 800;
+        }
+
+        .lsel-card.sel .lsel-check {
+            display: inline-block;
         }
 
         /* 학생 확인용 카드 */
@@ -1818,7 +1866,7 @@
             </div>
 
             <!-- 학년 선택 필터 탭 (3, 4학년: YBM 최희경 / 5, 6학년: 천재 함순애) -->
-            <div class="wt-grade-tabs-wrap" style="display:flex; gap:0.45rem; margin-bottom:0.85rem; flex-wrap:wrap;" id="wtGradeTabsWrap">
+            <div class="wt-grade-tabs-wrap" style="display:flex; gap:0.45rem; margin-bottom:0.6rem; flex-wrap:wrap;" id="wtGradeTabsWrap">
                 <button type="button" class="wt-grade-tab" data-grade="3" onclick="filterWordtypingGrade(3)">
                     <i class="fas fa-graduation-cap"></i> 3학년 <span style="font-size:0.72rem; font-weight:500;">(YBM 최희경)</span>
                 </button>
@@ -1830,6 +1878,19 @@
                 </button>
                 <button type="button" class="wt-grade-tab active" data-grade="6" onclick="filterWordtypingGrade(6)">
                     <i class="fas fa-graduation-cap"></i> 6학년 <span style="font-size:0.72rem; font-weight:500;">(천재 함순애)</span>
+                </button>
+            </div>
+
+            <!-- 학기 선택 필터 탭 (전체, 1학기, 2학기) -->
+            <div class="wt-sem-tabs-wrap" style="display:flex; gap:0.4rem; margin-bottom:0.85rem; flex-wrap:wrap;" id="wtSemTabsWrap">
+                <button type="button" class="wt-sem-tab active" data-sem="all" onclick="filterWordtypingSemester('all')">
+                    전체 (1~12단원)
+                </button>
+                <button type="button" class="wt-sem-tab" data-sem="sem1" onclick="filterWordtypingSemester('sem1')">
+                    1학기 (1~6단원)
+                </button>
+                <button type="button" class="wt-sem-tab" data-sem="sem2" onclick="filterWordtypingSemester('sem2')">
+                    2학기 (7~12단원)
                 </button>
             </div>
 
@@ -2401,7 +2462,12 @@ function renderHallOfFame() {
     }).join('');
 }
 
-// ── 데이터 로딩 (WaurimalCurriculum 우선 -> config.json -> Firestore -> localStorage) ──
+// ── 데이터 로딩 (WaurimalCurriculum 48단원 엄격 연동 -> config.json -> 백업) ──
+function validate48Lessons(arr) {
+    if (!Array.isArray(arr) || arr.length !== 48) return false;
+    return [3, 4, 5, 6].every(g => arr.filter(l => Number(l.grade) === g).length === 12);
+}
+
 async function initAppConfig() {
     let loaded = false;
 
@@ -2409,17 +2475,17 @@ async function initAppConfig() {
     if (window.WaurimalCurriculum && typeof window.WaurimalCurriculum.getLessons === 'function') {
         try {
             const cLessons = window.WaurimalCurriculum.getLessons();
-            if (Array.isArray(cLessons) && cLessons.length > 0) {
+            if (validate48Lessons(cLessons)) {
                 lessons = cLessons.map(l => ({
                     code: l.code,
-                    grade: l.grade,
-                    publisher: l.publisher || '',
+                    grade: Number(l.grade),
+                    publisher: l.publisher || (Number(l.grade) <= 4 ? 'YBM (최희경)' : '천재 (함순애)'),
                     name: l.name,
                     words: l.words || []
                 }));
                 isConfigLoaded = true;
                 loaded = true;
-                console.log("[wordtyping] WaurimalCurriculum 연동 완료:", lessons.length, "개 단원 로드");
+                console.log("[wordtyping] WaurimalCurriculum 48개 단원 연동 완료");
             }
         } catch(e) {
             console.warn("[wordtyping] WaurimalCurriculum 연동 오류:", e);
@@ -2433,41 +2499,56 @@ async function initAppConfig() {
             if (res.ok) {
                 const data = await res.json();
                 globalConfig = data;
-                isConfigLoaded = true;
-                lessons = data.lessons || [];
+                if (validate48Lessons(data.lessons)) {
+                    lessons = data.lessons.map(l => ({
+                        code: l.code,
+                        grade: Number(l.grade),
+                        publisher: l.publisher || (Number(l.grade) <= 4 ? 'YBM (최희경)' : '천재 (함순애)'),
+                        name: l.name,
+                        words: l.words || []
+                    }));
+                    isConfigLoaded = true;
+                    loaded = true;
+                }
                 if (data.school) {
                     document.getElementById('school-nm').textContent = data.school;
                 }
-                loaded = true;
             }
         } catch(e) {
-            console.log('config.json 로드 실패, 로컬 백업 확인');
+            console.log('config.json 로드 실패');
         }
     }
 
-    // 3) Firestore 교사 맞춤 설정 오버라이드 확인
+    // 3) 만약 로드에 실패했거나 불완전한 경우 WaurimalCurriculum 기본값 강제 복구
+    if (!validate48Lessons(lessons)) {
+        if (window.WaurimalCurriculum && Array.isArray(window.WaurimalCurriculum.defaultLessons)) {
+            lessons = window.WaurimalCurriculum.defaultLessons.map(l => ({
+                code: l.code,
+                grade: Number(l.grade),
+                publisher: l.publisher || (Number(l.grade) <= 4 ? 'YBM (최희경)' : '천재 (함순애)'),
+                name: l.name,
+                words: l.words || []
+            }));
+            isConfigLoaded = true;
+            loaded = true;
+            try { localStorage.removeItem(K_LESSONS); } catch(e){}
+        }
+    }
+
+    // 4) Firestore 교사 맞춤 설정 오버라이드 확인
     if (db) {
         try {
             const docSnap = await db.collection('games').doc('wordtyping').collection('settings').doc('main').get();
             if (docSnap.exists) {
                 const data = docSnap.data();
-                if (data) {
-                    if (data.school) {
-                        document.getElementById('school-nm').textContent = data.school;
-                        globalConfig.school = data.school;
-                    }
+                if (data && data.school) {
+                    document.getElementById('school-nm').textContent = data.school;
+                    globalConfig.school = data.school;
                 }
             }
         } catch (e) {
             console.warn('Firestore 설정 로드 알림:', e);
         }
-    }
-
-    // 4) 로컬스토리지 백업
-    if (!loaded) {
-        try { lessons = JSON.parse(localStorage.getItem(K_LESSONS) || '[]'); } catch { lessons = []; }
-        globalConfig.school = localStorage.getItem(K_SCHOOL) || '이의초등학교';
-        document.getElementById('school-nm').textContent = globalConfig.school;
     }
 
     updateWelcomeBox();
@@ -3101,8 +3182,9 @@ async function reloadTeacherScores() {
     }
 }
 
-// ── 학생 진입 플로우 (학년별 필터 탭 연동) ──
+// ── 학생 진입 플로우 (학년 및 학기 필터 연동) ──
 let currentStudentGrade = 6;
+let currentStudentSemester = 'all'; // 'all', 'sem1', 'sem2'
 
 function filterWordtypingGrade(grade) {
     currentStudentGrade = Number(grade) || 6;
@@ -3110,22 +3192,58 @@ function filterWordtypingGrade(grade) {
         const g = Number(tab.getAttribute('data-grade'));
         tab.classList.toggle('active', g === currentStudentGrade);
     });
-    renderStudentLessons(currentStudentGrade);
+    renderStudentLessons(currentStudentGrade, currentStudentSemester);
 }
 
-function renderStudentLessons(grade = currentStudentGrade) {
+function filterWordtypingSemester(sem) {
+    currentStudentSemester = sem || 'all';
+    document.querySelectorAll('.wt-sem-tab').forEach(tab => {
+        const s = tab.getAttribute('data-sem');
+        tab.classList.toggle('active', s === currentStudentSemester);
+    });
+    renderStudentLessons(currentStudentGrade, currentStudentSemester);
+}
+
+function renderStudentLessons(grade = currentStudentGrade, semester = currentStudentSemester) {
     const grid = document.getElementById('lsel-grid');
     if (!grid) return;
 
-    let gradeLessons = lessons.filter(l => {
+    // 만약 lessons가 아직 로드되지 않았거나 불완전하면 강제 재연동 시도
+    if (!lessons || lessons.length < 48) {
+        if (window.WaurimalCurriculum && typeof window.WaurimalCurriculum.getLessons === 'function') {
+            const cl = window.WaurimalCurriculum.getLessons();
+            if (Array.isArray(cl) && cl.length === 48) {
+                lessons = cl.map(l => ({
+                    code: l.code,
+                    grade: Number(l.grade),
+                    publisher: l.publisher || (Number(l.grade) <= 4 ? 'YBM (최희경)' : '천재 (함순애)'),
+                    name: l.name,
+                    words: l.words || []
+                }));
+            }
+        }
+    }
+
+    // 해당 학년 단원만 정확하게 추출
+    let gradeLessons = (lessons || []).filter(l => {
         if (l.grade && Number(l.grade) === Number(grade)) return true;
         if (l.code && l.code.startsWith(`${grade}G_`)) return true;
-        if (grade === 6 && l.code && l.code.startsWith('L') && !l.code.includes('G')) return true;
         return false;
     });
 
-    if (gradeLessons.length === 0) {
-        gradeLessons = lessons;
+    // 학기 필터링 (1~6단원: 1학기, 7~12단원: 2학기)
+    if (semester === 'sem1') {
+        gradeLessons = gradeLessons.filter(l => {
+            const m = l.code.match(/_L?(\d+)$/) || (l.name && l.name.match(/Lesson\s*(\d+)/i));
+            const num = m ? parseInt(m[1], 10) : 1;
+            return num <= 6;
+        });
+    } else if (semester === 'sem2') {
+        gradeLessons = gradeLessons.filter(l => {
+            const m = l.code.match(/_L?(\d+)$/) || (l.name && l.name.match(/Lesson\s*(\d+)/i));
+            const num = m ? parseInt(m[1], 10) : 1;
+            return num >= 7;
+        });
     }
 
     const valid = gradeLessons.filter(l => parseWords(l.words).length > 0);
@@ -3135,12 +3253,32 @@ function renderStudentLessons(grade = currentStudentGrade) {
     grid.innerHTML = valid.map(l => {
         const wordCount = parseWords(l.words).length;
         const isSel = (selLesson && selLesson.code === l.code);
-        let cleanName = (l.name || l.code).replace(/^\[.*?\]\s*/, '');
+
+        // 단원 번호 추출
+        const m = l.code.match(/_L?(\d+)$/) || (l.name && l.name.match(/Lesson\s*(\d+)/i));
+        const unitNum = m ? parseInt(m[1], 10) : 1;
+        const unitNumStr = `${unitNum}단원`;
+        const semStr = unitNum <= 6 ? '1학기' : '2학기';
+
+        // 단원 영어 명칭 추출 (ex: "Lesson 01 - Hi, I'm Sena" -> "Hi, I'm Sena")
+        let displayTitle = l.name || l.code;
+        if (displayTitle.includes(' - ')) {
+            displayTitle = displayTitle.split(' - ').slice(1).join(' - ').trim();
+        } else {
+            displayTitle = displayTitle.replace(/^\[.*?\]\s*/, '').replace(/^[0-9]+학년\s*Lesson\s*\d+\s*-?\s*/i, '').trim();
+        }
+
         return `
             <div class="lsel-card ${isSel ? 'sel' : ''}" id="lc-${l.code}" onclick="selectStudentLesson('${l.code}')" title="${l.name || l.code}">
-                <div class="lsel-code">${l.code}</div>
-                <div class="lsel-name">${cleanName}</div>
-                <div class="lsel-cnt">${wordCount} 단어</div>
+                <div class="lsel-card-header">
+                    <span class="lsel-badge">${unitNumStr}</span>
+                    <span class="lsel-sem-badge">${semStr}</span>
+                </div>
+                <div class="lsel-title">${displayTitle}</div>
+                <div class="lsel-footer">
+                    <div class="lsel-cnt"><i class="fas fa-font"></i> ${wordCount}단어</div>
+                    <span class="lsel-check"><i class="fas fa-check-circle"></i> 선택</span>
+                </div>
             </div>`;
     }).join('');
 }
@@ -3154,6 +3292,7 @@ function enterStudent() {
         }
     }
     filterWordtypingGrade(currentStudentGrade);
+    filterWordtypingSemester('all');
     selLesson = null;
     goto('s-lesson');
 }
@@ -3171,8 +3310,16 @@ function goToPlayer() {
     words = parseWords(selLesson.words || '');
     if (!words.length) { alert('선택한 단원에 학습할 단어가 없습니다.'); return; }
 
+    const m = selLesson.code.match(/_L?(\d+)$/) || (selLesson.name && selLesson.name.match(/Lesson\s*(\d+)/i));
+    const unitNum = m ? parseInt(m[1], 10) : 1;
+    let cleanTitle = selLesson.name || selLesson.code;
+    if (cleanTitle.includes(' - ')) {
+        cleanTitle = cleanTitle.split(' - ').slice(1).join(' - ').trim();
+    }
+    const pub = selLesson.publisher || (selLesson.grade <= 4 ? 'YBM (최희경)' : '천재 (함순애)');
+
     document.getElementById('sel-lesson-lbl').textContent =
-        selLesson.name ? `${selLesson.code} (${selLesson.name})` : selLesson.code;
+        `[${selLesson.grade}학년 ${pub}] ${unitNum}단원 - ${cleanTitle} (${words.length}단어)`;
 
     // GNB 프로필이 있는지 확인
     let profile = null;
@@ -3186,7 +3333,7 @@ function goToPlayer() {
 
     if (profile && profile.name) {
         const school = (profile.school && profile.school.trim()) || globalConfig.school || '이의초등학교';
-        const g = profile.grade ? `${profile.grade}학년 ` : '';
+        const g = profile.grade ? `${profile.grade}학년 ` : `${selLesson.grade}학년 `;
         const c = profile.classNum ? `${profile.classNum}반 ` : '';
         const n = profile.studentNum ? `${profile.studentNum}번 ` : '';
         nameDisplay.textContent = `${school} ${g}${c}${n}${profile.name}`.trim();
@@ -3194,13 +3341,14 @@ function goToPlayer() {
         formWrap.style.display = 'none';
 
         // 폼에도 값 미리 채워둠
-        if (profile.grade) document.getElementById('p-grade').value = profile.grade;
+        document.getElementById('p-grade').value = profile.grade || selLesson.grade;
         if (profile.classNum) document.getElementById('p-class').value = profile.classNum;
         if (profile.studentNum) document.getElementById('p-num').value = profile.studentNum;
         if (profile.name) document.getElementById('p-name').value = profile.name;
     } else {
         profileView.style.display = 'none';
         formWrap.style.display = 'block';
+        document.getElementById('p-grade').value = selLesson.grade || currentStudentGrade;
     }
 
     goto('s-player');

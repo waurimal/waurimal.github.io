@@ -9,7 +9,7 @@
 (function() {
     'use strict';
 
-    const CURRICULUM_VERSION = '2026_V2_FULL_48';
+    const CURRICULUM_VERSION = '2026_V5_FULL_48_STRICT';
 
     const RAW_LESSONS = [
     {
@@ -3549,23 +3549,34 @@
     const STORAGE_KEY = 'waurimal_custom_curriculum';
     const VERSION_KEY = 'waurimal_curriculum_version';
 
-    // 로컬 스토리지에 캐시된 커스텀 단원 확인
+    function isStrictValidCurriculum(list) {
+        if (!Array.isArray(list) || list.length !== 48) return false;
+        const grades = [3, 4, 5, 6];
+        const gradeCountsValid = grades.every(g => list.filter(l => Number(l.grade) === g).length === 12);
+        if (!gradeCountsValid) return false;
+        return list.every(l => Array.isArray(l.words) && l.words.length > 0);
+    }
+
+    // 로컬 스토리지에 캐시된 커스텀 단원 엄격 검증
     let currentLessons = [...RAW_LESSONS];
     try {
         const cachedVersion = localStorage.getItem(VERSION_KEY);
-        if (cachedVersion !== CURRICULUM_VERSION) {
-            // 최신 48단원 데이터셋으로 자동 동기화
+        const saved = localStorage.getItem(STORAGE_KEY);
+        let validCache = false;
+        if (cachedVersion === CURRICULUM_VERSION && saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                if (isStrictValidCurriculum(parsed)) {
+                    currentLessons = parsed;
+                    validCache = true;
+                }
+            } catch (err) {}
+        }
+        if (!validCache) {
+            // 최신 48단원 원본 데이터셋으로 자동 동기화 및 캐시 갱신
             currentLessons = [...RAW_LESSONS];
             localStorage.setItem(STORAGE_KEY, JSON.stringify(RAW_LESSONS));
             localStorage.setItem(VERSION_KEY, CURRICULUM_VERSION);
-        } else {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    currentLessons = parsed;
-                }
-            }
         }
     } catch (e) {
         console.warn("Curriculum local storage error:", e);
@@ -3765,12 +3776,14 @@
                     const docSnap = await db.collection('settings').doc('curriculum').get();
                     if (docSnap.exists && docSnap.data().lessons && Array.isArray(docSnap.data().lessons)) {
                         const cloudLessons = docSnap.data().lessons;
-                        if (cloudLessons.length > 0) {
+                        if (isStrictValidCurriculum(cloudLessons)) {
                             this.lessons = cloudLessons;
                             localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudLessons));
                             localStorage.setItem(VERSION_KEY, CURRICULUM_VERSION);
                             window.dispatchEvent(new CustomEvent('waurimal_curriculum_updated', { detail: cloudLessons }));
                             return true;
+                        } else {
+                            console.warn("WaurimalCurriculum: Cloud data incomplete, keeping strict 48 units.");
                         }
                     }
                 }
@@ -3790,7 +3803,7 @@
                     return db.collection('settings').doc('curriculum').onSnapshot(docSnap => {
                         if (docSnap.exists && docSnap.data().lessons && Array.isArray(docSnap.data().lessons)) {
                             const cloudLessons = docSnap.data().lessons;
-                            if (cloudLessons.length > 0) {
+                            if (isStrictValidCurriculum(cloudLessons)) {
                                 this.lessons = cloudLessons;
                                 localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudLessons));
                                 localStorage.setItem(VERSION_KEY, CURRICULUM_VERSION);
