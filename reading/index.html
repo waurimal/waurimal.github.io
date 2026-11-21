@@ -1,0 +1,2717 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>영어 읽기 스프린트 (Reading Sprint) - 와우리말 에듀테크</title>
+
+    <!-- Pretendard 웹폰트 -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <!-- FontAwesome 아이콘 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- 와우리말 공통 테마 -->
+    <link rel="stylesheet" href="../common/waurimal-theme.css">
+    <!-- Firebase 공통 설정 & 2026 초등 3~6학년 44단원 공통 교과과정 (Words >= 10, Sentences >= 10) -->
+    <script src="../common/firebase-config.js"></script>
+    <script src="../common/curriculum.js?v=20261121_authentic44_v7"></script>
+
+    <style>
+        :root {
+            --app-font: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            --primary-indigo: #4F46E5;
+            --primary-indigo-hover: #4338CA;
+            --card-bg: #FFFFFF;
+            --border-color: #E0E7FF;
+            --shadow-soft: 0 10px 25px -5px rgba(79, 70, 229, 0.08), 0 8px 10px -6px rgba(79, 70, 229, 0.04);
+        }
+
+        body {
+            font-family: var(--app-font);
+            background-color: #F8FAFC;
+            color: #1E293B;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* 50:50 대칭 분할 레이아웃 */
+        .hidden {
+            display: none !important;
+        }
+
+        .home-split-grid.hidden {
+            display: none !important;
+        }
+
+        .home-left, .home-right {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .home-split-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.5rem;
+            align-items: stretch;
+            width: 100%;
+        }
+
+        @media (max-width: 960px) {
+            .home-split-grid {
+                grid-template-columns: 1fr;
+                gap: 1.2rem;
+            }
+        }
+
+        /* 공통 카드 컴포넌트 */
+        .reading-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-soft);
+            transition: all 0.2s ease;
+        }
+
+        /* 상단 서브타이틀 박스 */
+        .hdr-sub-box {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            border: 1px solid #C7D2FE;
+            border-radius: 14px;
+            padding: 0.6rem 1.2rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.06);
+        }
+
+        /* 히어로 버튼 */
+        .hero-btn {
+            background: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%);
+            color: #FFFFFF;
+            border-radius: 16px;
+            padding: 1.25rem 1.5rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 10px 20px -3px rgba(79, 70, 229, 0.35);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .hero-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 24px -2px rgba(79, 70, 229, 0.45);
+        }
+
+        /* 커스텀 스크롤바 */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #F1F5F9;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
+        }
+    
+        /* ════════════════════════════════════════════════════════════════════
+           ── 와우리말 단어 타자 연습(Wordtyping) 표준 규격 스타일 ──
+           ════════════════════════════════════════════════════════════════════ */
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --primary-light: #EEF2FF;
+            --accent: #6366F1;
+            --accent-glow: rgba(79, 70, 229, 0.22);
+            --border-color: #E0E7FF;
+            --text-main: #0F172A;
+            --text-sub: #475569;
+            --card-bg: #FFFFFF;
+        }
+
+        /* 통일된 상단 타이틀 헤더 */
+        .hdr {
+            text-align: center;
+            padding: 0.2rem 0 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .hdr h1 {
+            font-size: clamp(1.45rem, 3vw, 2.1rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #312E81 0%, #4F46E5 50%, #6366F1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.25rem;
+            line-height: 1.2;
+        }
+
+        .hdr-sub {
+            font-size: clamp(0.84rem, 1.8vw, 0.95rem);
+            color: var(--text-sub);
+            font-weight: 500;
+        }
+
+        /* 게임 특징 및 규칙 안내 (Wordtyping 표준) */
+        .home-features {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+            margin-top: 1rem;
+            background: #F8FAFC;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 0.9rem 1rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.7rem;
+        }
+
+        .feat-icon {
+            font-size: 1.15rem;
+            line-height: 1.2;
+            flex-shrink: 0;
+        }
+
+        .feat-title {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .feat-desc {
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            margin-top: 0.1rem;
+            line-height: 1.35;
+        }
+
+        /* 하단 교사 모드 진입 링크 */
+        .teacher-link-wrap {
+            margin-top: 1.4rem;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--border-color);
+            text-align: center;
+        }
+
+        .btn-teacher-link {
+            background: none;
+            border: none;
+            color: #64748B;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-teacher-link:hover {
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .hof-header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            margin-bottom: 0.7rem;
+        }
+
+        .hof-title {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .hof-live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: #EEF2FF;
+            color: #4F46E5;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 0.2rem 0.55rem;
+            border-radius: 20px;
+            border: 1px solid #C7D2FE;
+            letter-spacing: 0.04em;
+        }
+
+        .pulse-dot {
+            width: 6px;
+            height: 6px;
+            background: #4F46E5;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(79, 70, 229, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+        }
+
+        .hof-subtitle {
+            font-size: 0.78rem;
+            color: var(--text-sub);
+            font-weight: 500;
+        }
+
+        /* 도전 모드 선택 버튼 */
+        .mode-btn {
+            cursor: pointer;
+            outline: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .mode-btn:active {
+            transform: scale(0.98);
+        }
+
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+    <!-- 상단 와우리말 통합 GNB 네비게이션 -->
+    <script src="../common/waurimal-nav.js"></script>
+
+    <!-- 메인 컨테이너 -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-4 md:py-6 flex flex-col gap-4">
+
+        <!-- 헤더 영역: 게임 타이틀 & 시인성 서브타이틀 박스 -->
+        <!-- 통일된 상단 타이틀 헤더 (단어타자연습 표준 동일 규격) -->
+        <div class="hdr">
+            <h1>영어 읽기 스프린트 (Reading Sprint)</h1>
+            <p class="hdr-sub" id="hsub">원어민 음성을 듣고 마이크로 따라 읽어 발음 정확도를 높이세요!</p>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- 1. 홈 화면 (screen-home: 50% vs 50% 분할) -->
+        <!-- ─────────────────────────────────────────── -->
+        <div id="screen-home" class="home-split-grid">
+            <!-- [좌측 50%]: 읽기 연습 모드 & 단원 선택 -->
+            <div class="home-left flex flex-col gap-4">
+                <div class="reading-card space-y-4">
+                    <!-- 본문 내 중복 학생 정보 바 없음 (단어타자/행맨/스크리블/빙고 표준 준수) -->
+
+                    <!-- 단원 선택 및 스프린트 시작 영역 -->
+                    <div class="p-4 bg-indigo-50/70 border border-indigo-200 rounded-2xl space-y-3">
+                        <!-- 1) 학습 대상 선택 (문장 읽기 vs 단어 읽기) -->
+                        <div class="space-y-1.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-black text-indigo-900">🎙️ 학습 대상 선택</span>
+                                <span id="readingModeBadge" class="text-[10px] font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full">문장 읽기</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 bg-indigo-100/60 p-1 rounded-xl">
+                                <button type="button" id="readingModeSentenceBtn" onclick="setReadingMatchMode('sentence')" class="py-2 rounded-lg text-xs font-black transition-all bg-indigo-600 text-white shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <span>💬</span> 문장 읽기
+                                </button>
+                                <button type="button" id="readingModeWordBtn" onclick="setReadingMatchMode('word')" class="py-2 rounded-lg text-xs font-black transition-all text-slate-600 hover:text-indigo-900 flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <span>🔤</span> 단어 읽기
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 2) 학년 및 교과서 선택 (3·4학년: YBM 최희경 / 5·6학년: 천재 함순애) -->
+                        <div class="space-y-1.5 pt-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-black text-indigo-900">🎓 학년 및 교과서 선택</span>
+                                <span class="text-[10px] text-slate-500 font-medium">초등 3~6학년 44단원 완비</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2" id="readingGradeTabsWrap">
+                                <button type="button" class="reading-grade-btn py-2 px-3 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-indigo-50 border-indigo-600 text-indigo-800 shadow-xs cursor-pointer" data-grade="3" onclick="setReadingSelectedGrade(3)" id="readingGradeBtn3">
+                                    <div class="flex items-center gap-1.5 font-black text-xs">
+                                        <i class="fas fa-graduation-cap"></i> 3학년
+                                    </div>
+                                    <span class="text-[10px] text-indigo-600 font-medium">YBM (최희경)</span>
+                                </button>
+                                <button type="button" class="reading-grade-btn py-2 px-3 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-white border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer" data-grade="4" onclick="setReadingSelectedGrade(4)" id="readingGradeBtn4">
+                                    <div class="flex items-center gap-1.5 font-black text-xs">
+                                        <i class="fas fa-graduation-cap"></i> 4학년
+                                    </div>
+                                    <span class="text-[10px] text-slate-400 font-medium">YBM (최희경)</span>
+                                </button>
+                                <button type="button" class="reading-grade-btn py-2 px-3 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-white border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer" data-grade="5" onclick="setReadingSelectedGrade(5)" id="readingGradeBtn5">
+                                    <div class="flex items-center gap-1.5 font-black text-xs">
+                                        <i class="fas fa-graduation-cap"></i> 5학년
+                                    </div>
+                                    <span class="text-[10px] text-slate-400 font-medium">천재 (함순애)</span>
+                                </button>
+                                <button type="button" class="reading-grade-btn py-2 px-3 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-white border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer" data-grade="6" onclick="setReadingSelectedGrade(6)" id="readingGradeBtn6">
+                                    <div class="flex items-center gap-1.5 font-black text-xs">
+                                        <i class="fas fa-graduation-cap"></i> 6학년
+                                    </div>
+                                    <span class="text-[10px] text-slate-400 font-medium">천재 (함순애)</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 3) 학기 범위 선택 (전체 / 1학기 / 2학기) -->
+                        <div class="space-y-1.5 pt-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-black text-indigo-900">📅 학기 범위 선택</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-1.5 bg-slate-100 p-1 rounded-xl" id="readingSemTabsWrap">
+                                <button type="button" class="reading-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-indigo-700 shadow-xs cursor-pointer" data-sem="all" onclick="setReadingSelectedSemester('all')" id="readingSemAllBtn">
+                                    전체 (1~10단원)
+                                </button>
+                                <button type="button" class="reading-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-800 cursor-pointer" data-sem="1" onclick="setReadingSelectedSemester(1)" id="readingSem1Btn">
+                                    1학기 (1~5단원)
+                                </button>
+                                <button type="button" class="reading-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-800 cursor-pointer" data-sem="2" onclick="setReadingSelectedSemester(2)" id="readingSem2Btn">
+                                    2학기 (6~10단원)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 4) 학습 단원 드롭다운 선택 -->
+                        <div class="space-y-1.5 pt-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-black text-indigo-900">📖 학습 단원 / 주제 선택</span>
+                                <span id="unitSentenceCountBadge" class="text-[10px] font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full">
+                                    문장 수 로딩중...
+                                </span>
+                            </div>
+                            <select id="unitSelect" onchange="updateSelectedUnitInfo()" class="w-full p-3 bg-white border border-indigo-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500 shadow-2xs">
+                                <!-- 44개 정규 단원 동적 로드 -->
+                            </select>
+                        </div>
+
+                        <!-- 🎯 도전 모드 선택 (🌱 일반 모드 vs 🔥 고급 모드 더블 스코어) -->
+                        <div class="space-y-1.5 pt-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-black text-indigo-900">🎯 도전 난이도 / 모드 선택</span>
+                                <span id="modeBonusBadge" class="text-[10px] font-black text-indigo-700 bg-indigo-100 px-2.5 py-0.5 rounded-full">
+                                    🌱 일반 모드 (기본 1x)
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" id="btn-mode-normal" onclick="setPracticeMode('normal')" class="mode-btn p-3 rounded-xl border-2 border-indigo-600 bg-indigo-50/50 text-left transition relative flex flex-col justify-between shadow-xs ring-2 ring-indigo-200">
+                                    <div class="flex items-center justify-between w-full mb-1">
+                                        <span class="text-xs font-black text-indigo-900">🌱 일반 모드</span>
+                                        <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">1x 점수</span>
+                                    </div>
+                                    <span class="text-[11px] text-slate-500 font-medium">영어 문장 보며 읽기</span>
+                                </button>
+                                <button type="button" id="btn-mode-advanced" onclick="setPracticeMode('advanced')" class="mode-btn p-3 rounded-xl border-2 border-slate-200 bg-white hover:bg-rose-50/50 text-left transition relative flex flex-col justify-between">
+                                    <div class="flex items-center justify-between w-full mb-1">
+                                        <span class="text-xs font-black text-rose-600 flex items-center gap-1">
+                                            <i class="fa-solid fa-fire text-rose-500"></i>
+                                            <span>고급 모드</span>
+                                        </span>
+                                        <span class="text-[10px] font-black text-rose-600 bg-rose-100 px-1.5 py-0.5 rounded animate-pulse">2x 더블!</span>
+                                    </div>
+                                    <span class="text-[11px] text-slate-500 font-medium">해석만 보고 영어로 읽기</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <p class="text-[11px] text-slate-500 font-medium leading-relaxed">
+                            선택한 모드에 맞춰 마이크에 대고 직접 발음하여 스피드와 정확도를 평가받습니다.
+                        </p>
+                        <button type="button" onclick="startReadingPractice()" class="hero-btn">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl flex-shrink-0">
+                                    🎙️
+                                </div>
+                                <div class="text-left">
+                                    <div class="font-black text-base">읽기 스프린트 시작하기</div>
+                                    <div class="text-[11px] text-indigo-100 font-medium">실시간 AI 발음 평가 & 명예의 전당 도전!</div>
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-arrow-right text-lg text-indigo-200"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 읽기 연습 팁 카드 -->
+
+                <!-- 읽기 연습 팁 및 특징 안내 카드 (Wordtyping 표준 규격) -->
+                <div class="reading-card bg-linear-to-br from-white to-indigo-50/30 space-y-2.5">
+                    <div class="flex items-center gap-2">
+                        <span class="text-base">💡</span>
+                        <h3 class="font-black text-slate-800 text-sm">영어 읽기 고득점 꿀팁</h3>
+                    </div>
+                    <ul class="text-xs text-slate-600 space-y-2 leading-relaxed">
+                        <li>• <strong class="text-rose-600">🔥 고급 모드 (점수 더블 2x)</strong>: 한국어 해석만 보고 머릿속으로 영어를 떠올려 말하면 <strong>최종 점수가 2배(더블!)</strong>로 계산되어 명예의 전당 1위 등극에 유리합니다!</li>
+                        <li>• <strong>원어민 음성 듣기</strong>: 🔊 듣기 버튼을 눌러 원어민 발음과 억양을 먼저 확인하세요. (일반 모드 지원, 고급 모드는 발화 후 정답 확인)</li>
+                        <li>• <strong>정확한 발음</strong>: 단어 끝소리(자음)까지 명확하고 또박또박 발음할수록 높은 정확도를 얻습니다.</li>
+                        <li>• <strong>스피드 보너스</strong>: 망설이지 않고 자연스러운 속도로 읽으면 추가 스피드 점수가 부여됩니다.</li>
+                        <li>• <strong>크롬(Chrome) 브라우저 권장</strong>: 마이크 권한을 허용하여 최적의 AI 음성 인식을 경험하세요.</li>
+                    </ul>
+
+                    <!-- 게임 특징 및 규칙 안내 (Wordtyping 표준 3개 항목) -->
+                    <div class="home-features">
+                        <div class="feature-item">
+                            <span class="feat-icon">🎙️</span>
+                            <div>
+                                <div class="feat-title">AI 음성인식 발음 평가</div>
+                                <div class="feat-desc">마이크로 영어 문장을 직접 읽고 실시간 발음 정확도(Score)를 측정합니다.</div>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feat-icon">⚡</span>
+                            <div>
+                                <div class="feat-title">원어민 발음 듣기 지원</div>
+                                <div class="feat-desc">어려운 문장은 원어민 TTS 음성을 먼저 듣고 자연스럽게 따라 읽을 수 있습니다.</div>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feat-icon">🏆</span>
+                            <div>
+                                <div class="feat-title">실시간 명예의 전당 등재</div>
+                                <div class="feat-desc">단원별 높은 발음 점수를 획득해 학급 및 전체 랭킹 1위에 도전하세요!</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 교사 모드 진입 링크 (Wordtyping 표준 하단 점선 아래 배치) -->
+                    <div class="teacher-link-wrap">
+                        <button type="button" class="btn-teacher-link" onclick="openTeacherAuthModal()">
+                            <i class="fas fa-cog"></i> 교사 설정 모드 (단원 목록 및 클라우드 DB 관리)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [우측 50%]: 실시간 명예의 전당 (Top 30) -->
+            <div class="home-right">
+                <div class="reading-card hall-of-fame-card flex flex-col h-full">
+                    <div class="hof-header">
+                        <div class="hof-title">
+                            <span style="font-size:1.3rem;">🏆</span>
+                            <span>명예의 전당</span>
+                            <span class="hof-live-badge"><span class="pulse-dot"></span> LIVE</span>
+                        </div>
+                        <div class="hof-subtitle">단원별·학급별 실시간 랭킹 순위표 (Top 30)</div>
+                    </div>
+
+                    <!-- 1. 기간 선택 탭 (단어타자연습 표준 동일) -->
+                    <div class="hof-period-tabs flex gap-1 mb-2.5 p-1 bg-slate-100 rounded-xl">
+                        <button type="button" class="hof-period-tab flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-indigo-700 shadow-2xs" id="hof-tab-all" onclick="setHofPeriod('all')">
+                            <i class="fas fa-infinity"></i> 전체
+                        </button>
+                        <button type="button" class="hof-period-tab flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800" id="hof-tab-month" onclick="setHofPeriod('month')">
+                            <i class="fas fa-calendar-alt"></i> 이번 달
+                        </button>
+                        <button type="button" class="hof-period-tab flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800" id="hof-tab-week" onclick="setHofPeriod('week')">
+                            <i class="fas fa-fire"></i> 이번 주
+                        </button>
+                    </div>
+
+                    <!-- 2. 단원 및 난이도 모드 필터 -->
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <select id="hof-filter-unit" onchange="filterHofList()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="ALL">전체 단원</option>
+                        </select>
+                        <select id="hof-filter-mode" onchange="filterHofList()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="ALL">전체 난이도</option>
+                            <option value="normal">🌱 일반 모드</option>
+                            <option value="advanced">🔥 고급 모드 (2x)</option>
+                        </select>
+                    </div>
+
+                    <!-- 3. 학년 및 반 필터 -->
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <select id="hof-filter-grade" onchange="filterHofList()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="ALL">전체 학년</option>
+                            <option value="3">3학년</option>
+                            <option value="4">4학년</option>
+                            <option value="5">5학년</option>
+                            <option value="6">6학년</option>
+                        </select>
+                        <select id="hof-filter-class" onchange="filterHofList()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="ALL">전체 반</option>
+                            <option value="1">1반</option><option value="2">2반</option>
+                            <option value="3">3반</option><option value="4">4반</option>
+                            <option value="5">5반</option><option value="6">6반</option>
+                            <option value="7">7반</option><option value="8">8반</option>
+                            <option value="9">9반</option><option value="10">10반</option>
+                            <option value="11">11반</option><option value="12">12반</option>
+                            <option value="13">13반</option><option value="14">14반</option>
+                            <option value="15">15반</option>
+                        </select>
+                    </div>
+
+                    <!-- 실시간 랭킹 목록 컨테이너 -->
+                    <div id="hof-records-container" class="flex-1 overflow-y-auto custom-scrollbar max-h-[460px] space-y-2 pr-1">
+                        <div class="text-center py-16 text-slate-400 text-xs font-bold">
+                            <i class="fa-solid fa-spinner fa-spin text-indigo-600 text-base mb-2 block"></i>
+                            명예의 전당 기록을 불러오는 중입니다...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- 2. 실시간 읽기 연습 화면 (screen-practice) -->
+        <!-- ─────────────────────────────────────────── -->
+        <div id="screen-practice" class="hidden max-w-2xl mx-auto w-full">
+            <div class="reading-card space-y-5">
+                <!-- 상단 헤더: 단원명, 진행 문장 카운터, 소요시간 -->
+                <div class="flex items-center justify-between pb-3 border-b border-indigo-100">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span id="currentUnitTitle" class="text-sm font-black text-indigo-800 block">Unit 1</span>
+                            <span id="currentModeBadge" class="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">🌱 일반 모드</span>
+                        </div>
+                        <span id="sentenceCounter" class="text-xs font-bold text-slate-400">문장 1/8</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span id="timerDisplay" class="text-xs font-black text-slate-700 bg-slate-100 px-2.5 py-1 rounded-xl">
+                            ⏱️ 0.0초
+                        </span>
+                        <button type="button" onclick="confirmExitPractice()" class="text-xs text-slate-400 hover:text-red-500 font-bold px-2 py-1 transition">
+                            연습 중단
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 목표 문장 카드 (일반 모드 vs 고급 모드 동적 렌더링) -->
+                <div id="targetCardContainer" class="p-6 bg-indigo-50/60 border border-indigo-100 rounded-2xl text-center space-y-3 transition-all">
+                    <div class="flex items-center justify-center">
+                        <span id="targetLabel" class="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider block">따라 읽을 문장</span>
+                    </div>
+
+                    <!-- 1. 고급 모드 전용: 한국어 해석 박스 (메인으로 강조) -->
+                    <div id="advancedMeaningBox" class="hidden p-4 bg-white/95 border-2 border-rose-300 rounded-xl shadow-xs space-y-1">
+                        <span class="text-[10px] font-black text-rose-600 uppercase tracking-wider flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-fire text-rose-500"></i> 해석을 보고 영어로 말하세요! (점수 2배 더블)
+                        </span>
+                        <div id="targetKoreanMeaning" class="text-xl md:text-2xl font-black text-slate-900 leading-snug">
+                            <!-- 한국어 해석 동적 출력 -->
+                        </div>
+                    </div>
+
+                    <!-- 2. 영어 문장 박스 (일반 모드는 항상 노출, 고급 모드는 발화 후 정답 공개) -->
+                    <div id="targetSentenceWrap" class="relative">
+                        <div id="targetSentence" class="text-xl md:text-2xl font-black text-slate-800 leading-snug tracking-wide">
+                            Hello, nice to meet you.
+                        </div>
+                        <!-- 고급 모드 블라인드 마스크 -->
+                        <div id="targetSentenceBlind" class="hidden py-4 px-3 bg-slate-100/90 border-2 border-dashed border-rose-200 rounded-xl text-center">
+                            <div class="flex items-center justify-center gap-2 text-rose-700 text-xs font-black">
+                                <i class="fa-solid fa-lock text-rose-500 text-sm"></i>
+                                <span>영어 문장 가림 (마이크로 말하면 정답이 공개되고 2배 점수가 부여됩니다!)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. 일반 모드 보조 해석 표시 -->
+                    <div id="normalSubMeaning" class="hidden text-xs font-bold text-slate-500">
+                        <!-- 뜻: ... -->
+                    </div>
+
+                    <!-- 4. 원어민 발음 듣기 버튼 -->
+                    <div id="targetTTSContainer">
+                        <button type="button" id="targetTTSBtn" onclick="playTargetTTS()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-xl text-xs font-bold shadow-2xs transition">
+                            <i class="fa-solid fa-volume-high"></i>
+                            <span id="targetTTSText">원어민 발음 듣기</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 마이크 녹음 버튼 영역 -->
+                <div class="flex flex-col items-center gap-3">
+                    <button type="button" id="recordBtn" onclick="toggleRecording()" class="w-full max-w-sm py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-base rounded-2xl shadow-md transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-microphone text-lg"></i>
+                        <span>마이크 켜고 읽기 시작</span>
+                    </button>
+                    <div class="flex items-center gap-2 text-[11px] text-slate-400">
+                        <span>버튼을 누르고 문장을 또박또박 읽어주세요.</span>
+                        <span>•</span>
+                        <button type="button" onclick="showMicGuideModal()" class="text-indigo-600 hover:underline font-bold">마이크 권한 다시 묻지 않게 설정 💡</button>
+                    </div>
+                </div>
+
+                <!-- AI 음성 인식 결과 및 피드백 박스 -->
+                <div id="feedbackArea" class="min-h-[70px] p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center flex flex-col items-center justify-center text-xs font-medium text-slate-500">
+                    마이크를 켜고 영어를 소리 내어 읽으면 AI가 발음을 분석합니다.
+                </div>
+
+                <!-- 다음 문장 네비게이션 버튼 -->
+                <div id="practiceNavButtons" class="hidden flex gap-2">
+                    <button type="button" onclick="retryCurrentSentence()" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+                        🔄 다시 읽기
+                    </button>
+                    <button type="button" id="nextSentenceBtn" onclick="goToNextSentence()" class="flex-2 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl shadow-xs transition">
+                        다음 문장으로 ➡️
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- 3. 결과 화면 (screen-result) -->
+        <!-- ─────────────────────────────────────────── -->
+        <div id="screen-result" class="hidden max-w-md mx-auto w-full">
+            <div class="reading-card text-center space-y-6 py-8">
+                <div class="text-5xl animate-bounce">🎉</div>
+                <div>
+                    <h2 class="text-2xl font-black text-indigo-800 mb-1">스프린트 완주 성공!</h2>
+                    <div id="finalResultUnitTitle" class="text-xs text-slate-500 font-bold space-y-1">
+                        <div>L01 단원 연습 완료</div>
+                    </div>
+                </div>
+
+                <div id="finalScoreCard" class="p-5 bg-indigo-50 border border-indigo-200 rounded-2xl relative">
+                    <span id="finalScoreLabel" class="text-xs text-indigo-600 font-bold block mb-1">최종 획득 점수</span>
+                    <span id="finalScoreDisplay" class="text-4xl font-black text-indigo-700 tracking-wider">105</span>
+                    <span class="text-sm font-bold text-indigo-600 ml-1">점</span>
+                </div>
+
+                <p id="saveStatus" class="text-xs font-bold text-indigo-600">⏳ 점수를 클라우드와 명예의 전당에 기록 중입니다...</p>
+
+                <button type="button" onclick="backToHome()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm rounded-xl shadow-md transition">
+                    메인 홈으로 나가기
+                </button>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- 4. 교사 관리자 모드 (screen-teacher) -->
+        <!-- ─────────────────────────────────────────── -->
+        <div id="screen-teacher" class="hidden max-w-4xl mx-auto w-full">
+            <div class="reading-card space-y-4">
+                <div class="flex justify-between items-center pb-3 border-b border-indigo-100">
+                    <div>
+                        <h2 class="text-xl font-black text-slate-800">영어 읽기 스프린트 교사 관리자</h2>
+                        <p class="text-xs text-slate-500 font-semibold">24개 단원 및 문장 관리, 성적표 CSV 다운로드, 학급 일괄 삭제</p>
+                    </div>
+                    <button type="button" onclick="backToHome()" class="text-xs font-bold text-slate-500 hover:bg-slate-200 bg-slate-100 px-3 py-1.5 rounded-lg transition">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> 메인으로
+                    </button>
+                </div>
+
+                <!-- 탭 메뉴 -->
+                <div class="flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                    <button type="button" id="t-tab-btn-units" onclick="switchTeacherTab('units')" class="flex-1 py-2 rounded-lg bg-white text-indigo-700 shadow-2xs">
+                        📚 단원/문장 관리 (24개)
+                    </button>
+                    <button type="button" id="t-tab-btn-scores" onclick="switchTeacherTab('scores')" class="flex-1 py-2 rounded-lg text-slate-500 hover:text-slate-800">
+                        📊 성적표 & CSV 다운로드
+                    </button>
+                    <button type="button" id="t-tab-btn-security" onclick="switchTeacherTab('security')" class="flex-1 py-2 rounded-lg text-slate-500 hover:text-slate-800">
+                        🔒 보안 & 학급 삭제
+                    </button>
+                </div>
+
+                <!-- 탭 1: 단원/문장 관리 -->
+                <div id="t-tab-units" class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <label class="text-xs font-black text-slate-700">단원 선택 및 문장 편집</label>
+                        <div class="flex gap-1.5">
+                            <button type="button" onclick="addNewUnitPrompt()" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg shadow-2xs transition">
+                                <i class="fa-solid fa-plus mr-1"></i> 새 단원 추가
+                            </button>
+                            <button type="button" onclick="deleteCurrentUnit()" class="text-xs bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-1.5 rounded-lg shadow-2xs transition">
+                                단원 삭제
+                            </button>
+                        </div>
+                    </div>
+
+                    <select id="teacherUnitSelect" onchange="loadTeacherUnitData()" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none">
+                        <!-- 24개 단원 목록 -->
+                    </select>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-[11px] font-bold text-slate-600">단원 문장 목록 (줄바꿈(Enter)으로 문장 구분):</label>
+                            <span id="teacherSentenceCount" class="text-[10px] text-slate-400 font-bold">0개 문장</span>
+                        </div>
+                        <p class="text-[11px] text-indigo-700 bg-indigo-50/70 p-2.5 rounded-xl font-medium mb-2 border border-indigo-100 leading-relaxed">
+                            💡 <strong>고급 읽기 모드 팁</strong>: 문장을 <code class="bg-white px-1.5 py-0.5 rounded border border-indigo-200 text-indigo-800 font-bold">영어 문장 : 한국어 해석</code> 형태로 입력하시면 학생이 한국어 해석만 보고 영어로 말하는 <strong>고급 읽기 모드 (점수 더블 2x)</strong>가 완벽하게 지원됩니다.<br>
+                            (예시: <span class="text-slate-800 font-semibold">Hello, nice to meet you. : 안녕하세요, 만나서 반갑습니다.</span>)
+                        </p>
+                        <textarea id="teacherUnitTextarea" rows="8" placeholder="Hello, nice to meet you. : 안녕하세요, 만나서 반갑습니다.&#10;How are you today? : 오늘 기분은 어떠세요?..." class="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-medium outline-none leading-relaxed custom-scrollbar"></textarea>
+                    </div>
+
+                    <button type="button" onclick="saveTeacherUnit()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl shadow transition">
+                        <i class="fa-solid fa-check mr-1"></i> 현재 단원 문장 저장하기
+                    </button>
+                </div>
+
+                <!-- 탭 2: 학생 성적표 & CSV -->
+                <div id="t-tab-scores" class="hidden space-y-3">
+                    <div class="flex flex-wrap justify-between items-center gap-2">
+                        <span class="text-xs font-bold text-slate-600">전체 학생 읽기 스프린트 성적표</span>
+                        <div class="flex items-center gap-2">
+                            <span id="teacherScoresCountBadge" class="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">조회: 0건</span>
+                            <button type="button" onclick="downloadReadingScoresCSV()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg shadow-2xs transition">
+                                <i class="fa-solid fa-file-excel mr-1"></i> 엑셀/CSV 다운로드
+                            </button>
+                        </div>
+                    </div>
+                    <!-- 교사용 성적표 필터 & 정렬 바 -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                        <select id="teacher-filter-grade" onchange="renderReadingScoresTable()" class="p-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="ALL">전체 학년</option>
+                            <option value="3">3학년</option>
+                            <option value="4">4학년</option>
+                            <option value="5">5학년</option>
+                            <option value="6">6학년</option>
+                        </select>
+                        <select id="teacher-filter-class" onchange="renderReadingScoresTable()" class="p-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="ALL">전체 반</option>
+                            <option value="1">1반</option><option value="2">2반</option>
+                            <option value="3">3반</option><option value="4">4반</option>
+                            <option value="5">5반</option><option value="6">6반</option>
+                            <option value="7">7반</option><option value="8">8반</option>
+                            <option value="9">9반</option><option value="10">10반</option>
+                            <option value="11">11반</option><option value="12">12반</option>
+                            <option value="13">13반</option><option value="14">14반</option>
+                            <option value="15">15반</option>
+                        </select>
+                        <select id="teacher-filter-unit" onchange="renderReadingScoresTable()" class="p-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="ALL">전체 단원/주제</option>
+                        </select>
+                        <select id="teacher-filter-mode" onchange="renderReadingScoresTable()" class="p-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="ALL">전체 난이도</option>
+                            <option value="normal">🌱 일반 모드</option>
+                            <option value="advanced">🔥 고급 모드 (2x)</option>
+                        </select>
+                        <select id="teacher-sort-by" onchange="renderReadingScoresTable()" class="p-2 bg-white border border-indigo-200 rounded-lg text-xs font-bold text-indigo-700 outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="recent">최신 기록순 ⏱️</option>
+                            <option value="score">높은 점수순 🏆</option>
+                        </select>
+                    </div>
+                    <div class="max-h-[380px] overflow-y-auto custom-scrollbar border border-slate-200 rounded-xl bg-white">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200 sticky top-0">
+                                <tr>
+                                    <th class="p-2.5">순위</th>
+                                    <th class="p-2.5">이름</th>
+                                    <th class="p-2.5">학적</th>
+                                    <th class="p-2.5">단원</th>
+                                    <th class="p-2.5">난이도</th>
+                                    <th class="p-2.5">점수</th>
+                                    <th class="p-2.5">정확도</th>
+                                    <th class="p-2.5">시간</th>
+                                    <th class="p-2.5">달성일시</th>
+                                </tr>
+                            </thead>
+                            <tbody id="readingScoresTbody" class="divide-y divide-slate-100">
+                                <!-- 테이블 목록 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 탭 3: 보안 & 학급 삭제 -->
+                <div id="t-tab-security" class="hidden space-y-5">
+                    <!-- 비밀번호 변경 -->
+                    <div class="p-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl">
+                        <h4 class="text-xs font-black text-slate-800 mb-2">교사 관리자 비밀번호 변경</h4>
+                        <div class="flex gap-2">
+                            <input type="password" id="newTeacherPwInput" placeholder="새 비밀번호 입력" class="flex-1 p-2 bg-white border border-indigo-200 rounded-xl text-xs font-bold outline-none">
+                            <button type="button" onclick="updateTeacherPassword()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-2xs transition">
+                                비밀번호 변경
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 학급 랭킹 일괄 삭제 -->
+                    <div class="p-4 bg-red-50/50 border border-red-100 rounded-2xl">
+                        <h4 class="text-xs font-black text-red-800 mb-1">학급별 랭킹 기록 일괄 정리/삭제</h4>
+                        <p class="text-[11px] text-red-600 mb-3">학기말 또는 시험 후 특정 학년/반의 데이터를 일괄 삭제합니다. (복구 불가)</p>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <select id="delete-target-grade" class="p-2 bg-white border border-red-200 rounded-lg text-xs font-bold text-slate-700">
+                                <option value="ALL">전체 학년</option>
+                                <option value="3">3학년</option>
+                                <option value="4">4학년</option>
+                                <option value="5">5학년</option>
+                                <option value="6">6학년</option>
+                            </select>
+                            <select id="delete-target-class" class="p-2 bg-white border border-red-200 rounded-lg text-xs font-bold text-slate-700">
+                                <option value="ALL">전체 반</option>
+                                <option value="1">1반</option>
+                                <option value="2">2반</option>
+                                <option value="3">3반</option>
+                                <option value="4">4반</option>
+                                <option value="5">5반</option>
+                            </select>
+                            <button type="button" onclick="deleteClassReadingScores()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-2xs transition">
+                                일괄 삭제 실행
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 모달: 마이크 권한 영구 허용 안내 모달 -->
+    <!-- ─────────────────────────────────────────── -->
+    <div id="modal-mic-guide" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+        <div class="bg-white max-w-md w-full p-6 rounded-2xl shadow-2xl space-y-4 text-left">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🎙️</span>
+                    <h3 class="text-base font-black text-slate-800">마이크 권한 영구 허용 설정 안내</h3>
+                </div>
+                <button type="button" onclick="closeMicGuideModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            </div>
+            
+            <div class="space-y-3 text-xs leading-relaxed text-slate-600">
+                <div class="p-3.5 bg-indigo-50 border border-indigo-200 rounded-xl space-y-1.5">
+                    <strong class="text-indigo-900 font-bold block text-xs">🌐 1. 웹사이트 (HTTPS) 또는 로컬 서버 (localhost) 접속 시</strong>
+                    <p class="text-slate-600">
+                        1) 브라우저(Chrome/Edge) 주소창 왼쪽의 <strong>조율기(또는 자물쇠 🔒) 아이콘</strong>을 클릭합니다.<br>
+                        2) <strong>마이크</strong> 항목을 <strong>'허용(Allow)'</strong>으로 변경합니다.<br>
+                        3) 이후에는 <strong>다시는 묻지 않고 클릭 즉시 음성인식이 시작</strong>됩니다!
+                    </p>
+                </div>
+
+                <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-xl space-y-1.5">
+                    <strong class="text-amber-900 font-bold block text-xs">📁 2. 로컬 파일 (file:///)로 직접 열었을 때</strong>
+                    <p class="text-slate-600">
+                        크롬 브라우저의 기본 보안 정책상 <code class="bg-white px-1 py-0.5 rounded text-amber-800 font-bold">file:///</code> 경로에서는 마이크 권한을 영구 저장하지 못하고 매번 묻도록 설계되어 있습니다.<br>
+                        프로젝트 폴더의 <strong>[로컬서버_마이크영구허용_실행.bat]</strong>을 더블 클릭해 실행하시면, 1회 허용 후 영구적으로 다시 묻지 않습니다!
+                    </p>
+                </div>
+            </div>
+
+            <button type="button" onclick="closeMicGuideModal()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow transition">
+                확인했습니다
+            </button>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 모달: 교사 인증 모달 -->
+    <!-- ─────────────────────────────────────────── -->
+    <div id="modal-teacher-auth" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 border border-indigo-100 shadow-xl space-y-4">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">🔒</span>
+                <h3 class="text-base font-black text-slate-800">교사 인증</h3>
+            </div>
+            <p class="text-xs text-slate-500 font-medium">교사 전용 비밀번호를 입력해주세요.</p>
+            <input type="password" id="teacherPwInput" placeholder="비밀번호 입력" class="w-full p-2.5 bg-indigo-50 border border-indigo-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500">
+            <div class="flex gap-2">
+                <button type="button" onclick="closeTeacherAuthModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl transition">취소</button>
+                <button type="button" onclick="verifyTeacher()" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 커스텀 알림 모달 -->
+    <!-- ─────────────────────────────────────────── -->
+    <div id="custom-alert" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 border border-indigo-100 shadow-xl text-center space-y-3">
+            <div class="text-3xl">⚠️</div>
+            <h4 class="text-sm font-black text-slate-800">알림</h4>
+            <p id="alert-msg" class="text-xs text-slate-600 font-medium leading-relaxed"></p>
+            <button type="button" onclick="closeAlert()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition">
+                확인
+            </button>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- FIREBASE & 읽기 스프린트 엔진 스크립트 (ES Module) -->
+    <!-- ─────────────────────────────────────────── -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { 
+            getFirestore, collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, 
+            getDocs, addDoc, query, where, orderBy, limit, serverTimestamp 
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: atob("QUl6YVN5QmpkdVVCMXFFQXBkdWpaNmtxQXdvQmlzQWpBTE5YVjI4"),
+            authDomain: "reading-c0510.firebaseapp.com",
+            projectId: "reading-c0510",
+            storageBucket: "reading-c0510.firebasestorage.app",
+            messagingSenderId: "140234107393",
+            appId: "1:140234107393:web:6ede13e43bf353a8b5ee00",
+            measurementId: "G-5X277KTD9R"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // ── 전역 상태 ──
+        let rawCurriculumLessons = [];
+        let loadedUnits = {}; // 44개 정규 교과 단원 목록 ({ unitName: [sentences...] })
+        let currentReadingGrade = 3;
+        let currentReadingSemester = 'all';
+        let currentReadingMatchMode = 'sentence'; // 'sentence' | 'word'
+
+        function detectInitialGrade() {
+            try {
+                const rawProfile = localStorage.getItem('studentProfile');
+                if (rawProfile) {
+                    const p = JSON.parse(rawProfile);
+                    if (p && p.grade) {
+                        const parsedG = parseInt(p.grade, 10);
+                        if ([3, 4, 5, 6].includes(parsedG)) return parsedG;
+                    }
+                }
+            } catch(e) {}
+            return 3;
+        }
+
+        function getLessonNumber(lesson) {
+            if (lesson.unit) return Number(lesson.unit);
+            if (lesson.lesson) return Number(lesson.lesson);
+            const codeMatch = String(lesson.code || '').match(/_L(\d+)/i);
+            if (codeMatch) return parseInt(codeMatch[1], 10);
+            const nameMatch = String(lesson.name || '').match(/Lesson\s*(\d+)/i);
+            if (nameMatch) return parseInt(nameMatch[1], 10);
+            return 1;
+        }
+
+        window.setReadingMatchMode = (mode) => {
+            currentReadingMatchMode = mode;
+            const sentBtn = document.getElementById('readingModeSentenceBtn');
+            const wordBtn = document.getElementById('readingModeWordBtn');
+            const modeBadge = document.getElementById('readingModeBadge');
+
+            if (mode === 'word') {
+                if (sentBtn) sentBtn.className = "py-2 rounded-lg text-xs font-black transition-all text-slate-600 hover:text-indigo-900 flex items-center justify-center gap-1.5 cursor-pointer";
+                if (wordBtn) wordBtn.className = "py-2 rounded-lg text-xs font-black transition-all bg-indigo-600 text-white shadow-xs flex items-center justify-center gap-1.5 cursor-pointer";
+                if (modeBadge) {
+                    modeBadge.innerText = "단어 읽기";
+                    modeBadge.className = "text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full";
+                }
+            } else {
+                if (sentBtn) sentBtn.className = "py-2 rounded-lg text-xs font-black transition-all bg-indigo-600 text-white shadow-xs flex items-center justify-center gap-1.5 cursor-pointer";
+                if (wordBtn) wordBtn.className = "py-2 rounded-lg text-xs font-black transition-all text-slate-600 hover:text-indigo-900 flex items-center justify-center gap-1.5 cursor-pointer";
+                if (modeBadge) {
+                    modeBadge.innerText = "문장 읽기";
+                    modeBadge.className = "text-[10px] font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full";
+                }
+            }
+            buildReadingUnits();
+            renderUnitSelects();
+        };
+
+        window.setReadingSelectedGrade = (g) => {
+            currentReadingGrade = Number(g);
+            updateReadingFilterUI();
+            buildReadingUnits();
+            renderUnitSelects();
+        };
+
+        window.setReadingSelectedSemester = (sem) => {
+            currentReadingSemester = sem;
+            updateReadingFilterUI();
+            buildReadingUnits();
+            renderUnitSelects();
+        };
+
+        function updateReadingFilterUI() {
+            [3, 4, 5, 6].forEach(g => {
+                const btn = document.getElementById('readingGradeBtn' + g);
+                if (!btn) return;
+                const isCur = (g === currentReadingGrade);
+                const pub = g <= 4 ? 'YBM (최희경)' : '천재 (함순애)';
+                if (isCur) {
+                    btn.className = "reading-grade-btn py-2 px-3 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-indigo-50 border-indigo-600 text-indigo-800 shadow-xs cursor-pointer";
+                    btn.innerHTML = `<div class=\"flex items-center gap-1.5 font-black text-xs\"><i class=\"fas fa-graduation-cap\"></i> ${g}학년</div><span class=\"text-[10px] text-indigo-600 font-medium\">${pub}</span>`;
+                } else {
+                    btn.className = "reading-grade-btn py-2 px-3 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-white border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer";
+                    btn.innerHTML = `<div class=\"flex items-center gap-1.5 font-black text-xs\"><i class=\"fas fa-graduation-cap\"></i> ${g}학년</div><span class=\"text-[10px] text-slate-400 font-medium\">${pub}</span>`;
+                }
+            });
+
+            const is10 = (currentReadingGrade <= 4);
+            const maxL = is10 ? 10 : 12;
+            const sem1L = is10 ? 5 : 6;
+            const sem2Start = sem1L + 1;
+
+            const allBtn = document.getElementById('readingSemAllBtn');
+            const sem1Btn = document.getElementById('readingSem1Btn');
+            const sem2Btn = document.getElementById('readingSem2Btn');
+
+            if (allBtn) {
+                allBtn.innerText = `전체 (1~${maxL}단원)`;
+                allBtn.className = (currentReadingSemester === 'all')
+                    ? "reading-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-indigo-700 shadow-xs cursor-pointer"
+                    : "reading-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-800 cursor-pointer";
+            }
+            if (sem1Btn) {
+                sem1Btn.innerText = `1학기 (1~${sem1L}단원)`;
+                sem1Btn.className = (currentReadingSemester === 1 || currentReadingSemester === '1')
+                    ? "reading-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-indigo-700 shadow-xs cursor-pointer"
+                    : "reading-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-800 cursor-pointer";
+            }
+            if (sem2Btn) {
+                sem2Btn.innerText = `2학기 (${sem2Start}~${maxL}단원)`;
+                sem2Btn.className = (currentReadingSemester === 2 || currentReadingSemester === '2')
+                    ? "reading-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-indigo-700 shadow-xs cursor-pointer"
+                    : "reading-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-800 cursor-pointer";
+            }
+        }
+
+        function buildReadingUnits() {
+            const newUnits = {};
+            const isWord = (currentReadingMatchMode === 'word');
+            const is10 = (currentReadingGrade <= 4);
+            const sem1Max = is10 ? 5 : 6;
+
+            rawCurriculumLessons.forEach(l => {
+                const g = Number(l.grade);
+                const uNum = getLessonNumber(l);
+                const semStr = (uNum <= sem1Max) ? '1' : '2';
+                const padU = String(uNum).padStart(2, '0');
+                const cleanName = String(l.name || l.title || `Lesson ${uNum}`).replace(/^\[.*?\]\s*/, '').trim();
+                const key = `[${g}-${semStr}-${padU}] ${cleanName}`;
+
+                let items = [];
+                if (isWord) {
+                    const rawWords = l.words || [];
+                    items = rawWords.map(w => ({
+                        sentence: String(w.word || w.en || w.text || '').trim(),
+                        meaning: String(w.meaning || w.kr || w.translation || '').trim()
+                    })).filter(it => it.sentence.length > 0);
+                } else {
+                    const rawSentences = l.sentences || [];
+                    items = rawSentences.map(s => ({
+                        sentence: String(s.sentence || s.en || s.text || '').trim(),
+                        meaning: String(s.meaning || s.kr || s.translation || '').trim()
+                    })).filter(it => it.sentence.length > 0);
+                }
+
+                if (items.length > 0) {
+                    newUnits[key] = items;
+                }
+            });
+
+            if (Object.keys(newUnits).length > 0) {
+                loadedUnits = newUnits;
+            }
+        }
+        let globalTeacherPw = "4657"; // 기본 비밀번호 (교사 설정 및 WaurimalAuth와 연동)
+        let globalSchoolName = "이의초등학교";
+
+        let currentPracticeUnit = "";
+        let currentPracticeMode = "normal"; // "normal" | "advanced"
+        let currentSentenceIndex = 0;
+        let isRecording = false;
+
+        // ── 내장 기본 번역 사전 (콜론이 없는 문장 자동 해석 매핑 지원) ──
+        const BUILTIN_TRANSLATIONS = {
+            "are you bored?": "심심하니? (지루해요?)",
+            "are you okay?": "괜찮으세요? (너 괜찮니?)",
+            "because my dog is sick.": "우리 강아지가 아프기 때문이야.",
+            "can i go in?": "들어가도 될까요?",
+            "can i join the club?": "동아리에 가입해도 될까요?",
+            "can i try it?": "내가 한번 해봐도 될까?",
+            "can i try this on?": "입어봐도 될까요?",
+            "can you catch the ball?": "너 공을 잡을 수 있니?",
+            "can you come to the laser show?": "레이저 쇼에 올 수 있니?",
+            "can you come to the movie festival?": "영화 축제에 올 수 있니?",
+            "can you fly?": "너 날 수 있니?",
+            "can you jump?": "너 뛸 수 있니? (너 점프할 수 있니?)",
+            "can you turn down the volume?": "볼륨을 좀 줄여주시겠어요?",
+            "can you turn on the light?": "불 좀 켜주시겠어요?",
+            "can you watch my bag for a moment?": "제 가방 좀 잠깐 봐주시겠어요?",
+            "come on in.": "어서 들어오세요.",
+            "come to the park at 7.": "7시에 공원으로 와.",
+            "come to the sports park at 10.": "10시에 체육공원으로 와.",
+            "come upstairs.": "위층으로 올라오렴.",
+            "could you repeat that?": "다시 한 번 말씀해 주시겠어요?",
+            "could you take a picture of me?": "사진 한 장 찍어주시겠어요?",
+            "did you guys make a short movie?": "너희들 단편 영화를 만들었니?",
+            "did you paint the wall?": "너 벽을 칠했니?",
+            "did you sleep well?": "잘 잤니? (숙면 취하셨어요?)",
+            "did you take these pictures?": "이 사진들 네가 찍었니?",
+            "did you win the quiz last year?": "너 작년에 퀴즈에서 우승했니?",
+            "do you know anything about jegichagi?": "제기차기에 대해 알고 있니?",
+            "do you know anything about tuho?": "너 투호에 대해 알고 있니?",
+            "do you like vegetables?": "너는 채소를 좋아하니?",
+            "do you like working out?": "운동하는 것 좋아하세요?",
+            "do you need anything else?": "다른 것 더 필요하신가요?",
+            "do you need help?": "도움이 필요하신가요?",
+            "do you want more?": "더 드릴까요? (더 원하시나요?)",
+            "don't give up.": "포기하지 마.",
+            "don't worry.": "걱정하지 마.",
+            "feel free to ask me anything.": "무엇이든 편하게 물어보세요.",
+            "gather around everyone.": "여러분 모두 모여보세요.",
+            "get dressed.": "옷 입으렴.",
+            "get on the bus.": "버스에 타세요.",
+            "go for it.": "힘내! (도전해 봐!)",
+            "go straight and turn left.": "곧장 가서 왼쪽으로 도세요.",
+            "go straight one block and turn left.": "한 블록 곧장 가서 왼쪽으로 도세요.",
+            "go straight one block and turn right at the bank.": "한 블록 곧장 가서 은행에서 오른쪽으로 도세요.",
+            "go straight two blocks and turn left at the bank.": "두 블록 곧장 가서 은행에서 왼쪽으로 도세요.",
+            "good for you.": "잘했어. (너에게 참 유익하구나.)",
+            "great!": "대단해! (멋져!)",
+            "hana won the quiz.": "하나가 퀴즈에서 우승했어.",
+            "hand it in by monday.": "월요일까지 제출하세요.",
+            "have a good one.": "좋은 하루 보내세요.",
+            "have you ever been there before?": "전에 그곳에 가본 적이 있나요?",
+            "he has blue eyes.": "그는 파란 눈을 가지고 있어요.",
+            "he is very tall.": "그는 키가 매우 커요.",
+            "he wrote many great books.": "그는 훌륭한 책들을 많이 썼어.",
+            "hello, nice to meet you.": "안녕하세요, 만나서 반갑습니다.",
+            "hello.": "안녕하세요.",
+            "hello. i'm genie. i can dance.": "안녕. 나는 지니야. 나는 춤출 수 있어.",
+            "hi, kazan.": "안녕, 카잔.",
+            "how are you today?": "오늘 기분은 어떠세요?",
+            "how do you spell your name?": "너의 이름은 철자가 어떻게 되니?",
+            "how much is it?": "얼마인가요?",
+            "how often do you eat vegetables?": "너는 얼마나 자주 채소를 먹니?",
+            "how often do you exercise?": "너는 얼마나 자주 운동하니?",
+            "i am sad.": "나는 슬퍼.",
+            "i can go on field trips.": "나는 현장 체험 학습을 갈 수 있어.",
+            "i can make a snowman.": "나는 눈사람을 만들 수 있어.",
+            "i can see beautiful flowers.": "나는 아름다운 꽃들을 볼 수 있어.",
+            "i can ski. can you ski?": "나는 스키 탈 수 있어. 너는 스키 탈 수 있니?",
+            "i can swim in the sea.": "나는 바다에서 수영할 수 있어.",
+            "i can swim. can you swim?": "나는 수영할 수 있어. 너는 수영할 수 있니?",
+            "i can't think of the word.": "단어가 생각이 안 나요.",
+            "i can't wait!": "정말 기대돼! (못 기다리겠어!)",
+            "i cleaned the street.": "나는 거리를 청소했어.",
+            "i cut my finger.": "손가락을 베었어요.",
+            "i didn't get it.": "이해하지 못했어요.",
+            "i don't have any plans.": "나는 아무런 계획이 없어.",
+            "i don't like winter.": "나는 겨울을 좋아하지 않아.",
+            "i eat fresh fruit and vegetables for breakfast.": "나는 아침으로 신선한 과일과 채소를 먹어.",
+            "i had a good time with my family.": "나는 가족들과 즐거운 시간을 보냈어요.",
+            "i have a dog.": "나는 강아지를 키우고 있어요.",
+            "i have a soccer game with my club members.": "나는 동아리 회원들과 축구 경기가 있어.",
+            "i have no idea.": "전혀 모르겠어.",
+            "i highly recommend that.": "그것을 강력히 추천합니다.",
+            "i hope you get better soon.": "빨리 쾌차하시길 바라요.",
+            "i like apples and bananas.": "나는 사과와 바나나를 좋아합니다.",
+            "i like spring.": "나는 봄을 좋아해.",
+            "i love our school lunches.": "나는 우리 학교 급식을 정말 좋아해.",
+            "i painted the wall with uju.": "나는 우주와 함께 벽을 칠했어.",
+            "i play the guitar every day.": "나는 매일 기타를 연주해.",
+            "i prefer summer to winter.": "나는 겨울보다 여름을 더 좋아해요.",
+            "i respect my parents.": "나는 부모님을 존경합니다.",
+            "i study english consistently.": "나는 꾸준히 영어를 공부해요.",
+            "i swept the floor.": "바닥을 쓸었어요.",
+            "i think i got lost.": "길을 잃은 것 같아요.",
+            "i think so too.": "나도 그렇게 생각해.",
+            "i took a nap for an hour.": "나는 한 시간 동안 낮잠을 잤어요.",
+            "i try to wake up early in the morning.": "나는 아침에 일찍 일어나려고 노력해요.",
+            "i used to study a lot.": "나는 예전에 공부를 많이 하곤 했어요.",
+            "i will get off at the next station.": "다음 역에서 내릴게요.",
+            "i'd like to get a cat.": "나는 고양이를 키우고 싶어요.",
+            "i'll be right back.": "곧 돌아올게요.",
+            "i'll be right there.": "곧장 그곳으로 갈게요.",
+            "i'm almost there.": "거의 다 왔어요.",
+            "i'm brushing my teeth.": "이를 닦고 있어요.",
+            "i'm curious about it.": "그것에 대해 궁금해요.",
+            "i'm feeling better.": "기분이 한결 나아졌어요.",
+            "i'm glad you like it.": "마음에 들어 하니 기뻐요.",
+            "i'm going downstairs.": "아래층으로 내려갈게요.",
+            "i'm going to dream park.": "나는 드림 파크에 갈 거야.",
+            "i'm going to pick apples.": "나는 사과를 딸 거야.",
+            "i'm going to stay home.": "나는 집에 머무를 거야.",
+            "i'm going to visit my grandparents.": "나는 조부모님 댁을 방문할 거야.",
+            "i'm having fun.": "즐거운 시간을 보내고 있어요.",
+            "i'm in the sixth grade.": "나는 6학년이야.",
+            "i'm looking forward to it.": "정말 기대돼요.",
+            "i'm not good at making things.": "나는 만드는 것을 잘 못해.",
+            "i'm on my way.": "지금 가는 중이에요.",
+            "i'm putting on my shoes.": "신발을 신고 있어요.",
+            "i'm so hungry.": "나 너무 배고파.",
+            "i'm taking my dog for a walk.": "나는 강아지를 산책시키고 있어요.",
+            "it is the best ever.": "역대 최고예요.",
+            "it looks fun.": "재미있어 보여.",
+            "it takes an hour.": "한 시간 걸려요.",
+            "it was nice meeting you.": "만나서 반가웠습니다.",
+            "it's a korean game.": "그것은 한국의 전통 놀이야.",
+            "it's been a while.": "오랜만이에요.",
+            "it's getting better and better.": "점점 좋아지고 있어요.",
+            "it's like an umbrella.": "그것은 우산 같아요.",
+            "it's next to the bus stop.": "버스 정류장 옆에 있어요.",
+            "it's next to the school.": "학교 옆에 있어요.",
+            "it's no big deal.": "대단한 일 아니에요. (별것 아니에요.)",
+            "it's on april 22nd.": "4월 22일이야.",
+            "it's on may 1st.": "5월 1일이야.",
+            "it's too cold.": "너무 추워.",
+            "it's up to you.": "너에게 달렸어. (네 결정에 맡길게.)",
+            "kevin, eat more salad.": "케빈, 샐러드를 더 먹으렴.",
+            "kick the jegi into the air.": "제기를 공중으로 차 올려.",
+            "let me double-check.": "제가 다시 한 번 확인할게요.",
+            "let's meet tomorrow.": "내일 만나요.",
+            "look at the giraffe.": "기린을 봐.",
+            "look to the right side.": "오른쪽을 봐.",
+            "my favorite food is delicious pizza.": "내가 가장 좋아하는 음식은 맛있는 피자입니다.",
+            "no problem.": "문제없어요. (괜찮아요.)",
+            "no, i can't.": "아니, 할 수 없어.",
+            "no, i didn't.": "아니, 안 칠했어.",
+            "no, i don't.": "아니, 잘 몰라.",
+            "not at all.": "전혀 아닙니다. (별말씀을요.)",
+            "now, give some carrots to her.": "이제, 그녀에게 당근을 좀 주렴.",
+            "of course.": "물론이지.",
+            "once a day.": "하루에 한 번.",
+            "ouch! i can't climb.": "아야! 나는 올라갈 수 없어.",
+            "please come in.": "어서 들어오세요.",
+            "please take a seat.": "자리에 앉아주세요.",
+            "see you on tuesday.": "화요일에 봐요.",
+            "she has short gray hair.": "그녀는 짧은 회색 머리를 가지고 있어요.",
+            "she is wearing a yellow shirt and blue pants.": "그녀는 노란 셔츠와 파란 바지를 입고 있어요.",
+            "she is wearing black glasses.": "그녀는 검은 안경을 쓰고 있어요.",
+            "sorry, but i can't.": "미안하지만, 갈 수 없어.",
+            "that must be tough.": "정말 힘들었겠어요.",
+            "that sounds fun.": "재미있겠네요.",
+            "that's a good idea.": "좋은 생각이야.",
+            "that's not right.": "그것은 맞지 않아. (그렇지 않아.)",
+            "the bear is heavier than the dog.": "곰이 개보다 더 무겁다.",
+            "the cow is bigger than the pig.": "소가 돼지보다 더 크다.",
+            "the lion is faster than the cat.": "사자가 고양이보다 더 빠르다.",
+            "three times a week.": "일주일에 세 번.",
+            "time flies.": "시간이 참 빠르네요.",
+            "tom, you did a good job.": "톰, 너 정말 잘했어.",
+            "trust me, please.": "나를 믿어줘.",
+            "we can eat delicious food.": "우리는 맛있는 음식을 먹을 수 있어.",
+            "we can save water.": "우리는 물을 절약할 수 있어.",
+            "we wear this on sunny and rainy days.": "우리는 맑은 날과 비 오는 날에 이것을 써요.",
+            "we'll wear green shirts.": "우리는 초록색 셔츠를 입을 거야.",
+            "we're going to make apple pizza, too.": "우리는 사과 피자도 만들 거야.",
+            "what are you going to do this weekend?": "이번 주말에 무엇을 할 거니?",
+            "what do you recommend?": "무엇을 추천하시나요?",
+            "what does he look like?": "그는 어떻게 생겼나요?",
+            "what does she look like?": "그녀는 어떻게 생겼나요?",
+            "what grade are you in?": "너는 몇 학년이니?",
+            "what is she wearing?": "그녀는 무엇을 입고 있나요?",
+            "what is your movie about?": "너의 영화는 무엇에 관한 것이니?",
+            "what season do you like?": "너는 어떤 계절을 좋아하니?",
+            "what time is it now?": "지금 몇 시인가요?",
+            "what time will you arrive?": "몇 시에 도착하시나요?",
+            "what was that?": "방금 뭐라고 하셨나요?",
+            "what will you do at the festival?": "너는 축제에서 무엇을 할 거니?",
+            "what's for lunch today?": "오늘 점심 메뉴는 뭐야?",
+            "what's your name?": "너의 이름은 무엇이니?",
+            "when is earth day?": "지구의 날은 언제니?",
+            "when is your birthday?": "너의 생일은 언제니?",
+            "where do you live?": "어디에 사시나요?",
+            "where is the library?": "도서관이 어디에 있나요?",
+            "where is the restaurant?": "식당이 어디에 있나요?",
+            "why are you sad?": "너는 왜 슬프니?",
+            "why are you worried?": "너는 왜 걱정하고 있니?",
+            "will you join us?": "우리와 함께할래?",
+            "wow, that looks fun.": "와, 재미있어 보인다.",
+            "yes, i can.": "응, 할 수 있어.",
+            "yes, i did.": "응, 칠했어.",
+            "yes, i do.": "응, 알고 있어.",
+            "you are a good dancer.": "너는 춤을 잘 추는구나.",
+            "you can do it.": "너는 할 수 있어.",
+            "you can do many things for the animals.": "너는 동물들을 위해 많은 일을 할 수 있어.",
+            "you look happy.": "너 행복해 보여.",
+            "you look like your mother.": "너는 너의 어머니를 닮았구나.",
+            "you scared me.": "깜짝 놀랐잖아요.",
+            "you should eat more vegetables.": "너는 채소를 더 많이 먹어야 해.",
+            "you went there yesterday, too.": "너는 어제도 거기에 갔었잖아.",
+            "you're really good at this.": "너는 이것을 정말 잘하는구나.",
+            "you're right.": "네 말이 맞아."
+        };
+
+        // 문장 파싱 유틸: "영어 문장 : 한국어 해석" 형태 및 객체 분리 지원
+        function parseSentenceItem(item) {
+            if (!item) return { english: '', korean: '' };
+            if (typeof item === 'object') {
+                return {
+                    english: String(item.sentence || item.english || item.text || '').trim(),
+                    korean: String(item.meaning || item.korean || item.translation || '').trim()
+                };
+            }
+            const str = String(item).trim();
+            if (str.includes(':')) {
+                const idx = str.indexOf(':');
+                const eng = str.substring(0, idx).trim();
+                const kor = str.substring(idx + 1).trim();
+                return { english: eng, korean: kor };
+            }
+            const normKey = str.toLowerCase().replace(/\s+/g, ' ').trim();
+            if (BUILTIN_TRANSLATIONS[normKey]) {
+                return { english: str, korean: BUILTIN_TRANSLATIONS[normKey] };
+            }
+            const cleanKey = normKey.replace(/[.,!?]/g, '').trim();
+            for (const [k, v] of Object.entries(BUILTIN_TRANSLATIONS)) {
+                if (k.replace(/[.,!?]/g, '').trim() === cleanKey) {
+                    return { english: str, korean: v };
+                }
+            }
+            return { english: str, korean: '' };
+        }
+
+        // 도전 모드 전환 함수
+        window.setPracticeMode = (mode) => {
+            currentPracticeMode = mode;
+            const btnNormal = document.getElementById('btn-mode-normal');
+            const btnAdv = document.getElementById('btn-mode-advanced');
+            const badge = document.getElementById('modeBonusBadge');
+
+            if (mode === 'advanced') {
+                if (btnAdv) {
+                    btnAdv.className = "mode-btn p-3 rounded-xl border-2 border-rose-500 bg-rose-50/70 text-left transition relative flex flex-col justify-between shadow-xs ring-2 ring-rose-300";
+                }
+                if (btnNormal) {
+                    btnNormal.className = "mode-btn p-3 rounded-xl border-2 border-slate-200 bg-white hover:bg-slate-50 text-left transition relative flex flex-col justify-between";
+                }
+                if (badge) {
+                    badge.className = "text-[10px] font-black text-rose-700 bg-rose-100 px-2.5 py-0.5 rounded-full animate-pulse border border-rose-200";
+                    badge.innerHTML = '🔥 고급 모드 (점수 2배 더블!)';
+                }
+            } else {
+                if (btnNormal) {
+                    btnNormal.className = "mode-btn p-3 rounded-xl border-2 border-indigo-600 bg-indigo-50/50 text-left transition relative flex flex-col justify-between shadow-xs ring-2 ring-indigo-200";
+                }
+                if (btnAdv) {
+                    btnAdv.className = "mode-btn p-3 rounded-xl border-2 border-slate-200 bg-white hover:bg-rose-50/50 text-left transition relative flex flex-col justify-between";
+                }
+                if (badge) {
+                    badge.className = "text-[10px] font-black text-indigo-700 bg-indigo-100 px-2.5 py-0.5 rounded-full";
+                    badge.innerHTML = '🌱 일반 모드 (기본 1x)';
+                }
+            }
+        };
+        let recognition = null;
+        let startTime = null;
+        let timerInterval = null;
+        let pendingResult = null;
+        let currentUnitTotalScore = 0;
+        let unitTotalAccuracy = 0;
+        let unitTotalTime = 0;
+
+        let hofAllScores = [];
+        let hofCurrentPeriod = 'all';
+        let unsubscribeHofTop = null;
+        let unsubscribeHofRecent = null;
+        const scoresMap = new Map();
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── 유틸: 이름 마스킹 (홍O동 표준) ──
+        // ════════════════════════════════════════════════════════════════════
+        function maskStudentName(nameStr) {
+            if (!nameStr) return '학생';
+            let str = String(nameStr).trim();
+            str = str.replace(/\*/g, 'O');
+            if (str.includes('선생님') || str.includes('관리자')) return str;
+
+            const parts = str.split(/\s+/);
+            if (parts.length > 1) {
+                const rawName = parts[parts.length - 1];
+                if (!rawName.endsWith('반') && !rawName.endsWith('번') && !rawName.endsWith('학년')) {
+                    const prefix = parts.slice(0, -1).join(' ');
+                    return prefix + ' ' + maskSingleName(rawName);
+                }
+            }
+            return maskSingleName(str);
+        }
+
+        function maskSingleName(name) {
+            if (!name) return '';
+            const s = name.trim();
+            if (s.length <= 1) return s;
+            if (s.length === 2) return s[0] + 'O';
+            if (s.length === 3) return s[0] + 'O' + s[2];
+            return s[0] + 'O'.repeat(s.length - 2) + s[s.length - 1];
+        }
+
+        // GNB 프로필 연동
+        function getStudentInfo() {
+            if (window.WaurimalStudent && typeof window.WaurimalStudent.get === 'function') {
+                const sso = window.WaurimalStudent.get();
+                if (sso) {
+                    return {
+                        grade: String(sso.grade || ''),
+                        classNum: String(sso.classNum || ''),
+                        studentNum: String(sso.studentNum || ''),
+                        name: sso.name || '학생',
+                        school: sso.school || ''
+                    };
+                }
+            }
+            let info = { grade: '', classNum: '', studentNum: '', name: '학생', school: '' };
+            try {
+                const saved = localStorage.getItem('waurimal_student_profile');
+                if (saved) {
+                    const p = JSON.parse(saved);
+                    info = {
+                        grade: String(p.grade || ''),
+                        classNum: String(p.classNum || p.class || ''),
+                        studentNum: String(p.studentNum || p.number || p.num || ''),
+                        name: p.name || p.studentName || '학생',
+                        school: p.school || ''
+                    };
+                }
+            } catch(e) {}
+            return info;
+        }
+
+        function syncProfileDisplay() {
+            const info = getStudentInfo();
+            const disp = document.getElementById('homeStudentDisplay');
+            if (disp) {
+                let text = info.name || '학생';
+                if (info.grade && info.classNum) {
+                    text = `${info.grade}학년 ${info.classNum}반 ${info.studentNum ? info.studentNum + '번 ' : ''}${info.name}`;
+                }
+                disp.innerText = maskStudentName(text);
+            }
+        };
+        window.syncProfileDisplay = syncProfileDisplay;
+        window.addEventListener('storage', syncProfileDisplay);
+        window.addEventListener('waurimal_student_updated', syncProfileDisplay);
+
+        // 화면 전환 유틸
+        window.showScreen = (screenId) => {
+            if (screenId === 'screen-teacher' && (!window.WaurimalAuth || !window.WaurimalAuth.isAuthenticated())) {
+                if (typeof window.openTeacherAuthModal === 'function') {
+                    window.openTeacherAuthModal();
+                } else {
+                    alert('교사 인증이 필요합니다.');
+                }
+                return;
+            }
+            const screens = ['screen-home', 'screen-practice', 'screen-result', 'screen-teacher'];
+            screens.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.classList.add('hidden');
+                    el.style.setProperty('display', 'none', 'important');
+                }
+            });
+            const target = document.getElementById(screenId);
+            if (target) {
+                target.classList.remove('hidden');
+                if (screenId === 'screen-home' || screenId === 'login-screen') {
+                    target.style.setProperty('display', 'grid', 'important');
+                } else {
+                    target.style.setProperty('display', 'block', 'important');
+                }
+            }
+
+            const hdr = document.querySelector('.hdr');
+            if (hdr) {
+                if (screenId === 'screen-home' || screenId === 'screen-teacher') {
+                    hdr.style.removeProperty('display');
+                } else {
+                    hdr.style.setProperty('display', 'none', 'important');
+                }
+            }
+            window.scrollTo({ top: 0, behavior: 'instant' });
+        };
+
+        window.showAlert = (msg) => {
+            document.getElementById('alert-msg').innerHTML = String(msg).replace(/\n/g, '<br>');
+            document.getElementById('custom-alert').classList.remove('hidden');
+        };
+        window.closeAlert = () => {
+            document.getElementById('custom-alert').classList.add('hidden');
+        };
+
+        window.backToHome = () => {
+            if (recognition && isRecording) {
+                try { recognition.stop(); } catch(e){}
+            }
+            if (timerInterval) clearInterval(timerInterval);
+            isRecording = false;
+            window.showScreen('screen-home');
+            filterHofList();
+        };
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── 1. DB 단원 데이터 로드 및 초기화 ──
+        // ════════════════════════════════════════════════════════════════════
+        async function initApp() {
+            window.initApp = initApp;
+            currentReadingGrade = detectInitialGrade();
+            syncProfileDisplay();
+
+            // 설정 로드
+            try {
+                const snap = await getDoc(doc(db, "settings", "global"));
+                if (snap.exists()) {
+                    const d = snap.data();
+                    if (d.teacherPw) globalTeacherPw = String(d.teacherPw);
+                    if (d.schoolName) globalSchoolName = String(d.schoolName);
+                }
+            } catch(e) {
+                console.warn("Settings load error:", e);
+            }
+
+            // 1. WaurimalCurriculum 공통 커리큘럼 우선 로드 (2026 초등 3~6학년 44단원 정규 교과과정)
+            let loadedFromCurriculum = false;
+            if (window.WaurimalCurriculum && typeof window.WaurimalCurriculum.getLessons === 'function') {
+                const curLessons = window.WaurimalCurriculum.getLessons();
+                if (Array.isArray(curLessons) && curLessons.length >= 40) {
+                    rawCurriculumLessons = curLessons;
+                    loadedFromCurriculum = true;
+                }
+            }
+
+            // 2. config.json fallback (44단원 동기화)
+            if (!loadedFromCurriculum) {
+                try {
+                    const res = await fetch('config.json');
+                    if (res.ok) {
+                        const cfg = await res.json();
+                        if (cfg && Array.isArray(cfg.lessons) && cfg.lessons.length >= 40) {
+                            rawCurriculumLessons = cfg.lessons;
+                            loadedFromCurriculum = true;
+                        }
+                    }
+                } catch(e) {
+                    console.warn("config.json fetch error:", e);
+                }
+            }
+
+            // 3. Firestore fallback
+            if (!loadedFromCurriculum) {
+                try {
+                    const querySnapshot = await getDocs(collection(db, "units"));
+                    let fbUnits = {};
+                    querySnapshot.forEach(d => {
+                        const data = d.data();
+                        if (data.texts && Array.isArray(data.texts)) {
+                            fbUnits[d.id] = data.texts;
+                        } else if (data.text) {
+                            fbUnits[d.id] = [data.text];
+                        }
+                    });
+                    if (Object.keys(fbUnits).length > 0) {
+                        loadedUnits = fbUnits;
+                    }
+                } catch(e) {}
+            }
+
+            if (rawCurriculumLessons.length > 0) {
+                buildReadingUnits();
+            }
+
+            updateReadingFilterUI();
+            renderUnitSelects();
+            listenToHallOfFame();
+        }
+
+        function updateSelectedUnitInfo() {
+            const sel = document.getElementById('unitSelect');
+            const badge = document.getElementById('unitSentenceCountBadge');
+            const isWord = (currentReadingMatchMode === 'word');
+            if (sel && badge && loadedUnits[sel.value]) {
+                const cnt = loadedUnits[sel.value].length;
+                badge.innerText = `총 ${cnt}${isWord ? '단어' : '문장'} 스프린트`;
+            }
+        }
+        window.updateSelectedUnitInfo = updateSelectedUnitInfo;
+
+        function renderUnitSelects() {
+            const unitKeys = Object.keys(loadedUnits);
+            if (unitKeys.length === 0) return;
+
+            const isWord = (currentReadingMatchMode === 'word');
+            const homeSelect = document.getElementById('unitSelect');
+            if (homeSelect) {
+                const cur = homeSelect.value;
+                homeSelect.innerHTML = '';
+
+                let filteredKeys = unitKeys.filter(key => {
+                    const m = key.match(/^\[(\d+)-(\d+)-(\d+)\]/);
+                    if (!m) return true;
+                    const g = parseInt(m[1], 10);
+                    const sem = parseInt(m[2], 10);
+                    if (g !== currentReadingGrade) return false;
+                    if (currentReadingSemester === 1 || currentReadingSemester === '1') return sem === 1;
+                    if (currentReadingSemester === 2 || currentReadingSemester === '2') return sem === 2;
+                    return true;
+                });
+
+                if (filteredKeys.length === 0) filteredKeys = unitKeys;
+
+                filteredKeys.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    const cnt = loadedUnits[name] ? loadedUnits[name].length : 0;
+                    opt.textContent = `${name} (${cnt}${isWord ? '단어' : '문장'})`;
+                    homeSelect.appendChild(opt);
+                });
+
+                if (cur && loadedUnits[cur] && filteredKeys.includes(cur)) {
+                    homeSelect.value = cur;
+                } else if (filteredKeys.length > 0) {
+                    homeSelect.value = filteredKeys[0];
+                }
+                updateSelectedUnitInfo();
+            }
+
+            // 2. 명예의 전당 단원 필터 셀렉트
+            const hofSelect = document.getElementById('hof-filter-unit');
+            if (hofSelect) {
+                const curHof = hofSelect.value;
+                hofSelect.innerHTML = '<option value="ALL">전체 단원/주제</option>';
+                unitKeys.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = name;
+                    hofSelect.appendChild(opt);
+                });
+                if (curHof) hofSelect.value = curHof;
+            }
+
+            // 3. 교사 관리 단원 셀렉트
+            const teacherSelect = document.getElementById('teacherUnitSelect');
+            if (teacherSelect) {
+                teacherSelect.innerHTML = '';
+                unitKeys.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    const cnt = loadedUnits[name] ? loadedUnits[name].length : 0;
+                    opt.textContent = `${name} (${cnt}항목)`;
+                    teacherSelect.appendChild(opt);
+                });
+                if (typeof loadTeacherUnitData === 'function') loadTeacherUnitData();
+            }
+
+            // 4. 교사용 성적표 단원 필터 셀렉트
+            const tFilterUnit = document.getElementById('teacher-filter-unit');
+            if (tFilterUnit) {
+                const curTFilter = tFilterUnit.value;
+                tFilterUnit.innerHTML = '<option value="ALL">전체 단원/주제</option>';
+                unitKeys.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = name;
+                    tFilterUnit.appendChild(opt);
+                });
+                if (curTFilter) tFilterUnit.value = curTFilter;
+            }
+        }
+
+        window.updateSelectedUnitInfo = () => {
+            const sel = document.getElementById('unitSelect');
+            const badge = document.getElementById('unitSentenceCountBadge');
+            const isWord = (currentReadingMatchMode === 'word');
+            if (sel && badge && loadedUnits[sel.value]) {
+                const cnt = loadedUnits[sel.value].length;
+                badge.innerText = `총 ${cnt}${isWord ? '단어' : '문장'} 스프린트`;
+            }
+        };
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── 2. 영어 읽기 스프린트 엔진 (TTS & STT & 채점) ──
+        // ════════════════════════════════════════════════════════════════════
+        window.startReadingPractice = () => {
+            const sel = document.getElementById('unitSelect');
+            if (!sel || !loadedUnits[sel.value] || loadedUnits[sel.value].length === 0) {
+                showAlert("선택한 단원에 문장이 없습니다.");
+                return;
+            }
+
+            currentPracticeUnit = sel.value;
+            currentSentenceIndex = 0;
+            currentUnitTotalScore = 0;
+            unitTotalAccuracy = 0;
+            unitTotalTime = 0;
+
+            window.showScreen('screen-practice');
+            loadSentenceUI();
+        };
+
+        function loadSentenceUI() {
+            const list = loadedUnits[currentPracticeUnit] || [];
+            if (currentSentenceIndex >= list.length) {
+                finishSprint();
+                return;
+            }
+
+            const rawSentence = list[currentSentenceIndex];
+            const parsed = parseSentenceItem(rawSentence);
+
+            document.getElementById('currentUnitTitle').innerText = currentPracticeUnit;
+            document.getElementById('sentenceCounter').innerText = `문장 ${currentSentenceIndex + 1}/${list.length}`;
+            document.getElementById('timerDisplay').innerText = "⏱️ 0.0초";
+
+            // 상단 모드 배지
+            const modeBadge = document.getElementById('currentModeBadge');
+            if (modeBadge) {
+                if (currentPracticeMode === 'advanced') {
+                    modeBadge.className = "text-[10px] font-black px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200 animate-pulse";
+                    modeBadge.innerText = "🔥 고급 모드 (2x)";
+                } else {
+                    modeBadge.className = "text-[10px] font-black px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700";
+                    modeBadge.innerText = "🌱 일반 모드 (1x)";
+                }
+            }
+
+            // 라벨 및 문장 카드 UI 조정
+            const targetLabel = document.getElementById('targetLabel');
+            const advMeaningBox = document.getElementById('advancedMeaningBox');
+            const targetKoreanMeaning = document.getElementById('targetKoreanMeaning');
+            const targetSentence = document.getElementById('targetSentence');
+            const targetSentenceBlind = document.getElementById('targetSentenceBlind');
+            const normalSubMeaning = document.getElementById('normalSubMeaning');
+            const ttsContainer = document.getElementById('targetTTSContainer');
+            const ttsText = document.getElementById('targetTTSText');
+
+            // 영어 본문 설정
+            targetSentence.innerText = parsed.english;
+
+            if (currentPracticeMode === 'advanced') {
+                // [🔥 고급 모드]: 한국어 해석만 크게 표시, 영어 문장은 가림!
+                if (targetLabel) {
+                    targetLabel.className = "text-[11px] font-extrabold text-rose-600 uppercase tracking-wider block";
+                    targetLabel.innerHTML = '<i class="fa-solid fa-fire text-rose-500 mr-1"></i> 고급 도전: 아래 해석을 보고 영어로 말하세요! (점수 2배)';
+                }
+                if (advMeaningBox) advMeaningBox.classList.remove('hidden');
+                if (targetKoreanMeaning) {
+                    targetKoreanMeaning.innerText = parsed.korean || "(해석을 준비 중인 문장입니다)";
+                }
+                // 영어 문장은 숨김 처리
+                targetSentence.classList.add('hidden');
+                if (targetSentenceBlind) targetSentenceBlind.classList.remove('hidden');
+                if (normalSubMeaning) normalSubMeaning.classList.add('hidden');
+
+                // 발화 전에는 원어민 듣기를 숨김 (치팅 방지)
+                if (ttsContainer) ttsContainer.classList.add('hidden');
+            } else {
+                // [🌱 일반 모드]: 영어 문장 노출, 한국어는 보조 표시
+                if (targetLabel) {
+                    targetLabel.className = "text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider block";
+                    targetLabel.innerText = "따라 읽을 문장";
+                }
+                if (advMeaningBox) advMeaningBox.classList.add('hidden');
+                targetSentence.classList.remove('hidden');
+                if (targetSentenceBlind) targetSentenceBlind.classList.add('hidden');
+
+                if (normalSubMeaning) {
+                    if (parsed.korean) {
+                        normalSubMeaning.innerText = `뜻: ${parsed.korean}`;
+                        normalSubMeaning.classList.remove('hidden');
+                    } else {
+                        normalSubMeaning.classList.add('hidden');
+                    }
+                }
+
+                if (ttsContainer) {
+                    ttsContainer.classList.remove('hidden');
+                    if (ttsText) ttsText.innerText = "원어민 발음 듣기";
+                }
+            }
+
+            const recBtn = document.getElementById('recordBtn');
+            recBtn.className = "w-full max-w-sm py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-base rounded-2xl shadow-md transition flex items-center justify-center gap-2";
+            recBtn.innerHTML = '<i class="fa-solid fa-microphone text-lg"></i><span>마이크 켜고 읽기 시작</span>';
+
+            const feedbackArea = document.getElementById('feedbackArea');
+            if (currentPracticeMode === 'advanced') {
+                feedbackArea.className = "min-h-[70px] p-4 bg-rose-50/50 border border-rose-200 rounded-2xl text-center flex flex-col items-center justify-center text-xs font-semibold text-rose-600";
+                feedbackArea.innerHTML = '<div class="flex items-center gap-1.5"><i class="fa-solid fa-microphone-lines text-base"></i><span>마이크를 켜고 위 해석에 맞는 영어 문장을 자신있게 말해보세요!</span></div>';
+            } else {
+                feedbackArea.className = "min-h-[70px] p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center flex flex-col items-center justify-center text-xs font-medium text-slate-500";
+                feedbackArea.innerHTML = "마이크를 켜고 영어를 소리 내어 읽으면 AI가 발음을 분석합니다.";
+            }
+
+            document.getElementById('practiceNavButtons').classList.add('hidden');
+            pendingResult = null;
+        }
+
+        // 원어민 발음 TTS 듣기 (Frog/Street 표준 고품질 음성 엔진)
+        function getEnglishVoice() {
+            if (!('speechSynthesis' in window)) return null;
+            const voices = window.speechSynthesis.getVoices();
+            if (!voices || voices.length === 0) return null;
+            const preferredNames = ['Google US English', 'Microsoft Jenny', 'Microsoft Aria', 'Microsoft Guy', 'Microsoft David', 'Microsoft Zira', 'Samantha', 'Alex'];
+            for (const name of preferredNames) {
+                const found = voices.find(v => v.name && v.name.includes(name));
+                if (found) return found;
+            }
+            const enUS = voices.find(v => v.lang === 'en-US' || v.lang === 'en_US');
+            if (enUS) return enUS;
+            return voices.find(v => v.lang && v.lang.startsWith('en')) || null;
+        }
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = () => { getEnglishVoice(); };
+        }
+
+        window.playTargetTTS = () => {
+            const list = loadedUnits[currentPracticeUnit] || [];
+            const raw = list[currentSentenceIndex] || document.getElementById('targetSentence').innerText;
+            const parsed = parseSentenceItem(raw);
+            const text = parsed.english || document.getElementById('targetSentence').innerText;
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utter = new SpeechSynthesisUtterance(text);
+                utter.lang = 'en-US';
+                utter.rate = 0.85;
+                const voice = getEnglishVoice();
+                if (voice) utter.voice = voice;
+                window.speechSynthesis.speak(utter);
+            } else {
+                showAlert("사용 중인 브라우저에서는 듣기 기능을 지원하지 않습니다.");
+            }
+        };
+
+        function initSpeechRecognition() {
+            window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!window.SpeechRecognition) {
+                showAlert("이 브라우저는 음성 인식을 지원하지 않습니다. Chrome 브라우저를 사용해주세요.");
+                return null;
+            }
+            const rc = new SpeechRecognition();
+            rc.lang = 'en-US';
+            rc.interimResults = false;
+            rc.maxAlternatives = 1;
+            return rc;
+        }
+
+        window.toggleRecording = () => {
+            if (isRecording) {
+                if (recognition) recognition.stop();
+                return;
+            }
+
+            recognition = initSpeechRecognition();
+            if (!recognition) return;
+
+            document.getElementById('feedbackArea').innerHTML = '';
+            document.getElementById('practiceNavButtons').classList.add('hidden');
+
+            recognition.onstart = () => {
+                isRecording = true;
+                const recBtn = document.getElementById('recordBtn');
+                recBtn.className = "w-full max-w-sm py-4 bg-red-500 hover:bg-red-600 text-white font-black text-base rounded-2xl shadow-md transition flex items-center justify-center gap-2 animate-pulse";
+                recBtn.innerHTML = '<i class="fa-solid fa-stop text-lg"></i><span>🛑 다 읽었어요! (제출)</span>';
+
+                startTime = Date.now();
+                timerInterval = setInterval(() => {
+                    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                    document.getElementById('timerDisplay').innerText = `⏱️ ${elapsed}초`;
+                }, 100);
+            };
+
+            recognition.onspeechend = () => {
+                recognition.stop();
+            };
+
+            recognition.onresult = (event) => {
+                clearInterval(timerInterval);
+                isRecording = false;
+
+                const recBtn = document.getElementById('recordBtn');
+                recBtn.className = "w-full max-w-sm py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-base rounded-2xl shadow-md transition flex items-center justify-center gap-2";
+                recBtn.innerHTML = '<i class="fa-solid fa-microphone text-lg"></i><span>🎙️ 다시 녹음하기</span>';
+
+                const recognizedText = event.results[0][0].transcript;
+                const timeTaken = (Date.now() - startTime) / 1000;
+
+                const list = loadedUnits[currentPracticeUnit] || [];
+                const rawTarget = list[currentSentenceIndex] || document.getElementById('targetSentence').innerText;
+                const parsed = parseSentenceItem(rawTarget);
+                const targetText = parsed.english || document.getElementById('targetSentence').innerText;
+                evaluateAndShowFeedback(targetText, recognizedText, timeTaken);
+            };
+
+            recognition.onerror = (event) => {
+                clearInterval(timerInterval);
+                isRecording = false;
+                const recBtn = document.getElementById('recordBtn');
+                recBtn.className = "w-full max-w-sm py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-base rounded-2xl shadow-md transition flex items-center justify-center gap-2";
+                recBtn.innerHTML = '<i class="fa-solid fa-microphone text-lg"></i><span>🎙️ 마이크 다시 켜기</span>';
+
+                if (event.error === 'not-allowed') {
+                    document.getElementById('feedbackArea').innerHTML = '<span class="text-red-500 font-bold">마이크 사용 권한이 차단되었거나 허용되지 않았습니다. 브라우저 주소창 왼쪽의 자물쇠/조율기 아이콘에서 마이크를 \'허용\'해주세요.</span>';
+                } else if (event.error === 'no-speech') {
+                    document.getElementById('feedbackArea').innerHTML = '<span class="text-red-500 font-bold">목소리가 들리지 않았어요. 버튼을 누르고 다시 크게 말해주세요!</span>';
+                } else {
+                    document.getElementById('feedbackArea').innerHTML = `<span class="text-red-500 font-bold">마이크 오류가 발생했습니다 (${event.error}). 다시 눌러주세요.</span>`;
+                }
+            };
+
+            recognition.onend = () => {
+                if (isRecording) {
+                    clearInterval(timerInterval);
+                    isRecording = false;
+                    const recBtn = document.getElementById('recordBtn');
+                    recBtn.className = "w-full max-w-sm py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-base rounded-2xl shadow-md transition flex items-center justify-center gap-2";
+                    recBtn.innerHTML = '<i class="fa-solid fa-microphone text-lg"></i><span>🎙️ 다시 시도</span>';
+                }
+            };
+
+            recognition.start();
+        };
+
+        // 레벤슈타인 편집거리 계산
+        function getLevenshteinDistance(a, b) {
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) { matrix[i] = [i]; }
+            for (let j = 0; j <= a.length; j++) { matrix[0][j] = j; }
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1));
+                    }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
+        function evaluateAndShowFeedback(target, recognized, timeTaken) {
+            const cleanTarget = target.toLowerCase().replace(/[.,!?]/g, "").trim();
+            const cleanRecognized = recognized.toLowerCase().replace(/[.,!?]/g, "").trim();
+
+            const dist = getLevenshteinDistance(cleanTarget, cleanRecognized);
+            const maxLen = Math.max(cleanTarget.length, cleanRecognized.length);
+            let accuracy = maxLen > 0 ? ((maxLen - dist) / maxLen) * 100 : 0;
+            accuracy = Math.max(0, Math.round(accuracy));
+
+            // 단어 수 기반 유창성/스피드 보너스 (문장당 단어 수 기준)
+            const wordCount = Math.max(1, cleanTarget.split(/\s+/).length);
+            const targetTime = wordCount * 1.0 + 1.5;
+            let speedBonus = 0;
+            if (accuracy >= 65 && timeTaken < targetTime) {
+                speedBonus = Math.min(20, Math.max(0, Math.round((targetTime - timeTaken) * 4)));
+            }
+
+            // 기본 점수 계산 (최대 120점)
+            const baseScore = Math.min(120, Math.round(accuracy + speedBonus));
+
+            // 🔥 고급 모드일 때 점수 더블(2배)!
+            const multiplier = (currentPracticeMode === 'advanced') ? 2 : 1;
+            const sentenceScore = baseScore * multiplier;
+
+            unitTotalAccuracy += accuracy;
+            unitTotalTime += timeTaken;
+            currentUnitTotalScore += sentenceScore;
+
+            // 고급 모드일 때 발화 완료 후 정답 영어 문장 및 TTS 공개!
+            const list = loadedUnits[currentPracticeUnit] || [];
+            const parsed = parseSentenceItem(list[currentSentenceIndex]);
+            if (currentPracticeMode === 'advanced') {
+                const targetSentence = document.getElementById('targetSentence');
+                const targetSentenceBlind = document.getElementById('targetSentenceBlind');
+                const ttsContainer = document.getElementById('targetTTSContainer');
+                const ttsText = document.getElementById('targetTTSText');
+
+                if (targetSentence) targetSentence.classList.remove('hidden');
+                if (targetSentenceBlind) targetSentenceBlind.classList.add('hidden');
+                if (ttsContainer) {
+                    ttsContainer.classList.remove('hidden');
+                    if (ttsText) ttsText.innerText = "🔊 정답 원어민 발음 듣기";
+                }
+            }
+
+            const feedbackArea = document.getElementById('feedbackArea');
+            let colorClass = "text-emerald-600";
+            let badge = "🎉 훌륭합니다!";
+            if (accuracy < 60) {
+                colorClass = "text-amber-600";
+                badge = "💪 조금 더 또박또박 읽어보세요!";
+            } else if (accuracy < 80) {
+                colorClass = "text-blue-600";
+                badge = "👍 좋아요!";
+            }
+
+            const doubleScoreBadge = (currentPracticeMode === 'advanced')
+                ? `<span class="inline-flex items-center gap-1 bg-rose-600 text-white font-black text-[11px] px-2 py-0.5 rounded-full shadow-xs animate-pulse">🔥 더블 점수 2x (+${sentenceScore}점)</span>`
+                : `<span class="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full text-[11px]">+${sentenceScore}점</span>`;
+
+            feedbackArea.className = "min-h-[70px] p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center flex flex-col items-center justify-center text-xs font-medium text-slate-500";
+            feedbackArea.innerHTML = `
+                <div class="space-y-2 w-full">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-black ${colorClass}">${badge}</span>
+                        <div class="flex items-center gap-1.5">
+                            ${doubleScoreBadge}
+                            <span class="font-bold text-slate-500">인식 정확도: <strong class="text-indigo-600">${accuracy}%</strong> • ${timeTaken.toFixed(1)}초${speedBonus > 0 ? ' (스피드+' + speedBonus + ')' : ''}</span>
+                        </div>
+                    </div>
+                    <div class="p-2.5 bg-white border border-slate-200 rounded-xl text-left text-xs font-semibold text-slate-700 space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] text-slate-400 font-bold">내가 읽은 발음:</span>
+                            <span class="text-[10px] ${accuracy >= 80 ? 'text-emerald-600' : 'text-amber-600'} font-bold">${accuracy}% 일치</span>
+                        </div>
+                        <div class="text-slate-800 font-bold">"${recognized || '(음성 인식 실패)'}"</div>
+                        ${currentPracticeMode === 'advanced' ? `
+                            <div class="pt-1.5 mt-1 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                                <span class="text-rose-600 font-bold">🎯 정답 영어 문장:</span>
+                                <span class="text-slate-800 font-black">${parsed.english}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('practiceNavButtons').classList.remove('hidden');
+        }
+
+        window.retryCurrentSentence = () => {
+            loadSentenceUI();
+        };
+
+        window.goToNextSentence = () => {
+            currentSentenceIndex++;
+            loadSentenceUI();
+        };
+
+        window.confirmExitPractice = () => {
+            if (confirm("연습을 중단하고 메인 홈으로 나가시겠습니까?")) {
+                backToHome();
+            }
+        };
+
+        // 완주 시 점수 DB 저장 및 결과 표출
+        async function finishSprint() {
+            const list = loadedUnits[currentPracticeUnit] || [];
+            const count = list.length || 1;
+            const avgAccuracy = Math.round(unitTotalAccuracy / count);
+
+            // 점수 더블 계산
+            const multiplier = (currentPracticeMode === 'advanced') ? 2 : 1;
+            const baseAvgScore = Math.max(50, Math.min(120, Math.round((currentUnitTotalScore / multiplier) / count)));
+            const totalScore = baseAvgScore * multiplier;
+
+            const modeLabel = (currentPracticeMode === 'advanced') ? '🔥 고급 (2x 더블)' : '🌱 일반';
+            document.getElementById('finalResultUnitTitle').innerHTML = `
+                <div class="text-sm font-black text-indigo-900">[${currentPracticeUnit}] ${count}문장 완주</div>
+                <div class="mt-1 inline-block px-2.5 py-0.5 rounded-full text-[11px] font-black ${currentPracticeMode === 'advanced' ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-indigo-100 text-indigo-700'}">
+                    ${modeLabel} 모드 완주
+                </div>
+            `;
+            document.getElementById('finalScoreDisplay').innerText = totalScore;
+
+            const finalScoreCard = document.getElementById('finalScoreCard');
+            const finalScoreLabel = document.getElementById('finalScoreLabel');
+            if (finalScoreCard) {
+                if (currentPracticeMode === 'advanced') {
+                    finalScoreCard.className = "p-5 bg-gradient-to-br from-rose-50 to-orange-50 border-2 border-rose-300 rounded-2xl shadow-sm relative";
+                    if (finalScoreLabel) {
+                        finalScoreLabel.className = "text-xs text-rose-700 font-black block mb-1";
+                        finalScoreLabel.innerHTML = "🔥 고급 모드 더블 스코어(2x) 획득 점수";
+                    }
+                } else {
+                    finalScoreCard.className = "p-5 bg-indigo-50 border border-indigo-200 rounded-2xl";
+                    if (finalScoreLabel) {
+                        finalScoreLabel.className = "text-xs text-indigo-600 font-bold block mb-1";
+                        finalScoreLabel.innerText = "최종 획득 점수";
+                    }
+                }
+            }
+
+            const statusEl = document.getElementById('saveStatus');
+            if (statusEl) {
+                statusEl.className = "text-xs font-bold text-indigo-600 animate-pulse";
+                statusEl.innerText = "⏳ 점수를 클라우드와 명예의 전당에 기록 중입니다...";
+            }
+
+            window.showScreen('screen-result');
+
+            // 점수 저장
+            await saveScoreToDB(currentPracticeUnit, totalScore, unitTotalTime, avgAccuracy, currentPracticeMode);
+        }
+
+        function normalizeScoreDoc(id, data) {
+            let rawName = data.name || data.studentName || '학생';
+            let cleanName = String(rawName).replace(/\*/g, 'O');
+
+            let ts = data.timestamp;
+            if (ts && typeof ts.toMillis === 'function') {
+                ts = ts.toMillis();
+            } else if (typeof ts === 'string') {
+                ts = new Date(ts).getTime();
+            } else if (typeof ts === 'number') {
+                if (ts < 10000000000) ts = ts * 1000;
+            } else if (ts && typeof ts.seconds === 'number') {
+                ts = ts.seconds * 1000;
+            } else if (!ts) {
+                ts = Date.now();
+            }
+
+            const gradeStr = String(data.grade || '');
+            const classStr = String(data.classNum || data.class || '');
+            const numStr = String(data.studentNum || data.number || '');
+
+            const mode = data.mode || (String(data.unit || '').includes('[고급]') ? 'advanced' : 'normal');
+            const modeLabel = data.modeLabel || (mode === 'advanced' ? '고급' : '일반');
+
+            return {
+                id: id,
+                name: rawName,
+                maskedName: maskStudentName(cleanName),
+                schoolInfo: (gradeStr && classStr) ? `${gradeStr}학년 ${classStr}반` : '',
+                grade: gradeStr,
+                classNum: classStr,
+                studentNum: numStr,
+                unit: data.baseUnit || data.unit || '기본 단원',
+                mode: mode,
+                modeLabel: modeLabel,
+                score: parseInt(data.score, 10) || 0,
+                accuracy: data.accuracy || 0,
+                time: data.time || 0,
+                timestamp: ts
+            };
+        }
+
+        function updateHofFromMap() {
+            hofAllScores = Array.from(scoresMap.values());
+            filterHofList();
+            const teacherScreen = document.getElementById('screen-teacher');
+            if (teacherScreen && !teacherScreen.classList.contains('hidden')) {
+                renderReadingScoresTable();
+            }
+        }
+
+        async function saveScoreToDB(unitName, score, timeTaken, accuracy, mode = 'normal') {
+            const studentInfo = getStudentInfo();
+            const sName = studentInfo.name || '학생';
+            const sGrade = studentInfo.grade || '6';
+            const sClass = studentInfo.classNum || studentInfo.class || '1';
+            const sNum = studentInfo.studentNum || studentInfo.number || '1';
+
+            const scoreData = {
+                unit: unitName,
+                baseUnit: unitName,
+                mode: mode,
+                modeLabel: mode === 'advanced' ? '고급' : '일반',
+                grade: String(sGrade),
+                classNum: String(sClass),
+                studentNum: String(sNum),
+                name: sName,
+                maskedName: maskStudentName(sName),
+                score: score,
+                accuracy: accuracy,
+                time: Math.round(timeTaken * 10) / 10,
+                timestamp: serverTimestamp()
+            };
+
+            const statusEl = document.getElementById('saveStatus');
+
+            try {
+                const docRef = await addDoc(collection(db, "scores"), scoreData);
+
+                // 실시간 메모리 즉각 반영 (0ms 지연)
+                const localItem = {
+                    id: docRef.id,
+                    name: sName,
+                    maskedName: maskStudentName(sName),
+                    schoolInfo: `${sGrade}학년 ${sClass}반`,
+                    grade: String(sGrade),
+                    classNum: String(sClass),
+                    studentNum: String(sNum),
+                    unit: unitName,
+                    mode: mode,
+                    modeLabel: mode === 'advanced' ? '고급' : '일반',
+                    score: score,
+                    accuracy: accuracy,
+                    time: Math.round(timeTaken * 10) / 10,
+                    timestamp: Date.now()
+                };
+                scoresMap.set(docRef.id, localItem);
+                updateHofFromMap();
+
+                // 로컬 스토리지에 내 최근 기록 캐싱
+                try {
+                    const myHistory = JSON.parse(localStorage.getItem('waurimal_reading_my_scores') || '[]');
+                    myHistory.unshift(localItem);
+                    localStorage.setItem('waurimal_reading_my_scores', JSON.stringify(myHistory.slice(0, 50)));
+                } catch(e) {}
+
+                if (statusEl) {
+                    statusEl.className = "text-xs font-bold text-emerald-600";
+                    statusEl.innerText = "✅ 클라우드 명예의 전당과 교사용 성적표에 점수가 성공적으로 기록되었습니다!";
+                }
+            } catch(e) {
+                console.warn("Score save error", e);
+                // 네트워크 오류 시 로컬 캐시 즉시 보관
+                const tempId = 'local_' + Date.now();
+                const localItem = {
+                    id: tempId,
+                    name: sName,
+                    maskedName: maskStudentName(sName),
+                    schoolInfo: `${sGrade}학년 ${sClass}반`,
+                    grade: String(sGrade),
+                    classNum: String(sClass),
+                    studentNum: String(sNum),
+                    unit: unitName,
+                    mode: mode,
+                    modeLabel: mode === 'advanced' ? '고급' : '일반',
+                    score: score,
+                    accuracy: accuracy,
+                    time: Math.round(timeTaken * 10) / 10,
+                    timestamp: Date.now()
+                };
+                scoresMap.set(tempId, localItem);
+                updateHofFromMap();
+
+                if (statusEl) {
+                    statusEl.className = "text-xs font-bold text-amber-600";
+                    statusEl.innerText = "💾 네트워크 지연으로 기록이 로컬 저장소에 안전하게 보관되었습니다.";
+                }
+            }
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── 3. 실시간 명예의 전당 (Top 30 + 홍O동 마스킹) ──
+        // ════════════════════════════════════════════════════════════════════
+        window.setHofPeriod = (period) => {
+            hofCurrentPeriod = period;
+            ['all', 'month', 'week'].forEach(p => {
+                const tab = document.getElementById('hof-tab-' + p);
+                if (tab) {
+                    if (p === period) {
+                        tab.className = "hof-period-tab flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-indigo-700 shadow-2xs";
+                    } else {
+                        tab.className = "hof-period-tab flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800";
+                    }
+                }
+            });
+            filterHofList();
+        };
+
+        function listenToHallOfFame() {
+            if (unsubscribeHofTop) { unsubscribeHofTop(); unsubscribeHofTop = null; }
+            if (unsubscribeHofRecent) { unsubscribeHofRecent(); unsubscribeHofRecent = null; }
+
+            // 1. 최근 학습 제출 기록 실시간 리스너 (최신순 300건 - 오늘, 이번 주, 이번 달 학생 완주 기록)
+            const qRecent = query(collection(db, "scores"), orderBy("timestamp", "desc"), limit(300));
+            unsubscribeHofRecent = onSnapshot(qRecent, (snap) => {
+                snap.forEach(d => {
+                    scoresMap.set(d.id, normalizeScoreDoc(d.id, d.data()));
+                });
+                updateHofFromMap();
+            }, (err) => {
+                console.warn("HOF recent query notice:", err);
+                updateHofFromMap();
+            });
+
+            // 2. 역대 최고점 실시간 리스너 (점수 내림차순 150건 - 전체 명예의 전당 레전드 랭킹)
+            const qTop = query(collection(db, "scores"), orderBy("score", "desc"), limit(150));
+            unsubscribeHofTop = onSnapshot(qTop, (snap) => {
+                snap.forEach(d => {
+                    scoresMap.set(d.id, normalizeScoreDoc(d.id, d.data()));
+                });
+                updateHofFromMap();
+            }, (err) => {
+                console.warn("HOF top query notice:", err);
+                updateHofFromMap();
+            });
+        }
+
+        window.filterHofList = () => {
+            const container = document.getElementById('hof-records-container');
+            if (!container) return;
+
+            const g = document.getElementById('hof-filter-grade') ? document.getElementById('hof-filter-grade').value : 'ALL';
+            const c = document.getElementById('hof-filter-class') ? document.getElementById('hof-filter-class').value : 'ALL';
+            const u = document.getElementById('hof-filter-unit') ? document.getElementById('hof-filter-unit').value : 'ALL';
+            const m = document.getElementById('hof-filter-mode') ? document.getElementById('hof-filter-mode').value : 'ALL';
+
+            const now = new Date();
+            const curYear = now.getFullYear();
+            const curMonth = now.getMonth();
+            const oneWeekAgoMs = now.getTime() - 7 * 24 * 60 * 60 * 1000;
+
+            let filtered = hofAllScores.filter(item => {
+                if (g !== 'ALL' && item.grade !== g) return false;
+                if (c !== 'ALL' && item.classNum !== c) return false;
+                if (u !== 'ALL' && item.unit !== u) return false;
+                if (m !== 'ALL' && item.mode !== m) return false;
+
+                if (hofCurrentPeriod !== 'all' && item.timestamp) {
+                    const t = new Date(item.timestamp);
+                    if (hofCurrentPeriod === 'month') {
+                        if (t.getFullYear() !== curYear || t.getMonth() !== curMonth) return false;
+                    } else if (hofCurrentPeriod === 'week') {
+                        if (t.getTime() < oneWeekAgoMs) return false;
+                    }
+                }
+                return true;
+            });
+
+            // 1인 1최고점수 (이름이 '학생'인 익명 기록은 ID로 고유 식별하여 뭉개짐 방지)
+            const uniqueMap = new Map();
+            filtered.forEach(item => {
+                const isGenericName = (!item.name || item.name === '학생');
+                const modeKey = (m === 'ALL') ? `_${item.mode || 'normal'}` : '';
+                const key = isGenericName
+                    ? item.id
+                    : (item.studentNum 
+                        ? `${item.grade}_${item.classNum}_${item.studentNum}_${item.name}_${u === 'ALL' ? '' : item.unit}${modeKey}`
+                        : `${item.schoolInfo}_${item.name}_${u === 'ALL' ? '' : item.unit}${modeKey}`);
+
+                if (!uniqueMap.has(key) || uniqueMap.get(key).score < item.score) {
+                    uniqueMap.set(key, item);
+                }
+            });
+
+            // 점수 내림차순 정렬 (동점 시 최신 기록 우선)
+            const displayList = Array.from(uniqueMap.values()).sort((a,b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return (b.timestamp || 0) - (a.timestamp || 0);
+            }).slice(0, 30);
+
+            if (displayList.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16 text-slate-400 text-xs font-bold">
+                        선택한 조건에 해당하는 명예의 전당 기록이 없습니다.<br>
+                        새로운 영어 읽기 스프린트를 완주하여 첫 랭킹에 도전해 보세요!
+                    </div>
+                `;
+                return;
+            }
+
+            const sanitize = window.WaurimalSanitize || (s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
+            container.innerHTML = displayList.map((item, index, arr) => {
+                // 동점자 동일 순위 및 차순위 건너뛰기 (1등 2명이면 1등, 1등, 3등)
+                const rank = arr.findIndex(x => Number(x.score || 0) <= Number(item.score || 0)) + 1;
+                let rankBadge = `<span class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 font-black text-xs">${rank}</span>`;
+                if (rank === 1) rankBadge = '<span class="text-xl">🥇</span>';
+                else if (rank === 2) rankBadge = '<span class="text-xl">🥈</span>';
+                else if (rank === 3) rankBadge = '<span class="text-xl">🥉</span>';
+
+                const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleDateString('ko-KR', { year: '2-digit', month: 'numeric', day: 'numeric' }) : '-';
+                const safeName = sanitize(item.maskedName || maskStudentName(item.name || '학생'));
+                const safeUnit = sanitize(item.unit);
+                const safeSchool = item.schoolInfo ? sanitize(item.schoolInfo) + ' • ' : '';
+
+                const modeTag = (item.mode === 'advanced' || item.modeLabel === '고급')
+                    ? '<span class="text-[9px] font-black bg-rose-50 text-rose-700 border border-rose-200 px-1.5 py-0.2 rounded-full">🔥 고급 2x</span>'
+                    : '<span class="text-[9px] font-bold bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded-full">🌱 일반</span>';
+
+                return `
+                    <div class="flex items-center justify-between p-2.5 bg-white border border-indigo-100 rounded-xl hover:border-indigo-300 transition shadow-2xs">
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center justify-center w-8 text-center flex-shrink-0">
+                                ${rankBadge}
+                            </div>
+                            <div>
+                                <div class="font-black text-slate-800 text-xs flex items-center gap-1.5">
+                                    <span>${safeName}</span>
+                                    <span class="text-[10px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-bold">${safeUnit}</span>
+                                    ${modeTag}
+                                </div>
+                                <div class="text-[10px] text-slate-400 font-medium">
+                                    ${safeSchool}${dateStr}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm font-black ${item.mode === 'advanced' ? 'text-rose-600' : 'text-indigo-600'}">${item.score.toLocaleString()}</span>
+                            <span class="text-[10px] text-slate-500 font-bold ml-0.5">점</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        };
+
+        window.showMicGuideModal = () => {
+            const modal = document.getElementById('modal-mic-guide');
+            if (modal) modal.classList.remove('hidden');
+        };
+
+        window.closeMicGuideModal = () => {
+            const modal = document.getElementById('modal-mic-guide');
+            if (modal) modal.classList.add('hidden');
+        };
+
+        // ════════════════════════════════════════════════════════════════════
+        // ── 4. 교사 전용 관리 화면 (24개 단원 + CSV + 학급 삭제) ──
+        // ════════════════════════════════════════════════════════════════════
+        window.openTeacherAuthModal = () => {
+            if (window.WaurimalAuth && window.WaurimalAuth.isAuthenticated()) {
+                window.showScreen('screen-teacher');
+                switchTeacherTab('units');
+                return;
+            }
+            document.getElementById('teacherPwInput').value = '';
+            document.getElementById('modal-teacher-auth').classList.remove('hidden');
+        };
+        window.closeTeacherAuthModal = () => {
+            document.getElementById('modal-teacher-auth').classList.add('hidden');
+        };
+
+        window.verifyTeacher = () => {
+            const input = document.getElementById('teacherPwInput').value.trim();
+            const isValid = window.WaurimalAuth ? window.WaurimalAuth.authenticate(input) : (input === (localStorage.getItem('waurimal_admin_pw') || globalTeacherPw || '4657'));
+            if (isValid) {
+                closeTeacherAuthModal();
+                window.showScreen('screen-teacher');
+                switchTeacherTab('units');
+            } else {
+                showAlert("비밀번호가 일치하지 않습니다.");
+            }
+        };
+
+        window.switchTeacherTab = (tab) => {
+            ['units', 'scores', 'security'].forEach(t => {
+                const el = document.getElementById('t-tab-' + t);
+                const btn = document.getElementById('t-tab-btn-' + t);
+                if (t === tab) {
+                    el.classList.remove('hidden');
+                    btn.className = "flex-1 py-2 rounded-lg bg-white text-indigo-700 shadow-2xs font-bold";
+                } else {
+                    el.classList.add('hidden');
+                    btn.className = "flex-1 py-2 rounded-lg text-slate-500 hover:text-slate-800 font-bold";
+                }
+            });
+            if (tab === 'scores') renderReadingScoresTable();
+        };
+
+        window.loadTeacherUnitData = () => {
+            const sel = document.getElementById('teacherUnitSelect');
+            if (!sel || !sel.value || !loadedUnits[sel.value]) return;
+
+            const sentences = loadedUnits[sel.value] || [];
+            document.getElementById('teacherUnitTextarea').value = sentences.join('\n');
+            document.getElementById('teacherSentenceCount').innerText = `총 ${sentences.length}개 문장`;
+        };
+
+        window.saveTeacherUnit = async () => {
+            const sel = document.getElementById('teacherUnitSelect');
+            if (!sel || !sel.value) return;
+
+            const unitName = sel.value;
+            const raw = document.getElementById('teacherUnitTextarea').value;
+            const sentences = raw.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+
+            if (sentences.length === 0) {
+                showAlert("단원에 문장을 1개 이상 입력해주세요.");
+                return;
+            }
+
+            loadedUnits[unitName] = sentences;
+
+            try {
+                await setDoc(doc(db, "units", unitName), { texts: sentences });
+                showAlert(`[${unitName}] 단원의 ${sentences.length}개 문장이 성공적으로 저장되었습니다!`);
+                try { localStorage.setItem('waurimal_reading_units_cache', JSON.stringify(loadedUnits)); } catch(e){}
+                renderUnitSelects();
+                document.getElementById('teacherUnitSelect').value = unitName;
+                loadTeacherUnitData();
+            } catch(e) {
+                showAlert("저장 실패: " + e.message);
+            }
+        };
+
+        window.addNewUnitPrompt = () => {
+            const name = prompt("새로운 단원명을 입력하세요: (예: Unit 3. My Daily Life)");
+            if (!name || !name.trim()) return;
+            const trimmed = name.trim();
+            if (loadedUnits[trimmed]) {
+                showAlert("이미 존재하는 단원명입니다.");
+                return;
+            }
+
+            loadedUnits[trimmed] = ["Sample sentence."];
+            try { localStorage.setItem('waurimal_reading_units_cache', JSON.stringify(loadedUnits)); } catch(e){}
+            renderUnitSelects();
+            document.getElementById('teacherUnitSelect').value = trimmed;
+            loadTeacherUnitData();
+        };
+
+        window.deleteCurrentUnit = async () => {
+            const sel = document.getElementById('teacherUnitSelect');
+            if (!sel || !sel.value) return;
+            const unitName = sel.value;
+
+            if (Object.keys(loadedUnits).length <= 1) {
+                showAlert("최소 1개의 단원은 남겨두어야 합니다.");
+                return;
+            }
+
+            if (!confirm(`정말로 [${unitName}] 단원을 삭제하시겠습니까?`)) return;
+
+            delete loadedUnits[unitName];
+            try {
+                await deleteDoc(doc(db, "units", unitName));
+                showAlert("단원이 성공적으로 삭제되었습니다.");
+                try { localStorage.setItem('waurimal_reading_units_cache', JSON.stringify(loadedUnits)); } catch(e){}
+                renderUnitSelects();
+            } catch(e) {
+                showAlert("삭제 실패: " + e.message);
+            }
+        };
+
+        window.renderReadingScoresTable = function() {
+            const tbody = document.getElementById('readingScoresTbody');
+            if (!tbody) return;
+
+            const g = document.getElementById('teacher-filter-grade') ? document.getElementById('teacher-filter-grade').value : 'ALL';
+            const c = document.getElementById('teacher-filter-class') ? document.getElementById('teacher-filter-class').value : 'ALL';
+            const u = document.getElementById('teacher-filter-unit') ? document.getElementById('teacher-filter-unit').value : 'ALL';
+            const m = document.getElementById('teacher-filter-mode') ? document.getElementById('teacher-filter-mode').value : 'ALL';
+            const sortBy = document.getElementById('teacher-sort-by') ? document.getElementById('teacher-sort-by').value : 'recent';
+
+            let filtered = hofAllScores.filter(item => {
+                if (g !== 'ALL' && item.grade !== g) return false;
+                if (c !== 'ALL' && item.classNum !== c) return false;
+                if (u !== 'ALL' && item.unit !== u) return false;
+                if (m !== 'ALL' && item.mode !== m) return false;
+                return true;
+            });
+
+            if (sortBy === 'recent') {
+                filtered.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+            } else {
+                filtered.sort((a,b) => {
+                    if (b.score !== a.score) return b.score - a.score;
+                    return (b.timestamp || 0) - (a.timestamp || 0);
+                });
+            }
+
+            const badge = document.getElementById('teacherScoresCountBadge');
+            if (badge) badge.innerText = `조회: ${filtered.length}건`;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-400 text-xs font-bold">선택한 조건에 해당하는 성적 데이터가 없습니다.</td></tr>';
+                return;
+            }
+
+            const sanitize = window.WaurimalSanitize || (v => String(v || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
+            tbody.innerHTML = filtered.map((s, idx, arr) => {
+                // 동점자 동일 순위 및 차순위 건너뛰기 (점수순 정렬 시)
+                const rank = (sortBy === 'score') ? (arr.findIndex(x => Number(x.score || 0) <= Number(s.score || 0)) + 1) : (idx + 1);
+                const modeBadge = (s.mode === 'advanced' || s.modeLabel === '고급')
+                    ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-700 border border-rose-200">🔥 고급 (2x)</span>'
+                    : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">🌱 일반</span>';
+
+                return `
+                <tr class="hover:bg-indigo-50/50 transition">
+                    <td class="p-2.5 font-bold">${rank}</td>
+                    <td class="p-2.5 font-black text-slate-800">${sanitize(s.maskedName)}</td>
+                    <td class="p-2.5 font-semibold text-slate-600">${s.schoolInfo ? sanitize(s.schoolInfo) : '-'}</td>
+                    <td class="p-2.5 font-semibold text-indigo-700">${sanitize(s.unit)}</td>
+                    <td class="p-2.5">${modeBadge}</td>
+                    <td class="p-2.5 font-black ${s.mode === 'advanced' ? 'text-rose-600' : 'text-indigo-600'}">${Number(s.score || 0).toLocaleString()}점</td>
+                    <td class="p-2.5 font-bold text-slate-600">${s.accuracy}%</td>
+                    <td class="p-2.5 font-medium text-slate-500">${s.time}초</td>
+                    <td class="p-2.5 text-slate-400 text-[11px]">${s.timestamp ? new Date(s.timestamp).toLocaleDateString('ko-KR') : '-'}</td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        window.downloadReadingScoresCSV = () => {
+            const g = document.getElementById('teacher-filter-grade') ? document.getElementById('teacher-filter-grade').value : 'ALL';
+            const c = document.getElementById('teacher-filter-class') ? document.getElementById('teacher-filter-class').value : 'ALL';
+            const u = document.getElementById('teacher-filter-unit') ? document.getElementById('teacher-filter-unit').value : 'ALL';
+            const m = document.getElementById('teacher-filter-mode') ? document.getElementById('teacher-filter-mode').value : 'ALL';
+            const sortBy = document.getElementById('teacher-sort-by') ? document.getElementById('teacher-sort-by').value : 'recent';
+
+            let filtered = hofAllScores.filter(item => {
+                if (g !== 'ALL' && item.grade !== g) return false;
+                if (c !== 'ALL' && item.classNum !== c) return false;
+                if (u !== 'ALL' && item.unit !== u) return false;
+                if (m !== 'ALL' && item.mode !== m) return false;
+                return true;
+            });
+
+            if (sortBy === 'recent') {
+                filtered.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+            } else {
+                filtered.sort((a,b) => {
+                    if (b.score !== a.score) return b.score - a.score;
+                    return (b.timestamp || 0) - (a.timestamp || 0);
+                });
+            }
+
+            if (filtered.length === 0) {
+                showAlert("다운로드할 데이터가 없습니다.");
+                return;
+            }
+
+            let csv = "\uFEFF순위,이름,학적,단원,난이도,점수,정확도(%),소요시간(초),달성일시\n";
+            filtered.forEach((item, idx) => {
+                const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleString('ko-KR') : '';
+                const studentDisplayName = item.name || item.maskedName || '학생';
+                const modeStr = (item.mode === 'advanced' || item.modeLabel === '고급') ? '고급 (2x)' : '일반';
+                csv += `"${idx + 1}","${studentDisplayName}","${item.schoolInfo || ''}","${item.unit || ''}","${modeStr}","${item.score}","${item.accuracy}","${item.time}","${dateStr}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `영어읽기_성적표_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        window.updateTeacherPassword = async () => {
+            const input = document.getElementById('newTeacherPwInput').value.trim();
+            if (input.length < 4) {
+                showAlert("비밀번호는 최소 4자리 이상이어야 합니다.");
+                return;
+            }
+            try {
+                if (window.WaurimalAuth) {
+                    window.WaurimalAuth.setPw(input);
+                } else {
+                    localStorage.setItem('waurimal_admin_pw', input);
+                }
+                await setDoc(doc(db, "settings", "global"), { teacherPw: input }, { merge: true });
+                globalTeacherPw = input;
+                document.getElementById('newTeacherPwInput').value = '';
+                showAlert("교사 비밀번호가 성공적으로 변경되었습니다.");
+            } catch(e) {
+                showAlert("비밀번호 변경 실패: " + e.message);
+            }
+        };
+
+        window.deleteClassReadingScores = async () => {
+            const g = document.getElementById('delete-target-grade').value;
+            const c = document.getElementById('delete-target-class').value;
+
+            if (!confirm(`정말로 [${g === 'ALL' ? '전체 학년' : g + '학년'} ${c === 'ALL' ? '전체 반' : c + '반'}]의 읽기 기록을 일괄 삭제하시겠습니까?`)) {
+                return;
+            }
+
+            try {
+                let count = 0;
+                for (const item of hofAllScores) {
+                    if (g !== 'ALL' && item.grade !== g) continue;
+                    if (c !== 'ALL' && item.classNum !== c) continue;
+                    await deleteDoc(doc(db, "scores", item.id));
+                    scoresMap.delete(item.id);
+                    count++;
+                }
+                showAlert(`총 ${count}건의 학급 성적 기록이 삭제되었습니다.`);
+                updateHofFromMap();
+            } catch(e) {
+                showAlert("삭제 중 오류가 발생했습니다: " + e.message);
+            }
+        };
+
+        // 앱 초기화 실행
+        initApp();
+
+    </script>
+</body>
+</html>

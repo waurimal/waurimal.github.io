@@ -16,6 +16,9 @@
 
     <!-- 와우리말 공통 테마 -->
     <link rel="stylesheet" href="../common/waurimal-theme.css">
+    <!-- Firebase 공통 설정 & 2026 초등 3~6학년 44단원 공통 교과과정 (Words >= 10, Sentences >= 10) -->
+    <script src="../common/firebase-config.js"></script>
+    <script src="../common/curriculum.js?v=20261121_authentic44_v7"></script>
 
     <style>
         :root {
@@ -214,15 +217,70 @@
 
                     <!-- 단원 선택 영역 -->
                     <div class="p-4 bg-sky-50/70 border border-sky-200 rounded-2xl space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-black text-sky-950">💬 대화 단원 / 롤플레잉 주제 선택</span>
-                            <span id="unitTurnCountBadge" class="text-[10px] font-bold text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full">
-                                대화 로딩중...
-                            </span>
+                        <!-- 1) 학년 및 교과서 선택 (3·4학년: YBM 최희경 / 5·6학년: 천재 함순애) -->
+                        <div class="space-y-1.5 pt-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-black text-sky-950">🎓 학년 및 교과서 선택</span>
+                                <span class="text-[10px] text-slate-500 font-medium">초등 3~6학년 44단원 완비</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2" id="speakingGradeTabsWrap">
+                                <button type="button" class="speaking-grade-btn py-2 px-3 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-sky-50 border-sky-500 text-sky-800 shadow-xs cursor-pointer" data-grade="3" onclick="setSpeakingSelectedGrade(3)" id="speakingGradeBtn3">
+                                    <div class="flex items-center gap-1.5 font-black text-xs">
+                                        <i class="fas fa-graduation-cap"></i> 3학년
+                                    </div>
+                                    <span class="text-[10px] text-sky-600 font-medium">YBM (최희경)</span>
+                                </button>
+                                <button type="button" class="speaking-grade-btn py-2 px-3 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-white border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer" data-grade="4" onclick="setSpeakingSelectedGrade(4)" id="speakingGradeBtn4">
+                                    <div class="flex items-center gap-1.5 font-black text-xs">
+                                        <i class="fas fa-graduation-cap"></i> 4학년
+                                    </div>
+                                    <span class="text-[10px] text-slate-400 font-medium">YBM (최희경)</span>
+                                </button>
+                                <button type="button" class="speaking-grade-btn py-2 px-3 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-white border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer" data-grade="5" onclick="setSpeakingSelectedGrade(5)" id="speakingGradeBtn5">
+                                    <div class="flex items-center gap-1.5 font-black text-xs">
+                                        <i class="fas fa-graduation-cap"></i> 5학년
+                                    </div>
+                                    <span class="text-[10px] text-slate-400 font-medium">천재 (함순애)</span>
+                                </button>
+                                <button type="button" class="speaking-grade-btn py-2 px-3 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-white border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer" data-grade="6" onclick="setSpeakingSelectedGrade(6)" id="speakingGradeBtn6">
+                                    <div class="flex items-center gap-1.5 font-black text-xs">
+                                        <i class="fas fa-graduation-cap"></i> 6학년
+                                    </div>
+                                    <span class="text-[10px] text-slate-400 font-medium">천재 (함순애)</span>
+                                </button>
+                            </div>
                         </div>
-                        <select id="unitSelect" onchange="updateSelectedUnitInfo()" class="w-full p-3 bg-white border border-sky-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-sky-500">
-                            <!-- 단원 동적 로드 -->
-                        </select>
+
+                        <!-- 2) 학기 범위 선택 (전체 / 1학기 / 2학기) -->
+                        <div class="space-y-1.5 pt-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-black text-sky-950">📅 학기 범위 선택</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-1.5 bg-slate-100 p-1 rounded-xl" id="speakingSemTabsWrap">
+                                <button type="button" class="speaking-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-sky-700 shadow-xs cursor-pointer" data-sem="all" onclick="setSpeakingSelectedSemester('all')" id="speakingSemAllBtn">
+                                    전체 (1~10단원)
+                                </button>
+                                <button type="button" class="speaking-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-800 cursor-pointer" data-sem="1" onclick="setSpeakingSelectedSemester(1)" id="speakingSem1Btn">
+                                    1학기 (1~5단원)
+                                </button>
+                                <button type="button" class="speaking-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-800 cursor-pointer" data-sem="2" onclick="setSpeakingSelectedSemester(2)" id="speakingSem2Btn">
+                                    2학기 (6~10단원)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 3) 대화 단원 드롭다운 선택 -->
+                        <div class="space-y-1.5 pt-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-black text-sky-950">💬 대화 단원 / 롤플레잉 주제 선택</span>
+                                <span id="unitTurnCountBadge" class="text-[10px] font-bold text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full">
+                                    대화 로딩중...
+                                </span>
+                            </div>
+                            <select id="unitSelect" onchange="updateSelectedUnitInfo()" class="w-full p-3 bg-white border border-sky-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-sky-500 shadow-2xs">
+                                <!-- 44개 정규 단원 동적 로드 -->
+                            </select>
+                        </div>
 
                         <!-- 🎯 도전 모드 선택 (🌱 일반 모드 vs 🔥 고급 모드 더블 스코어) -->
                         <div class="space-y-1.5 pt-1">
@@ -1064,7 +1122,124 @@
                 "B: Let's both pursue our dreams with passion and make the world a better place! : 우리 둘 다 열정을 품고 꿈을 좇아서 세상을 더 살기 좋은 곳으로 만들자!"
         ]
 };
+        let rawCurriculumLessons = [];
         let loadedDialogues = JSON.parse(JSON.stringify(DEFAULT_DIALOGUES));
+        let currentSpeakingGrade = 3;
+        let currentSpeakingSemester = 'all';
+
+        function detectInitialGrade() {
+            try {
+                const rawProfile = localStorage.getItem('studentProfile');
+                if (rawProfile) {
+                    const p = JSON.parse(rawProfile);
+                    if (p && p.grade) {
+                        const parsedG = parseInt(p.grade, 10);
+                        if ([3, 4, 5, 6].includes(parsedG)) return parsedG;
+                    }
+                }
+            } catch(e) {}
+            return 3;
+        }
+
+        function getLessonNumber(lesson) {
+            if (lesson.unit) return Number(lesson.unit);
+            if (lesson.lesson) return Number(lesson.lesson);
+            const codeMatch = String(lesson.code || '').match(/_L(\d+)/i);
+            if (codeMatch) return parseInt(codeMatch[1], 10);
+            const nameMatch = String(lesson.name || '').match(/Lesson\s*(\d+)/i);
+            if (nameMatch) return parseInt(nameMatch[1], 10);
+            return 1;
+        }
+
+        window.setSpeakingSelectedGrade = (g) => {
+            currentSpeakingGrade = Number(g);
+            updateSpeakingFilterUI();
+            buildSpeakingDialogues();
+            renderUnitSelects();
+        };
+
+        window.setSpeakingSelectedSemester = (sem) => {
+            currentSpeakingSemester = sem;
+            updateSpeakingFilterUI();
+            buildSpeakingDialogues();
+            renderUnitSelects();
+        };
+
+        function updateSpeakingFilterUI() {
+            [3, 4, 5, 6].forEach(g => {
+                const btn = document.getElementById('speakingGradeBtn' + g);
+                if (!btn) return;
+                const isCur = (g === currentSpeakingGrade);
+                const pub = g <= 4 ? 'YBM (최희경)' : '천재 (함순애)';
+                if (isCur) {
+                    btn.className = "speaking-grade-btn py-2 px-3 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-sky-50 border-sky-500 text-sky-800 shadow-xs cursor-pointer";
+                    btn.innerHTML = `<div class=\"flex items-center gap-1.5 font-black text-xs\"><i class=\"fas fa-graduation-cap\"></i> ${g}학년</div><span class=\"text-[10px] text-sky-600 font-medium\">${pub}</span>`;
+                } else {
+                    btn.className = "speaking-grade-btn py-2 px-3 rounded-xl text-xs font-bold border transition-all text-left flex flex-col items-start bg-white border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer";
+                    btn.innerHTML = `<div class=\"flex items-center gap-1.5 font-black text-xs\"><i class=\"fas fa-graduation-cap\"></i> ${g}학년</div><span class=\"text-[10px] text-slate-400 font-medium\">${pub}</span>`;
+                }
+            });
+
+            const is10 = (currentSpeakingGrade <= 4);
+            const maxL = is10 ? 10 : 12;
+            const sem1L = is10 ? 5 : 6;
+            const sem2Start = sem1L + 1;
+
+            const allBtn = document.getElementById('speakingSemAllBtn');
+            const sem1Btn = document.getElementById('speakingSem1Btn');
+            const sem2Btn = document.getElementById('speakingSem2Btn');
+
+            if (allBtn) {
+                allBtn.innerText = `전체 (1~${maxL}단원)`;
+                allBtn.className = (currentSpeakingSemester === 'all')
+                    ? "speaking-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-sky-700 shadow-xs cursor-pointer"
+                    : "speaking-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-800 cursor-pointer";
+            }
+            if (sem1Btn) {
+                sem1Btn.innerText = `1학기 (1~${sem1L}단원)`;
+                sem1Btn.className = (currentSpeakingSemester === 1 || currentSpeakingSemester === '1')
+                    ? "speaking-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-sky-700 shadow-xs cursor-pointer"
+                    : "speaking-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-800 cursor-pointer";
+            }
+            if (sem2Btn) {
+                sem2Btn.innerText = `2학기 (${sem2Start}~${maxL}단원)`;
+                sem2Btn.className = (currentSpeakingSemester === 2 || currentSpeakingSemester === '2')
+                    ? "speaking-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-sky-700 shadow-xs cursor-pointer"
+                    : "speaking-sem-btn py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-800 cursor-pointer";
+            }
+        }
+
+        function buildSpeakingDialogues() {
+            const newDialogues = {};
+            const is10 = (currentSpeakingGrade <= 4);
+            const sem1Max = is10 ? 5 : 6;
+
+            rawCurriculumLessons.forEach(l => {
+                const g = Number(l.grade);
+                const uNum = getLessonNumber(l);
+                const semStr = (uNum <= sem1Max) ? '1' : '2';
+                const padU = String(uNum).padStart(2, '0');
+                const cleanName = String(l.name || l.title || `Lesson ${uNum}`).replace(/^\[.*?\]\s*/, '').trim();
+                const key = `[${g}-${semStr}-${padU}] ${cleanName}`;
+
+                const sents = l.sentences || [];
+                // Alternating 10 dialogue turns (A: AI speaker, B: Student)
+                const turns = sents.map((s, idx) => {
+                    const speaker = (idx % 2 === 0) ? 'A' : 'B';
+                    const eng = String(s.en || s.sentence || s.text || '').trim();
+                    const kor = String(s.kr || s.meaning || s.translation || '').trim();
+                    return `${speaker}: ${eng} : ${kor}`;
+                }).filter(t => t.length > 5);
+
+                if (turns.length > 0) {
+                    newDialogues[key] = turns;
+                }
+            });
+
+            if (Object.keys(newDialogues).length > 0) {
+                loadedDialogues = newDialogues;
+            }
+        }
 
         let globalTeacherPw = "4657";
         let globalSchoolName = "이의초등학교";
@@ -1263,7 +1438,20 @@
         // ════════════════════════════════════════════════════════════════════
         // ── 1. DB 단원 데이터 로드 및 초기화 ──
         // ════════════════════════════════════════════════════════════════════
+        function updateSelectedUnitInfo() {
+            const sel = document.getElementById('unitSelect');
+            const badge = document.getElementById('unitTurnCountBadge');
+            if (sel && badge && loadedDialogues[sel.value]) {
+                const cnt = loadedDialogues[sel.value].length;
+                badge.innerText = `총 ${cnt}턴 대화 롤플레잉`;
+            }
+        }
+        window.updateSelectedUnitInfo = updateSelectedUnitInfo;
+
         async function initApp() {
+            window.initApp = initApp;
+            currentSpeakingGrade = detectInitialGrade();
+
             // 설정 로드
             try {
                 const snap = await getDoc(doc(db, "settings", "global"));
@@ -1276,39 +1464,56 @@
                 console.warn("Settings load error:", e);
             }
 
-            // 로컬 캐시 복원
-            try {
-                const cached = localStorage.getItem('waurimal_speaking_dialogues_cache_v3_v2');
-                if (cached) {
-                    const parsed = JSON.parse(cached);
-                    if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
-                        loadedDialogues = { ...DEFAULT_DIALOGUES, ...parsed };
-                        renderUnitSelects();
-                    }
+            // 1. WaurimalCurriculum 공통 커리큘럼 우선 로드 (2026 초등 3~6학년 44단원 정규 교과과정)
+            let loadedFromCurriculum = false;
+            if (window.WaurimalCurriculum && typeof window.WaurimalCurriculum.getLessons === 'function') {
+                const curLessons = window.WaurimalCurriculum.getLessons();
+                if (Array.isArray(curLessons) && curLessons.length >= 40) {
+                    rawCurriculumLessons = curLessons;
+                    loadedFromCurriculum = true;
                 }
-            } catch(e){}
-
-            // Firestore speaking_units 로드
-            try {
-                const querySnapshot = await getDocs(collection(db, "speaking_units"));
-                let fbUnits = {};
-                querySnapshot.forEach(d => {
-                    const data = d.data();
-                    if (data.dialogue && Array.isArray(data.dialogue)) {
-                        fbUnits[d.id] = data.dialogue;
-                    } else if (data.texts && Array.isArray(data.texts)) {
-                        fbUnits[d.id] = data.texts;
-                    }
-                });
-
-                if (Object.keys(fbUnits).length > 0) {
-                    loadedDialogues = { ...DEFAULT_DIALOGUES, ...fbUnits };
-                    try { localStorage.setItem('waurimal_speaking_dialogues_cache_v3_v2', JSON.stringify(loadedDialogues)); } catch(e){}
-                }
-            } catch(e) {
-                console.warn("speaking_units load error:", e);
             }
 
+            // 2. config.json fallback (44단원 동기화)
+            if (!loadedFromCurriculum) {
+                try {
+                    const res = await fetch('config.json');
+                    if (res.ok) {
+                        const cfg = await res.json();
+                        if (cfg && Array.isArray(cfg.lessons) && cfg.lessons.length >= 40) {
+                            rawCurriculumLessons = cfg.lessons;
+                            loadedFromCurriculum = true;
+                        }
+                    }
+                } catch(e) {
+                    console.warn("config.json fetch error:", e);
+                }
+            }
+
+            // 3. Firestore speaking_units fallback
+            if (!loadedFromCurriculum) {
+                try {
+                    const querySnapshot = await getDocs(collection(db, "speaking_units"));
+                    let fbUnits = {};
+                    querySnapshot.forEach(d => {
+                        const data = d.data();
+                        if (data.dialogue && Array.isArray(data.dialogue)) {
+                            fbUnits[d.id] = data.dialogue;
+                        } else if (data.texts && Array.isArray(data.texts)) {
+                            fbUnits[d.id] = data.texts;
+                        }
+                    });
+                    if (Object.keys(fbUnits).length > 0) {
+                        loadedDialogues = { ...DEFAULT_DIALOGUES, ...fbUnits };
+                    }
+                } catch(e) {}
+            }
+
+            if (rawCurriculumLessons.length > 0) {
+                buildSpeakingDialogues();
+            }
+
+            updateSpeakingFilterUI();
             renderUnitSelects();
             listenToHallOfFame();
         }
@@ -1322,13 +1527,33 @@
             if (homeSelect) {
                 const cur = homeSelect.value;
                 homeSelect.innerHTML = '';
-                unitKeys.forEach(name => {
+
+                let filteredKeys = unitKeys.filter(key => {
+                    const m = key.match(/^\[(\d+)-(\d+)-(\d+)\]/);
+                    if (!m) return true;
+                    const g = parseInt(m[1], 10);
+                    const sem = parseInt(m[2], 10);
+                    if (g !== currentSpeakingGrade) return false;
+                    if (currentSpeakingSemester === 1 || currentSpeakingSemester === '1') return sem === 1;
+                    if (currentSpeakingSemester === 2 || currentSpeakingSemester === '2') return sem === 2;
+                    return true;
+                });
+
+                if (filteredKeys.length === 0) filteredKeys = unitKeys;
+
+                filteredKeys.forEach(name => {
                     const opt = document.createElement('option');
                     opt.value = name;
-                    opt.textContent = `${name} (${loadedDialogues[name].length}턴 대화)`;
+                    const cnt = loadedDialogues[name] ? loadedDialogues[name].length : 0;
+                    opt.textContent = `${name} (${cnt}턴 대화)`;
                     homeSelect.appendChild(opt);
                 });
-                if (cur && loadedDialogues[cur]) homeSelect.value = cur;
+
+                if (cur && loadedDialogues[cur] && filteredKeys.includes(cur)) {
+                    homeSelect.value = cur;
+                } else if (filteredKeys.length > 0) {
+                    homeSelect.value = filteredKeys[0];
+                }
                 updateSelectedUnitInfo();
             }
 
@@ -1353,10 +1578,11 @@
                 unitKeys.forEach(name => {
                     const opt = document.createElement('option');
                     opt.value = name;
-                    opt.textContent = `${name} (${loadedDialogues[name].length}턴)`;
+                    const cnt = loadedDialogues[name] ? loadedDialogues[name].length : 0;
+                    opt.textContent = `${name} (${cnt}턴)`;
                     teacherSelect.appendChild(opt);
                 });
-                loadTeacherUnitData();
+                if (typeof loadTeacherUnitData === 'function') loadTeacherUnitData();
             }
 
             // 4. 교사용 성적표 단원 필터
@@ -1373,14 +1599,6 @@
                 if (curTFilter) tFilterUnit.value = curTFilter;
             }
         }
-
-        window.updateSelectedUnitInfo = () => {
-            const sel = document.getElementById('unitSelect');
-            const badge = document.getElementById('unitTurnCountBadge');
-            if (sel && badge && loadedDialogues[sel.value]) {
-                badge.innerText = `총 ${loadedDialogues[sel.value].length}턴 대화 롤플레잉`;
-            }
-        };
 
         // ════════════════════════════════════════════════════════════════════
         // ── 2. 대화문 파싱 유틸 ──
