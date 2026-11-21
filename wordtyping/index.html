@@ -12,7 +12,7 @@
     <!-- 와우리말 공통 통합 테마 및 내비게이션 -->
     <link rel="stylesheet" href="../common/waurimal-theme.css">
     <script src="../common/waurimal-nav.js"></script>
-    <script src="../common/curriculum.js?v=20261121_authentic44_v6"></script>
+    <script src="../common/curriculum.js?v=20261121_authentic44_v7"></script>
     <script src="../common/firebase-config.js?v=20261111_db_restore"></script>
 
     <!-- Firebase SDK (v10 compat) -->
@@ -2469,7 +2469,9 @@ function validateAuthenticLessons(arr) {
     const g4 = arr.filter(l => Number(l.grade) === 4).length;
     const g5 = arr.filter(l => Number(l.grade) === 5).length;
     const g6 = arr.filter(l => Number(l.grade) === 6).length;
-    return g3 === 10 && g4 === 10 && g5 === 12 && g6 === 12;
+    const countCheck = g3 === 10 && g4 === 10 && g5 === 12 && g6 === 12;
+    if (!countCheck) return false;
+    return arr.every(l => Array.isArray(l.words) && l.words.length >= 10);
 }
 
 async function initAppConfig() {
