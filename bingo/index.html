@@ -680,7 +680,7 @@
         <!-- ─────────────────────────────────────────── -->
         <!-- 2. 1:1 대기실 화면 (screen-waiting) -->
         <!-- ─────────────────────────────────────────── -->
-        <div  class="hidden max-w-lg mx-auto w-full">
+        <div id="screen-waiting" class="hidden max-w-lg mx-auto w-full">
             <div class="bingo-card text-center space-y-4">
                 <span class="text-xs font-black text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full">1:1 대기실</span>
                 <h2 class="text-xl font-black text-slate-800">친구 접속을 기다리는 중입니다</h2>
@@ -1224,6 +1224,73 @@
         let currentBingoMatchMode = 'word'; // 'word' | 'sentence'
         let currentBingoGrade = 3; // 3, 4, 5, 6
         let currentBingoSemester = 'all'; // 'all' | 1 | 2
+
+        // ── 전역 화면 전환 및 탭 엔진 (showScreen, backToHome, switchHomeTab, showAlert) ──
+        const ALL_SCREENS = [
+            'screen-home', 'screen-waiting', 'screen-setup', 'screen-rps',
+            'screen-game', 'screen-host', 'screen-result', 'screen-admin'
+        ];
+
+        window.showScreen = (screenId) => {
+            ALL_SCREENS.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (id === screenId) {
+                        el.classList.remove('hidden');
+                    } else {
+                        el.classList.add('hidden');
+                    }
+                }
+            });
+            window.scrollTo(0, 0);
+        };
+
+        window.backToHome = () => {
+            if (unsubscribeRoom) {
+                try { unsubscribeRoom(); } catch(e) {}
+                unsubscribeRoom = null;
+            }
+            hasSetupBoard = false;
+            isSetupCompleted = false;
+            isGameOver = false;
+            myBoard = [];
+            window.showScreen('screen-home');
+        };
+
+        window.switchHomeTab = (tab) => {
+            const tab1v1 = document.getElementById('home-tab-1v1');
+            const tabClass = document.getElementById('home-tab-class');
+            const btn1v1 = document.getElementById('tab-btn-1v1');
+            const btnClass = document.getElementById('tab-btn-class');
+
+            if (tab === 'class') {
+                if (tab1v1) tab1v1.classList.add('hidden');
+                if (tabClass) tabClass.classList.remove('hidden');
+                if (btn1v1) btn1v1.className = "flex-1 py-2.5 rounded-lg text-slate-500 hover:text-slate-800 font-black transition";
+                if (btnClass) btnClass.className = "flex-1 py-2.5 rounded-lg bg-white text-purple-700 shadow-2xs font-black transition";
+            } else {
+                if (tabClass) tabClass.classList.add('hidden');
+                if (tab1v1) tab1v1.classList.remove('hidden');
+                if (btnClass) btnClass.className = "flex-1 py-2.5 rounded-lg text-slate-500 hover:text-slate-800 font-black transition";
+                if (btn1v1) btn1v1.className = "flex-1 py-2.5 rounded-lg bg-white text-emerald-700 shadow-2xs font-black transition";
+            }
+        };
+
+        window.showAlert = (msg) => {
+            const el = document.getElementById('alert-msg');
+            const modal = document.getElementById('custom-alert');
+            if (el && modal) {
+                el.innerText = msg;
+                modal.classList.remove('hidden');
+            } else {
+                alert(msg);
+            }
+        };
+
+        window.closeAlert = () => {
+            const modal = document.getElementById('custom-alert');
+            if (modal) modal.classList.add('hidden');
+        };
 
         window.setBingoMatchMode = (mode) => {
             currentBingoMatchMode = mode;
