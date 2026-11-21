@@ -1,342 +1,2205 @@
 {
   "school": "이의초등학교",
-  "curriculumVersion": "2026_V2_FULL_48",
   "lessons": [
     {
       "code": "3G_L01",
       "grade": 3,
       "publisher": "YBM (최희경)",
-      "name": "[YBM (최희경)] 3학년 Lesson 01 - Hi, I'm Sena",
-      "words": "hello : 안녕\nhi : 안녕\nI : 나\nam : ~이다\nmy : 나의\nname : 이름\nbye : 잘 가\ngoodbye : 안녕히 가세요\nmeet : 만나다\nnice : 좋은, 반가운\nfriend : 친구\nyou : 너, 당신"
+      "name": "[YBM (최희경)] 3학년 Lesson 01 - Hello, ABC!",
+      "words": [
+        {
+          "en": "hello",
+          "kr": "안녕"
+        },
+        {
+          "en": "hi",
+          "kr": "안녕"
+        },
+        {
+          "en": "I",
+          "kr": "나"
+        },
+        {
+          "en": "am",
+          "kr": "~이다"
+        },
+        {
+          "en": "my",
+          "kr": "나의"
+        },
+        {
+          "en": "name",
+          "kr": "이름"
+        },
+        {
+          "en": "thank",
+          "kr": "고마워하다"
+        },
+        {
+          "en": "you",
+          "kr": "너, 당신"
+        },
+        {
+          "en": "goodbye",
+          "kr": "안녕히 가세요"
+        },
+        {
+          "en": "bye",
+          "kr": "잘 가"
+        },
+        {
+          "en": "meet",
+          "kr": "만나다"
+        },
+        {
+          "en": "nice",
+          "kr": "반가운, 좋은"
+        }
+      ]
     },
     {
       "code": "3G_L02",
       "grade": 3,
       "publisher": "YBM (최희경)",
       "name": "[YBM (최희경)] 3학년 Lesson 02 - What's This?",
-      "words": "what : 무엇\nthis : 이것\nthat : 저것\nbook : 책\npen : 펜\npencil : 연필\ncup : 컵\ncap : 모자\nbag : 가방\ndesk : 책상\nchair : 의자\napple : 사과"
+      "words": [
+        {
+          "en": "what",
+          "kr": "무엇"
+        },
+        {
+          "en": "this",
+          "kr": "이것"
+        },
+        {
+          "en": "that",
+          "kr": "저것"
+        },
+        {
+          "en": "it",
+          "kr": "그것"
+        },
+        {
+          "en": "is",
+          "kr": "~이다"
+        },
+        {
+          "en": "bag",
+          "kr": "가방"
+        },
+        {
+          "en": "ball",
+          "kr": "공"
+        },
+        {
+          "en": "chair",
+          "kr": "의자"
+        },
+        {
+          "en": "car",
+          "kr": "자동차"
+        },
+        {
+          "en": "doll",
+          "kr": "인형"
+        },
+        {
+          "en": "clock",
+          "kr": "시계"
+        },
+        {
+          "en": "cup",
+          "kr": "컵"
+        },
+        {
+          "en": "big",
+          "kr": "큰"
+        },
+        {
+          "en": "small",
+          "kr": "작은"
+        }
+      ]
     },
     {
       "code": "3G_L03",
       "grade": 3,
       "publisher": "YBM (최희경)",
-      "name": "[YBM (최희경)] 3학년 Lesson 03 - Open the Box, Please",
-      "words": "open : 열다\nclose : 닫다\nbox : 상자\ndoor : 문\nwindow : 창문\nstand up : 일어서다\nsit down : 앉다\nplease : 부디, 제발\nlook : 보다\nlisten : 듣다\nread : 읽다\ncome : 오다"
+      "name": "[YBM (최희경)] 3학년 Lesson 03 - Sit Down, Please",
+      "words": [
+        {
+          "en": "stand",
+          "kr": "서다"
+        },
+        {
+          "en": "sit",
+          "kr": "앉다"
+        },
+        {
+          "en": "up",
+          "kr": "위로"
+        },
+        {
+          "en": "down",
+          "kr": "아래로"
+        },
+        {
+          "en": "open",
+          "kr": "열다"
+        },
+        {
+          "en": "close",
+          "kr": "닫다"
+        },
+        {
+          "en": "door",
+          "kr": "문"
+        },
+        {
+          "en": "book",
+          "kr": "책"
+        },
+        {
+          "en": "please",
+          "kr": "부탁합니다, 제발"
+        },
+        {
+          "en": "okay",
+          "kr": "좋아, 알았어"
+        },
+        {
+          "en": "come",
+          "kr": "오다"
+        },
+        {
+          "en": "here",
+          "kr": "여기"
+        }
+      ]
     },
     {
       "code": "3G_L04",
       "grade": 3,
       "publisher": "YBM (최희경)",
-      "name": "[YBM (최희경)] 3학년 Lesson 04 - Do You Like Apples?",
-      "words": "like : 좋아하다\napple : 사과\nbanana : 바나나\nmilk : 우유\ncheese : 치즈\norange : 오렌지\nstrawberry : 딸기\nchicken : 닭고기\npizza : 피자\nmelon : 멜론\ngrape : 포도\nbread : 빵"
+      "name": "[YBM (최희경)] 3학년 Lesson 04 - How Many Cows?",
+      "words": [
+        {
+          "en": "how",
+          "kr": "얼마나, 어떻게"
+        },
+        {
+          "en": "many",
+          "kr": "많은"
+        },
+        {
+          "en": "cow",
+          "kr": "소"
+        },
+        {
+          "en": "pig",
+          "kr": "돼지"
+        },
+        {
+          "en": "duck",
+          "kr": "오리"
+        },
+        {
+          "en": "cat",
+          "kr": "고양이"
+        },
+        {
+          "en": "dog",
+          "kr": "개"
+        },
+        {
+          "en": "zebra",
+          "kr": "얼룩말"
+        },
+        {
+          "en": "one",
+          "kr": "하나 (1)"
+        },
+        {
+          "en": "two",
+          "kr": "둘 (2)"
+        },
+        {
+          "en": "three",
+          "kr": "셋 (3)"
+        },
+        {
+          "en": "four",
+          "kr": "넷 (4)"
+        },
+        {
+          "en": "five",
+          "kr": "다섯 (5)"
+        }
+      ]
     },
     {
       "code": "3G_L05",
       "grade": 3,
       "publisher": "YBM (최희경)",
-      "name": "[YBM (최희경)] 3학년 Lesson 05 - How Many Dogs?",
-      "words": "how : 얼마나\nmany : 많은\none : 하나\ntwo : 둘\nthree : 셋\nfour : 넷\nfive : 다섯\nsix : 여섯\nseven : 일곱\neight : 여덟\nnine : 아홉\nten : 열\ndog : 개\ncat : 고양이"
+      "name": "[YBM (최희경)] 3학년 Lesson 05 - Do You Like Apples?",
+      "words": [
+        {
+          "en": "like",
+          "kr": "좋아하다"
+        },
+        {
+          "en": "apple",
+          "kr": "사과"
+        },
+        {
+          "en": "banana",
+          "kr": "바나나"
+        },
+        {
+          "en": "orange",
+          "kr": "오렌지"
+        },
+        {
+          "en": "grape",
+          "kr": "포도"
+        },
+        {
+          "en": "pizza",
+          "kr": "피자"
+        },
+        {
+          "en": "bread",
+          "kr": "빵"
+        },
+        {
+          "en": "soup",
+          "kr": "수프"
+        },
+        {
+          "en": "ice cream",
+          "kr": "아이스크림"
+        },
+        {
+          "en": "yes",
+          "kr": "응, 그래"
+        },
+        {
+          "en": "no",
+          "kr": "아니요"
+        }
+      ]
     },
     {
       "code": "3G_L06",
       "grade": 3,
       "publisher": "YBM (최희경)",
-      "name": "[YBM (최희경)] 3학년 Lesson 06 - Do You Have a Ruler?",
-      "words": "have : 가지고 있다\nruler : 자\neraser : 지우개\ncrayon : 크레용\nglue stick : 풀\nnotebook : 공책\nscissors : 가위\npencil : 연필\npencil case : 필통\nmarker : 사인펜"
+      "name": "[YBM (최희경)] 3학년 Lesson 06 - I Can Jump",
+      "words": [
+        {
+          "en": "can",
+          "kr": "~할 수 있다"
+        },
+        {
+          "en": "jump",
+          "kr": "뛰다, 점프하다"
+        },
+        {
+          "en": "swim",
+          "kr": "수영하다"
+        },
+        {
+          "en": "fly",
+          "kr": "날다"
+        },
+        {
+          "en": "kick",
+          "kr": "차다"
+        },
+        {
+          "en": "catch",
+          "kr": "잡다"
+        },
+        {
+          "en": "run",
+          "kr": "달리다"
+        },
+        {
+          "en": "dance",
+          "kr": "춤추다"
+        },
+        {
+          "en": "slide",
+          "kr": "미끄러지다"
+        },
+        {
+          "en": "climb",
+          "kr": "오르다"
+        },
+        {
+          "en": "ski",
+          "kr": "스키 타다"
+        }
+      ]
     },
     {
       "code": "3G_L07",
       "grade": 3,
       "publisher": "YBM (최희경)",
-      "name": "[YBM (최희경)] 3학년 Lesson 07 - Can You Swim?",
-      "words": "can : ~할 수 있다\nswim : 수영하다\nfly : 날다\njump : 뛰다\nrun : 달리다\ndance : 춤추다\nsing : 노래하다\nskate : 스케이트 타다\nski : 스키 타다\nclimb : 기어오르다\nride : 타다"
+      "name": "[YBM (최희경)] 3학년 Lesson 07 - I Have a Pencil",
+      "words": [
+        {
+          "en": "have",
+          "kr": "가지고 있다"
+        },
+        {
+          "en": "pencil",
+          "kr": "연필"
+        },
+        {
+          "en": "ruler",
+          "kr": "자"
+        },
+        {
+          "en": "eraser",
+          "kr": "지우개"
+        },
+        {
+          "en": "crayon",
+          "kr": "크레용"
+        },
+        {
+          "en": "notebook",
+          "kr": "공책"
+        },
+        {
+          "en": "glue",
+          "kr": "풀"
+        },
+        {
+          "en": "scissors",
+          "kr": "가위"
+        },
+        {
+          "en": "pencil case",
+          "kr": "필통"
+        },
+        {
+          "en": "here",
+          "kr": "여기"
+        }
+      ]
     },
     {
       "code": "3G_L08",
       "grade": 3,
       "publisher": "YBM (최희경)",
-      "name": "[YBM (최희경)] 3학년 Lesson 08 - Don't Run, Please",
-      "words": "run : 달리다\ntouch : 만지다\npush : 밀다\nshout : 소리치다\neat : 먹다\nenter : 들어가다\nstop : 멈추다\nquiet : 조용한\ncareful : 조심하는\nsorry : 미안한\nsleep : 자다"
+      "name": "[YBM (최희경)] 3학년 Lesson 08 - I'm Happy",
+      "words": [
+        {
+          "en": "happy",
+          "kr": "행복한, 기쁜"
+        },
+        {
+          "en": "sad",
+          "kr": "슬픈"
+        },
+        {
+          "en": "angry",
+          "kr": "화난"
+        },
+        {
+          "en": "hungry",
+          "kr": "배고픈"
+        },
+        {
+          "en": "tired",
+          "kr": "피곤한"
+        },
+        {
+          "en": "birthday",
+          "kr": "생일"
+        },
+        {
+          "en": "six",
+          "kr": "여섯 (6)"
+        },
+        {
+          "en": "seven",
+          "kr": "일곱 (7)"
+        },
+        {
+          "en": "eight",
+          "kr": "여덟 (8)"
+        },
+        {
+          "en": "nine",
+          "kr": "아홉 (9)"
+        },
+        {
+          "en": "ten",
+          "kr": "열 (10)"
+        }
+      ]
     },
     {
       "code": "3G_L09",
       "grade": 3,
       "publisher": "YBM (최희경)",
-      "name": "[YBM (최희경)] 3학년 Lesson 09 - Where Is the Ball?",
-      "words": "where : 어디\nin : ~안에\non : ~위에\nunder : ~아래에\nby : ~옆에\nball : 공\nbox : 상자\ntable : 탁자\nbed : 침대\nroom : 방\nchair : 의자\ndesk : 책상"
+      "name": "[YBM (최희경)] 3학년 Lesson 09 - What Color Is It?",
+      "words": [
+        {
+          "en": "color",
+          "kr": "색, 색깔"
+        },
+        {
+          "en": "red",
+          "kr": "빨간색"
+        },
+        {
+          "en": "blue",
+          "kr": "파란색"
+        },
+        {
+          "en": "yellow",
+          "kr": "노란색"
+        },
+        {
+          "en": "green",
+          "kr": "초록색"
+        },
+        {
+          "en": "pink",
+          "kr": "분홍색"
+        },
+        {
+          "en": "purple",
+          "kr": "보라색"
+        },
+        {
+          "en": "white",
+          "kr": "흰색"
+        },
+        {
+          "en": "brown",
+          "kr": "갈색"
+        },
+        {
+          "en": "black",
+          "kr": "검은색"
+        },
+        {
+          "en": "orange",
+          "kr": "주황색"
+        }
+      ]
     },
     {
       "code": "3G_L10",
       "grade": 3,
       "publisher": "YBM (최희경)",
-      "name": "[YBM (최희경)] 3학년 Lesson 10 - What Color Is It?",
-      "words": "color : 색깔\nred : 빨간색\nblue : 파란색\nyellow : 노란색\ngreen : 초록색\nblack : 검은색\nwhite : 하얀색\npink : 분홍색\norange : 주황색\npurple : 보라색\nbrown : 갈색\nrainbow : 무지개"
-    },
-    {
-      "code": "3G_L11",
-      "grade": 3,
-      "publisher": "YBM (최희경)",
-      "name": "[YBM (최희경)] 3학년 Lesson 11 - How Old Are You?",
-      "words": "old : 나이 든\nyear : 살, 해\neleven : 열하나 (11)\ntwelve : 열둘 (12)\nbirthday : 생일\ncandle : 양초\nparty : 파티\npresent : 선물\ncake : 케이크\ncard : 카드\nhappy : 행복한\ntoday : 오늘"
-    },
-    {
-      "code": "3G_L12",
-      "grade": 3,
-      "publisher": "YBM (최희경)",
-      "name": "[YBM (최희경)] 3학년 Lesson 12 - It's Sunny",
-      "words": "weather : 날씨\nsunny : 화창한\nrainy : 비 오는\nsnowy : 눈 오는\nwindy : 바람 부는\ncloudy : 흐린\nwarm : 따뜻한\ncold : 추운\nhot : 더운\ncoat : 외투, 코트\numbrella : 우산\nsky : 하늘"
+      "name": "[YBM (최희경)] 3학년 Lesson 10 - How's the Weather?",
+      "words": [
+        {
+          "en": "weather",
+          "kr": "날씨"
+        },
+        {
+          "en": "sunny",
+          "kr": "화창한, 맑은"
+        },
+        {
+          "en": "cloudy",
+          "kr": "흐린"
+        },
+        {
+          "en": "raining",
+          "kr": "비가 오는"
+        },
+        {
+          "en": "snowing",
+          "kr": "눈이 오는"
+        },
+        {
+          "en": "windy",
+          "kr": "바람 부는"
+        },
+        {
+          "en": "hot",
+          "kr": "더운"
+        },
+        {
+          "en": "cold",
+          "kr": "추운"
+        },
+        {
+          "en": "snowman",
+          "kr": "눈사람"
+        },
+        {
+          "en": "warm",
+          "kr": "따뜻한"
+        }
+      ]
     },
     {
       "code": "4G_L01",
       "grade": 4,
       "publisher": "YBM (최희경)",
       "name": "[YBM (최희경)] 4학년 Lesson 01 - How Are You?",
-      "words": "good : 좋은\ngreat : 아주 좋은\nfine : 괜찮은\nnot bad : 나쁘지 않은\ntired : 피곤한\nsad : 슬픈\nhappy : 행복한\nsick : 아픈\nmorning : 아침\nafternoon : 오후\ntoday : 오늘\nclass : 수업, 학급"
+      "words": [
+        {
+          "en": "morning",
+          "kr": "아침"
+        },
+        {
+          "en": "afternoon",
+          "kr": "오후"
+        },
+        {
+          "en": "evening",
+          "kr": "저녁"
+        },
+        {
+          "en": "night",
+          "kr": "밤"
+        },
+        {
+          "en": "good",
+          "kr": "좋은"
+        },
+        {
+          "en": "great",
+          "kr": "아주 좋은"
+        },
+        {
+          "en": "fine",
+          "kr": "잘 지내는"
+        },
+        {
+          "en": "not bad",
+          "kr": "그럭저럭 괜찮은"
+        },
+        {
+          "en": "sleepy",
+          "kr": "졸린"
+        },
+        {
+          "en": "tired",
+          "kr": "피곤한"
+        }
+      ]
     },
     {
       "code": "4G_L02",
       "grade": 4,
       "publisher": "YBM (최희경)",
-      "name": "[YBM (최희경)] 4학년 Lesson 02 - Who Is She?",
-      "words": "who : 누구\nshe : 그녀\nhe : 그\nfather : 아버지\nmother : 어머니\nbrother : 남자형제\nsister : 여자형제\ngrandmother : 할머니\ngrandfather : 할아버지\nteacher : 선생님\nfriend : 친구\ncousin : 사촌"
+      "name": "[YBM (최희경)] 4학년 Lesson 02 - Who's She?",
+      "words": [
+        {
+          "en": "who",
+          "kr": "누구"
+        },
+        {
+          "en": "she",
+          "kr": "그녀"
+        },
+        {
+          "en": "he",
+          "kr": "그"
+        },
+        {
+          "en": "friend",
+          "kr": "친구"
+        },
+        {
+          "en": "mother",
+          "kr": "어머니"
+        },
+        {
+          "en": "father",
+          "kr": "아버지"
+        },
+        {
+          "en": "brother",
+          "kr": "남자 형제"
+        },
+        {
+          "en": "sister",
+          "kr": "여자 형제"
+        },
+        {
+          "en": "teacher",
+          "kr": "선생님"
+        },
+        {
+          "en": "tall",
+          "kr": "키가 큰"
+        },
+        {
+          "en": "pretty",
+          "kr": "예쁜"
+        }
+      ]
     },
     {
       "code": "4G_L03",
       "grade": 4,
       "publisher": "YBM (최희경)",
       "name": "[YBM (최희경)] 4학년 Lesson 03 - What Time Is It?",
-      "words": "time : 시간\no'clock : 정각\nhour : 시간 (시)\nminute : 분\nwatch : 손목시계\nclock : 벽시계\nbreakfast : 아침식사\nlunch : 점심식사\ndinner : 저녁식사\nbedtime : 취침시간\nschool : 학교\nlate : 늦은"
+      "words": [
+        {
+          "en": "time",
+          "kr": "시간, 때"
+        },
+        {
+          "en": "o'clock",
+          "kr": "~시 정각"
+        },
+        {
+          "en": "eleven",
+          "kr": "열하나 (11)"
+        },
+        {
+          "en": "twelve",
+          "kr": "열둘 (12)"
+        },
+        {
+          "en": "thirty",
+          "kr": "삼십 (30)"
+        },
+        {
+          "en": "breakfast",
+          "kr": "아침 식사"
+        },
+        {
+          "en": "lunch",
+          "kr": "점심 식사"
+        },
+        {
+          "en": "dinner",
+          "kr": "저녁 식사"
+        },
+        {
+          "en": "bedtime",
+          "kr": "취침 시간"
+        },
+        {
+          "en": "wake up",
+          "kr": "일어나다"
+        }
+      ]
     },
     {
       "code": "4G_L04",
       "grade": 4,
       "publisher": "YBM (최희경)",
       "name": "[YBM (최희경)] 4학년 Lesson 04 - Let's Play Soccer",
-      "words": "soccer : 축구\nbaseball : 야구\nbasketball : 농구\nbadminton : 배드민턴\ntennis : 테니스\nplay : 놀다, 운동하다\nsound : 들리다\nfun : 재미있는\nsorry : 미안한\nbusy : 바쁜\ntogether : 함께\nteam : 팀"
+      "words": [
+        {
+          "en": "soccer",
+          "kr": "축구"
+        },
+        {
+          "en": "baseball",
+          "kr": "야구"
+        },
+        {
+          "en": "basketball",
+          "kr": "농구"
+        },
+        {
+          "en": "badminton",
+          "kr": "배드민턴"
+        },
+        {
+          "en": "play",
+          "kr": "놀다, 운동 경기를 하다"
+        },
+        {
+          "en": "jump rope",
+          "kr": "줄넘기"
+        },
+        {
+          "en": "together",
+          "kr": "함께"
+        },
+        {
+          "en": "fun",
+          "kr": "재미있는"
+        },
+        {
+          "en": "sure",
+          "kr": "물론이지"
+        },
+        {
+          "en": "sorry",
+          "kr": "미안한"
+        }
+      ]
     },
     {
       "code": "4G_L05",
       "grade": 4,
       "publisher": "YBM (최희경)",
-      "name": "[YBM (최희경)] 4학년 Lesson 05 - Where Is My Bag?",
-      "words": "bag : 가방\ncap : 모자\nshoes : 신발\nglasses : 안경\nnext to : ~옆에\nbehind : ~뒤에\nfront : 앞\nunder : ~아래에\ncloset : 옷장\nsofa : 소파\nbed : 침대\ndesk : 책상"
+      "name": "[YBM (최희경)] 4학년 Lesson 05 - Where's My Bag?",
+      "words": [
+        {
+          "en": "where",
+          "kr": "어디에"
+        },
+        {
+          "en": "in",
+          "kr": "~안에"
+        },
+        {
+          "en": "on",
+          "kr": "~위에"
+        },
+        {
+          "en": "under",
+          "kr": "~아래에"
+        },
+        {
+          "en": "by",
+          "kr": "~옆에"
+        },
+        {
+          "en": "desk",
+          "kr": "책상"
+        },
+        {
+          "en": "bed",
+          "kr": "침대"
+        },
+        {
+          "en": "box",
+          "kr": "상자"
+        },
+        {
+          "en": "table",
+          "kr": "탁자"
+        },
+        {
+          "en": "chair",
+          "kr": "의자"
+        },
+        {
+          "en": "cap",
+          "kr": "모자"
+        }
+      ]
     },
     {
       "code": "4G_L06",
       "grade": 4,
       "publisher": "YBM (최희경)",
       "name": "[YBM (최희경)] 4학년 Lesson 06 - What Are You Doing?",
-      "words": "doing : 하는 중인\ncooking : 요리하는\nreading : 읽는\ndrawing : 그리는\nwatching : 보는\nsleeping : 자는\nstudying : 공부하는\nplaying : 노는\neating : 먹는\nhelping : 돕는\ncleaning : 청소하는\nwashing : 씻는"
+      "words": [
+        {
+          "en": "doing",
+          "kr": "하고 있는"
+        },
+        {
+          "en": "reading",
+          "kr": "읽고 있는"
+        },
+        {
+          "en": "drawing",
+          "kr": "그리고 있는"
+        },
+        {
+          "en": "cooking",
+          "kr": "요리하고 있는"
+        },
+        {
+          "en": "cleaning",
+          "kr": "청소하고 있는"
+        },
+        {
+          "en": "singing",
+          "kr": "노래하고 있는"
+        },
+        {
+          "en": "dancing",
+          "kr": "춤추고 있는"
+        },
+        {
+          "en": "washing",
+          "kr": "씻고 있는"
+        },
+        {
+          "en": "eating",
+          "kr": "먹고 있는"
+        },
+        {
+          "en": "sleeping",
+          "kr": "자고 있는"
+        }
+      ]
     },
     {
       "code": "4G_L07",
       "grade": 4,
       "publisher": "YBM (최희경)",
       "name": "[YBM (최희경)] 4학년 Lesson 07 - Is This Your Jacket?",
-      "words": "jacket : 재킷\numbrella : 우산\nglove : 장갑\ncoat : 외투, 코트\nshirt : 셔츠\nskirt : 치마\ndress : 원피스\nboots : 부츠\nyour : 너의\nmine : 나의 것\nhis : 그의 것\nhers : 그녀의 것"
+      "words": [
+        {
+          "en": "jacket",
+          "kr": "재킷"
+        },
+        {
+          "en": "coat",
+          "kr": "코트"
+        },
+        {
+          "en": "skirt",
+          "kr": "치마"
+        },
+        {
+          "en": "shirt",
+          "kr": "셔츠"
+        },
+        {
+          "en": "pants",
+          "kr": "바지"
+        },
+        {
+          "en": "shoes",
+          "kr": "신발"
+        },
+        {
+          "en": "socks",
+          "kr": "양말"
+        },
+        {
+          "en": "hat",
+          "kr": "모자"
+        },
+        {
+          "en": "glove",
+          "kr": "장갑"
+        },
+        {
+          "en": "your",
+          "kr": "너의"
+        },
+        {
+          "en": "my",
+          "kr": "나의"
+        }
+      ]
     },
     {
       "code": "4G_L08",
       "grade": 4,
       "publisher": "YBM (최희경)",
       "name": "[YBM (최희경)] 4학년 Lesson 08 - Do You Want Some Chicken?",
-      "words": "chicken : 닭고기, 치킨\nwater : 물\njuice : 주스\ncake : 케이크\ncookie : 쿠키\nsandwich : 샌드위치\nnoodle : 국수, 면\nfruit : 과일\nhungry : 배고픈\nthirsty : 목마른\nwant : 원하다\nfull : 배부른"
+      "words": [
+        {
+          "en": "chicken",
+          "kr": "닭고기, 치킨"
+        },
+        {
+          "en": "fish",
+          "kr": "생선"
+        },
+        {
+          "en": "milk",
+          "kr": "우유"
+        },
+        {
+          "en": "water",
+          "kr": "물"
+        },
+        {
+          "en": "juice",
+          "kr": "주스"
+        },
+        {
+          "en": "cake",
+          "kr": "케이크"
+        },
+        {
+          "en": "cookie",
+          "kr": "쿠키"
+        },
+        {
+          "en": "want",
+          "kr": "원하다"
+        },
+        {
+          "en": "some",
+          "kr": "약간의, 조금"
+        },
+        {
+          "en": "delicious",
+          "kr": "맛있는"
+        }
+      ]
     },
     {
       "code": "4G_L09",
       "grade": 4,
       "publisher": "YBM (최희경)",
       "name": "[YBM (최희경)] 4학년 Lesson 09 - What Day Is It Today?",
-      "words": "Monday : 월요일\nTuesday : 화요일\nWednesday : 수요일\nThursday : 목요일\nFriday : 금요일\nSaturday : 토요일\nSunday : 일요일\ntoday : 오늘\ntomorrow : 내일\nweekend : 주말\nclass : 수업\nday : 요일, 날"
+      "words": [
+        {
+          "en": "day",
+          "kr": "요일, 날"
+        },
+        {
+          "en": "today",
+          "kr": "오늘"
+        },
+        {
+          "en": "Monday",
+          "kr": "월요일"
+        },
+        {
+          "en": "Tuesday",
+          "kr": "화요일"
+        },
+        {
+          "en": "Wednesday",
+          "kr": "수요일"
+        },
+        {
+          "en": "Thursday",
+          "kr": "목요일"
+        },
+        {
+          "en": "Friday",
+          "kr": "금요일"
+        },
+        {
+          "en": "Saturday",
+          "kr": "토요일"
+        },
+        {
+          "en": "Sunday",
+          "kr": "일요일"
+        },
+        {
+          "en": "week",
+          "kr": "주, 일주일"
+        }
+      ]
     },
     {
       "code": "4G_L10",
       "grade": 4,
       "publisher": "YBM (최희경)",
       "name": "[YBM (최희경)] 4학년 Lesson 10 - How Much Is It?",
-      "words": "how much : 얼마\ndollar : 달러\nwon : 원\nbuy : 사다\nsell : 팔다\ncheap : 값싼\nexpensive : 비싼\nmoney : 돈\nprice : 가격\nstore : 가게, 상점\nclerk : 점원\npresent : 선물"
-    },
-    {
-      "code": "4G_L11",
-      "grade": 4,
-      "publisher": "YBM (최희경)",
-      "name": "[YBM (최희경)] 4학년 Lesson 11 - I Have a Cold",
-      "words": "cold : 감기\nfever : 열\nheadache : 두통\ntoothache : 치통\nstomachache : 복통\nmedicine : 약\ndoctor : 의사\nhospital : 병원\nrest : 휴식, 쉬다\nwarm : 따뜻한\nmatter : 문제, 일\nhealthy : 건강한"
-    },
-    {
-      "code": "4G_L12",
-      "grade": 4,
-      "publisher": "YBM (최희경)",
-      "name": "[YBM (최희경)] 4학년 Lesson 12 - How Was Your Vacation?",
-      "words": "vacation : 방학\nwent : 갔다\nvisited : 방문했다\nplayed : 놀았다\nwatched : 봤다\nhad : 가졌다\nbeach : 해변\ntrip : 여행\ngrandparents : 조부모님\nexciting : 신나는\nwonderful : 멋진\nmemory : 추억"
+      "words": [
+        {
+          "en": "much",
+          "kr": "많은"
+        },
+        {
+          "en": "hundred",
+          "kr": "백 (100)"
+        },
+        {
+          "en": "thousand",
+          "kr": "천 (1000)"
+        },
+        {
+          "en": "won",
+          "kr": "원 (화폐)"
+        },
+        {
+          "en": "dollar",
+          "kr": "달러"
+        },
+        {
+          "en": "cheap",
+          "kr": "값싼"
+        },
+        {
+          "en": "expensive",
+          "kr": "비싼"
+        },
+        {
+          "en": "buy",
+          "kr": "사다"
+        },
+        {
+          "en": "ruler",
+          "kr": "자"
+        },
+        {
+          "en": "notebook",
+          "kr": "공책"
+        }
+      ]
     },
     {
       "code": "5G_L01",
       "grade": 5,
       "publisher": "천재 (함순애)",
       "name": "[천재 (함순애)] 5학년 Lesson 01 - Where Are You From?",
-      "words": "country : 나라, 국가\nKorea : 대한민국\nCanada : 캐나다\nthe U.K. : 영국\nthe U.S.A. : 미국\nAustralia : 호주\nFrance : 프랑스\nChina : 중국\nVietnam : 베트남\nfrom : ~출신의\nworld : 세계\nwelcome : 환영하다"
+      "words": [
+        {
+          "en": "country",
+          "kr": "나라, 국가"
+        },
+        {
+          "en": "Korea",
+          "kr": "한국"
+        },
+        {
+          "en": "Canada",
+          "kr": "캐나다"
+        },
+        {
+          "en": "Vietnam",
+          "kr": "베트남"
+        },
+        {
+          "en": "France",
+          "kr": "프랑스"
+        },
+        {
+          "en": "India",
+          "kr": "인도"
+        },
+        {
+          "en": "U.S.",
+          "kr": "미국"
+        },
+        {
+          "en": "from",
+          "kr": "~출신의"
+        },
+        {
+          "en": "friend",
+          "kr": "친구"
+        },
+        {
+          "en": "cousin",
+          "kr": "사촌"
+        },
+        {
+          "en": "beautiful",
+          "kr": "아름다운"
+        }
+      ]
     },
     {
       "code": "5G_L02",
       "grade": 5,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 5학년 Lesson 02 - I'd Like a Sandwich",
-      "words": "sandwich : 샌드위치\nsalad : 샐러드\njuice : 주스\npizza : 피자\nburger : 버거\norder : 주문\nmenu : 메뉴\nlike : 원하다\neat : 먹다\ndrink : 마시다\ndessert : 디저트\ndelicious : 맛있는"
+      "name": "[천재 (함순애)] 5학년 Lesson 02 - What Are These?",
+      "words": [
+        {
+          "en": "these",
+          "kr": "이것들"
+        },
+        {
+          "en": "those",
+          "kr": "저것들"
+        },
+        {
+          "en": "glasses",
+          "kr": "안경"
+        },
+        {
+          "en": "gloves",
+          "kr": "장갑"
+        },
+        {
+          "en": "scissors",
+          "kr": "가위"
+        },
+        {
+          "en": "pants",
+          "kr": "바지"
+        },
+        {
+          "en": "shoes",
+          "kr": "신발"
+        },
+        {
+          "en": "socks",
+          "kr": "양말"
+        },
+        {
+          "en": "heavy",
+          "kr": "무거운"
+        },
+        {
+          "en": "light",
+          "kr": "가벼운"
+        }
+      ]
     },
     {
       "code": "5G_L03",
       "grade": 5,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 5학년 Lesson 03 - May I Sit Here?",
-      "words": "sit : 앉다\nuse : 사용하다\ntake : 찍다, 가져가다\nopen : 열다\nborrow : 빌리다\nbring : 가져오다\nwash : 씻다\nmay : ~해도 되다\ncourse : 물론\nproblem : 문제\ngo ahead : 어서 하렴\nhere : 여기"
+      "name": "[천재 (함순애)] 5학년 Lesson 03 - Can I Take Pictures?",
+      "words": [
+        {
+          "en": "take",
+          "kr": "찍다, 취하다"
+        },
+        {
+          "en": "picture",
+          "kr": "사진, 그림"
+        },
+        {
+          "en": "sit",
+          "kr": "앉다"
+        },
+        {
+          "en": "touch",
+          "kr": "만지다"
+        },
+        {
+          "en": "feed",
+          "kr": "먹이를 주다"
+        },
+        {
+          "en": "pet",
+          "kr": "애완동물"
+        },
+        {
+          "en": "museum",
+          "kr": "박물관"
+        },
+        {
+          "en": "camera",
+          "kr": "카메라"
+        },
+        {
+          "en": "sorry",
+          "kr": "미안한"
+        },
+        {
+          "en": "sure",
+          "kr": "물론"
+        }
+      ]
     },
     {
       "code": "5G_L04",
       "grade": 5,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 5학년 Lesson 04 - Whose Sock Is This?",
-      "words": "whose : 누구의\nsock : 양말\nglove : 장갑\nwatch : 손목시계\ntowel : 수건\nbrush : 솔, 빗\ncap : 모자\numbrella : 우산\nmine : 나의 것\nyours : 너의 것\nhis : 그의 것\nhers : 그녀의 것"
+      "name": "[천재 (함순애)] 5학년 Lesson 04 - Whose Pen Is This?",
+      "words": [
+        {
+          "en": "whose",
+          "kr": "누구의"
+        },
+        {
+          "en": "pen",
+          "kr": "펜"
+        },
+        {
+          "en": "brush",
+          "kr": "붓"
+        },
+        {
+          "en": "umbrella",
+          "kr": "우산"
+        },
+        {
+          "en": "watch",
+          "kr": "손목시계"
+        },
+        {
+          "en": "cap",
+          "kr": "모자"
+        },
+        {
+          "en": "mine",
+          "kr": "나의 것"
+        },
+        {
+          "en": "yours",
+          "kr": "너의 것"
+        },
+        {
+          "en": "his",
+          "kr": "그의 것"
+        },
+        {
+          "en": "hers",
+          "kr": "그녀의 것"
+        }
+      ]
     },
     {
       "code": "5G_L05",
       "grade": 5,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 5학년 Lesson 05 - What's Your Favorite Subject?",
-      "words": "subject : 과목\nmath : 수학\nscience : 과학\nmusic : 음악\nart : 미술\nEnglish : 영어\nPE : 체육\nKorean : 국어\nhistory : 역사\nwhy : 왜\nbecause : ~때문에\ninteresting : 흥미로운"
+      "name": "[천재 (함순애)] 5학년 Lesson 05 - Let's Go Shopping",
+      "words": [
+        {
+          "en": "shopping",
+          "kr": "쇼핑"
+        },
+        {
+          "en": "buy",
+          "kr": "사다"
+        },
+        {
+          "en": "store",
+          "kr": "가게, 상점"
+        },
+        {
+          "en": "market",
+          "kr": "시장"
+        },
+        {
+          "en": "shirt",
+          "kr": "셔츠"
+        },
+        {
+          "en": "hat",
+          "kr": "모자"
+        },
+        {
+          "en": "jacket",
+          "kr": "재킷"
+        },
+        {
+          "en": "price",
+          "kr": "가격"
+        },
+        {
+          "en": "cheap",
+          "kr": "값싼"
+        },
+        {
+          "en": "expensive",
+          "kr": "비싼"
+        }
+      ]
     },
     {
       "code": "5G_L06",
       "grade": 5,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 5학년 Lesson 06 - Where Is the Ice Cream Store?",
-      "words": "bank : 은행\nbakery : 빵집\nbookstore : 서점\nmuseum : 박물관\npost office : 우체국\nstraight : 곧장, 똑바로\nturn : 돌다\nblock : 블록, 구역\nleft : 왼쪽\nright : 오른쪽\nnext to : ~옆에\nbetween : ~사이에"
+      "name": "[천재 (함순애)] 5학년 Lesson 06 - What Will You Do This Summer?",
+      "words": [
+        {
+          "en": "summer",
+          "kr": "여름"
+        },
+        {
+          "en": "vacation",
+          "kr": "방학, 휴가"
+        },
+        {
+          "en": "travel",
+          "kr": "여행하다"
+        },
+        {
+          "en": "visit",
+          "kr": "방문하다"
+        },
+        {
+          "en": "grandparents",
+          "kr": "조부모님"
+        },
+        {
+          "en": "camp",
+          "kr": "캠프하다"
+        },
+        {
+          "en": "swim",
+          "kr": "수영하다"
+        },
+        {
+          "en": "beach",
+          "kr": "해변"
+        },
+        {
+          "en": "mountain",
+          "kr": "산"
+        },
+        {
+          "en": "plan",
+          "kr": "계획"
+        }
+      ]
     },
     {
       "code": "5G_L07",
       "grade": 5,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 5학년 Lesson 07 - I Visited My Uncle",
-      "words": "visited : 방문했다\nwent : 갔다\nate : 먹었다\nsaw : 보았다\nrode : 탔다\nswam : 수영했다\nmade : 만들었다\nenjoyed : 즐겼다\nuncle : 삼촌, 이모부\nisland : 섬\nfarm : 농장\ndelicious : 맛있는"
+      "name": "[천재 (함순애)] 5학년 Lesson 07 - I Went to a Watermelon Festival",
+      "words": [
+        {
+          "en": "went",
+          "kr": "갔다 (go의 과거)"
+        },
+        {
+          "en": "saw",
+          "kr": "보았다 (see의 과거)"
+        },
+        {
+          "en": "ate",
+          "kr": "먹었다 (eat의 과거)"
+        },
+        {
+          "en": "had",
+          "kr": "가졌다 (have의 과거)"
+        },
+        {
+          "en": "festival",
+          "kr": "축제"
+        },
+        {
+          "en": "watermelon",
+          "kr": "수박"
+        },
+        {
+          "en": "delicious",
+          "kr": "맛있는"
+        },
+        {
+          "en": "yesterday",
+          "kr": "어제"
+        },
+        {
+          "en": "weekend",
+          "kr": "주말"
+        },
+        {
+          "en": "exciting",
+          "kr": "신나는"
+        }
+      ]
     },
     {
       "code": "5G_L08",
       "grade": 5,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 5학년 Lesson 08 - I'm Taller Than You",
-      "words": "taller : 더 키가 큰\nshorter : 더 키가 작은\nfaster : 더 빠른\nslower : 더 느린\nbigger : 더 큰\nsmaller : 더 작은\nheavier : 더 무거운\nlighter : 더 가벼운\nthan : ~보다\ncheetah : 치타\ngiraffe : 기린\ncompare : 비교하다"
+      "name": "[천재 (함순애)] 5학년 Lesson 08 - What Would You Like?",
+      "words": [
+        {
+          "en": "order",
+          "kr": "주문하다"
+        },
+        {
+          "en": "pizza",
+          "kr": "피자"
+        },
+        {
+          "en": "burger",
+          "kr": "버거"
+        },
+        {
+          "en": "salad",
+          "kr": "샐러드"
+        },
+        {
+          "en": "juice",
+          "kr": "주스"
+        },
+        {
+          "en": "water",
+          "kr": "물"
+        },
+        {
+          "en": "soup",
+          "kr": "수프"
+        },
+        {
+          "en": "sandwich",
+          "kr": "샌드위치"
+        },
+        {
+          "en": "hungry",
+          "kr": "배고픈"
+        },
+        {
+          "en": "thirsty",
+          "kr": "목마른"
+        }
+      ]
     },
     {
       "code": "5G_L09",
       "grade": 5,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 5학년 Lesson 09 - What Do You Think?",
-      "words": "think : 생각하다\nopinion : 의견\nagree : 동의하다\ndisagree : 동의하지 않다\nidea : 생각, 아이디어\nwonderful : 멋진\ndifficult : 어려운\neasy : 쉬운\nboring : 지루한\nimportant : 중요한\nshare : 나누다\ntogether : 함께"
+      "name": "[천재 (함순애)] 5학년 Lesson 09 - They Are Twenty Thousand Won",
+      "words": [
+        {
+          "en": "twenty",
+          "kr": "이십 (20)"
+        },
+        {
+          "en": "thirty",
+          "kr": "삼십 (30)"
+        },
+        {
+          "en": "forty",
+          "kr": "사십 (40)"
+        },
+        {
+          "en": "fifty",
+          "kr": "오십 (50)"
+        },
+        {
+          "en": "hundred",
+          "kr": "백 (100)"
+        },
+        {
+          "en": "thousand",
+          "kr": "천 (1000)"
+        },
+        {
+          "en": "won",
+          "kr": "원 (화폐)"
+        },
+        {
+          "en": "pants",
+          "kr": "바지"
+        },
+        {
+          "en": "shoes",
+          "kr": "신발"
+        },
+        {
+          "en": "gloves",
+          "kr": "장갑"
+        }
+      ]
     },
     {
       "code": "5G_L10",
       "grade": 5,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 5학년 Lesson 10 - Who Wrote the Book?",
-      "words": "wrote : 썼다\npainted : 그렸다\ninvented : 발명했다\nbuilt : 지었다\ndiscovered : 발견했다\nauthor : 작가\nscientist : 과학자\nking : 왕\nbook : 책\npainting : 그림\nairplane : 비행기\nhistory : 역사"
+      "name": "[천재 (함순애)] 5학년 Lesson 10 - What Time Do You Get Up?",
+      "words": [
+        {
+          "en": "get up",
+          "kr": "기상하다, 일어나다"
+        },
+        {
+          "en": "wash",
+          "kr": "씻다"
+        },
+        {
+          "en": "breakfast",
+          "kr": "아침 식사"
+        },
+        {
+          "en": "school",
+          "kr": "학교"
+        },
+        {
+          "en": "lunch",
+          "kr": "점심 식사"
+        },
+        {
+          "en": "homework",
+          "kr": "숙제"
+        },
+        {
+          "en": "dinner",
+          "kr": "저녁 식사"
+        },
+        {
+          "en": "bed",
+          "kr": "잠자리, 침대"
+        },
+        {
+          "en": "daily",
+          "kr": "매일의, 일상의"
+        },
+        {
+          "en": "routine",
+          "kr": "일과"
+        }
+      ]
     },
     {
       "code": "5G_L11",
       "grade": 5,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 5학년 Lesson 11 - We Should Save the Earth",
-      "words": "earth : 지구\nprotect : 보호하다\nrecycle : 재활용하다\nsave : 절약하다, 구하다\nturn off : 끄다\nwaste : 낭비하다\nplastic : 플라스틱\nenergy : 에너지\nnature : 자연\nshould : ~해야 한다\nplanet : 행성, 지구\nclean : 깨끗한, 청소하다"
+      "name": "[천재 (함순애)] 5학년 Lesson 11 - My Favorite Subject Is Math",
+      "words": [
+        {
+          "en": "subject",
+          "kr": "과목"
+        },
+        {
+          "en": "favorite",
+          "kr": "가장 좋아하는"
+        },
+        {
+          "en": "math",
+          "kr": "수학"
+        },
+        {
+          "en": "science",
+          "kr": "과학"
+        },
+        {
+          "en": "English",
+          "kr": "영어"
+        },
+        {
+          "en": "music",
+          "kr": "음악"
+        },
+        {
+          "en": "art",
+          "kr": "미술"
+        },
+        {
+          "en": "P.E.",
+          "kr": "체육"
+        },
+        {
+          "en": "history",
+          "kr": "역사"
+        },
+        {
+          "en": "Korean",
+          "kr": "국어"
+        }
+      ]
     },
     {
       "code": "5G_L12",
       "grade": 5,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 5학년 Lesson 12 - What Are You Going to Do This Weekend?",
-      "words": "going to : ~할 예정이다\nplan : 계획\nweekend : 주말\ncamping : 캠핑\nmovie : 영화\nconcert : 음악회, 콘서트\nlibrary : 도서관\npicnic : 소풍\ntomorrow : 내일\nafternoon : 오후\nstay : 머무르다\ninvite : 초대하다"
+      "name": "[천재 (함순애)] 5학년 Lesson 12 - What Do You Want to Be?",
+      "words": [
+        {
+          "en": "future",
+          "kr": "미래"
+        },
+        {
+          "en": "job",
+          "kr": "직업"
+        },
+        {
+          "en": "doctor",
+          "kr": "의사"
+        },
+        {
+          "en": "pilot",
+          "kr": "조종사"
+        },
+        {
+          "en": "cook",
+          "kr": "요리사"
+        },
+        {
+          "en": "scientist",
+          "kr": "과학자"
+        },
+        {
+          "en": "artist",
+          "kr": "화가, 예술가"
+        },
+        {
+          "en": "police officer",
+          "kr": "경찰관"
+        },
+        {
+          "en": "firefighter",
+          "kr": "소방관"
+        },
+        {
+          "en": "teacher",
+          "kr": "선생님"
+        }
+      ]
     },
     {
       "code": "6G_L01",
       "grade": 6,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 6학년 Lesson 01 - What grade are you in?",
-      "words": "first : 첫 번째의\nsecond : 두 번째의\nthird : 세 번째의\nfourth : 네 번째의\nfifth : 다섯 번째의\nsixth : 여섯 번째의\ngrade : 학년\nspell : 철자를 쓰다\njoin : 가입하다\nclub : 동아리\ndance : 춤추다, 춤\ndraw : 그리다\nplay : 놀다, 연주하다\nlisten : 듣다\nread : 읽다\nride : (자전거 등을) 타다"
+      "name": "[천재 (함순애)] 6학년 Lesson 01 - What Grade Are You In?",
+      "words": [
+        {
+          "en": "grade",
+          "kr": "학년"
+        },
+        {
+          "en": "first",
+          "kr": "첫 번째의 (1번째)"
+        },
+        {
+          "en": "second",
+          "kr": "두 번째의 (2번째)"
+        },
+        {
+          "en": "third",
+          "kr": "세 번째의 (3번째)"
+        },
+        {
+          "en": "fourth",
+          "kr": "네 번째의 (4번째)"
+        },
+        {
+          "en": "fifth",
+          "kr": "다섯 번째의 (5번째)"
+        },
+        {
+          "en": "sixth",
+          "kr": "여섯 번째의 (6번째)"
+        },
+        {
+          "en": "spell",
+          "kr": "철자를 말하다"
+        },
+        {
+          "en": "club",
+          "kr": "동아리"
+        },
+        {
+          "en": "join",
+          "kr": "가입하다, 함께하다"
+        }
+      ]
     },
     {
       "code": "6G_L02",
       "grade": 6,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 6학년 Lesson 02 - What season do you like?",
-      "words": "season : 계절\nspring : 봄\nsummer : 여름\nfall : 가을\nwinter : 겨울\nbeautiful : 아름다운\nflower : 꽃\ncold : 추운\nwarm : 따뜻한\ndelicious : 맛있는\nalso : 또한\ncolorful : 다채로운\nswim : 수영하다\nfield trip : 현장학습\nclear : 맑은\nbright : 밝은"
+      "name": "[천재 (함순애)] 6학년 Lesson 02 - What Season Do You Like?",
+      "words": [
+        {
+          "en": "season",
+          "kr": "계절"
+        },
+        {
+          "en": "spring",
+          "kr": "봄"
+        },
+        {
+          "en": "summer",
+          "kr": "여름"
+        },
+        {
+          "en": "fall",
+          "kr": "가을"
+        },
+        {
+          "en": "winter",
+          "kr": "겨울"
+        },
+        {
+          "en": "warm",
+          "kr": "따뜻한"
+        },
+        {
+          "en": "cool",
+          "kr": "시원한"
+        },
+        {
+          "en": "flower",
+          "kr": "꽃"
+        },
+        {
+          "en": "swim",
+          "kr": "수영하다"
+        },
+        {
+          "en": "skate",
+          "kr": "스케이트 타다"
+        }
+      ]
     },
     {
       "code": "6G_L03",
       "grade": 6,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 6학년 Lesson 03 - When is your birthday?",
-      "words": "campaign : 홍보활동\nearth : 지구\npaper : 종이\nposter : 포스터\nsave : 구하다\nshirt : 셔츠\nturn off : 끄다\nwhen : 언제\nworld : 세계"
+      "name": "[천재 (함순애)] 6학년 Lesson 03 - When Is Your Birthday?",
+      "words": [
+        {
+          "en": "birthday",
+          "kr": "생일"
+        },
+        {
+          "en": "January",
+          "kr": "1월"
+        },
+        {
+          "en": "February",
+          "kr": "2월"
+        },
+        {
+          "en": "March",
+          "kr": "3월"
+        },
+        {
+          "en": "April",
+          "kr": "4월"
+        },
+        {
+          "en": "May",
+          "kr": "5월"
+        },
+        {
+          "en": "June",
+          "kr": "6월"
+        },
+        {
+          "en": "July",
+          "kr": "7월"
+        },
+        {
+          "en": "August",
+          "kr": "8월"
+        },
+        {
+          "en": "September",
+          "kr": "9월"
+        },
+        {
+          "en": "October",
+          "kr": "10월"
+        },
+        {
+          "en": "November",
+          "kr": "11월"
+        },
+        {
+          "en": "December",
+          "kr": "12월"
+        }
+      ]
     },
     {
       "code": "6G_L04",
       "grade": 6,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 6학년 Lesson 04 - Why are you happy?",
-      "words": "because : ~ 때문에\nbelt : 띠\nbirdhouse : 새집, 새장\nbreak : 부수다, 깨다\ncongratulations : 축하\ntest : 시험\nwhy : 왜\nworry : 걱정하다\nwrong : 나쁜, 틀린"
+      "name": "[천재 (함순애)] 6학년 Lesson 04 - Why Are You Happy?",
+      "words": [
+        {
+          "en": "happy",
+          "kr": "행복한, 기쁜"
+        },
+        {
+          "en": "sad",
+          "kr": "슬픈"
+        },
+        {
+          "en": "excited",
+          "kr": "신난, 들뜬"
+        },
+        {
+          "en": "worried",
+          "kr": "걱정스러운"
+        },
+        {
+          "en": "angry",
+          "kr": "화난"
+        },
+        {
+          "en": "win",
+          "kr": "이기다"
+        },
+        {
+          "en": "lose",
+          "kr": "잃다, 지다"
+        },
+        {
+          "en": "prize",
+          "kr": "상, 상품"
+        },
+        {
+          "en": "test",
+          "kr": "시험"
+        },
+        {
+          "en": "because",
+          "kr": "~때문에"
+        }
+      ]
     },
     {
       "code": "6G_L05",
       "grade": 6,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 6학년 Lesson 05 - Where is the post office?",
-      "words": "bank : 은행\nblock : 구역\nhospital : 병원\nhungry : 배고픈\nrestaurant : 식당\nleft : 왼쪽\nrestroom : 화장실\nstop : 정류장\nstore : 가게\nstraight : 똑바로, 일직선으로\ntown : 마을"
+      "name": "[천재 (함순애)] 6학년 Lesson 05 - Where Is ABC Library?",
+      "words": [
+        {
+          "en": "library",
+          "kr": "도서관"
+        },
+        {
+          "en": "bank",
+          "kr": "은행"
+        },
+        {
+          "en": "hospital",
+          "kr": "병원"
+        },
+        {
+          "en": "post office",
+          "kr": "우체국"
+        },
+        {
+          "en": "museum",
+          "kr": "박물관"
+        },
+        {
+          "en": "straight",
+          "kr": "곧장, 직진하여"
+        },
+        {
+          "en": "left",
+          "kr": "왼쪽"
+        },
+        {
+          "en": "right",
+          "kr": "오른쪽"
+        },
+        {
+          "en": "turn",
+          "kr": "돌다"
+        },
+        {
+          "en": "block",
+          "kr": "블록, 구역"
+        }
+      ]
     },
     {
       "code": "6G_L06",
       "grade": 6,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 6학년 Lesson 06 - What does he look like?",
-      "words": "aunt : 고모\ndaughter : 딸\ndress : 드레스\neye : 눈\nhair : 머리카락\nlong : 긴\nof : …의\nsame : 같은\nsand : 모래\nshort : 짧은"
+      "name": "[천재 (함순애)] 6학년 Lesson 06 - He Has Blue Eyes",
+      "words": [
+        {
+          "en": "tall",
+          "kr": "키가 큰"
+        },
+        {
+          "en": "short",
+          "kr": "키가 작은"
+        },
+        {
+          "en": "hair",
+          "kr": "머리카락"
+        },
+        {
+          "en": "straight",
+          "kr": "직모의, 곧은"
+        },
+        {
+          "en": "curly",
+          "kr": "곱슬곱슬한"
+        },
+        {
+          "en": "long",
+          "kr": "긴"
+        },
+        {
+          "en": "eyes",
+          "kr": "눈"
+        },
+        {
+          "en": "glasses",
+          "kr": "안경"
+        },
+        {
+          "en": "wear",
+          "kr": "착용하다, 입다"
+        },
+        {
+          "en": "look like",
+          "kr": "~처럼 보이다"
+        }
+      ]
     },
     {
       "code": "6G_L07",
       "grade": 6,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 6학년 Lesson 07 - Can you come to my party?",
-      "words": "after : ~후에\nbiscuit : 비스킷\nlaser : 레이저\nlight : 빛\nnumber : 숫자\nsoft drink : 청량음료\ntell : 말하다"
+      "name": "[천재 (함순애)] 6학년 Lesson 07 - Can You Come to the Movie Festival?",
+      "words": [
+        {
+          "en": "invite",
+          "kr": "초대하다"
+        },
+        {
+          "en": "party",
+          "kr": "파티"
+        },
+        {
+          "en": "festival",
+          "kr": "축제"
+        },
+        {
+          "en": "movie",
+          "kr": "영화"
+        },
+        {
+          "en": "concert",
+          "kr": "음악회, 콘서트"
+        },
+        {
+          "en": "busy",
+          "kr": "바쁜"
+        },
+        {
+          "en": "free",
+          "kr": "한가한, 자유로운"
+        },
+        {
+          "en": "sure",
+          "kr": "물론"
+        },
+        {
+          "en": "sorry",
+          "kr": "미안한"
+        },
+        {
+          "en": "join",
+          "kr": "함께하다"
+        }
+      ]
     },
     {
       "code": "6G_L08",
       "grade": 6,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 6학년 Lesson 08 - I'm stronger than you.",
-      "words": "always : 항상, 언제나\nbaby : 아기\ncatch : 잡다\nclock : 시계\ndribble : 공을 몰다\nfast : 빠른\ngiraffe : 기린\ngive : 주다\ngoal : 득점\nheavy : 무거운\nrace : 경주\nside : 쪽\nstrong : 힘 센\nthan : ~보다\ntower : 탑\nwin : 이기다"
+      "name": "[천재 (함순애)] 6학년 Lesson 08 - It's Taller Than the Tree",
+      "words": [
+        {
+          "en": "taller",
+          "kr": "더 키가 큰"
+        },
+        {
+          "en": "smaller",
+          "kr": "더 작은"
+        },
+        {
+          "en": "bigger",
+          "kr": "더 큰"
+        },
+        {
+          "en": "faster",
+          "kr": "더 빠른"
+        },
+        {
+          "en": "slower",
+          "kr": "더 느린"
+        },
+        {
+          "en": "stronger",
+          "kr": "더 힘이 센"
+        },
+        {
+          "en": "heavier",
+          "kr": "더 무거운"
+        },
+        {
+          "en": "than",
+          "kr": "~보다"
+        },
+        {
+          "en": "tower",
+          "kr": "탑"
+        },
+        {
+          "en": "tree",
+          "kr": "나무"
+        }
+      ]
     },
     {
       "code": "6G_L09",
       "grade": 6,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 6학년 Lesson 09 - What will you do this weekend?",
-      "words": "any : 어떤\nchildren : 아이들\nforest : 숲\nhamburger : 햄버거\nplan : 계획\nprogram : 프로그램\nroom : 방\nstay : 머무르다\ntent : 텐트\nvillage : 마을\nzoo : 동물원"
+      "name": "[천재 (함순애)] 6학년 Lesson 09 - What Are You Going to Do?",
+      "words": [
+        {
+          "en": "plan",
+          "kr": "계획"
+        },
+        {
+          "en": "future",
+          "kr": "미래"
+        },
+        {
+          "en": "tomorrow",
+          "kr": "내일"
+        },
+        {
+          "en": "weekend",
+          "kr": "주말"
+        },
+        {
+          "en": "bake",
+          "kr": "굽다"
+        },
+        {
+          "en": "cookies",
+          "kr": "쿠키"
+        },
+        {
+          "en": "ride",
+          "kr": "타다"
+        },
+        {
+          "en": "bike",
+          "kr": "자전거"
+        },
+        {
+          "en": "visit",
+          "kr": "방문하다"
+        },
+        {
+          "en": "museum",
+          "kr": "박물관"
+        }
+      ]
     },
     {
       "code": "6G_L10",
       "grade": 6,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 6학년 Lesson 10 - How often do you exercise?",
-      "words": "shirt : 셔츠\npants : 바지\nshoes : 신발\ndollar : 달러\ncent : 센트\ncheap : 값싼\nexpensive : 비싼\nbuy : 사다\nsell : 팔다\nmoney : 돈\nmarket : 시장\npresent : 선물"
+      "name": "[천재 (함순애)] 6학년 Lesson 10 - How Often Do You Eat Vegetables?",
+      "words": [
+        {
+          "en": "often",
+          "kr": "자주, 종종"
+        },
+        {
+          "en": "always",
+          "kr": "항상"
+        },
+        {
+          "en": "usually",
+          "kr": "보통, 대개"
+        },
+        {
+          "en": "sometimes",
+          "kr": "때때로"
+        },
+        {
+          "en": "never",
+          "kr": "결코 ~않다"
+        },
+        {
+          "en": "once",
+          "kr": "한 번"
+        },
+        {
+          "en": "twice",
+          "kr": "두 번"
+        },
+        {
+          "en": "exercise",
+          "kr": "운동하다"
+        },
+        {
+          "en": "vegetable",
+          "kr": "채소"
+        },
+        {
+          "en": "healthy",
+          "kr": "건강한"
+        }
+      ]
     },
     {
       "code": "6G_L11",
       "grade": 6,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 6학년 Lesson 11 - Do you know anything about jegichagi?",
-      "words": "headache : 두통, 머리 아픔\nstomachache : 복통, 배 아픔\ntoothache : 치통, 이 아픔\nfever : 열\ncold : 감기, 추운\nmatter : 문제, 일\ndoctor : 의사\nhospital : 병원\nmedicine : 약\nrest : 휴식, 쉬다\nwarm : 따뜻한\nhealthy : 건강한"
+      "name": "[천재 (함순애)] 6학년 Lesson 11 - Do You Know Anything About Tuho?",
+      "words": [
+        {
+          "en": "traditional",
+          "kr": "전통적인"
+        },
+        {
+          "en": "game",
+          "kr": "놀이, 게임"
+        },
+        {
+          "en": "Tuho",
+          "kr": "투호"
+        },
+        {
+          "en": "Jegichagi",
+          "kr": "제기차기"
+        },
+        {
+          "en": "Yutnori",
+          "kr": "윷놀이"
+        },
+        {
+          "en": "culture",
+          "kr": "문화"
+        },
+        {
+          "en": "throw",
+          "kr": "던지다"
+        },
+        {
+          "en": "arrow",
+          "kr": "화살"
+        },
+        {
+          "en": "jar",
+          "kr": "항아리"
+        },
+        {
+          "en": "rules",
+          "kr": "규칙"
+        }
+      ]
     },
     {
       "code": "6G_L12",
       "grade": 6,
       "publisher": "천재 (함순애)",
-      "name": "[천재 (함순애)] 6학년 Lesson 12 - Did you paint the wall?",
-      "words": "idea : 생각, 아이디어\ntogether : 함께\npark : 공원\nmovie : 영화\nsound : 들리다\nwonderful : 멋진\nbadminton : 배드민턴\nafternoon : 오후\ntomorrow : 내일\nweekend : 주말\nbusy : 바쁜\nfinish : 끝내다"
+      "name": "[천재 (함순애)] 6학년 Lesson 12 - We Made a Class Album",
+      "words": [
+        {
+          "en": "made",
+          "kr": "만들었다 (make의 과거)"
+        },
+        {
+          "en": "album",
+          "kr": "앨범"
+        },
+        {
+          "en": "memory",
+          "kr": "추억, 기억"
+        },
+        {
+          "en": "graduation",
+          "kr": "졸업"
+        },
+        {
+          "en": "special",
+          "kr": "특별한"
+        },
+        {
+          "en": "remember",
+          "kr": "기억하다"
+        },
+        {
+          "en": "painted",
+          "kr": "칠했다"
+        },
+        {
+          "en": "helped",
+          "kr": "도왔다"
+        },
+        {
+          "en": "cleaned",
+          "kr": "청소했다"
+        },
+        {
+          "en": "wonderful",
+          "kr": "멋진"
+        }
+      ]
     }
   ]
 }

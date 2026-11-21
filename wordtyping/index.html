@@ -12,7 +12,7 @@
     <!-- 와우리말 공통 통합 테마 및 내비게이션 -->
     <link rel="stylesheet" href="../common/waurimal-theme.css">
     <script src="../common/waurimal-nav.js"></script>
-    <script src="../common/curriculum.js?v=20261121_full48_v5"></script>
+    <script src="../common/curriculum.js?v=20261121_authentic44_v6"></script>
     <script src="../common/firebase-config.js?v=20261111_db_restore"></script>
 
     <!-- Firebase SDK (v10 compat) -->
@@ -1862,7 +1862,7 @@
         <div class="card" style="padding: 1.25rem 1.4rem;">
             <div class="ct" style="margin-bottom: 0.75rem; font-size: 1.05rem; display:flex; justify-content:space-between; align-items:center;">
                 <span><i class="fas fa-layer-group"></i> 학습할 학년과 단원을 선택하세요</span>
-                <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">초등 3~6학년 48개 전 단원</span>
+                <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">초등 3~6학년 44개 전 단원 완비</span>
             </div>
 
             <!-- 학년 선택 필터 탭 (3, 4학년: YBM 최희경 / 5, 6학년: 천재 함순애) -->
@@ -2462,20 +2462,24 @@ function renderHallOfFame() {
     }).join('');
 }
 
-// ── 데이터 로딩 (WaurimalCurriculum 48단원 엄격 연동 -> config.json -> 백업) ──
-function validate48Lessons(arr) {
-    if (!Array.isArray(arr) || arr.length !== 48) return false;
-    return [3, 4, 5, 6].every(g => arr.filter(l => Number(l.grade) === g).length === 12);
+// ── 데이터 로딩 (WaurimalCurriculum 44단원 엄격 연동 -> config.json -> 백업) ──
+function validateAuthenticLessons(arr) {
+    if (!Array.isArray(arr) || arr.length !== 44) return false;
+    const g3 = arr.filter(l => Number(l.grade) === 3).length;
+    const g4 = arr.filter(l => Number(l.grade) === 4).length;
+    const g5 = arr.filter(l => Number(l.grade) === 5).length;
+    const g6 = arr.filter(l => Number(l.grade) === 6).length;
+    return g3 === 10 && g4 === 10 && g5 === 12 && g6 === 12;
 }
 
 async function initAppConfig() {
     let loaded = false;
 
-    // 1) WaurimalCurriculum (정규 공통 교과과정 48단원) 최우선 자동 연동
+    // 1) WaurimalCurriculum (정규 공통 교과과정 44단원) 최우선 자동 연동
     if (window.WaurimalCurriculum && typeof window.WaurimalCurriculum.getLessons === 'function') {
         try {
             const cLessons = window.WaurimalCurriculum.getLessons();
-            if (validate48Lessons(cLessons)) {
+            if (validateAuthenticLessons(cLessons)) {
                 lessons = cLessons.map(l => ({
                     code: l.code,
                     grade: Number(l.grade),
@@ -2485,7 +2489,7 @@ async function initAppConfig() {
                 }));
                 isConfigLoaded = true;
                 loaded = true;
-                console.log("[wordtyping] WaurimalCurriculum 48개 단원 연동 완료");
+                console.log("[wordtyping] WaurimalCurriculum 44개 단원 연동 완료");
             }
         } catch(e) {
             console.warn("[wordtyping] WaurimalCurriculum 연동 오류:", e);
@@ -2499,7 +2503,7 @@ async function initAppConfig() {
             if (res.ok) {
                 const data = await res.json();
                 globalConfig = data;
-                if (validate48Lessons(data.lessons)) {
+                if (validateAuthenticLessons(data.lessons)) {
                     lessons = data.lessons.map(l => ({
                         code: l.code,
                         grade: Number(l.grade),
@@ -2520,7 +2524,7 @@ async function initAppConfig() {
     }
 
     // 3) 만약 로드에 실패했거나 불완전한 경우 WaurimalCurriculum 기본값 강제 복구
-    if (!validate48Lessons(lessons)) {
+    if (!validateAuthenticLessons(lessons)) {
         if (window.WaurimalCurriculum && Array.isArray(window.WaurimalCurriculum.defaultLessons)) {
             lessons = window.WaurimalCurriculum.defaultLessons.map(l => ({
                 code: l.code,
@@ -3186,12 +3190,23 @@ async function reloadTeacherScores() {
 let currentStudentGrade = 6;
 let currentStudentSemester = 'all'; // 'all', 'sem1', 'sem2'
 
+function updateSemesterTabLabels(grade) {
+    const is10 = (Number(grade) <= 4);
+    const btnAll = document.querySelector('.wt-sem-tab[data-sem="all"]');
+    const btnSem1 = document.querySelector('.wt-sem-tab[data-sem="sem1"]');
+    const btnSem2 = document.querySelector('.wt-sem-tab[data-sem="sem2"]');
+    if (btnAll) btnAll.textContent = is10 ? '전체 (1~10단원)' : '전체 (1~12단원)';
+    if (btnSem1) btnSem1.textContent = is10 ? '1학기 (1~5단원)' : '1학기 (1~6단원)';
+    if (btnSem2) btnSem2.textContent = is10 ? '2학기 (6~10단원)' : '2학기 (7~12단원)';
+}
+
 function filterWordtypingGrade(grade) {
     currentStudentGrade = Number(grade) || 6;
     document.querySelectorAll('.wt-grade-tab').forEach(tab => {
         const g = Number(tab.getAttribute('data-grade'));
         tab.classList.toggle('active', g === currentStudentGrade);
     });
+    updateSemesterTabLabels(currentStudentGrade);
     renderStudentLessons(currentStudentGrade, currentStudentSemester);
 }
 
@@ -3209,10 +3224,10 @@ function renderStudentLessons(grade = currentStudentGrade, semester = currentStu
     if (!grid) return;
 
     // 만약 lessons가 아직 로드되지 않았거나 불완전하면 강제 재연동 시도
-    if (!lessons || lessons.length < 48) {
+    if (!lessons || lessons.length < 44) {
         if (window.WaurimalCurriculum && typeof window.WaurimalCurriculum.getLessons === 'function') {
             const cl = window.WaurimalCurriculum.getLessons();
-            if (Array.isArray(cl) && cl.length === 48) {
+            if (Array.isArray(cl) && cl.length === 44) {
                 lessons = cl.map(l => ({
                     code: l.code,
                     grade: Number(l.grade),
@@ -3231,18 +3246,19 @@ function renderStudentLessons(grade = currentStudentGrade, semester = currentStu
         return false;
     });
 
-    // 학기 필터링 (1~6단원: 1학기, 7~12단원: 2학기)
+    // 학기 필터링 (3,4학년: 1~5단원 1학기, 6~10단원 2학기 / 5,6학년: 1~6단원 1학기, 7~12단원 2학기)
+    const maxSem1 = (Number(grade) <= 4) ? 5 : 6;
     if (semester === 'sem1') {
         gradeLessons = gradeLessons.filter(l => {
             const m = l.code.match(/_L?(\d+)$/) || (l.name && l.name.match(/Lesson\s*(\d+)/i));
             const num = m ? parseInt(m[1], 10) : 1;
-            return num <= 6;
+            return num <= maxSem1;
         });
     } else if (semester === 'sem2') {
         gradeLessons = gradeLessons.filter(l => {
             const m = l.code.match(/_L?(\d+)$/) || (l.name && l.name.match(/Lesson\s*(\d+)/i));
             const num = m ? parseInt(m[1], 10) : 1;
-            return num >= 7;
+            return num > maxSem1;
         });
     }
 
@@ -3258,7 +3274,7 @@ function renderStudentLessons(grade = currentStudentGrade, semester = currentStu
         const m = l.code.match(/_L?(\d+)$/) || (l.name && l.name.match(/Lesson\s*(\d+)/i));
         const unitNum = m ? parseInt(m[1], 10) : 1;
         const unitNumStr = `${unitNum}단원`;
-        const semStr = unitNum <= 6 ? '1학기' : '2학기';
+        const semStr = unitNum <= maxSem1 ? '1학기' : '2학기';
 
         // 단원 영어 명칭 추출 (ex: "Lesson 01 - Hi, I'm Sena" -> "Hi, I'm Sena")
         let displayTitle = l.name || l.code;

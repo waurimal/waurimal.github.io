@@ -361,7 +361,7 @@
 
     <!-- 상단 와우리말 통합 GNB 네비게이션 -->
     <script src="../common/waurimal-nav.js"></script>
-    <script src="../common/curriculum.js?v=20261121_full48_v5"></script>
+    <script src="../common/curriculum.js?v=20261121_authentic44_v6"></script>
 
     <!-- 메인 컨테이너 -->
     <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-4 md:py-6 flex flex-col gap-4">
@@ -424,7 +424,7 @@
                         </div>
 
                         <select id="homeLessonSelect" onchange="updateSelectedLessonInfo()" class="w-full p-3 bg-white border border-rose-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-rose-500">
-                            <!-- 48개 단원 동적 로드 -->
+                            <!-- 44개 정합 단원 동적 로드 -->
                         </select>
 
                         <!-- 난이도 선택 -->
@@ -1131,10 +1131,10 @@
             const homeSel = document.getElementById('homeLessonSelect');
             if (!homeSel) return;
 
-            if (!lessons || lessons.length < 48) {
+            if (!lessons || lessons.length < 44) {
                 if (window.WaurimalCurriculum && typeof window.WaurimalCurriculum.getLessons === 'function') {
                     const cl = window.WaurimalCurriculum.getLessons();
-                    if (Array.isArray(cl) && cl.length === 48) {
+                    if (Array.isArray(cl) && cl.length === 44) {
                         lessons = cl.map(l => {
                             const sentsStr = (l.sentences || []).map(s => {
                                 const en = (s.en || s.sentence || '').trim();
@@ -1184,7 +1184,7 @@
         async function initApp() {
             syncProfileDisplay();
 
-            // 1) WaurimalCurriculum (초등 영어 공통 48개 단원) 최우선 자동 연동
+            // 1) WaurimalCurriculum (초등 영어 공통 44개 정합 단원) 최우선 자동 연동
             if (window.WaurimalCurriculum && typeof window.WaurimalCurriculum.getLessons === 'function') {
                 try {
                     const cLessons = window.WaurimalCurriculum.getLessons();
@@ -1203,7 +1203,7 @@
                                 words: sentsStr
                             };
                         });
-                        console.log("[sen_typing] WaurimalCurriculum 48개 단원 연동 성공!");
+                        console.log("[sen_typing] WaurimalCurriculum 44개 단원 연동 성공!");
                     }
                 } catch(e) {
                     console.warn("[sen_typing] Curriculum sync error:", e);
