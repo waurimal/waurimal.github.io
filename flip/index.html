@@ -399,6 +399,11 @@
                     <div id="multiScoreBoard" class="hidden flex items-center gap-2">
                         <!-- 멀티플레이 실시간 점수 -->
                     </div>
+                    <!-- 실시간 소요 시간 타이머 -->
+                    <div id="gameTimerBadge" class="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold shadow-xs">
+                        <i class="fa-regular fa-clock text-amber-500"></i>
+                        <span id="gameTimerDisplay" class="font-black text-amber-800 text-sm">00:00</span>
+                    </div>
                 </div>
                 <button type="button" onclick="confirmExitGame()" class="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold shadow transition">
                     <i class="fa-solid fa-door-open mr-1"></i> 나가기
@@ -415,7 +420,7 @@
                 <div id="gameOverOverlay" class="absolute inset-0 bg-white/95 backdrop-blur-sm z-20 hidden flex-col items-center justify-center p-6 text-center modal-enter">
                     <div class="text-6xl mb-3">🎉</div>
                     <h2 class="text-3xl font-black text-purple-700 mb-2">게임 종료!</h2>
-                    <p id="gameOverMsg" class="text-base text-slate-700 font-bold mb-6">모든 카드를 성공적으로 맞혔습니다!</p>
+                    <div id="gameOverMsg" class="text-base text-slate-700 font-bold mb-6 w-full max-w-sm">모든 카드를 성공적으로 맞혔습니다!</div>
                     <button type="button" onclick="exitGame()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg text-sm transition-transform hover:-translate-y-0.5">
                         홈으로 돌아가기
                     </button>
@@ -1014,6 +1019,47 @@
         let isGameLocked = false;
         let unsubRoom = null;
 
+        // 게임 타이머 상태
+        let gameStartTime = null;
+        let gameTimerInterval = null;
+        let gameElapsedSeconds = 0;
+
+        function startGameTimer() {
+            stopGameTimer();
+            gameStartTime = Date.now();
+            gameElapsedSeconds = 0;
+            updateTimerDisplay(0);
+            gameTimerInterval = setInterval(() => {
+                if (!gameStartTime) return;
+                gameElapsedSeconds = Math.floor((Date.now() - gameStartTime) / 1000);
+                updateTimerDisplay(gameElapsedSeconds);
+            }, 1000);
+        }
+
+        function stopGameTimer() {
+            if (gameTimerInterval) {
+                clearInterval(gameTimerInterval);
+                gameTimerInterval = null;
+            }
+        }
+
+        function updateTimerDisplay(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            const text = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            const el = document.getElementById('gameTimerDisplay');
+            if (el) el.innerText = text;
+        }
+
+        function formatElapsedText(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            if (m > 0) {
+                return `${m}분 ${s}초`;
+            }
+            return `${s}초`;
+        }
+
         let hofAllScores = [];
 
         const getCollection = (colName) => collection(db, 'schools', schoolName, colName);
@@ -1504,6 +1550,8 @@
             document.getElementById('matchCount').innerText = '0';
             document.getElementById('gameOverOverlay').classList.add('hidden');
 
+            startGameTimer();
+
             window.showScreen('screen-game');
 
             renderBoard();
@@ -1620,6 +1668,8 @@
                         document.getElementById('multiScoreBoard').classList.remove('hidden');
                         document.getElementById('gameOverOverlay').classList.add('hidden');
 
+                        startGameTimer();
+
                         window.showScreen('screen-game');
                     }
 
@@ -1704,6 +1754,9 @@
                     // 짝 맞춤 성공!
                     c1.matched = true;
                     c2.matched = true;
+                    if (window.WaurimalAudio && typeof window.WaurimalAudio.play === 'function') {
+                        window.WaurimalAudio.play('eat');
+                    }
                     const myMaskedName = getFormattedName().split(' ').slice(3).join(' ') || '나';
                     c1.matchedBy = myMaskedName;
                     c2.matchedBy = myMaskedName;
@@ -1731,6 +1784,9 @@
                     }
                 } else {
                     // 짝 틀림: 1.5초 후 다시 뒤집기
+                    if (window.WaurimalAudio && typeof window.WaurimalAudio.play === 'function') {
+                        window.WaurimalAudio.play('wrong');
+                    }
                     setTimeout(async () => {
                         gameCards[idx1].flipped = false;
                         gameCards[idx2].flipped = false;
@@ -1757,17 +1813,74 @@
         async function checkSingleGameEnd() {
             const totalPairs = gameCards.length / 2;
             if (matchedPairs === totalPairs) {
-                const scoreToAdd = totalPairs * 10;
+                stopGameTimer();
+                const elapsedSec = Math.max(1, gameElapsedSeconds || Math.floor((Date.now() - (gameStartTime || Date.now())) / 1000));
+                
+                // 1. 기본 카드 완성 점수 (쌍당 10점, 예: 8쌍 = 80점)
+                const baseScore = totalPairs * 10;
+                
+                // 2. 기준 시간 (초등학생 기준 카드 1쌍당 15초, 예: 8쌍 = 120초)
+                const targetSeconds = totalPairs * 15;
+                
+                // 3. 시간 보너스: 기준 시간보다 빠르면 남은 초 × 2점
+                const remainingSec = Math.max(0, targetSeconds - elapsedSec);
+                const timeBonus = remainingSec * 2;
+                
+                // 4. 스피드 마스터 보너스 (초고속 클리어 시 보너스 +50점)
+                const speedBonus = (elapsedSec <= totalPairs * 6) ? 50 : 0;
+                
+                const finalScore = baseScore + timeBonus + speedBonus;
+
+                if (window.WaurimalAudio && typeof window.WaurimalAudio.play === 'function') {
+                    window.WaurimalAudio.play('complete');
+                }
+
                 document.getElementById('gameOverOverlay').classList.remove('hidden');
                 document.getElementById('gameOverOverlay').classList.add('flex');
-                document.getElementById('gameOverMsg').innerHTML = `모든 카드를 맞혔습니다!<br>획득 점수: <strong class="text-purple-600 font-black text-xl">${scoreToAdd}점</strong>`;
-                await saveScore(scoreToAdd);
+                
+                const formattedTime = formatElapsedText(elapsedSec);
+                document.getElementById('gameOverMsg').innerHTML = `
+                    <div class="w-full text-center">
+                        <div class="text-sm text-slate-500 font-bold mb-3">모든 카드를 성공적으로 맞혔습니다!</div>
+                        <div class="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl p-4 text-left shadow-xs mb-3 space-y-2">
+                            <div class="flex justify-between items-center text-xs text-slate-600 font-bold">
+                                <span>⏱️ 클리어 시간</span>
+                                <span class="text-slate-800 text-sm font-black">${formattedTime}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs text-slate-600 font-bold">
+                                <span>🃏 기본 카드 점수</span>
+                                <span class="text-slate-800 font-black">${baseScore}점</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs text-purple-700 font-bold">
+                                <span>⚡ 스피드 시간 보너스</span>
+                                <span class="font-black">+${timeBonus}점</span>
+                            </div>
+                            ${speedBonus > 0 ? `
+                            <div class="flex justify-between items-center text-xs text-amber-600 font-bold">
+                                <span>🚀 초고속 클리어 보너스</span>
+                                <span class="font-black">+${speedBonus}점</span>
+                            </div>` : ''}
+                            <div class="border-t border-purple-200 pt-2 flex justify-between items-center font-black">
+                                <span class="text-slate-800 text-sm">🏆 최종 획득 점수</span>
+                                <span class="text-purple-600 text-2xl font-black">${finalScore.toLocaleString()}점</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                await saveScore(finalScore, elapsedSec);
             }
         }
 
         async function checkMultiGameEnd(data) {
             const allMatched = data.boardState.every(c => c.matched);
             if (allMatched) {
+                stopGameTimer();
+                const elapsedSec = Math.max(1, gameElapsedSeconds || Math.floor((Date.now() - (gameStartTime || Date.now())) / 1000));
+                const totalPairs = data.boardState.length / 2;
+                const targetSeconds = totalPairs * 15;
+                const remainingSec = Math.max(0, targetSeconds - elapsedSec);
+                const multiTimeBonus = Math.floor(remainingSec * 1.5);
+
                 let max = -1;
                 let winners = [];
                 for (let uid in data.players) {
@@ -1779,37 +1892,78 @@
                     }
                 }
 
+                const myRawScore = (data.players[currentUserUid] && data.players[currentUserUid].score) || 0;
+                const isMeWinner = winners.includes(getFormattedName());
+                const winBonus = isMeWinner ? 30 : 0;
+                const myTotalScore = myRawScore + multiTimeBonus + winBonus;
+
+                if (window.WaurimalAudio && typeof window.WaurimalAudio.play === 'function') {
+                    window.WaurimalAudio.play('complete');
+                }
+
                 document.getElementById('gameOverOverlay').classList.remove('hidden');
                 document.getElementById('gameOverOverlay').classList.add('flex');
-                document.getElementById('gameOverMsg').innerHTML = `게임 종료! 승자: <strong class="text-purple-600">${winners.join(', ')}</strong>`;
+                
+                const formattedTime = formatElapsedText(elapsedSec);
+                document.getElementById('gameOverMsg').innerHTML = `
+                    <div class="w-full text-center">
+                        <div class="text-sm font-black text-purple-700 mb-2">대결 종료! 승자: ${winners.join(', ')}</div>
+                        <div class="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl p-4 text-left shadow-xs mb-3 space-y-2">
+                            <div class="flex justify-between items-center text-xs text-slate-600 font-bold">
+                                <span>⏱️ 대결 소요 시간</span>
+                                <span class="text-slate-800 text-sm font-black">${formattedTime}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs text-slate-600 font-bold">
+                                <span>🃏 맞힌 카드 점수</span>
+                                <span class="text-slate-800 font-black">${myRawScore}점</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs text-purple-700 font-bold">
+                                <span>⚡ 스피드 시간 보너스</span>
+                                <span class="font-black">+${multiTimeBonus}점</span>
+                            </div>
+                            ${winBonus > 0 ? `
+                            <div class="flex justify-between items-center text-xs text-amber-600 font-bold">
+                                <span>👑 대결 승리 보너스</span>
+                                <span class="font-black">+${winBonus}점</span>
+                            </div>` : ''}
+                            <div class="border-t border-purple-200 pt-2 flex justify-between items-center font-black">
+                                <span class="text-slate-800 text-sm">🏆 최종 획득 점수</span>
+                                <span class="text-purple-600 text-2xl font-black">${myTotalScore.toLocaleString()}점</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
 
                 if (data.players[currentUserUid]) {
-                    await saveScore(data.players[currentUserUid].score);
+                    await saveScore(myTotalScore, elapsedSec);
                 }
             }
         }
 
-        async function saveScore(scoreToAdd) {
+        async function saveScore(scoreToAdd, clearTimeSec) {
             try {
                 const ref = getDocRef('scores', currentUserUid);
                 const snap = await getDoc(ref);
+                const updatePayload = {
+                    score: (snap.exists() ? (snap.data().score || 0) : 0) + scoreToAdd,
+                    name: getFormattedName(),
+                    grade: studentProfile.grade,
+                    classNum: studentProfile.classNum,
+                    unit: currentUnitName || '기본 단원',
+                    lastClearTime: clearTimeSec || null,
+                    updatedAt: Date.now()
+                };
                 if (snap.exists()) {
-                    await updateDoc(ref, {
-                        score: (snap.data().score || 0) + scoreToAdd,
-                        name: getFormattedName(),
-                        grade: studentProfile.grade,
-                        classNum: studentProfile.classNum,
-                        unit: currentUnitName || '기본 단원', updatedAt: Date.now()
-                    });
+                    if (clearTimeSec) {
+                        const prevBest = snap.data().bestClearTime;
+                        updatePayload.bestClearTime = prevBest ? Math.min(prevBest, clearTimeSec) : clearTimeSec;
+                    }
+                    await updateDoc(ref, updatePayload);
                 } else {
-                    await setDoc(ref, {
-                        uid: currentUserUid,
-                        name: getFormattedName(),
-                        grade: studentProfile.grade,
-                        classNum: studentProfile.classNum,
-                        score: scoreToAdd,
-                        unit: currentUnitName || '기본 단원', updatedAt: Date.now()
-                    });
+                    updatePayload.uid = currentUserUid;
+                    updatePayload.score = scoreToAdd;
+                    if (clearTimeSec) updatePayload.bestClearTime = clearTimeSec;
+                    await setDoc(ref, updatePayload);
                 }
             } catch (e) {
                 console.error("Score save failed", e);
@@ -1824,6 +1978,7 @@
         };
 
         window.exitGame = async () => {
+            stopGameTimer();
             if (unsubRoom) { unsubRoom(); unsubRoom = null; }
             if (isHost && currentRoom) {
                 try { await deleteDoc(getDocRef('rooms', currentRoom)); } catch (e) {}
@@ -1985,6 +2140,7 @@
                     <div class="text-right flex-shrink-0">
                         <span class="font-black text-sm text-purple-600">${(item.score || 0).toLocaleString()}</span>
                         <span class="text-[10px] text-slate-400 ml-0.5 font-bold">점</span>
+                        ${item.bestClearTime ? `<span class="block text-[10px] text-slate-400 font-semibold">⚡ ${Math.floor(item.bestClearTime/60) > 0 ? Math.floor(item.bestClearTime/60)+'분 ' : ''}${item.bestClearTime%60}초</span>` : ''}
                     </div>
                 `;
                 container.appendChild(row);
@@ -2265,7 +2421,10 @@
                     <td class="p-3 text-center font-bold ${rank <= 3 ? 'text-amber-600 font-black' : 'text-slate-400'}">${rank}</td>
                     <td class="p-3 font-bold text-slate-700">${r.name ? r.name.split(' ').slice(0, 3).join(' ') : '-'}</td>
                     <td class="p-3 font-extrabold text-slate-800">${r.name ? r.name.split(' ').slice(3).join(' ') : '-'}</td>
-                    <td class="p-3 text-right font-black text-purple-600">${(r.score || 0).toLocaleString()}점</td>
+                    <td class="p-3 text-right font-black text-purple-600">
+                        ${(r.score || 0).toLocaleString()}점
+                        ${r.bestClearTime ? `<span class="block text-[11px] text-slate-400 font-medium font-mono">⏱️ ${Math.floor(r.bestClearTime/60) > 0 ? Math.floor(r.bestClearTime/60)+'분 ' : ''}${r.bestClearTime%60}초</span>` : ''}
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -2276,11 +2435,12 @@
                 showAlert("다운로드할 데이터가 없습니다.", "알림", "⚠️");
                 return;
             }
-            let csv = "\uFEFF순위,학적,학생명,누적점수\n";
+            let csv = "\uFEFF순위,학적,학생명,누적점수,최고기록시간\n";
             teacherScoreRecords.forEach((r, i) => {
                 const hakjeok = r.name ? r.name.split(' ').slice(0, 3).join(' ') : '';
                 const studentName = r.name ? r.name.split(' ').slice(3).join(' ') : '';
-                csv += `${i + 1},"${hakjeok}","${studentName}",${r.score || 0}\n`;
+                const timeStr = r.bestClearTime ? `${Math.floor(r.bestClearTime/60) > 0 ? Math.floor(r.bestClearTime/60)+'분 ' : ''}${r.bestClearTime%60}초` : '-';
+                csv += `${i + 1},"${hakjeok}","${studentName}",${r.score || 0},"${timeStr}"\n`;
             });
 
             const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
