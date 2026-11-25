@@ -149,6 +149,7 @@ class MugunghwaGame {
         this.gameScore = 0;
 
         // 플레이어 초기화
+        this.player.name = settings.playerName || '나';
         this.player.m = 0;
         this.player.checkpoint = 0;
         this.player.displayX = this.TRACK_LEFT;
@@ -362,14 +363,33 @@ class MugunghwaGame {
             window.MugunghwaAudio.playGoal();
         }
 
-        this.addFloatingText(`🏆 ${this.player.finishRank}등으로 골인 성공!`, this.player.displayX, this.player.displayY - 35, '#FBBF24');
+        // 스피드런 보너스 점수 산정 (빨리 들어올수록 대폭 높은 점수 획득!)
+        // 1. 순위 보너스: 1위 2,500점, 2위 1,800점, 3위 1,200점, 기타 800점
+        const rankBonus = this.player.finishRank === 1 ? 2500 : (this.player.finishRank === 2 ? 1800 : (this.player.finishRank === 3 ? 1200 : 800));
+
+        // 2. 시간 보너스: 남은 시간 1초당 60점 (빠를수록 대량 득점)
+        const safeRemaining = Math.max(0, this.remainingTime);
+        const timeBonus = Math.floor(safeRemaining * 60);
+
+        // 3. 완주 소요 시간 (초)
+        const elapsedSec = (Math.max(0.1, this.timeLimit - safeRemaining)).toFixed(1);
+
+        const totalScore = this.gameScore + rankBonus + timeBonus;
+
+        this.addFloatingText(`🏆 ${this.player.finishRank}등 골인! (+${rankBonus}점)`, this.player.displayX, this.player.displayY - 35, '#FBBF24');
+        this.addFloatingText(`⚡ 스피드런 시간 보너스 +${timeBonus}점!`, this.player.displayX, this.player.displayY - 55, '#F59E0B');
 
         // 게임 승리 모달 호출
         if (window.showVictoryModal) {
             window.showVictoryModal({
                 rank: this.player.finishRank,
-                score: this.gameScore,
-                remainingTime: Math.floor(this.remainingTime)
+                score: totalScore,
+                baseScore: this.gameScore,
+                rankBonus: rankBonus,
+                timeBonus: timeBonus,
+                elapsedSec: elapsedSec,
+                remainingTime: Math.floor(safeRemaining),
+                playerName: this.player.name
             });
         }
     }

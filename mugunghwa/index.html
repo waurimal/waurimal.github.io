@@ -139,6 +139,10 @@
 
                     <div class="space-y-2 mt-3 pt-3 border-t border-slate-800 text-xs">
                         <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">🏃 내 닉네임 / 이름</label>
+                            <input type="text" id="soloPlayerName" placeholder="예: 홍길동" maxlength="8" class="w-full p-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 text-xs font-bold text-center">
+                        </div>
+                        <div>
                             <label class="block text-[11px] font-bold text-emerald-300 mb-1">⏱️ 들어오는 시간</label>
                             <select id="soloTimeLimit" class="w-full p-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 font-bold text-xs cursor-pointer">
                                 <option value="60">60초 스피드런</option>
@@ -164,6 +168,34 @@
                 </button>
             </div>
         </div>
+
+        <!-- 🏆 명예의 전당 (HALL OF FAME · TOP 10 랭킹) -->
+        <section class="bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950 p-5 rounded-3xl border border-amber-500/50 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl">🏆</span>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-base sm:text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400">
+                                명예의 전당 (Hall of Fame) · 100m 골인 랭킹 TOP 10
+                            </h2>
+                            <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-extrabold border border-amber-500/30">실시간 기록</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-0.5">
+                            ⚡ 100m 결승선에 빠르게 골인할수록 스피드런 시간 보너스 점수(+60점/초)가 폭발적으로 증가합니다!
+                        </p>
+                    </div>
+                </div>
+                <button type="button" id="btnResetHallOfFame" class="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-[11px] font-bold transition flex items-center gap-1 cursor-pointer">
+                    <i class="fa-solid fa-rotate-right"></i> <span>기록 초기화</span>
+                </button>
+            </div>
+
+            <!-- 랭킹 목록 그리드 -->
+            <div id="hallOfFameList" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                <!-- JS로 1~10위 항목 동적 렌더링 -->
+            </div>
+        </section>
 
         <!-- 게임 규칙 카드 -->
         <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 text-xs text-slate-300 space-y-2">
@@ -260,19 +292,41 @@
                 축하합니다! 무사히 100m 결승선을 통과하여 승리했습니다!
             </p>
 
-            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2 text-sm text-left">
-                <div class="flex justify-between">
+            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2 text-xs sm:text-sm text-left">
+                <div class="flex justify-between items-center">
                     <span class="text-slate-400">골인 순위</span>
                     <span id="victoryRank" class="font-black text-yellow-400 text-base">1등 🥇</span>
                 </div>
-                <div class="flex justify-between">
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-400">완주 소요 시간</span>
+                    <span id="victoryElapsed" class="font-bold text-sky-300">28.5초</span>
+                </div>
+                <div class="flex justify-between items-center">
                     <span class="text-slate-400">남은 시간</span>
-                    <span id="victoryTime" class="font-bold text-white">45초</span>
+                    <span id="victoryRemaining" class="font-bold text-white">61.5초</span>
                 </div>
-                <div class="flex justify-between">
-                    <span class="text-slate-400">획득 점수</span>
-                    <span id="victoryScore" class="font-bold text-emerald-400">1,500점</span>
+                <div class="h-px bg-slate-800 my-1"></div>
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-slate-400">기본 퀴즈 점수</span>
+                    <span id="victoryBaseScore" class="text-slate-200 font-bold">+1,500점</span>
                 </div>
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-slate-400">🏆 순위 보너스</span>
+                    <span id="victoryRankBonus" class="text-amber-400 font-bold">+2,500점</span>
+                </div>
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-slate-400">⚡ 스피드런 시간 보너스</span>
+                    <span id="victoryTimeBonus" class="text-emerald-400 font-bold">+3,690점</span>
+                </div>
+                <div class="h-px bg-slate-800 my-1"></div>
+                <div class="flex justify-between items-center text-base pt-1">
+                    <span class="font-black text-amber-300">최종 획득 점수</span>
+                    <span id="victoryScore" class="font-black text-xl text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-500">7,690점</span>
+                </div>
+            </div>
+
+            <div id="victoryHofNotice" class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center justify-center gap-2">
+                <span>✨</span> <span>명예의 전당 TOP 10 랭킹에 기록이 등록되었습니다!</span>
             </div>
 
             <div class="flex gap-2">
@@ -343,12 +397,13 @@
             document.getElementById('btnStartSoloGame').addEventListener('click', () => {
                 const time = document.getElementById('soloTimeLimit').value;
                 const grade = document.getElementById('soloGrade').value;
+                const name = (document.getElementById('soloPlayerName') && document.getElementById('soloPlayerName').value.trim()) || '도전자';
 
                 window.MugunghwaQuizManager.setGrade(grade);
                 screenLobby.classList.add('hidden');
                 screenGame.classList.remove('hidden');
 
-                game.startNewGame({ mode: 'solo', timeLimit: Number(time) });
+                game.startNewGame({ mode: 'solo', timeLimit: Number(time), playerName: name });
                 serveNextQuiz();
             });
 
@@ -368,7 +423,7 @@
                     screenLobby.classList.add('hidden');
                     screenGame.classList.remove('hidden');
 
-                    game.startNewGame({ mode: 'multi', timeLimit: Number(time) });
+                    game.startNewGame({ mode: 'multi', timeLimit: Number(time), playerName: '선생님' });
                     window.MugunghwaMultiplayer.startHostGame();
                     serveNextQuiz();
                 } catch (e) {
@@ -392,7 +447,7 @@
                     screenLobby.classList.add('hidden');
                     screenGame.classList.remove('hidden');
 
-                    game.startNewGame({ mode: 'multi', timeLimit: room.timeLimit || 90 });
+                    game.startNewGame({ mode: 'multi', timeLimit: room.timeLimit || 90, playerName: name });
                     serveNextQuiz();
                 } catch (e) {
                     alert(e.message);
@@ -407,6 +462,7 @@
                 timeOverModal.classList.add('hidden');
                 screenGame.classList.add('hidden');
                 screenLobby.classList.remove('hidden');
+                renderHallOfFame();
             };
 
             document.getElementById('btnBackToLobby').addEventListener('click', returnToLobby);
@@ -528,12 +584,127 @@
                 }, 400);
             }
 
-            // 승리 모달 표출
+            // ───────────────────────────────────────────
+            // 명예의 전당 (Hall of Fame) 로컬스토리지 관리
+            // ───────────────────────────────────────────
+            const HOF_STORAGE_KEY = 'mugunghwa_hall_of_fame_records_v1';
+            const DEFAULT_HOF = [
+                { name: '빛의마라토너', score: 5450, elapsedSec: '28.5', rank: 1, date: '11/25 10:15' },
+                { name: '영어스피드왕', score: 4720, elapsedSec: '36.0', rank: 1, date: '11/25 11:30' },
+                { name: '질주마스터', score: 4100, elapsedSec: '43.2', rank: 1, date: '11/25 12:05' },
+                { name: '와우리말러너', score: 3650, elapsedSec: '50.1', rank: 2, date: '11/25 12:40' },
+                { name: '무궁화챔피언', score: 3200, elapsedSec: '58.4', rank: 2, date: '11/25 13:10' }
+            ];
+
+            function getHallOfFame() {
+                const stored = localStorage.getItem(HOF_STORAGE_KEY);
+                if (!stored) {
+                    localStorage.setItem(HOF_STORAGE_KEY, JSON.stringify(DEFAULT_HOF));
+                    return DEFAULT_HOF;
+                }
+                try {
+                    const parsed = JSON.parse(stored);
+                    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_HOF;
+                } catch (e) {
+                    return DEFAULT_HOF;
+                }
+            }
+
+            function recordToHallOfFame(record) {
+                const list = getHallOfFame();
+                list.push(record);
+                list.sort((a, b) => b.score - a.score);
+                const top10 = list.slice(0, 10);
+                localStorage.setItem(HOF_STORAGE_KEY, JSON.stringify(top10));
+                renderHallOfFame();
+                return top10;
+            }
+
+            function renderHallOfFame() {
+                const list = getHallOfFame();
+                const container = document.getElementById('hallOfFameList');
+                if (!container) return;
+                container.innerHTML = '';
+
+                list.forEach((item, index) => {
+                    const rankNum = index + 1;
+                    let rankBadge = '';
+                    let cardBg = '';
+
+                    if (rankNum === 1) {
+                        rankBadge = '<span class="w-8 h-8 rounded-full bg-amber-500/30 text-amber-300 border border-amber-400 flex items-center justify-center font-black text-sm shadow">🥇</span>';
+                        cardBg = 'bg-gradient-to-r from-amber-500/20 via-yellow-500/10 to-slate-900 border-amber-500/50 text-amber-200';
+                    } else if (rankNum === 2) {
+                        rankBadge = '<span class="w-8 h-8 rounded-full bg-slate-400/30 text-slate-200 border border-slate-300 flex items-center justify-center font-black text-sm shadow">🥈</span>';
+                        cardBg = 'bg-gradient-to-r from-slate-400/15 via-slate-500/10 to-slate-900 border-slate-400/30 text-slate-200';
+                    } else if (rankNum === 3) {
+                        rankBadge = '<span class="w-8 h-8 rounded-full bg-amber-800/40 text-amber-400 border border-amber-600 flex items-center justify-center font-black text-sm shadow">🥉</span>';
+                        cardBg = 'bg-gradient-to-r from-amber-700/15 to-slate-900 border-amber-700/30 text-amber-300';
+                    } else {
+                        rankBadge = `<span class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 border border-slate-700 flex items-center justify-center font-black text-xs">${rankNum}위</span>`;
+                        cardBg = 'bg-slate-900/60 border-slate-800/80 text-slate-300';
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = `p-3 rounded-2xl border flex items-center justify-between gap-3 ${cardBg} transition hover:border-amber-400/60`;
+                    card.innerHTML = `
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            ${rankBadge}
+                            <div class="truncate">
+                                <div class="font-black text-sm text-white truncate flex items-center gap-1.5">
+                                    <span>${item.name || '도전자'}</span>
+                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold">${item.rank ? item.rank + '등 골인' : ''}</span>
+                                </div>
+                                <div class="text-[11px] text-slate-400 flex items-center gap-2 mt-0.5">
+                                    <span class="text-sky-300 font-bold">⏱️ ${item.elapsedSec || '0'}초 완주</span>
+                                    <span>•</span>
+                                    <span>${item.date || ''}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <span class="font-black text-base sm:text-lg ${rankNum === 1 ? 'text-amber-300' : 'text-emerald-400'}">${(item.score || 0).toLocaleString()}점</span>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            // 기록 초기화 버튼 핸들러
+            const btnResetHof = document.getElementById('btnResetHallOfFame');
+            if (btnResetHof) {
+                btnResetHof.addEventListener('click', () => {
+                    if (confirm('명예의 전당 기록을 초기화하시겠습니까?')) {
+                        localStorage.setItem(HOF_STORAGE_KEY, JSON.stringify(DEFAULT_HOF));
+                        renderHallOfFame();
+                    }
+                });
+            }
+
+            // 첫 화면 진입 시 명예의 전당 즉시 렌더링
+            renderHallOfFame();
+
+            // 승리 모달 표출 및 명예의 전당 자동 등록
             window.showVictoryModal = (data) => {
                 document.getElementById('victoryRank').textContent = `${data.rank}등 🥇`;
-                document.getElementById('victoryTime').textContent = `${data.remainingTime}초`;
-                document.getElementById('victoryScore').textContent = `${data.score.toLocaleString()}점`;
+                document.getElementById('victoryElapsed').textContent = `${data.elapsedSec}초 완주`;
+                document.getElementById('victoryRemaining').textContent = `${data.remainingTime}초`;
+                document.getElementById('victoryBaseScore').textContent = `+${(data.baseScore || 0).toLocaleString()}점`;
+                document.getElementById('victoryRankBonus').textContent = `+${(data.rankBonus || 0).toLocaleString()}점`;
+                document.getElementById('victoryTimeBonus').textContent = `+${(data.timeBonus || 0).toLocaleString()}점`;
+                document.getElementById('victoryScore').textContent = `${(data.score || 0).toLocaleString()}점`;
                 victoryModal.classList.remove('hidden');
+
+                // 명예의 전당 자동 기록 저장
+                const now = new Date();
+                const dateStr = `${now.getMonth() + 1}/${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                recordToHallOfFame({
+                    name: data.playerName || '도전자',
+                    score: data.score,
+                    elapsedSec: data.elapsedSec,
+                    rank: data.rank,
+                    date: dateStr
+                });
             };
 
             // 타임오버 모달 표출
