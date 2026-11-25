@@ -283,83 +283,85 @@
     </main>
 
     <!-- ─────────────────────────────────────────── -->
-    <!-- 2. 인게임 메인 플레이 화면 (screen-game) -->
+    <!-- 2. 인게임 메인 플레이 화면 (screen-game: 화면 정중앙 배치) -->
     <!-- ─────────────────────────────────────────── -->
-    <div id="screen-game" class="hidden flex-col items-center w-full min-h-screen lg:h-screen lg:max-h-screen p-2 sm:p-3 overflow-hidden">
-        <!-- 인게임 상단 HUD 상태바 -->
-        <header class="w-full max-w-7xl bg-slate-900/90 backdrop-blur-md px-3 sm:px-4 py-2 rounded-2xl border border-slate-800 mb-2 flex flex-wrap items-center justify-between gap-2 shadow-lg flex-shrink-0">
-            <!-- 좌측: 모드 및 홈 복귀 -->
-            <div class="flex items-center gap-2">
-                <button type="button" id="btnBackToLobby" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition flex items-center gap-1 cursor-pointer">
-                    <i class="fa-solid fa-arrow-left"></i> 나가기
-                </button>
-                <div id="hudTaggerState" class="px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> 🟢 전진 찬스 (말하는 중!)
-                </div>
-            </div>
-
-            <!-- 중앙: 시간 타이머, 내 거리, 체크포인트 -->
-            <div class="flex items-center gap-3 sm:gap-4 bg-slate-950 px-3 sm:px-4 py-1 rounded-xl border border-slate-800">
-                <div class="flex items-center gap-1.5">
-                    <span class="text-xs text-slate-400 font-bold">남은 시간:</span>
-                    <span id="hudRemainingTime" class="font-black text-amber-300 text-base sm:text-lg">1:30</span>
-                </div>
-                <div class="h-4 w-px bg-slate-800"></div>
-                <div class="flex items-center gap-1.5">
-                    <span class="text-xs text-slate-400 font-bold">진행 거리:</span>
-                    <span id="hudPlayerDistance" class="font-black text-white text-xs sm:text-sm">0m / 100m</span>
-                </div>
-                <div class="h-4 w-px bg-slate-800"></div>
-                <div class="flex items-center gap-1.5">
-                    <span class="text-xs text-slate-400 font-bold">안전선:</span>
-                    <span id="hudCheckpoint" class="font-black text-sky-400 text-xs sm:text-sm">0m</span>
-                </div>
-            </div>
-
-            <!-- 우측: 퀴즈 위치 토글 & 사운드 토글 -->
-            <div class="flex items-center gap-2">
-                <button type="button" id="btnToggleQuizPos" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer" title="문제 패널 위치 변경 (오른쪽/왼쪽)">
-                    <i class="fa-solid fa-arrows-left-right text-amber-400"></i>
-                    <span id="txtQuizPos" class="text-[11px]">문제: 우측</span>
-                </button>
-                <button type="button" id="btnToggleAudio" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition cursor-pointer text-xs" title="소리 켜기/끄기">
-                    <i class="fa-solid fa-volume-high"></i>
-                </button>
-            </div>
-        </header>
-
-        <!-- 크롬북 맞춤 사이드바이사이드 레이아웃: 트랙 캔버스 + 컴팩트 퀴즈 박스 -->
-        <div id="gamePlayArea" class="w-full max-w-7xl flex-1 min-h-0 flex flex-col lg:flex-row items-stretch gap-2.5 sm:gap-3">
-            <!-- 100m 달리기 캔버스 트랙 영역 -->
-            <div class="canvas-container flex-1 min-w-0 min-h-0 flex items-center justify-center bg-slate-950/70 rounded-2xl border border-slate-800/80 p-1 sm:p-1.5 shadow-2xl">
-                <div class="canvas-wrapper w-full h-full">
-                    <canvas id="gameCanvas" width="1200" height="600"></canvas>
-                </div>
-            </div>
-
-            <!-- 컴팩트 4지선다 영어 퀴즈 패널 (크롬북 최적화 사이드 패널) -->
-            <div id="gameQuizPanelWrapper" class="quiz-panel w-full lg:w-[350px] xl:w-[380px] flex-shrink-0 p-3 sm:p-4 flex flex-col justify-between gap-2.5 shadow-2xl border border-blue-500/40">
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
-                        <span id="quizPrompt" class="text-xs font-bold text-sky-300 flex items-center gap-1.5 truncate">
-                            <span>📝</span> <span>올바른 뜻을 고르세요!</span>
-                        </span>
-                        <button type="button" id="btnQuizTts" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs font-bold transition flex items-center gap-1 cursor-pointer flex-shrink-0">
-                            <i class="fa-solid fa-volume-high"></i> <span>발음</span>
-                        </button>
-                    </div>
-
-                    <!-- 문제 텍스트 -->
-                    <div class="py-2.5 px-3 bg-slate-950/90 rounded-2xl border border-slate-800/80 text-center shadow-inner">
-                        <span id="quizQuestionText" class="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 tracking-wider break-keep">
-                            flower
-                        </span>
+    <div id="screen-game" class="hidden fixed inset-0 z-30 bg-slate-950 flex flex-col items-center justify-center w-full h-full p-2 sm:p-4 overflow-hidden">
+        <div class="w-full max-w-7xl h-full max-h-[96vh] flex flex-col items-center justify-center gap-2 sm:gap-3 m-auto">
+            <!-- 인게임 상단 HUD 상태바 -->
+            <header class="w-full bg-slate-900/90 backdrop-blur-md px-3 sm:px-4 py-2 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-2 shadow-lg flex-shrink-0">
+                <!-- 좌측: 모드 및 홈 복귀 -->
+                <div class="flex items-center gap-2">
+                    <button type="button" id="btnBackToLobby" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition flex items-center gap-1 cursor-pointer">
+                        <i class="fa-solid fa-arrow-left"></i> 나가기
+                    </button>
+                    <div id="hudTaggerState" class="px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> 🟢 전진 찬스 (말하는 중!)
                     </div>
                 </div>
 
-                <!-- 4지선다 버튼 리스트 (크롬북에서 한눈에 터치/클릭 가능) -->
-                <div id="quizChoicesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2 flex-1 justify-center content-center">
-                    <!-- 동적으로 버튼 4개 삽입 -->
+                <!-- 중앙: 시간 타이머, 내 거리, 체크포인트 -->
+                <div class="flex items-center gap-3 sm:gap-4 bg-slate-950 px-3 sm:px-4 py-1 rounded-xl border border-slate-800">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-xs text-slate-400 font-bold">남은 시간:</span>
+                        <span id="hudRemainingTime" class="font-black text-amber-300 text-base sm:text-lg">1:30</span>
+                    </div>
+                    <div class="h-4 w-px bg-slate-800"></div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-xs text-slate-400 font-bold">진행 거리:</span>
+                        <span id="hudPlayerDistance" class="font-black text-white text-xs sm:text-sm">0m / 100m</span>
+                    </div>
+                    <div class="h-4 w-px bg-slate-800"></div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-xs text-slate-400 font-bold">안전선:</span>
+                        <span id="hudCheckpoint" class="font-black text-sky-400 text-xs sm:text-sm">0m</span>
+                    </div>
+                </div>
+
+                <!-- 우측: 퀴즈 위치 토글 & 사운드 토글 -->
+                <div class="flex items-center gap-2">
+                    <button type="button" id="btnToggleQuizPos" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer" title="문제 패널 위치 변경 (오른쪽/왼쪽)">
+                        <i class="fa-solid fa-arrows-left-right text-amber-400"></i>
+                        <span id="txtQuizPos" class="text-[11px]">문제: 우측</span>
+                    </button>
+                    <button type="button" id="btnToggleAudio" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition cursor-pointer text-xs" title="소리 켜기/끄기">
+                        <i class="fa-solid fa-volume-high"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- 크롬북 맞춤 사이드바이사이드 레이아웃: 트랙 캔버스 + 컴팩트 퀴즈 박스 (가로/세로 중앙 정렬) -->
+            <div id="gamePlayArea" class="w-full flex-1 min-h-0 flex flex-col lg:flex-row items-center justify-center gap-2.5 sm:gap-3 m-auto">
+                <!-- 100m 달리기 캔버스 트랙 영역 -->
+                <div class="canvas-container flex-1 min-w-0 h-full max-h-full flex items-center justify-center bg-slate-950/70 rounded-2xl border border-slate-800/80 p-1 sm:p-1.5 shadow-2xl">
+                    <div class="canvas-wrapper relative w-full h-full max-h-full aspect-[2/1] flex items-center justify-center m-auto">
+                        <canvas id="gameCanvas" width="1200" height="600"></canvas>
+                    </div>
+                </div>
+
+                <!-- 컴팩트 4지선다 영어 퀴즈 패널 (크롬북 최적화 사이드 패널) -->
+                <div id="gameQuizPanelWrapper" class="quiz-panel w-full lg:w-[350px] xl:w-[380px] h-full max-h-full flex-shrink-0 p-3 sm:p-4 flex flex-col justify-between gap-2.5 shadow-2xl border border-blue-500/40">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                            <span id="quizPrompt" class="text-xs font-bold text-sky-300 flex items-center gap-1.5 truncate">
+                                <span>📝</span> <span>올바른 뜻을 고르세요!</span>
+                            </span>
+                            <button type="button" id="btnQuizTts" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs font-bold transition flex items-center gap-1 cursor-pointer flex-shrink-0">
+                                <i class="fa-solid fa-volume-high"></i> <span>발음</span>
+                            </button>
+                        </div>
+
+                        <!-- 문제 텍스트 -->
+                        <div class="py-2.5 px-3 bg-slate-950/90 rounded-2xl border border-slate-800/80 text-center shadow-inner">
+                            <span id="quizQuestionText" class="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 tracking-wider break-keep">
+                                flower
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- 4지선다 버튼 리스트 (크롬북에서 한눈에 터치/클릭 가능) -->
+                    <div id="quizChoicesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2 flex-1 justify-center content-center">
+                        <!-- 동적으로 버튼 4개 삽입 -->
+                    </div>
                 </div>
             </div>
         </div>
