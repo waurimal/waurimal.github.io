@@ -339,27 +339,57 @@
                 </div>
 
                 <!-- 컴팩트 4지선다 영어 퀴즈 패널 (크롬북 최적화 사이드 패널) -->
-                <div id="gameQuizPanelWrapper" class="quiz-panel w-full lg:w-[350px] xl:w-[380px] h-full max-h-full flex-shrink-0 p-3 sm:p-4 flex flex-col justify-between gap-2.5 shadow-2xl border border-blue-500/40">
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                <div id="gameQuizPanelWrapper" class="quiz-panel w-full lg:w-[350px] xl:w-[380px] h-full max-h-full flex-shrink-0 p-3 sm:p-4 flex flex-col justify-between gap-2 shadow-2xl border border-blue-500/40">
+                    <div class="space-y-1.5">
+                        <!-- 상단 안내 및 발음 버튼 -->
+                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-1.5">
                             <span id="quizPrompt" class="text-xs font-bold text-sky-300 flex items-center gap-1.5 truncate">
-                                <span>📝</span> <span>올바른 뜻을 고르세요!</span>
+                                <span>🟢</span> <span>화살표 키로 이동 방향을 선택하세요</span>
                             </span>
                             <button type="button" id="btnQuizTts" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs font-bold transition flex items-center gap-1 cursor-pointer flex-shrink-0">
                                 <i class="fa-solid fa-volume-high"></i> <span>발음</span>
                             </button>
                         </div>
 
+                        <!-- 온스크린 D-Pad 컨트롤러 (Chromebook 터치 & 마우스 클릭) -->
+                        <div id="dpadContainer" class="p-2 bg-slate-950/70 rounded-2xl border border-slate-800/90 flex flex-col items-center justify-center gap-1 shadow-inner">
+                            <div class="w-full flex items-center justify-between px-1 text-[10px] text-slate-400 font-bold">
+                                <span>🎮 방향키 이동 (한 텀 1회)</span>
+                                <span id="dpadTurnStatus" class="text-emerald-400 font-black">🟢 이동 가능</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-1 w-full max-w-[210px] items-center justify-items-center">
+                                <div></div>
+                                <button type="button" id="btnMoveUp" class="dpad-btn w-full py-1.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-blue-600 text-sky-300 font-black text-xs transition border border-slate-700 shadow flex items-center justify-center gap-1 cursor-pointer" title="위 레인 이동 (↑ 또는 W)">
+                                    <span>▲</span> <span class="text-[10px]">위 레인</span>
+                                </button>
+                                <div></div>
+                                <button type="button" id="btnMoveLeft" class="dpad-btn w-full py-1.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-blue-600 text-amber-300 font-black text-xs transition border border-slate-700 shadow flex items-center justify-center gap-1 cursor-pointer" title="뒤로 후퇴 (← 또는 A)">
+                                    <span>◀</span> <span class="text-[10px]">-10m</span>
+                                </button>
+                                <div class="text-[10px] font-black text-amber-300 text-center select-none truncate px-1">
+                                    <span id="dpadCenterInfo">방향선택</span>
+                                </div>
+                                <button type="button" id="btnMoveRight" class="dpad-btn w-full py-1.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-blue-600 text-emerald-300 font-black text-xs transition border border-slate-700 shadow flex items-center justify-center gap-1 cursor-pointer" title="앞으로 전진 (→ 또는 D)">
+                                    <span class="text-[10px]">+10m</span> <span>▶</span>
+                                </button>
+                                <div></div>
+                                <button type="button" id="btnMoveDown" class="dpad-btn w-full py-1.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-blue-600 text-sky-300 font-black text-xs transition border border-slate-700 shadow flex items-center justify-center gap-1 cursor-pointer" title="아래 레인 이동 (↓ 또는 S)">
+                                    <span>▼</span> <span class="text-[10px]">아래 레인</span>
+                                </button>
+                                <div></div>
+                            </div>
+                        </div>
+
                         <!-- 문제 텍스트 -->
-                        <div class="py-2.5 px-3 bg-slate-950/90 rounded-2xl border border-slate-800/80 text-center shadow-inner">
-                            <span id="quizQuestionText" class="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 tracking-wider break-keep">
-                                flower
+                        <div class="py-2 px-3 bg-slate-950/90 rounded-2xl border border-slate-800/80 text-center shadow-inner min-h-[46px] flex items-center justify-center">
+                            <span id="quizQuestionText" class="text-lg sm:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 tracking-wider break-keep">
+                                화살표 키를 눌러 이동을 시작하세요!
                             </span>
                         </div>
                     </div>
 
-                    <!-- 4지선다 버튼 리스트 (크롬북에서 한눈에 터치/클릭 가능) -->
-                    <div id="quizChoicesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2 flex-1 justify-center content-center">
+                    <!-- 4지선다 버튼 리스트 (크롬북 최적화) -->
+                    <div id="quizChoicesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1.5 flex-1 justify-center content-center">
                         <!-- 동적으로 버튼 4개 삽입 -->
                     </div>
                 </div>
@@ -534,7 +564,7 @@
                 screenGame.classList.remove('hidden');
 
                 game.startNewGame({ mode: 'solo', timeLimit: Number(time), playerName: name });
-                serveNextQuiz();
+                prepareNextTurnStandby();
             });
 
             // 2. 호스트 방 생성 (교사용 대형 화면) -> 대기방 진입
@@ -579,7 +609,7 @@
                                     playerName: myPlayerName,
                                     players: roomData.players
                                 });
-                                serveNextQuiz();
+                                prepareNextTurnStandby();
                             } else {
                                 game.syncMultiplayerPlayers(roomData.players);
                             }
@@ -633,7 +663,7 @@
                                     playerName: myPlayerName,
                                     players: roomData.players
                                 });
-                                serveNextQuiz();
+                                prepareNextTurnStandby();
                             } else {
                                 game.syncMultiplayerPlayers(roomData.players);
                             }
@@ -694,12 +724,12 @@
             document.getElementById('btnRestartVictory').addEventListener('click', () => {
                 victoryModal.classList.add('hidden');
                 game.startNewGame({ mode: game.playMode, timeLimit: game.timeLimit });
-                serveNextQuiz();
+                prepareNextTurnStandby();
             });
             document.getElementById('btnRestartTimeOver').addEventListener('click', () => {
                 timeOverModal.classList.add('hidden');
                 game.startNewGame({ mode: game.playMode, timeLimit: game.timeLimit });
-                serveNextQuiz();
+                prepareNextTurnStandby();
             });
 
             // 오디오 토글
@@ -733,25 +763,102 @@
             });
             applyQuizPosition(quizPos);
 
-            // 5. 퀴즈 출제 함수 (턴마다 새로운 문제로 자동 갱신 지원)
+            // ───────────────────────────────────────────
+            // 5. 방향키 이동 & 퀴즈 출제 연동 시스템
+            // ───────────────────────────────────────────
             let promptRestoreTimer = null;
-            function serveNextQuiz(isNewTurn = false) {
+
+            // 새로운 구호(텀)가 시작될 때 이동 대기 상태로 초기화
+            function prepareNextTurnStandby() {
+                const promptEl = document.getElementById('quizPrompt');
+                const qText = document.getElementById('quizQuestionText');
+                const dpadStatus = document.getElementById('dpadTurnStatus');
+                const dpadCenter = document.getElementById('dpadCenterInfo');
+
+                if (promptRestoreTimer) clearTimeout(promptRestoreTimer);
+
+                if (dpadStatus) {
+                    dpadStatus.className = 'text-emerald-400 font-black animate-pulse';
+                    dpadStatus.textContent = '🟢 이동 가능';
+                }
+                if (dpadCenter) {
+                    dpadCenter.textContent = '방향선택';
+                    dpadCenter.className = 'text-[10px] font-black text-amber-300 text-center select-none truncate px-1';
+                }
+
+                if (promptEl) {
+                    promptEl.innerHTML = `<span>🟢</span> <span class="text-amber-300 font-extrabold">[구호 진행 중!]</span> <span>화살표 키(←↑↓→)로 이동할 방향을 선택하세요</span>`;
+                }
+
+                if (qText) {
+                    qText.textContent = '🎮 화살표 키나 아래 버튼을 눌러 이동하세요';
+                }
+
+                const grid = document.getElementById('quizChoicesGrid');
+                if (grid) {
+                    grid.innerHTML = `
+                        <div class="col-span-full py-3.5 px-2 text-center text-slate-400 bg-slate-950/60 rounded-xl border border-dashed border-slate-800 space-y-1">
+                            <div class="text-2xl">🏃‍♂️💨</div>
+                            <div class="text-xs font-bold text-slate-200">화살표 키(←↑↓→)나 조작 버튼을 누르면 이동 퀴즈가 나옵니다!</div>
+                            <div class="text-[11px] text-amber-400 font-semibold leading-relaxed">
+                                • 한 텀에 1회만 이동 가능합니다.<br>
+                                • 정답을 맞히면 선택한 레인/거리로 즉시 이동 완료됩니다!
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            // 플레이어의 이동 방향 요청 처리
+            function handleMoveRequest(direction) {
+                if (!game.isRunning || game.isPaused || game.player.isFinished) return;
+
+                // 술래가 빨간불 주시 중(SCANNING)일 때 이동 시도 시 즉시 적발!
+                if (game.tagger.state === 'SCANNING') {
+                    game.handleTaggerCaught();
+                    const promptEl = document.getElementById('quizPrompt');
+                    if (promptEl) {
+                        promptEl.innerHTML = `<span class="text-rose-400 font-black animate-pulse">🚨 술래 주시 중 움직임 적발! 체크포인트로 후퇴!</span>`;
+                    }
+                    return;
+                }
+
+                // 한 텀에 1회 제한
+                if (game.player.hasMovedThisTurn) {
+                    game.addFloatingText('⚠️ 이번 텀에는 이미 이동했습니다! 다음 구호를 기다리세요.', game.player.displayX, game.player.displayY - 30, '#FBBF24');
+                    const promptEl = document.getElementById('quizPrompt');
+                    if (promptEl) {
+                        promptEl.innerHTML = `<span class="text-amber-400 font-bold">⚠️ 이번 텀에는 이미 이동했습니다! 다음 구호를 기다리세요.</span>`;
+                    }
+                    return;
+                }
+
+                const res = game.requestMove(direction);
+                if (!res.success) return;
+
+                const dpadCenter = document.getElementById('dpadCenterInfo');
+                if (dpadCenter) {
+                    const dirNames = { up: '▲ 위', down: '▼ 아래', right: '▶ 전진', left: '◀ 후퇴' };
+                    dpadCenter.textContent = dirNames[direction] || direction;
+                    dpadCenter.className = 'text-[10px] font-black text-emerald-300 text-center select-none truncate px-1';
+                }
+
+                // 이동할 방향 결정 후 -> 문제 출제 & 맞히면 이동 완료
+                serveNextQuizForPendingMove(res.pendingMove);
+            }
+
+            // 이동 대기 위치에 따른 퀴즈 출제
+            function serveNextQuizForPendingMove(pendingMove) {
                 currentQuestion = window.MugunghwaQuizManager.generateQuestion();
                 const promptEl = document.getElementById('quizPrompt');
                 const qText = document.getElementById('quizQuestionText');
 
                 if (promptRestoreTimer) clearTimeout(promptRestoreTimer);
 
-                if (isNewTurn) {
-                    promptEl.innerHTML = `<span class="inline-flex items-center gap-1.5 text-amber-300 font-extrabold animate-pulse"><span>🔄 [새 턴!]</span> <span>새 문제 갱신!</span></span>`;
-                    promptRestoreTimer = setTimeout(() => {
-                        if (currentQuestion) {
-                            promptEl.innerHTML = `<span>📝</span> <span>${currentQuestion.prompt}</span>`;
-                        }
-                    }, 1800);
-                } else {
-                    promptEl.innerHTML = `<span>📝</span> <span>${currentQuestion.prompt}</span>`;
-                }
+                promptEl.innerHTML = `
+                    <span class="text-amber-300 font-black">🎯 [${pendingMove.dirLabel}]</span>
+                    <span class="text-sky-300 font-bold truncate">정답을 맞히면 이동 완료!</span>
+                `;
 
                 qText.textContent = currentQuestion.question;
                 qText.classList.add('scale-105', 'transition-transform');
@@ -763,7 +870,7 @@
                 currentQuestion.choices.forEach(ch => {
                     const btn = document.createElement('button');
                     btn.type = 'button';
-                    btn.className = 'quiz-choice-btn py-2.5 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 font-bold text-xs sm:text-sm transition text-left flex items-center justify-between cursor-pointer shadow min-h-[42px]';
+                    btn.className = 'quiz-choice-btn py-2.5 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-blue-600 text-slate-100 border border-slate-700 font-bold text-xs sm:text-sm transition text-left flex items-center justify-between cursor-pointer shadow min-h-[42px]';
                     btn.innerHTML = `<span>${ch.text}</span> <i class="fa-solid fa-chevron-right text-xs text-slate-500"></i>`;
 
                     btn.addEventListener('click', () => {
@@ -773,12 +880,111 @@
                 });
             }
 
-            // 턴이 새로 바뀔 때마다 문제 자동 갱신 이벤트 핸들러
+            // 퀴즈 답안 선택 시 처리 (이동 완료 확정 or 오답 후퇴)
+            function handleChoiceSelect(isCorrect, clickedBtn) {
+                if (!game.isRunning) return;
+
+                // 술래가 SCANNING(빨간불) 상태일 때 누르면 술래 적발 처리!
+                if (game.tagger.state === 'SCANNING') {
+                    game.handleTaggerCaught();
+                    clickedBtn.classList.add('bg-rose-600', 'text-white', 'border-rose-500');
+                    const promptEl = document.getElementById('quizPrompt');
+                    if (promptEl) {
+                        promptEl.innerHTML = `<span class="text-rose-400 font-black animate-pulse">🚨 술래 주시 중! 얼음 상태에서 움직여 적발되었습니다!</span>`;
+                    }
+                    return;
+                }
+
+                if (!game.player.pendingMove) {
+                    const promptEl = document.getElementById('quizPrompt');
+                    if (promptEl) {
+                        promptEl.innerHTML = `<span class="text-amber-400 font-bold">⚠️ 먼저 화살표 키로 이동할 방향을 선택해주세요!</span>`;
+                    }
+                    return;
+                }
+
+                const grid = document.getElementById('quizChoicesGrid');
+                const allBtns = grid.querySelectorAll('button');
+                allBtns.forEach(b => b.classList.add('pointer-events-none'));
+
+                const promptEl = document.getElementById('quizPrompt');
+                const dpadStatus = document.getElementById('dpadTurnStatus');
+                const dpadCenter = document.getElementById('dpadCenterInfo');
+
+                const result = game.confirmPendingMove(isCorrect);
+
+                if (isCorrect) {
+                    clickedBtn.classList.remove('bg-slate-800');
+                    clickedBtn.classList.add('bg-emerald-600', 'text-white', 'border-emerald-500');
+                    if (promptEl) {
+                        promptEl.innerHTML = `<span class="text-emerald-400 font-black">✅ 정답! 이동 완료! 다음 구호를 기다리세요.</span>`;
+                    }
+                } else {
+                    clickedBtn.classList.remove('bg-slate-800');
+                    clickedBtn.classList.add('bg-rose-600', 'text-white', 'border-rose-500');
+                    if (promptEl) {
+                        promptEl.innerHTML = `<span class="text-rose-400 font-black">💥 오답! 안전선으로 후퇴합니다. 다음 구호를 기다리세요.</span>`;
+                    }
+                }
+
+                if (dpadStatus) {
+                    dpadStatus.className = 'text-slate-400 font-bold';
+                    dpadStatus.textContent = '⏳ 이번 텀 완료';
+                }
+                if (dpadCenter) {
+                    dpadCenter.textContent = '대기 중';
+                    dpadCenter.className = 'text-[10px] font-bold text-slate-400 text-center select-none truncate px-1';
+                }
+            }
+
+            // 턴이 새로 바뀔 때마다 이동 대기 상태로 자동 갱신
             window.onNewTaggerTurn = (turnCount) => {
                 if (game.isRunning && !game.player.isFinished) {
-                    serveNextQuiz(true);
+                    prepareNextTurnStandby();
                 }
             };
+
+            // 술래가 빨간불로 주시 시작할 때 UI 알림
+            window.onTaggerScanStart = () => {
+                const dpadStatus = document.getElementById('dpadTurnStatus');
+                const dpadCenter = document.getElementById('dpadCenterInfo');
+                const promptEl = document.getElementById('quizPrompt');
+
+                if (dpadStatus) {
+                    dpadStatus.className = 'text-rose-400 font-black animate-pulse';
+                    dpadStatus.textContent = '🔴 얼음!';
+                }
+                if (dpadCenter) {
+                    dpadCenter.textContent = '얼음!';
+                    dpadCenter.className = 'text-[10px] font-black text-rose-400 text-center select-none truncate px-1';
+                }
+                if (promptEl && game.isRunning && !game.player.isFinished) {
+                    promptEl.innerHTML = `<span class="text-rose-400 font-black animate-pulse">🚨 술래 주시 중! 얼음! (움직이면 탈락)</span>`;
+                }
+            };
+
+            // 키보드 화살표 키 및 WASD 이동 이벤트 리스너
+            window.addEventListener('keydown', (e) => {
+                if (!game.isRunning || game.isPaused || game.player.isFinished) return;
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+                let dir = null;
+                if (e.code === 'ArrowUp' || e.code === 'KeyW') dir = 'up';
+                else if (e.code === 'ArrowDown' || e.code === 'KeyS') dir = 'down';
+                else if (e.code === 'ArrowRight' || e.code === 'KeyD') dir = 'right';
+                else if (e.code === 'ArrowLeft' || e.code === 'KeyA') dir = 'left';
+
+                if (dir) {
+                    e.preventDefault();
+                    handleMoveRequest(dir);
+                }
+            });
+
+            // 온스크린 D-Pad 버튼 클릭 리스너 (Chromebook 터치 & 마우스 클릭)
+            document.getElementById('btnMoveUp').addEventListener('click', () => handleMoveRequest('up'));
+            document.getElementById('btnMoveDown').addEventListener('click', () => handleMoveRequest('down'));
+            document.getElementById('btnMoveRight').addEventListener('click', () => handleMoveRequest('right'));
+            document.getElementById('btnMoveLeft').addEventListener('click', () => handleMoveRequest('left'));
 
             // 문제 발음 듣기
             document.getElementById('btnQuizTts').addEventListener('click', () => {
@@ -790,44 +996,16 @@
             // 50:50 힌트 패스 발동
             window.triggerHintPass = () => {
                 const grid = document.getElementById('quizChoicesGrid');
+                if (!grid) return;
                 const btns = Array.from(grid.querySelectorAll('button'));
                 let removed = 0;
                 btns.forEach((b, idx) => {
-                    if (removed < 2 && currentQuestion && !currentQuestion.choices[idx].isCorrect) {
+                    if (removed < 2 && currentQuestion && currentQuestion.choices[idx] && !currentQuestion.choices[idx].isCorrect) {
                         b.classList.add('opacity-25', 'pointer-events-none');
                         removed++;
                     }
                 });
             };
-
-            // 선택지 클릭 처리
-            function handleChoiceSelect(isCorrect, clickedBtn) {
-                if (!game.isRunning) return;
-
-                // 술래가 SCANNING(빨간불) 상태일 때 누르면 술래 적발 처리!
-                if (game.tagger.state === 'SCANNING') {
-                    game.handleTaggerCaught();
-                    clickedBtn.classList.add('bg-rose-600', 'text-white', 'border-rose-500');
-                    setTimeout(() => serveNextQuiz(), 600);
-                    return;
-                }
-
-                if (isCorrect) {
-                    clickedBtn.classList.remove('bg-slate-800');
-                    clickedBtn.classList.add('bg-emerald-600', 'text-white', 'border-emerald-500');
-                    game.handleCorrectAnswer();
-                } else {
-                    clickedBtn.classList.remove('bg-slate-800');
-                    clickedBtn.classList.add('bg-rose-600', 'text-white', 'border-rose-500');
-                    game.handleWrongAnswer();
-                }
-
-                setTimeout(() => {
-                    if (game.isRunning && !game.player.isFinished) {
-                        serveNextQuiz();
-                    }
-                }, 400);
-            }
 
             // ───────────────────────────────────────────
             // 명예의 전당 (Hall of Fame) 로컬스토리지 관리

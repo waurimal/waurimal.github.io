@@ -17,6 +17,9 @@ class MugunghwaGame {
         this.TRACK_Y_MIN = 170;
         this.TRACK_Y_MAX = 530;
 
+        // 5개 트랙 레인 Y 좌표 (균등 배치: 210, 275, 340, 405, 470)
+        this.LANES = [210, 275, 340, 405, 470];
+
         // 게임 상태
         this.isRunning = false;
         this.isPaused = false;
@@ -51,6 +54,9 @@ class MugunghwaGame {
             avatarSkin: 'runner_1',
             m: 0, // 0 ~ 100m
             checkpoint: 0, // 0, 25, 50, 75m
+            laneIndex: 2, // 1~5번 레인 중 중앙(3번 레인, index 2)
+            hasMovedThisTurn: false, // 한 텀에 1회 이동 제한 플래그
+            pendingMove: null, // 화살표 키로 선택한 이동 대기 { direction, dirLabel, targetM, targetLane, targetX, targetY }
             displayX: this.TRACK_LEFT,
             displayY: 340,
             targetX: this.TRACK_LEFT,
@@ -93,11 +99,11 @@ class MugunghwaGame {
 
     initFieldItems() {
         this.fieldItems = [
-            { id: 'f_1', m: 18, type: 'shoes', name: '부스터 신발', icon: '⚡', collected: false },
-            { id: 'f_2', m: 38, type: 'shield', name: '방어막 쉴드', icon: '🛡️', collected: false },
-            { id: 'f_3', m: 58, type: 'time', name: '타임 캡슐 (+10초)', icon: '⏱️', collected: false },
-            { id: 'f_4', m: 76, type: 'hint', name: '50:50 힌트 패스', icon: '🎯', collected: false },
-            { id: 'f_5', m: 90, type: 'star', name: '황금 스타 대시', icon: '⭐', collected: false }
+            { id: 'f_1', m: 18, laneIndex: 1, type: 'shoes', name: '부스터 신발', icon: '⚡', collected: false },
+            { id: 'f_2', m: 38, laneIndex: 3, type: 'shield', name: '방어막 쉴드', icon: '🛡️', collected: false },
+            { id: 'f_3', m: 58, laneIndex: 0, type: 'time', name: '타임 캡슐 (+10초)', icon: '⏱️', collected: false },
+            { id: 'f_4', m: 76, laneIndex: 4, type: 'hint', name: '50:50 힌트 패스', icon: '🎯', collected: false },
+            { id: 'f_5', m: 90, laneIndex: 2, type: 'star', name: '황금 스타 대시', icon: '⭐', collected: false }
         ];
     }
 
@@ -193,10 +199,13 @@ class MugunghwaGame {
         this.player.name = settings.playerName || '나';
         this.player.m = 0;
         this.player.checkpoint = 0;
+        this.player.laneIndex = 2; // 중앙(3번) 레인에서 시작
+        this.player.hasMovedThisTurn = false;
+        this.player.pendingMove = null;
         this.player.displayX = this.TRACK_LEFT;
         this.player.targetX = this.TRACK_LEFT;
-        this.player.displayY = 350;
-        this.player.targetY = 350;
+        this.player.displayY = this.LANES[2];
+        this.player.targetY = this.LANES[2];
         this.player.isFinished = false;
         this.player.finishRank = 0;
         this.player.isFallen = false;
@@ -239,6 +248,10 @@ class MugunghwaGame {
 
         this.tagger.turnCount++;
 
+        // 새 구호 시작: 이번 턴 이동 기회 초기화 (한 텀에 1회 이동 가능)
+        this.player.hasMovedThisTurn = false;
+        this.player.pendingMove = null;
+
         // 새 턴 시작 알림: 턴마다 새로운 퀴즈 문제로 즉시 갱신
         if (typeof window !== 'undefined' && window.onNewTaggerTurn) {
             window.onNewTaggerTurn(this.tagger.turnCount);
@@ -269,6 +282,15 @@ class MugunghwaGame {
         this.tagger.scanTimer = 0;
         this.tagger.scanDuration = Math.floor(100 + Math.random() * 60); // 1.6 ~ 2.6초 동안 전방 레이저 스캔
 
+        // 술래가 돌아봤을 때 미완료된 pendingMove는 취소
+        if (this.player.pendingMove) {
+            this.player.pendingMove = null;
+        }
+
+        if (typeof window !== 'undefined' && window.onTaggerScanStart) {
+            window.onTaggerScanStart();
+        }
+
         if (window.MugunghwaAudio) {
             window.MugunghwaAudio.playTagScan();
         }
@@ -276,6 +298,179 @@ class MugunghwaGame {
         // 멀티플레이어 호스트인 경우 상태 브로드캐스트
         if (this.playMode === 'multi' && window.MugunghwaMultiplayer && window.MugunghwaMultiplayer.isHost) {
             window.MugunghwaMultiplayer.broadcastTaggerState('SCANNING', this.tagger.speedMultiplier, this.tagger.turnCount);
+        }
+    }
+
+    // 플레이어가 화살표 키(←↑↓→ / WASD) 또는 온스크린 버튼으로 이동 방향을 선택
+    requestMove(direction) {
+        if (!this.isRunning || this.isPaused || this.player.isFinished) {
+            return { success: false, reason: 'not_running' };
+        }
+
+        // 1. 술래가 빨간불 주시 중(SCANNING)일 때 움직이면 즉시 적발!
+        if (this.tagger.state === 'SCANNING') {
+            this.player.pendingMove = null;
+            this.handleTaggerCaught();
+            return { success: false, reason: 'caught_by_tagger' };
+        }
+
+        // 2. 한 텀에 1회 이동 제한: 이미 이번 턴에 이동 완료했거나 소비한 경우
+        if (this.player.hasMovedThisTurn) {
+            this.addFloatingText('⚠️ 이번 텀에는 이미 이동했습니다! 다음 구호를 기다리세요.', this.player.displayX, this.player.displayY - 30, '#FBBF24');
+            return { success: false, reason: 'already_moved' };
+        }
+
+        const curM = this.player.m;
+        const curLane = this.player.laneIndex !== undefined ? this.player.laneIndex : 2;
+        let targetM = curM;
+        let targetLane = curLane;
+        let dirLabel = '';
+
+        if (direction === 'up') {
+            if (curLane <= 0) {
+                this.addFloatingText('⚠️ 이미 최상단 1번 레인입니다!', this.player.displayX, this.player.displayY - 25, '#F87171');
+                return { success: false, reason: 'boundary_top' };
+            }
+            targetLane = curLane - 1;
+            dirLabel = `위쪽 ${targetLane + 1}번 레인으로 이동`;
+        } else if (direction === 'down') {
+            if (curLane >= this.LANES.length - 1) {
+                this.addFloatingText('⚠️ 이미 최하단 5번 레인입니다!', this.player.displayX, this.player.displayY - 25, '#F87171');
+                return { success: false, reason: 'boundary_bottom' };
+            }
+            targetLane = curLane + 1;
+            dirLabel = `아래쪽 ${targetLane + 1}번 레인으로 이동`;
+        } else if (direction === 'right') {
+            if (curM >= 100) {
+                return { success: false, reason: 'already_goal' };
+            }
+            const stepM = this.player.buffs.shoes ? 20 : 10;
+            targetM = Math.min(100, curM + stepM);
+            dirLabel = `앞으로 +${stepM}m 전진`;
+        } else if (direction === 'left') {
+            if (curM <= 0) {
+                this.addFloatingText('⚠️ 출발선(0m) 이전으로는 갈 수 없습니다!', this.player.displayX, this.player.displayY - 25, '#F87171');
+                return { success: false, reason: 'boundary_start' };
+            }
+            targetM = Math.max(0, curM - 10);
+            dirLabel = `뒤로 -10m 후퇴`;
+        } else {
+            return { success: false, reason: 'unknown_direction' };
+        }
+
+        const targetX = this.mToX(targetM);
+        const targetY = this.LANES[targetLane];
+
+        this.player.pendingMove = {
+            direction,
+            dirLabel,
+            targetM,
+            targetLane,
+            targetX,
+            targetY,
+            prevM: curM,
+            prevLane: curLane
+        };
+
+        if (window.MugunghwaAudio) {
+            window.MugunghwaAudio.playStep();
+        }
+
+        this.addFloatingText(`🎯 ${dirLabel} 선택! 문제를 맞히세요!`, this.player.displayX, this.player.displayY - 25, '#FBBF24');
+
+        return {
+            success: true,
+            pendingMove: this.player.pendingMove
+        };
+    }
+
+    // 퀴즈 답안 선택 시 이동 확정 또는 오답 후퇴 처리
+    confirmPendingMove(isCorrect) {
+        if (!this.isRunning || this.player.isFinished) return { success: false };
+
+        // 술래가 돌아본 상태에서 제출한 경우: 즉시 적발!
+        if (this.tagger.state === 'SCANNING') {
+            this.player.pendingMove = null;
+            this.player.hasMovedThisTurn = true;
+            this.handleTaggerCaught();
+            return { success: false, reason: 'caught_by_tagger' };
+        }
+
+        const move = this.player.pendingMove;
+        if (!move) {
+            // 방향 선택 없이 문제를 직접 푼 경우
+            if (isCorrect) {
+                this.handleCorrectAnswer();
+            } else {
+                this.handleWrongAnswer();
+            }
+            this.player.hasMovedThisTurn = true;
+            return { success: true, moved: isCorrect };
+        }
+
+        // 이번 텀 이동 1회 소비 완료
+        this.player.hasMovedThisTurn = true;
+        this.player.pendingMove = null;
+
+        if (isCorrect) {
+            // 정답 시: 선택한 레인 및 거리로 이동 완료!
+            if (move.direction === 'right') {
+                if (this.player.buffs.shoes) {
+                    this.player.buffs.shoes = false;
+                    if (window.MugunghwaAudio) window.MugunghwaAudio.playBoost();
+                    this.addFloatingText('⚡ 부스터 2배 질주! +20m 전진 완료', move.targetX, move.targetY - 25, '#F59E0B');
+                } else {
+                    if (window.MugunghwaAudio) window.MugunghwaAudio.playStep();
+                    this.addFloatingText('+10m 전진 완료!', move.targetX, move.targetY - 20, '#10B981');
+                }
+            } else if (move.direction === 'left') {
+                if (window.MugunghwaAudio) window.MugunghwaAudio.playStep();
+                this.addFloatingText('-10m 뒤로 이동 완료!', move.targetX, move.targetY - 20, '#60A5FA');
+            } else if (move.direction === 'up') {
+                if (window.MugunghwaAudio) window.MugunghwaAudio.playStep();
+                this.addFloatingText(`⬆️ 위쪽 ${move.targetLane + 1}번 레인 이동 완료!`, move.targetX, move.targetY - 20, '#34D399');
+            } else if (move.direction === 'down') {
+                if (window.MugunghwaAudio) window.MugunghwaAudio.playStep();
+                this.addFloatingText(`⬇️ 아래쪽 ${move.targetLane + 1}번 레인 이동 완료!`, move.targetX, move.targetY - 20, '#34D399');
+            }
+
+            this.player.m = move.targetM;
+            this.player.laneIndex = move.targetLane;
+            this.player.targetX = move.targetX;
+            this.player.targetY = move.targetY;
+            this.player.isMoving = true;
+            this.gameScore += 150;
+
+            // 체크포인트 도달 확인 (25m, 50m, 75m)
+            if (this.player.m >= 75 && this.player.checkpoint < 75) {
+                this.player.checkpoint = 75;
+                this.addFloatingText('🚩 75m 안전 체크포인트 확보!', this.player.displayX, this.player.displayY - 35, '#38BDF8');
+            } else if (this.player.m >= 50 && this.player.checkpoint < 50) {
+                this.player.checkpoint = 50;
+                this.addFloatingText('🚩 50m 안전 체크포인트 확보!', this.player.displayX, this.player.displayY - 35, '#38BDF8');
+            } else if (this.player.m >= 25 && this.player.checkpoint < 25) {
+                this.player.checkpoint = 25;
+                this.addFloatingText('🚩 25m 안전 체크포인트 확보!', this.player.displayX, this.player.displayY - 35, '#38BDF8');
+            }
+
+            // 트랙 상 아이템 획득 검사
+            this.checkFieldItemPickup(this.player);
+
+            // 100m 결승선 골인 판정!
+            if (this.player.m >= 100 && !this.player.isFinished) {
+                this.triggerPlayerGoal();
+            }
+
+            // 멀티플레이어 위치 동기화
+            if (this.playMode === 'multi' && window.MugunghwaMultiplayer) {
+                window.MugunghwaMultiplayer.advancePlayer(move.targetM - move.prevM, null, move.targetLane);
+            }
+
+            return { success: true, moved: true, move };
+        } else {
+            // 오답 시: 이동 취소 및 직전 체크포인트로 강제 후퇴!
+            this.handleWrongAnswer();
+            return { success: false, moved: false, move };
         }
     }
 
@@ -378,25 +573,28 @@ class MugunghwaGame {
 
     checkFieldItemPickup(p) {
         this.fieldItems.forEach(item => {
-            if (!item.collected && p.m >= item.m - 2 && p.m <= item.m + 8) {
-                item.collected = true;
-                if (window.MugunghwaAudio) window.MugunghwaAudio.playItemGet();
+            if (!item.collected) {
+                const laneMatch = (item.laneIndex === undefined || item.laneIndex === p.laneIndex);
+                if (laneMatch && p.m >= item.m - 4 && p.m <= item.m + 8) {
+                    item.collected = true;
+                    if (window.MugunghwaAudio) window.MugunghwaAudio.playItemGet();
 
-                if (item.type === 'shoes') {
-                    p.buffs.shoes = true;
-                    this.addFloatingText('⚡ 부스터 신발 획득! (다음 정답 시 2배 전진)', p.displayX, p.displayY - 30, '#F59E0B');
-                } else if (item.type === 'shield') {
-                    p.buffs.shield = true;
-                    this.addFloatingText('🛡️ 방어막 쉴드 획득! (오답/감시 1회 방어)', p.displayX, p.displayY - 30, '#38BDF8');
-                } else if (item.type === 'time') {
-                    this.remainingTime += 10;
-                    this.addFloatingText('⏱️ 시간 보너스! +10초 추가', p.displayX, p.displayY - 30, '#10B981');
-                } else if (item.type === 'hint') {
-                    if (window.triggerHintPass) window.triggerHintPass();
-                    this.addFloatingText('🎯 50:50 힌트 패스 획득!', p.displayX, p.displayY - 30, '#A855F7');
-                } else if (item.type === 'star') {
-                    p.buffs.star = true;
-                    this.addFloatingText('⭐ 무적 스타 대시 획득!', p.displayX, p.displayY - 30, '#FBBF24');
+                    if (item.type === 'shoes') {
+                        p.buffs.shoes = true;
+                        this.addFloatingText('⚡ 부스터 신발 획득! (다음 정답 시 2배 전진)', p.displayX, p.displayY - 30, '#F59E0B');
+                    } else if (item.type === 'shield') {
+                        p.buffs.shield = true;
+                        this.addFloatingText('🛡️ 방어막 쉴드 획득! (오답/감시 1회 방어)', p.displayX, p.displayY - 30, '#38BDF8');
+                    } else if (item.type === 'time') {
+                        this.remainingTime += 10;
+                        this.addFloatingText('⏱️ 시간 보너스! +10초 추가', p.displayX, p.displayY - 30, '#10B981');
+                    } else if (item.type === 'hint') {
+                        if (window.triggerHintPass) window.triggerHintPass();
+                        this.addFloatingText('🎯 50:50 힌트 패스 획득!', p.displayX, p.displayY - 30, '#A855F7');
+                    } else if (item.type === 'star') {
+                        p.buffs.star = true;
+                        this.addFloatingText('⭐ 무적 스타 대시 획득!', p.displayX, p.displayY - 30, '#FBBF24');
+                    }
                 }
             }
         });
@@ -487,9 +685,10 @@ class MugunghwaGame {
             }
         }
 
-        // 3. 로컬 플레이어 위치 보간 (부드러운 전진 및 후퇴 애니메이션)
+        // 3. 로컬 플레이어 위치 보간 (부드러운 전진, 상하 레인 이동 및 후퇴 애니메이션)
         this.player.displayX += (this.player.targetX - this.player.displayX) * 0.15;
-        if (Math.abs(this.player.targetX - this.player.displayX) > 2) {
+        this.player.displayY += (this.player.targetY - this.player.displayY) * 0.15;
+        if (Math.abs(this.player.targetX - this.player.displayX) > 2 || Math.abs(this.player.targetY - this.player.displayY) > 2) {
             this.player.runFrame += 0.35;
             this.player.isMoving = true;
         } else {
@@ -683,17 +882,27 @@ class MugunghwaGame {
         ctx.lineWidth = 3;
         ctx.strokeRect(this.TRACK_LEFT - 30, this.TRACK_Y_MIN, this.TRACK_WIDTH + 60, this.TRACK_Y_MAX - this.TRACK_Y_MIN);
 
-        // 레인 구분 점선
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+        // 5개 레인 구분 점선 및 레인 번호 표시
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
         ctx.lineWidth = 1.5;
-        ctx.setLineDash([12, 10]);
-        for (let y = this.TRACK_Y_MIN + 60; y < this.TRACK_Y_MAX; y += 60) {
+        ctx.setLineDash([10, 8]);
+        const laneDividers = [242, 307, 372, 437];
+        laneDividers.forEach(ly => {
             ctx.beginPath();
-            ctx.moveTo(this.TRACK_LEFT - 25, y);
-            ctx.lineTo(this.TRACK_RIGHT + 25, y);
+            ctx.moveTo(this.TRACK_LEFT - 25, ly);
+            ctx.lineTo(this.TRACK_RIGHT + 25, ly);
             ctx.stroke();
-        }
+        });
         ctx.setLineDash([]);
+
+        // 출발선 좌측 레인 번호 뱃지 (1~5번)
+        for (let i = 0; i < this.LANES.length; i++) {
+            const ly = this.LANES[i];
+            ctx.fillStyle = (this.player.laneIndex === i) ? '#FBBF24' : 'rgba(255, 255, 255, 0.45)';
+            ctx.font = 'bold 11px Pretendard, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${i + 1}레인`, this.TRACK_LEFT - 18, ly + 4);
+        }
     }
 
     renderTrackMarkers(ctx) {
@@ -745,7 +954,9 @@ class MugunghwaGame {
         this.fieldItems.forEach(it => {
             if (it.collected) return;
             const x = this.mToX(it.m);
-            const y = this.TRACK_Y_MIN + 40 + ((it.m * 17) % (this.TRACK_Y_MAX - this.TRACK_Y_MIN - 80));
+            const y = (it.laneIndex !== undefined && this.LANES[it.laneIndex] !== undefined)
+                ? this.LANES[it.laneIndex]
+                : (this.TRACK_Y_MIN + 40 + ((it.m * 17) % (this.TRACK_Y_MAX - this.TRACK_Y_MIN - 80)));
 
             ctx.save();
             ctx.translate(x, y);
@@ -956,6 +1167,43 @@ class MugunghwaGame {
     }
 
     renderRunners(ctx) {
+        // 목표 이동 위치 타겟 가이드 렌더링 (방향 선택 후 정답 대기 상태)
+        if (this.player.pendingMove) {
+            const pm = this.player.pendingMove;
+            ctx.save();
+
+            // 점선 궤적 라인
+            ctx.strokeStyle = 'rgba(250, 204, 21, 0.85)';
+            ctx.lineWidth = 2.5;
+            ctx.setLineDash([6, 6]);
+            ctx.beginPath();
+            ctx.moveTo(this.player.displayX, this.player.displayY);
+            ctx.lineTo(pm.targetX, pm.targetY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // 펄스 애니메이션 목표 마커 링
+            const pulse = Math.sin(Date.now() / 150) * 4;
+            ctx.strokeStyle = '#FACC15';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(pm.targetX, pm.targetY, 20 + pulse, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.fillStyle = 'rgba(250, 204, 21, 0.25)';
+            ctx.beginPath();
+            ctx.arc(pm.targetX, pm.targetY, 20 + pulse, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 타겟 텍스트
+            ctx.fillStyle = '#FEF08A';
+            ctx.font = 'bold 11px Pretendard, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🎯 ' + (pm.dirLabel || '이동 목표'), pm.targetX, pm.targetY - 28);
+
+            ctx.restore();
+        }
+
         // 모든 주자 정렬 (Y축 깊이 기준)
         const allRunners = [...this.peers, this.player].sort((a, b) => a.displayY - b.displayY);
 
@@ -1010,7 +1258,8 @@ class MugunghwaGame {
                 ctx.fillStyle = '#FBBF24';
                 ctx.font = 'bold 11px Pretendard, sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('▼ 나', 0, -42);
+                const laneText = (this.player.laneIndex !== undefined) ? `${this.player.laneIndex + 1}레인` : '';
+                ctx.fillText(`▼ 나 (${laneText})`, 0, -42);
             }
 
             // 이름표 및 등번호
