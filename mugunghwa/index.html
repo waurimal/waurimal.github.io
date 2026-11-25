@@ -212,6 +212,77 @@
     </main>
 
     <!-- ─────────────────────────────────────────── -->
+    <!-- 1.5. 실시간 학급 대기방 화면 (screen-waiting-room) -->
+    <!-- ─────────────────────────────────────────── -->
+    <main id="screen-waiting-room" class="hidden flex-1 max-w-4xl w-full mx-auto px-4 py-8 flex flex-col gap-6">
+        <!-- 상단 대기방 헤더 & 참여 코드 -->
+        <div class="bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 p-6 sm:p-8 rounded-3xl border border-amber-500/50 shadow-2xl text-center space-y-4">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                <span>실시간 학급 대기방 · 참가자 입장 중</span>
+            </div>
+
+            <div>
+                <p class="text-xs sm:text-sm text-slate-400 font-bold mb-2">학생 기기 (스마트폰/태블릿) 입력 참여 코드</p>
+                <div class="flex items-center justify-center gap-3">
+                    <span id="waitingRoomCode" class="text-5xl sm:text-7xl font-black text-amber-400 font-mono tracking-widest px-8 py-3 bg-slate-950 rounded-2xl border-2 border-amber-500/60 shadow-inner">
+                        ----
+                    </span>
+                    <button type="button" id="btnCopyRoomCode" class="px-3.5 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-xs transition flex flex-col items-center gap-1 cursor-pointer" title="방 번호 복사">
+                        <i class="fa-solid fa-copy text-base"></i>
+                        <span class="text-[10px]">코드 복사</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 방 설정 뱃지 요약 -->
+            <div class="flex items-center justify-center gap-2 flex-wrap text-xs text-slate-300">
+                <span class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 font-bold" id="badgeRoomTime">⏱️ 제한시간: 90초</span>
+                <span class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 font-bold" id="badgeRoomGrade">📚 6학년 영어</span>
+                <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-extrabold" id="badgePlayerCount">현재 0명 입장</span>
+            </div>
+
+            <p id="waitingRoomSubtext" class="text-xs text-slate-400 max-w-lg mx-auto leading-relaxed">
+                학생들은 학생 기기에서 위 <strong>4자리 참여 코드</strong>를 입력하고 입장하세요.<br>
+                모든 참가자가 모이면 선생님(방장)이 아래 [경기 시작하기] 버튼을 누릅니다!
+            </p>
+        </div>
+
+        <!-- 실시간 입장 학생 명단 카드 그리드 -->
+        <div class="bg-slate-900/90 p-5 sm:p-6 rounded-3xl border border-slate-800 shadow-xl space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">👥</span>
+                    <h3 class="font-black text-white text-sm sm:text-base">입장한 반 친구들 목록</h3>
+                </div>
+                <span id="waitingRoomRosterCount" class="text-xs font-bold text-emerald-400">0명 준비 완료</span>
+            </div>
+
+            <!-- 참여자 카드 그리드 -->
+            <div id="waitingRoomRosterGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 min-h-[140px] max-h-80 overflow-y-auto worksheet-scroll p-1">
+                <!-- 동적으로 학생 카드 삽입 -->
+            </div>
+        </div>
+
+        <!-- 하단 액션 버튼 바 -->
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+            <button type="button" id="btnLeaveWaitingRoom" class="px-5 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition cursor-pointer flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> <span>대기방 나가기</span>
+            </button>
+
+            <!-- 호스트(선생님) 전용 시작 버튼 -->
+            <button type="button" id="btnHostStartGame" class="flex-1 min-w-[240px] py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-sm sm:text-base transition shadow-xl cursor-pointer flex items-center justify-center gap-2">
+                <i class="fa-solid fa-flag-checkered text-lg"></i> <span>전원 입장 완료! 경기 시작하기</span>
+            </button>
+
+            <!-- 학생 기기 전용 대기 안내 뱃지 -->
+            <div id="studentWaitingNotice" class="hidden flex-1 min-w-[240px] py-4 px-4 rounded-2xl bg-slate-800/80 border border-slate-700 text-amber-300 font-extrabold text-xs sm:text-sm text-center flex items-center justify-center gap-2 animate-pulse">
+                <i class="fa-solid fa-hourglass-half"></i> <span>선생님이 경기를 시작할 때까지 잠시만 기다려 주세요... 🏃</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- ─────────────────────────────────────────── -->
     <!-- 2. 인게임 메인 플레이 화면 (screen-game) -->
     <!-- ─────────────────────────────────────────── -->
     <div id="screen-game" class="hidden flex-col items-center justify-center w-full min-h-screen p-2 sm:p-4">
@@ -387,30 +458,75 @@
             window.activeGame = game;
 
             const screenLobby = document.getElementById('screen-lobby');
+            const screenWaitingRoom = document.getElementById('screen-waiting-room');
             const screenGame = document.getElementById('screen-game');
             const victoryModal = document.getElementById('victoryModal');
             const timeOverModal = document.getElementById('timeOverModal');
 
             let currentQuestion = null;
+            let myPlayerName = '도전자';
+
+            // 대기방 참가자 명단 렌더링 함수
+            function renderWaitingRoster(players) {
+                const grid = document.getElementById('waitingRoomRosterGrid');
+                const badgeCount = document.getElementById('waitingRoomRosterCount');
+                const badgeTotal = document.getElementById('badgePlayerCount');
+                if (!grid) return;
+
+                const playerList = Object.values(players || {});
+                const count = playerList.length;
+                if (badgeCount) badgeCount.textContent = `${count}명 준비 완료`;
+                if (badgeTotal) badgeTotal.textContent = `현재 ${count}명 입장`;
+
+                grid.innerHTML = '';
+                if (count === 0) {
+                    grid.innerHTML = `
+                        <div class="col-span-full py-8 text-center text-slate-500 text-xs">
+                            아직 입장한 학생이 없습니다. 학생 기기에서 위 방 번호를 입력해 주세요!
+                        </div>
+                    `;
+                    return;
+                }
+
+                playerList.forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = 'p-2.5 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center gap-2 transition hover:border-emerald-500/50 shadow';
+                    card.innerHTML = `
+                        <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-sm flex-shrink-0">
+                            🏃
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="font-bold text-xs text-white truncate">${p.name || '학생'}</div>
+                            <div class="text-[10px] text-emerald-400 font-semibold flex items-center gap-1 mt-0.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> 준비 완료
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
 
             // 1. 솔로 연습 모드 시작
             document.getElementById('btnStartSoloGame').addEventListener('click', () => {
                 const time = document.getElementById('soloTimeLimit').value;
                 const grade = document.getElementById('soloGrade').value;
                 const name = (document.getElementById('soloPlayerName') && document.getElementById('soloPlayerName').value.trim()) || '도전자';
+                myPlayerName = name;
 
                 window.MugunghwaQuizManager.setGrade(grade);
                 screenLobby.classList.add('hidden');
+                screenWaitingRoom.classList.add('hidden');
                 screenGame.classList.remove('hidden');
 
                 game.startNewGame({ mode: 'solo', timeLimit: Number(time), playerName: name });
                 serveNextQuiz();
             });
 
-            // 2. 호스트 방 생성 (교사용 대형 화면)
+            // 2. 호스트 방 생성 (교사용 대형 화면) -> 대기방 진입
             document.getElementById('btnCreateHostRoom').addEventListener('click', async () => {
                 const time = document.getElementById('hostTimeLimit').value;
                 const grade = document.getElementById('hostGrade').value;
+                myPlayerName = '선생님';
 
                 window.MugunghwaQuizManager.setGrade(grade);
                 try {
@@ -418,20 +534,48 @@
                         timeLimit: Number(time),
                         grade: grade
                     });
-                    alert(`🎉 학급 방이 생성되었습니다! 방 번호: [ ${roomId} ]\n학생들에게 방 번호를 알려주세요!`);
 
+                    // 게임을 바로 시작하지 않고, 대기방 화면으로 전환!
                     screenLobby.classList.add('hidden');
-                    screenGame.classList.remove('hidden');
+                    screenWaitingRoom.classList.remove('hidden');
+                    screenGame.classList.add('hidden');
 
-                    game.startNewGame({ mode: 'multi', timeLimit: Number(time), playerName: '선생님' });
-                    window.MugunghwaMultiplayer.startHostGame();
-                    serveNextQuiz();
+                    document.getElementById('waitingRoomCode').textContent = roomId;
+                    document.getElementById('badgeRoomTime').textContent = `⏱️ 제한시간: ${time === '0' ? '무제한' : time + '초'}`;
+                    document.getElementById('badgeRoomGrade').textContent = `📚 ${grade === 'all' ? '전체 학년' : grade + '학년'} 영어`;
+                    document.getElementById('waitingRoomSubtext').innerHTML = `학생들은 학생 기기에서 참여 코드 <strong>[ ${roomId} ]</strong>를 입력하고 입장하세요.<br>모든 참가자가 모이면 아래 <strong>[경기 시작하기]</strong> 버튼을 누릅니다!`;
+
+                    document.getElementById('btnHostStartGame').classList.remove('hidden');
+                    document.getElementById('studentWaitingNotice').classList.add('hidden');
+                    renderWaitingRoster({});
+
+                    // 멀티플레이어 상태 구독 (학생 입장 및 게임 시작 감지)
+                    window.MugunghwaMultiplayer.onStateChange(roomData => {
+                        if (!roomData) return;
+                        if (roomData.status === 'waiting') {
+                            renderWaitingRoster(roomData.players);
+                        } else if (roomData.status === 'playing') {
+                            if (!game.isRunning) {
+                                screenWaitingRoom.classList.add('hidden');
+                                screenGame.classList.remove('hidden');
+                                game.startNewGame({
+                                    mode: 'multi',
+                                    timeLimit: Number(roomData.timeLimit || time),
+                                    playerName: myPlayerName,
+                                    players: roomData.players
+                                });
+                                serveNextQuiz();
+                            } else {
+                                game.syncMultiplayerPlayers(roomData.players);
+                            }
+                        }
+                    });
                 } catch (e) {
                     alert('방 생성 실패: ' + e.message);
                 }
             });
 
-            // 3. 학생 방 입장
+            // 3. 학생 방 입장 -> 대기방 진입
             document.getElementById('btnJoinRoom').addEventListener('click', async () => {
                 const code = document.getElementById('joinRoomId').value.trim();
                 const name = document.getElementById('joinPlayerName').value.trim() || '도전자';
@@ -439,18 +583,79 @@
                     alert('4자리 방 번호를 입력해 주세요.');
                     return;
                 }
+                myPlayerName = name;
 
                 try {
                     const room = await window.MugunghwaMultiplayer.joinRoom(code, { name: name });
-                    alert(`✅ 방 [ ${code} ] 에 참가 완료! 경기를 시작합니다.`);
 
+                    // 바로 시작하지 않고 대기방 화면으로 전환!
                     screenLobby.classList.add('hidden');
-                    screenGame.classList.remove('hidden');
+                    screenWaitingRoom.classList.remove('hidden');
+                    screenGame.classList.add('hidden');
 
-                    game.startNewGame({ mode: 'multi', timeLimit: room.timeLimit || 90, playerName: name });
-                    serveNextQuiz();
+                    document.getElementById('waitingRoomCode').textContent = code;
+                    document.getElementById('badgeRoomTime').textContent = `⏱️ 제한시간: ${room.timeLimit || 90}초`;
+                    document.getElementById('badgeRoomGrade').textContent = `📚 ${room.grade === 'all' ? '전체 학년' : (room.grade || 6) + '학년'} 영어`;
+                    document.getElementById('waitingRoomSubtext').innerHTML = `👋 <strong>[ ${name} ]</strong> 학생 대기실 입장 완료!<br>선생님이 경기를 시작할 때까지 잠시 대기해 주세요.`;
+
+                    // 학생 기기는 시작 버튼 숨김, 대기 안내 표시
+                    document.getElementById('btnHostStartGame').classList.add('hidden');
+                    document.getElementById('studentWaitingNotice').classList.remove('hidden');
+                    renderWaitingRoster(room.players || {});
+
+                    // 멀티플레이어 상태 구독 (선생님이 시작하면 동시 시작)
+                    window.MugunghwaMultiplayer.onStateChange(roomData => {
+                        if (!roomData) return;
+                        if (roomData.status === 'waiting') {
+                            renderWaitingRoster(roomData.players);
+                        } else if (roomData.status === 'playing') {
+                            if (!game.isRunning) {
+                                screenWaitingRoom.classList.add('hidden');
+                                screenGame.classList.remove('hidden');
+                                game.startNewGame({
+                                    mode: 'multi',
+                                    timeLimit: Number(roomData.timeLimit || room.timeLimit || 90),
+                                    playerName: myPlayerName,
+                                    players: roomData.players
+                                });
+                                serveNextQuiz();
+                            } else {
+                                game.syncMultiplayerPlayers(roomData.players);
+                            }
+                        }
+                    });
                 } catch (e) {
                     alert(e.message);
+                }
+            });
+
+            // 호스트: 경기 시작하기 버튼 클릭
+            document.getElementById('btnHostStartGame').addEventListener('click', async () => {
+                try {
+                    await window.MugunghwaMultiplayer.startHostGame();
+                } catch (e) {
+                    alert('경기 시작 실패: ' + e.message);
+                }
+            });
+
+            // 대기방 나가기 버튼 클릭
+            document.getElementById('btnLeaveWaitingRoom').addEventListener('click', () => {
+                if (window.MugunghwaMultiplayer && window.MugunghwaMultiplayer.roomUnsubscribe) {
+                    window.MugunghwaMultiplayer.roomUnsubscribe();
+                }
+                screenWaitingRoom.classList.add('hidden');
+                screenLobby.classList.remove('hidden');
+            });
+
+            // 방 코드 복사 버튼
+            document.getElementById('btnCopyRoomCode').addEventListener('click', () => {
+                const code = document.getElementById('waitingRoomCode').textContent.trim();
+                if (code && code !== '----') {
+                    navigator.clipboard.writeText(code).then(() => {
+                        alert(`📋 참여 코드 [ ${code} ] 가 클립보드에 복사되었습니다!`);
+                    }).catch(() => {
+                        prompt('참여 코드 복사:', code);
+                    });
                 }
             });
 
@@ -460,6 +665,7 @@
                 if (game.animFrameId) cancelAnimationFrame(game.animFrameId);
                 victoryModal.classList.add('hidden');
                 timeOverModal.classList.add('hidden');
+                screenWaitingRoom.classList.add('hidden');
                 screenGame.classList.add('hidden');
                 screenLobby.classList.remove('hidden');
                 renderHallOfFame();

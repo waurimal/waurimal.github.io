@@ -66,7 +66,6 @@ class MugunghwaMultiplayer {
     // 1. 교사/호스트: 방 생성
     async createRoom(settings = {}) {
         if (!this.db) this.initFirebase();
-        if (!this.db) throw new Error("Firebase 연결을 초기화할 수 없습니다.");
 
         const roomId = settings.roomId || this.generateRoomId();
         const timeLimit = Number(settings.timeLimit) || 90; // 기본 90초
@@ -88,7 +87,7 @@ class MugunghwaMultiplayer {
             timeLimit: timeLimit,
             remainingTime: timeLimit,
             grade: grade,
-            createdAt: window.firebase.firestore.FieldValue.serverTimestamp(),
+            createdAt: Date.now(),
             taggerState: 'CHANTING', // CHANTING | TURNING | SCANNING
             taggerSpeed: 1.0,
             taggerTurnCount: 0,
@@ -96,6 +95,16 @@ class MugunghwaMultiplayer {
             fieldItems: initialFieldItems,
             finishers: [] // 골인 순서 기록 [{ id, name, rank, time }]
         };
+
+        if (!this.db) {
+            console.warn("[MugunghwaMultiplayer] Firebase not initialized. Using offline local mock room.");
+            this.isMock = true;
+            this.currentRoomId = roomId;
+            this.isHost = true;
+            this.roomData = roomPayload;
+            setTimeout(() => this.notifyStateChange(this.roomData), 100);
+            return roomId;
+        }
 
         const roomRef = this.db.collection('mugunghwa_rooms').doc(roomId);
         await roomRef.set(roomPayload);
@@ -110,21 +119,8 @@ class MugunghwaMultiplayer {
     // 2. 학생: 방 입장
     async joinRoom(roomId, playerInfo) {
         if (!this.db) this.initFirebase();
-        if (!this.db) throw new Error("Firebase 연결을 초기화할 수 없습니다.");
 
         const cleanId = String(roomId).trim();
-        const roomRef = this.db.collection('mugunghwa_rooms').doc(cleanId);
-        const snap = await roomRef.get();
-
-        if (!snap.exists) {
-            throw new Error(`방 번호 [${cleanId}]를 찾을 수 없습니다. 다시 확인해 주세요.`);
-        }
-
-        const room = snap.data();
-        if (room.status === 'ended') {
-            throw new Error("이미 종료된 게임 방입니다.");
-        }
-
         const playerData = {
             id: this.myPlayerId,
             name: playerInfo.name || '학생',
@@ -146,6 +142,34 @@ class MugunghwaMultiplayer {
             isOut: false,
             joinedAt: Date.now()
         };
+
+        if (!this.db) {
+            this.isMock = true;
+            this.currentRoomId = cleanId;
+            const mockRoom = {
+                roomId: cleanId,
+                status: 'waiting',
+                timeLimit: 90,
+                grade: 6,
+                players: {}
+            };
+            mockRoom.players[this.myPlayerId] = playerData;
+            this.roomData = mockRoom;
+            setTimeout(() => this.notifyStateChange(this.roomData), 100);
+            return mockRoom;
+        }
+
+        const roomRef = this.db.collection('mugunghwa_rooms').doc(cleanId);
+        const snap = await roomRef.get();
+
+        if (!snap.exists) {
+            throw new Error(`방 번호 [${cleanId}]를 찾을 수 없습니다. 다시 확인해 주세요.`);
+        }
+
+        const room = snap.data();
+        if (room.status === 'ended') {
+            throw new Error("이미 종료된 게임 방입니다.");
+        }
 
         const updateObj = {};
         updateObj[`players.${this.myPlayerId}`] = playerData;
@@ -203,6 +227,15 @@ class MugunghwaMultiplayer {
 
     // 4. 호스트 전용: 게임 시작
     async startHostGame() {
+        if (this.isMock) {
+            this.roomData.status = 'playing';
+            this.roomData.startedAt = Date.now();
+            this.roomData.taggerState = 'CHANTING';
+            this.roomData.taggerSpeed = 1.0;
+            this.roomData.taggerTurnCount = 1;
+            this.notifyStateChange(this.roomData);
+            return;
+        }
         if (!this.isHost || !this.currentRoomId || !this.db) return;
         const roomRef = this.db.collection('mugunghwa_rooms').doc(this.currentRoomId);
         await roomRef.update({
@@ -210,7 +243,7 @@ class MugunghwaMultiplayer {
             startedAt: Date.now(),
             taggerState: 'CHANTING',
             taggerSpeed: 1.0,
-            taggerTurnCount: 0
+            taggerTurnCount: 1
         });
     }
 

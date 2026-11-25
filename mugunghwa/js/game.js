@@ -129,6 +129,47 @@ class MugunghwaGame {
         }
     }
 
+    // 멀티플레이어 참여 학생 목록 동기화
+    syncMultiplayerPlayers(playersObj) {
+        if (!playersObj) return;
+        const myId = (window.MugunghwaMultiplayer && window.MugunghwaMultiplayer.myPlayerId) ? window.MugunghwaMultiplayer.myPlayerId : null;
+        const playerIds = Object.keys(playersObj).filter(id => id !== myId);
+
+        const newPeers = [];
+        playerIds.forEach((id, idx) => {
+            const p = playersObj[id];
+            let existing = this.peers.find(peer => peer.id === id);
+            const laneY = this.TRACK_Y_MIN + ((this.TRACK_Y_MAX - this.TRACK_Y_MIN) / Math.max(2, playerIds.length + 1)) * (idx + 1);
+            if (!existing) {
+                existing = {
+                    id: id,
+                    name: p.name || '학생',
+                    m: p.m || 0,
+                    checkpoint: p.checkpoint || 0,
+                    displayX: this.mToX(p.m || 0),
+                    displayY: laneY,
+                    targetX: this.mToX(p.m || 0),
+                    targetY: laneY,
+                    runFrame: 0,
+                    isFinished: p.isFinished || false,
+                    finishRank: p.finishRank || 0,
+                    isFallen: p.isFallen || false,
+                    buffs: p.activeBuffs || { shoes: false, shield: false }
+                };
+            } else {
+                existing.name = p.name || existing.name;
+                existing.m = p.m || 0;
+                existing.checkpoint = p.checkpoint || 0;
+                existing.targetX = this.mToX(p.m || 0);
+                existing.isFinished = p.isFinished || false;
+                existing.finishRank = p.finishRank || existing.finishRank;
+                existing.buffs = p.activeBuffs || existing.buffs;
+            }
+            newPeers.push(existing);
+        });
+        this.peers = newPeers;
+    }
+
     setTimeLimit(sec) {
         this.timeLimit = Number(sec) || 90;
         this.remainingTime = this.timeLimit;
@@ -162,7 +203,14 @@ class MugunghwaGame {
         this.player.buffs = { shoes: false, shield: false, star: false };
 
         this.initFieldItems();
-        this.initBots();
+        if (this.playMode === 'solo') {
+            this.initBots();
+        } else {
+            this.peers = [];
+            if (settings.players) {
+                this.syncMultiplayerPlayers(settings.players);
+            }
+        }
 
         // 술래 초기화
         this.tagger.state = 'CHANTING';
@@ -496,6 +544,13 @@ class MugunghwaGame {
                 bot.displayX += (bot.targetX - bot.displayX) * 0.12;
                 if (Math.abs(bot.targetX - bot.displayX) > 2) {
                     bot.runFrame += 0.3;
+                }
+            });
+        } else if (this.playMode === 'multi') {
+            this.peers.forEach(peer => {
+                peer.displayX += (peer.targetX - peer.displayX) * 0.14;
+                if (Math.abs(peer.targetX - peer.displayX) > 2) {
+                    peer.runFrame += 0.35;
                 }
             });
         }
