@@ -262,8 +262,17 @@ class MugunghwaAudio {
             }
 
             if (callback) {
-                utter.onend = () => callback();
-                utter.onerror = () => callback();
+                let hasFired = false;
+                const safeCb = () => {
+                    if (!hasFired) {
+                        hasFired = true;
+                        callback();
+                    }
+                };
+                utter.onend = safeCb;
+                utter.onerror = safeCb;
+                // 안전 타이머: 브라우저가 음성 이벤트를 놓치더라도 턴이 멈추지 않도록 보장
+                setTimeout(safeCb, Math.max(3000, Math.floor(2600 / rate) + 800));
             }
             window.speechSynthesis.speak(utter);
         } catch (e) {

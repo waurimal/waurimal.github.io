@@ -166,6 +166,7 @@ class MugunghwaMultiplayer {
         }
 
         const roomRef = this.db.collection('mugunghwa_rooms').doc(roomId);
+        let lastKnownTurn = 0;
         this.roomUnsubscribe = roomRef.onSnapshot(docSnap => {
             if (!docSnap.exists) {
                 this.roomData = null;
@@ -173,6 +174,15 @@ class MugunghwaMultiplayer {
                 return;
             }
             this.roomData = docSnap.data();
+
+            // 술래 턴이 증가했을 때 학생 단말기에서도 퀴즈 자동 갱신 트리거
+            if (this.roomData.taggerTurnCount && this.roomData.taggerTurnCount > lastKnownTurn) {
+                lastKnownTurn = this.roomData.taggerTurnCount;
+                if (!this.isHost && typeof window !== 'undefined' && window.onNewTaggerTurn) {
+                    window.onNewTaggerTurn(lastKnownTurn);
+                }
+            }
+
             this.notifyStateChange(this.roomData);
         }, err => {
             console.warn("[MugunghwaMultiplayer] Snapshot error:", err);

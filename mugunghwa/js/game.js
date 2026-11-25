@@ -188,6 +188,18 @@ class MugunghwaGame {
     speakTaggerChant() {
         if (!this.isRunning || this.isPaused) return;
 
+        this.tagger.turnCount++;
+
+        // 새 턴 시작 알림: 턴마다 새로운 퀴즈 문제로 즉시 갱신
+        if (typeof window !== 'undefined' && window.onNewTaggerTurn) {
+            window.onNewTaggerTurn(this.tagger.turnCount);
+        }
+
+        // 멀티플레이어 호스트인 경우 상태 브로드캐스트
+        if (this.playMode === 'multi' && window.MugunghwaMultiplayer && window.MugunghwaMultiplayer.isHost) {
+            window.MugunghwaMultiplayer.broadcastTaggerState('CHANTING', this.tagger.speedMultiplier, this.tagger.turnCount);
+        }
+
         // 구호 속도: 턴이 지날수록 약간씩 긴장감 넘치게 변동 (0.9 ~ 1.45배속)
         const speed = 0.95 + (Math.random() * 0.45);
         this.tagger.speedMultiplier = speed;
@@ -206,7 +218,6 @@ class MugunghwaGame {
     triggerTaggerTurn() {
         this.tagger.state = 'SCANNING';
         this.tagger.scanTimer = 0;
-        this.tagger.turnCount++;
         this.tagger.scanDuration = Math.floor(100 + Math.random() * 60); // 1.6 ~ 2.6초 동안 전방 레이저 스캔
 
         if (window.MugunghwaAudio) {
@@ -723,38 +734,146 @@ class MugunghwaGame {
         // 머리 & 회전 각도
         ctx.save();
         ctx.translate(0, -32);
-        const lookDir = Math.cos(this.tagger.headAngle); // 1 = 플레이어 주시(정면), -1 = 나무(뒤)
+        const lookDir = Math.cos(this.tagger.headAngle); // 1 = 플레이어 주시(정면), -1 = 나무(뒤통수)
 
-        // 머리카락 (양갈래 헤어)
-        ctx.fillStyle = '#1E1B4B';
-        ctx.beginPath();
-        ctx.arc(0, 0, 22, 0, Math.PI * 2);
-        ctx.fill();
-        // 양갈래 땋은 머리
-        ctx.fillRect(-28, -2, 10, 26);
-        ctx.fillRect(18, -2, 10, 26);
+        if (lookDir <= 0.15) {
+            // ==========================================
+            // [술래 뒤통수 렌더링 (나무를 바라보고 있을 때)]
+            // ==========================================
+            // 1. 머리 전체 (칠흑 같은 검은 머리카락)
+            ctx.fillStyle = '#111827';
+            ctx.beginPath();
+            ctx.arc(0, 0, 22, 0, Math.PI * 2);
+            ctx.fill();
 
-        // 얼굴
-        ctx.fillStyle = '#FED7AA';
-        ctx.beginPath();
-        ctx.arc(lookDir * 5, 2, 17, 0, Math.PI * 2);
-        ctx.fill();
+            // 2. 뒤통수 가르마 (5:5 정수리~목덜미 수직 분할선)
+            ctx.strokeStyle = '#030712';
+            ctx.lineWidth = 2.2;
+            ctx.beginPath();
+            ctx.moveTo(0, -21);
+            ctx.lineTo(0, 18);
+            ctx.stroke();
 
-        // 정면 주시 중일 때만 눈과 볼터치 그림
-        if (lookDir > 0) {
-            // 눈 (적색 센서 렌즈)
+            // 3. 머릿결 텍스처 (양쪽 땋은 머리로 모이는 흐름선)
+            ctx.strokeStyle = 'rgba(75, 85, 99, 0.45)';
+            ctx.lineWidth = 1.3;
+            ctx.beginPath();
+            ctx.moveTo(0, -10);
+            ctx.quadraticCurveTo(-10, -8, -20, 2);
+            ctx.moveTo(0, -10);
+            ctx.quadraticCurveTo(10, -8, 20, 2);
+            ctx.moveTo(0, 4);
+            ctx.quadraticCurveTo(-10, 6, -20, 12);
+            ctx.moveTo(0, 4);
+            ctx.quadraticCurveTo(10, 6, 20, 12);
+            ctx.stroke();
+
+            // 4. 뒤통수 상단 은은한 윤기 하이라이트
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+            ctx.lineWidth = 2.0;
+            ctx.beginPath();
+            ctx.arc(0, -3, 17, Math.PI * 1.15, Math.PI * 1.85);
+            ctx.stroke();
+
+            // 5. 양쪽 땋은 머리 (Pigtails)
+            ctx.fillStyle = '#111827';
+            // 왼쪽 땋은 머리
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(-27, 4, 11, 26, 4);
+            else ctx.fillRect(-27, 4, 11, 26);
+            ctx.fill();
+            // 오른쪽 땋은 머리
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(16, 4, 11, 26, 4);
+            else ctx.fillRect(16, 4, 11, 26);
+            ctx.fill();
+
+            // 땋은 머리 마디 선
+            ctx.strokeStyle = '#374151';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(-26, 12); ctx.lineTo(-17, 14);
+            ctx.moveTo(-26, 19); ctx.lineTo(-17, 21);
+            ctx.moveTo(-26, 26); ctx.lineTo(-17, 28);
+            ctx.moveTo(17, 14); ctx.lineTo(26, 12);
+            ctx.moveTo(17, 21); ctx.lineTo(26, 19);
+            ctx.moveTo(17, 28); ctx.lineTo(26, 26);
+            ctx.stroke();
+
+            // 6. 빨간색 머리끈 / 리본 방울
+            ctx.fillStyle = '#DC2626';
+            ctx.beginPath();
+            ctx.arc(-21, 3, 5.5, 0, Math.PI * 2);
+            ctx.arc(21, 3, 5.5, 0, Math.PI * 2);
+            ctx.fill();
+
             ctx.fillStyle = '#EF4444';
             ctx.beginPath();
-            ctx.arc(-2 + lookDir * 4, 0, 4, 0, Math.PI * 2);
-            ctx.arc(8 + lookDir * 4, 0, 4, 0, Math.PI * 2);
+            ctx.arc(-22, 2, 2.5, 0, Math.PI * 2);
+            ctx.arc(20, 2, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // ==========================================
+            // [술래 정면 렌더링 (플레이어들을 노려볼 때)]
+            // ==========================================
+            // 1. 뒤 배경 머리카락 베이스
+            ctx.fillStyle = '#111827';
+            ctx.beginPath();
+            ctx.arc(0, 0, 22, 0, Math.PI * 2);
             ctx.fill();
 
-            // 볼터치
-            ctx.fillStyle = 'rgba(244, 63, 94, 0.6)';
+            // 2. 양쪽 땋은 머리
+            ctx.fillRect(-27, 4, 11, 26);
+            ctx.fillRect(16, 4, 11, 26);
+
+            // 3. 빨간 머리끈 방울
+            ctx.fillStyle = '#DC2626';
             ctx.beginPath();
-            ctx.arc(-4 + lookDir * 4, 7, 3, 0, Math.PI * 2);
-            ctx.arc(10 + lookDir * 4, 7, 3, 0, Math.PI * 2);
+            ctx.arc(-21, 3, 5.5, 0, Math.PI * 2);
+            ctx.arc(21, 3, 5.5, 0, Math.PI * 2);
             ctx.fill();
+
+            // 4. 살구색 얼굴
+            ctx.fillStyle = '#FED7AA';
+            ctx.beginPath();
+            ctx.arc(lookDir * 4, 2, 17, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 5. 이마 일자 앞머리 (뱅 헤어)
+            ctx.fillStyle = '#111827';
+            ctx.beginPath();
+            ctx.arc(lookDir * 4, -5, 17.5, Math.PI * 0.95, Math.PI * 2.05);
+            ctx.lineTo(lookDir * 4 + 17, -1);
+            ctx.lineTo(lookDir * 4 - 17, -1);
+            ctx.closePath();
+            ctx.fill();
+
+            // 6. 눈 (적색 센서 렌즈 & 동공 하이라이트)
+            ctx.fillStyle = '#EF4444';
+            ctx.beginPath();
+            ctx.arc(-5 + lookDir * 4, 2, 4, 0, Math.PI * 2);
+            ctx.arc(6 + lookDir * 4, 2, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(-6 + lookDir * 4, 1, 1.3, 0, Math.PI * 2);
+            ctx.arc(5 + lookDir * 4, 1, 1.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 7. 분홍빛 볼터치
+            ctx.fillStyle = 'rgba(244, 63, 94, 0.65)';
+            ctx.beginPath();
+            ctx.arc(-7 + lookDir * 4, 9, 3.5, 0, Math.PI * 2);
+            ctx.arc(8 + lookDir * 4, 9, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 8. 미소 짓는 입
+            ctx.strokeStyle = '#B91C1C';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(lookDir * 4, 11, 3.5, 0.2, Math.PI - 0.2);
+            ctx.stroke();
         }
 
         ctx.restore();

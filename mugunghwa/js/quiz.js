@@ -6,6 +6,7 @@
 class MugunghwaQuizManager {
     constructor() {
         this.selectedGrade = 'all'; // 'all', 3, 4, 5, 6
+        this.lastQuestionKey = ''; // 직전 출제된 문제 키 (연속 동일 문제 방지)
         this.fallbackWords = [
             // 3학년 기본
             { en: 'run', kr: '달리다', grade: 3 },
@@ -132,10 +133,14 @@ class MugunghwaQuizManager {
         let ttsWord = '';
 
         if (isSentence) {
-            targetItem = sentences[Math.floor(Math.random() * sentences.length)];
+            // 직전 문제와 중복되지 않도록 필터링
+            const candidateSentences = sentences.filter(s => s.en !== this.lastQuestionKey);
+            const usablePool = candidateSentences.length > 0 ? candidateSentences : sentences;
+            targetItem = usablePool[Math.floor(Math.random() * usablePool.length)];
             questionText = targetItem.en;
             promptText = "다음 문장의 알맞은 우리말 뜻을 고르세요!";
             ttsWord = targetItem.en;
+            this.lastQuestionKey = targetItem.en;
 
             const distractors = [];
             const pool = sentences.filter(s => s.en !== targetItem.en);
@@ -149,10 +154,14 @@ class MugunghwaQuizManager {
                 ...distractors.map(d => ({ text: d.kr || d.en, isCorrect: false }))
             ];
         } else if (isReverse) {
-            targetItem = words[Math.floor(Math.random() * words.length)];
+            // 직전 문제와 중복되지 않도록 필터링
+            const candidateWords = words.filter(w => w.en !== this.lastQuestionKey);
+            const usablePool = candidateWords.length > 0 ? candidateWords : words;
+            targetItem = usablePool[Math.floor(Math.random() * usablePool.length)];
             questionText = targetItem.kr;
             promptText = "다음 우리말 뜻에 알맞은 영어 낱말은?";
             ttsWord = targetItem.en;
+            this.lastQuestionKey = targetItem.en;
 
             const distractors = [];
             const pool = words.filter(w => w.en.toLowerCase() !== targetItem.en.toLowerCase());
@@ -166,10 +175,14 @@ class MugunghwaQuizManager {
                 ...distractors.map(d => ({ text: d.en, isCorrect: false }))
             ];
         } else {
-            targetItem = words[Math.floor(Math.random() * words.length)];
+            // 직전 문제와 중복되지 않도록 필터링
+            const candidateWords = words.filter(w => w.en !== this.lastQuestionKey);
+            const usablePool = candidateWords.length > 0 ? candidateWords : words;
+            targetItem = usablePool[Math.floor(Math.random() * usablePool.length)];
             questionText = targetItem.en;
             promptText = "다음 영어 낱말의 올바른 우리말 뜻을 고르세요!";
             ttsWord = targetItem.en;
+            this.lastQuestionKey = targetItem.en;
 
             const distractors = [];
             const pool = words.filter(w => w.en.toLowerCase() !== targetItem.en.toLowerCase());

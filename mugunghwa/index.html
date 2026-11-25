@@ -432,11 +432,29 @@
                 btn.innerHTML = isMuted ? '<i class="fa-solid fa-volume-xmark text-rose-400"></i>' : '<i class="fa-solid fa-volume-high"></i>';
             });
 
-            // 5. 퀴즈 출제 함수
-            function serveNextQuiz() {
+            // 5. 퀴즈 출제 함수 (턴마다 새로운 문제로 자동 갱신 지원)
+            let promptRestoreTimer = null;
+            function serveNextQuiz(isNewTurn = false) {
                 currentQuestion = window.MugunghwaQuizManager.generateQuestion();
-                document.getElementById('quizPrompt').innerHTML = `<span>📝</span> <span>${currentQuestion.prompt}</span>`;
-                document.getElementById('quizQuestionText').textContent = currentQuestion.question;
+                const promptEl = document.getElementById('quizPrompt');
+                const qText = document.getElementById('quizQuestionText');
+
+                if (promptRestoreTimer) clearTimeout(promptRestoreTimer);
+
+                if (isNewTurn) {
+                    promptEl.innerHTML = `<span class="inline-flex items-center gap-1.5 text-amber-300 font-extrabold animate-pulse"><span>🔄 [새 턴!]</span> <span>술래가 뒤돌며 새로운 문제가 출제되었습니다!</span></span>`;
+                    promptRestoreTimer = setTimeout(() => {
+                        if (currentQuestion) {
+                            promptEl.innerHTML = `<span>📝</span> <span>${currentQuestion.prompt}</span>`;
+                        }
+                    }, 1800);
+                } else {
+                    promptEl.innerHTML = `<span>📝</span> <span>${currentQuestion.prompt}</span>`;
+                }
+
+                qText.textContent = currentQuestion.question;
+                qText.classList.add('scale-105', 'transition-transform');
+                setTimeout(() => qText.classList.remove('scale-105'), 200);
 
                 const grid = document.getElementById('quizChoicesGrid');
                 grid.innerHTML = '';
@@ -444,7 +462,7 @@
                 currentQuestion.choices.forEach(ch => {
                     const btn = document.createElement('button');
                     btn.type = 'button';
-                    btn.className = 'quiz-choice-btn py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 font-black text-sm sm:text-base transition text-left flex items-center justify-between';
+                    btn.className = 'quiz-choice-btn py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 font-black text-sm sm:text-base transition text-left flex items-center justify-between cursor-pointer';
                     btn.innerHTML = `<span>${ch.text}</span> <i class="fa-solid fa-chevron-right text-xs text-slate-500"></i>`;
 
                     btn.addEventListener('click', () => {
@@ -453,6 +471,13 @@
                     grid.appendChild(btn);
                 });
             }
+
+            // 턴이 새로 바뀔 때마다 문제 자동 갱신 이벤트 핸들러
+            window.onNewTaggerTurn = (turnCount) => {
+                if (game.isRunning && !game.player.isFinished) {
+                    serveNextQuiz(true);
+                }
+            };
 
             // 문제 발음 듣기
             document.getElementById('btnQuizTts').addEventListener('click', () => {
