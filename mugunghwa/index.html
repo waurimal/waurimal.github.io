@@ -880,29 +880,29 @@
                 });
             }
 
-            // 퀴즈 답안 선택 시 처리 (이동 완료 확정 or 오답 후퇴)
+            // 퀴즈 답안 선택 시 처리 (이동한 상태에서는 빨간 눈일 때도 정답 입력 허용)
             function handleChoiceSelect(isCorrect, clickedBtn) {
                 if (!game.isRunning) return;
 
-                // 술래가 SCANNING(빨간불) 상태일 때 누르면 술래 적발 처리!
-                if (game.tagger.state === 'SCANNING') {
-                    game.handleTaggerCaught();
-                    clickedBtn.classList.add('bg-rose-600', 'text-white', 'border-rose-500');
-                    const promptEl = document.getElementById('quizPrompt');
-                    if (promptEl) {
-                        promptEl.innerHTML = `<span class="text-rose-400 font-black animate-pulse">🚨 술래 주시 중! 얼음 상태에서 움직여 적발되었습니다!</span>`;
-                    }
-                    return;
-                }
-
+                // 이동 선택(pendingMove) 없이 버튼을 누른 경우
                 if (!game.player.pendingMove) {
-                    const promptEl = document.getElementById('quizPrompt');
-                    if (promptEl) {
-                        promptEl.innerHTML = `<span class="text-amber-400 font-bold">⚠️ 먼저 화살표 키로 이동할 방향을 선택해주세요!</span>`;
+                    if (game.tagger.state === 'SCANNING') {
+                        game.handleTaggerCaught();
+                        clickedBtn.classList.add('bg-rose-600', 'text-white', 'border-rose-500');
+                        const promptEl = document.getElementById('quizPrompt');
+                        if (promptEl) {
+                            promptEl.innerHTML = `<span class="text-rose-400 font-black animate-pulse">🚨 술래 주시 중 움직임 적발! 체크포인트로 후퇴!</span>`;
+                        }
+                    } else {
+                        const promptEl = document.getElementById('quizPrompt');
+                        if (promptEl) {
+                            promptEl.innerHTML = `<span class="text-amber-400 font-bold">⚠️ 먼저 화살표 키로 이동할 방향을 선택해주세요!</span>`;
+                        }
                     }
                     return;
                 }
 
+                // 이동한 상태(pendingMove가 있는 상태)에서는 빨간 눈(SCANNING) 상태여도 문제 맞히기 허용!
                 const grid = document.getElementById('quizChoicesGrid');
                 const allBtns = grid.querySelectorAll('button');
                 allBtns.forEach(b => b.classList.add('pointer-events-none'));
@@ -911,13 +911,18 @@
                 const dpadStatus = document.getElementById('dpadTurnStatus');
                 const dpadCenter = document.getElementById('dpadCenterInfo');
 
+                const wasScanning = (game.tagger.state === 'SCANNING');
                 const result = game.confirmPendingMove(isCorrect);
 
                 if (isCorrect) {
                     clickedBtn.classList.remove('bg-slate-800');
                     clickedBtn.classList.add('bg-emerald-600', 'text-white', 'border-emerald-500');
                     if (promptEl) {
-                        promptEl.innerHTML = `<span class="text-emerald-400 font-black">✅ 정답! 이동 완료! 다음 구호를 기다리세요.</span>`;
+                        if (wasScanning) {
+                            promptEl.innerHTML = `<span class="text-emerald-400 font-black">✅ 정답! 🔴 빨간 눈 주시 중 이동 완료!</span>`;
+                        } else {
+                            promptEl.innerHTML = `<span class="text-emerald-400 font-black">✅ 정답! 이동 완료! 다음 구호를 기다리세요.</span>`;
+                        }
                     }
                 } else {
                     clickedBtn.classList.remove('bg-slate-800');
@@ -959,7 +964,11 @@
                     dpadCenter.className = 'text-[10px] font-black text-rose-400 text-center select-none truncate px-1';
                 }
                 if (promptEl && game.isRunning && !game.player.isFinished) {
-                    promptEl.innerHTML = `<span class="text-rose-400 font-black animate-pulse">🚨 술래 주시 중! 얼음! (움직이면 탈락)</span>`;
+                    if (game.player.pendingMove) {
+                        promptEl.innerHTML = `<span class="text-rose-400 font-black animate-pulse">🔴 [빨간 눈 주시 중!]</span> <span class="text-amber-300 font-bold">이동 상태 유지! 정답을 맞히면 이동 완료!</span>`;
+                    } else {
+                        promptEl.innerHTML = `<span class="text-rose-400 font-black animate-pulse">🚨 술래 주시 중! 얼음! (새 이동 시 적발)</span>`;
+                    }
                 }
             };
 

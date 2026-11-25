@@ -248,13 +248,13 @@ class MugunghwaGame {
 
         this.tagger.turnCount++;
 
-        // 새 구호 시작: 이번 턴 이동 기회 초기화 (한 텀에 1회 이동 가능)
-        this.player.hasMovedThisTurn = false;
-        this.player.pendingMove = null;
-
-        // 새 턴 시작 알림: 턴마다 새로운 퀴즈 문제로 즉시 갱신
-        if (typeof window !== 'undefined' && window.onNewTaggerTurn) {
-            window.onNewTaggerTurn(this.tagger.turnCount);
+        // 플레이어가 아직 문제를 풀고 있는 중(pendingMove가 있음)이라면 문제를 유지하고,
+        // 이미 이동 완료했거나 대기 중인 경우에만 턴 리셋 및 새 문제 준비
+        if (!this.player.pendingMove) {
+            this.player.hasMovedThisTurn = false;
+            if (typeof window !== 'undefined' && window.onNewTaggerTurn) {
+                window.onNewTaggerTurn(this.tagger.turnCount);
+            }
         }
 
         // 멀티플레이어 호스트인 경우 상태 브로드캐스트
@@ -282,11 +282,7 @@ class MugunghwaGame {
         this.tagger.scanTimer = 0;
         this.tagger.scanDuration = Math.floor(100 + Math.random() * 60); // 1.6 ~ 2.6초 동안 전방 레이저 스캔
 
-        // 술래가 돌아봤을 때 미완료된 pendingMove는 취소
-        if (this.player.pendingMove) {
-            this.player.pendingMove = null;
-        }
-
+        // 술래가 빨간 눈(SCANNING)으로 돌아봐도, 이미 이동을 선택한 플레이어의 pendingMove는 유지하여 문제 풀기 허용!
         if (typeof window !== 'undefined' && window.onTaggerScanStart) {
             window.onTaggerScanStart();
         }
@@ -384,21 +380,18 @@ class MugunghwaGame {
         };
     }
 
-    // 퀴즈 답안 선택 시 이동 확정 또는 오답 후퇴 처리
+    // 퀴즈 답안 선택 시 이동 확정 또는 오답 후퇴 처리 (이동한 상태에서는 빨간 눈일 때도 정답 입력 허용)
     confirmPendingMove(isCorrect) {
         if (!this.isRunning || this.player.isFinished) return { success: false };
 
-        // 술래가 돌아본 상태에서 제출한 경우: 즉시 적발!
-        if (this.tagger.state === 'SCANNING') {
-            this.player.pendingMove = null;
-            this.player.hasMovedThisTurn = true;
-            this.handleTaggerCaught();
-            return { success: false, reason: 'caught_by_tagger' };
-        }
-
         const move = this.player.pendingMove;
         if (!move) {
-            // 방향 선택 없이 문제를 직접 푼 경우
+            // 이동 방향 선택 없이(pendingMove 없음) 답변한 경우: 술래가 빨간 눈(SCANNING)이면 적발
+            if (this.tagger.state === 'SCANNING') {
+                this.player.hasMovedThisTurn = true;
+                this.handleTaggerCaught();
+                return { success: false, reason: 'caught_by_tagger' };
+            }
             if (isCorrect) {
                 this.handleCorrectAnswer();
             } else {
@@ -408,12 +401,13 @@ class MugunghwaGame {
             return { success: true, moved: isCorrect };
         }
 
+        // 이동한 상태(pendingMove 존재)에서는 술래가 빨간 눈(SCANNING) 상태여도 문제 맞히기 허용!
         // 이번 텀 이동 1회 소비 완료
         this.player.hasMovedThisTurn = true;
         this.player.pendingMove = null;
 
         if (isCorrect) {
-            // 정답 시: 선택한 레인 및 거리로 이동 완료!
+            // 정답 시: 빨간 눈 상태여도 선택한 레인 및 거리로 정상 이동 완료!
             if (move.direction === 'right') {
                 if (this.player.buffs.shoes) {
                     this.player.buffs.shoes = false;
