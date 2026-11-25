@@ -21,42 +21,51 @@ body {
     -webkit-user-select: none;
 }
 
-/* 캔버스 래퍼 */
+/* 캔버스 래퍼 & 크롬북 반응형 최적화 */
+.canvas-container {
+    position: relative;
+    overflow: hidden;
+}
+
 .canvas-wrapper {
     position: relative;
     width: 100%;
-    max-width: 1200px;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
     aspect-ratio: 2 / 1;
     margin: 0 auto;
-    border-radius: 20px;
+    border-radius: 18px;
     overflow: hidden;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7), 0 0 25px rgba(234, 88, 12, 0.25);
-    border: 3px solid rgba(234, 88, 12, 0.45);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(234, 88, 12, 0.25);
+    border: 2px solid rgba(234, 88, 12, 0.45);
     background: #000;
 }
 
 #gameCanvas {
     width: 100%;
     height: 100%;
+    object-fit: contain;
     display: block;
 }
 
-/* 퀴즈 박스 애니메이션 */
+/* 퀴즈 박스 (크롬북 최적화 사이드 패널) */
 .quiz-panel {
-    background: rgba(15, 23, 42, 0.92);
-    backdrop-filter: blur(12px);
-    border: 2px solid rgba(59, 130, 246, 0.4);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    border-radius: 24px;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(14px);
+    border: 2px solid rgba(59, 130, 246, 0.45);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    border-radius: 20px;
 }
 
 .quiz-choice-btn {
-    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.16s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
+    min-height: 42px;
 }
 .quiz-choice-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
 }
 .quiz-choice-btn:active {
     transform: scale(0.98);
