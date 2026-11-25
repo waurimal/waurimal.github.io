@@ -82,6 +82,18 @@
                                 <option value="6" selected>6학년 영어 단어</option>
                             </select>
                         </div>
+                        <!-- 관리자 게임 참여 여부 선택 -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-emerald-300 mb-1">🎮 관리자 게임 참여 여부</label>
+                            <select id="hostParticipateOption" class="w-full p-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 font-bold text-xs cursor-pointer">
+                                <option value="spectator" selected>👀 관전 / 중계 모드 (교실 TV 대형 화면 최적화)</option>
+                                <option value="player">🏃 직접 참여 모드 (선생님도 학생들과 함께 달리기)</option>
+                            </select>
+                        </div>
+                        <div id="hostNameField" class="hidden">
+                            <label class="block text-[10px] text-slate-400 mb-0.5">선생님 이름표</label>
+                            <input type="text" id="hostPlayerName" value="선생님" maxlength="8" class="w-full p-1.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 text-xs text-center font-bold">
+                        </div>
                     </div>
                 </div>
 
@@ -239,7 +251,16 @@
             <div class="flex items-center justify-center gap-2 flex-wrap text-xs text-slate-300">
                 <span class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 font-bold" id="badgeRoomTime">⏱️ 제한시간: 90초</span>
                 <span class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 font-bold" id="badgeRoomGrade">📚 6학년 영어</span>
+                <span class="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-bold" id="badgeHostRole">👀 관리자: 관전 중계</span>
                 <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-extrabold" id="badgePlayerCount">현재 0명 입장</span>
+            </div>
+
+            <!-- 관리자 전용 참여 모드 실시간 전환 토글 버튼 -->
+            <div id="hostRoleToggleWrapper" class="hidden flex items-center justify-center gap-2 pt-1">
+                <button type="button" id="btnToggleHostParticipation" class="px-4 py-2 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-amber-500/50 text-xs font-bold text-amber-300 transition flex items-center gap-2 cursor-pointer shadow-lg hover:scale-105 active:scale-95" title="클릭하여 관리자 참여 여부를 변경합니다">
+                    <span id="txtHostRoleIcon">👀</span>
+                    <span id="txtHostRoleStatus">관리자 모드: 관전 / 중계 (클릭 시 직접 참여로 변경)</span>
+                </button>
             </div>
 
             <p id="waitingRoomSubtext" class="text-xs text-slate-400 max-w-lg mx-auto leading-relaxed">
@@ -511,6 +532,62 @@
             let currentQuestion = null;
             let myPlayerName = '도전자';
             let multiGameActive = false;
+            let hostParticipatingState = false;
+
+            // 로비에서 관리자 참여 여부 변경 시 이름표 필드 토글
+            const selHostParticipate = document.getElementById('hostParticipateOption');
+            const fieldHostName = document.getElementById('hostNameField');
+            if (selHostParticipate && fieldHostName) {
+                selHostParticipate.addEventListener('change', () => {
+                    if (selHostParticipate.value === 'player') {
+                        fieldHostName.classList.remove('hidden');
+                    } else {
+                        fieldHostName.classList.add('hidden');
+                    }
+                });
+            }
+
+            // 인게임 호스트 UI (관전 모드 vs 직접 참여 모드) 스타일 적용
+            function applyIngameHostRoleUI(isSpectator) {
+                const quizPanelWrapper = document.getElementById('gameQuizPanelWrapper');
+                const btnToggleQuiz = document.getElementById('btnToggleQuizPos');
+                const hudDistance = document.getElementById('hudPlayerDistance');
+
+                if (isSpectator) {
+                    if (quizPanelWrapper) quizPanelWrapper.classList.add('hidden');
+                    if (btnToggleQuiz) btnToggleQuiz.classList.add('hidden');
+                    if (hudDistance) hudDistance.innerHTML = '<span class="text-amber-300 font-black">👀 대형 TV 관전 중계</span>';
+                } else {
+                    if (quizPanelWrapper) quizPanelWrapper.classList.remove('hidden');
+                    if (btnToggleQuiz) btnToggleQuiz.classList.remove('hidden');
+                }
+            }
+
+            // 대기방 호스트 모드 뱃지 및 토글 상태 업데이트
+            function updateHostRoleUI(isParticipating) {
+                hostParticipatingState = Boolean(isParticipating);
+                const badge = document.getElementById('badgeHostRole');
+                const icon = document.getElementById('txtHostRoleIcon');
+                const status = document.getElementById('txtHostRoleStatus');
+                if (badge) {
+                    if (hostParticipatingState) {
+                        badge.className = 'px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold';
+                        badge.textContent = '🏃 관리자: 직접 참여';
+                    } else {
+                        badge.className = 'px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-bold';
+                        badge.textContent = '👀 관리자: 관전 중계';
+                    }
+                }
+                if (icon && status) {
+                    if (hostParticipatingState) {
+                        icon.textContent = '🏃';
+                        status.textContent = '관리자 모드: 직접 참여 중 (클릭 시 관전 모드로 전환)';
+                    } else {
+                        icon.textContent = '👀';
+                        status.textContent = '관리자 모드: 관전 / 중계 (클릭 시 직접 참여로 전환)';
+                    }
+                }
+            }
 
             // 글로벌 네비게이션 바(GNB) 숨기기/보이기 헬퍼 (인게임 상태창 가려짐 방지)
             function hideGlobalGnb() {
@@ -553,15 +630,22 @@
 
                 playerList.forEach(p => {
                     const card = document.createElement('div');
-                    card.className = 'p-2.5 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center gap-2 transition hover:border-emerald-500/50 shadow';
+                    const isHost = Boolean(p.isHost);
+                    card.className = isHost
+                        ? 'p-2.5 rounded-2xl bg-gradient-to-r from-amber-950/70 via-slate-900 to-amber-950/70 border-2 border-amber-500/80 flex items-center gap-2 transition hover:border-amber-400 shadow-lg shadow-amber-500/10'
+                        : 'p-2.5 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center gap-2 transition hover:border-emerald-500/50 shadow';
+
                     card.innerHTML = `
-                        <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-sm flex-shrink-0">
-                            🏃
+                        <div class="w-8 h-8 rounded-full ${isHost ? 'bg-amber-500/20 border-2 border-amber-400 text-amber-300' : 'bg-slate-800 border border-slate-700'} flex items-center justify-center text-sm flex-shrink-0">
+                            ${isHost ? '👑' : '🏃'}
                         </div>
                         <div class="min-w-0 flex-1">
-                            <div class="font-bold text-xs text-white truncate">${p.name || '학생'}</div>
-                            <div class="text-[10px] text-emerald-400 font-semibold flex items-center gap-1 mt-0.5">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> 준비 완료
+                            <div class="font-bold text-xs ${isHost ? 'text-amber-300 flex items-center gap-1' : 'text-white'} truncate">
+                                <span>${p.name || (isHost ? '선생님' : '학생')}</span>
+                                ${isHost ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-black">진행자</span>' : ''}
+                            </div>
+                            <div class="text-[10px] ${isHost ? 'text-amber-400' : 'text-emerald-400'} font-semibold flex items-center gap-1 mt-0.5">
+                                <span class="w-1.5 h-1.5 rounded-full ${isHost ? 'bg-amber-400' : 'bg-emerald-400'} animate-pulse"></span> ${isHost ? '참여 플레이어' : '준비 완료'}
                             </div>
                         </div>
                     `;
@@ -591,14 +675,18 @@
             document.getElementById('btnCreateHostRoom').addEventListener('click', async () => {
                 const time = document.getElementById('hostTimeLimit').value;
                 const grade = document.getElementById('hostGrade').value;
-                myPlayerName = '선생님';
+                const isHostParticipating = (document.getElementById('hostParticipateOption').value === 'player');
+                const hostName = (document.getElementById('hostPlayerName') && document.getElementById('hostPlayerName').value.trim()) || '선생님';
+                myPlayerName = hostName;
                 multiGameActive = false;
 
                 window.MugunghwaQuizManager.setGrade(grade);
                 try {
                     const roomId = await window.MugunghwaMultiplayer.createRoom({
                         timeLimit: Number(time),
-                        grade: grade
+                        grade: grade,
+                        hostParticipating: isHostParticipating,
+                        hostName: hostName
                     });
 
                     // 게임을 바로 시작하지 않고, 대기방 화면으로 전환!
@@ -609,15 +697,20 @@
                     document.getElementById('waitingRoomCode').textContent = roomId;
                     document.getElementById('badgeRoomTime').textContent = `⏱️ 제한시간: ${time === '0' ? '무제한' : time + '초'}`;
                     document.getElementById('badgeRoomGrade').textContent = `📚 ${grade === 'all' ? '전체 학년' : grade + '학년'} 영어`;
+                    updateHostRoleUI(isHostParticipating);
+                    document.getElementById('hostRoleToggleWrapper').classList.remove('hidden');
                     document.getElementById('waitingRoomSubtext').innerHTML = `학생들은 학생 기기에서 참여 코드 <strong>[ ${roomId} ]</strong>를 입력하고 입장하세요.<br>모든 참가자가 모이면 아래 <strong>[경기 시작하기]</strong> 버튼을 누릅니다!`;
 
                     document.getElementById('btnHostStartGame').classList.remove('hidden');
                     document.getElementById('studentWaitingNotice').classList.add('hidden');
-                    renderWaitingRoster({});
+                    renderWaitingRoster(window.MugunghwaMultiplayer.roomData ? window.MugunghwaMultiplayer.roomData.players : {});
 
                     // 멀티플레이어 상태 구독 (학생 입장 및 게임 시작 감지)
                     window.MugunghwaMultiplayer.onStateChange(roomData => {
                         if (!roomData) return;
+                        if (roomData.hostParticipating !== undefined) {
+                            updateHostRoleUI(roomData.hostParticipating);
+                        }
                         if (roomData.status === 'waiting') {
                             renderWaitingRoster(roomData.players);
                         } else if (roomData.status === 'playing') {
@@ -626,13 +719,18 @@
                                 hideGlobalGnb();
                                 screenWaitingRoom.classList.add('hidden');
                                 screenGame.classList.remove('hidden');
+                                const isHostSpec = !roomData.hostParticipating;
+                                applyIngameHostRoleUI(isHostSpec);
                                 game.startNewGame({
                                     mode: 'multi',
                                     timeLimit: Number(roomData.timeLimit || time),
                                     playerName: myPlayerName,
-                                    players: roomData.players
+                                    players: roomData.players,
+                                    hostParticipating: roomData.hostParticipating
                                 });
-                                prepareNextTurnStandby();
+                                if (!isHostSpec) {
+                                    prepareNextTurnStandby();
+                                }
                             } else {
                                 game.syncMultiplayerPlayers(roomData.players);
                             }
@@ -665,6 +763,8 @@
                     document.getElementById('waitingRoomCode').textContent = code;
                     document.getElementById('badgeRoomTime').textContent = `⏱️ 제한시간: ${room.timeLimit || 90}초`;
                     document.getElementById('badgeRoomGrade').textContent = `📚 ${room.grade === 'all' ? '전체 학년' : (room.grade || 6) + '학년'} 영어`;
+                    updateHostRoleUI(room.hostParticipating);
+                    document.getElementById('hostRoleToggleWrapper').classList.add('hidden'); // 학생은 토글 버튼 숨김
                     document.getElementById('waitingRoomSubtext').innerHTML = `👋 <strong>[ ${name} ]</strong> 학생 대기실 입장 완료!<br>선생님이 경기를 시작할 때까지 잠시 대기해 주세요.`;
 
                     // 학생 기기는 시작 버튼 숨김, 대기 안내 표시
@@ -675,6 +775,9 @@
                     // 멀티플레이어 상태 구독 (선생님이 시작하면 동시 시작)
                     window.MugunghwaMultiplayer.onStateChange(roomData => {
                         if (!roomData) return;
+                        if (roomData.hostParticipating !== undefined) {
+                            updateHostRoleUI(roomData.hostParticipating);
+                        }
                         if (roomData.status === 'waiting') {
                             renderWaitingRoster(roomData.players);
                         } else if (roomData.status === 'playing') {
@@ -683,11 +786,13 @@
                                 hideGlobalGnb();
                                 screenWaitingRoom.classList.add('hidden');
                                 screenGame.classList.remove('hidden');
+                                applyIngameHostRoleUI(false); // 학생은 항상 플레이어
                                 game.startNewGame({
                                     mode: 'multi',
                                     timeLimit: Number(roomData.timeLimit || room.timeLimit || 90),
                                     playerName: myPlayerName,
-                                    players: roomData.players
+                                    players: roomData.players,
+                                    hostParticipating: true
                                 });
                                 prepareNextTurnStandby();
                             } else {
@@ -697,6 +802,19 @@
                     });
                 } catch (e) {
                     alert(e.message);
+                }
+            });
+
+            // 호스트: 대기방에서 참여 모드 실시간 토글 (관전 ↔ 직접 참여)
+            document.getElementById('btnToggleHostParticipation').addEventListener('click', async () => {
+                const newMode = !hostParticipatingState;
+                const hostName = (document.getElementById('hostPlayerName') && document.getElementById('hostPlayerName').value.trim()) || '선생님';
+                myPlayerName = hostName;
+                try {
+                    await window.MugunghwaMultiplayer.setHostParticipation(newMode, hostName);
+                    updateHostRoleUI(newMode);
+                } catch (e) {
+                    alert('관리자 모드 변경 실패: ' + e.message);
                 }
             });
 
@@ -716,6 +834,8 @@
                 }
                 showGlobalGnb();
                 multiGameActive = false;
+                applyIngameHostRoleUI(false);
+                document.getElementById('hostRoleToggleWrapper').classList.add('hidden');
                 screenWaitingRoom.classList.add('hidden');
                 screenLobby.classList.remove('hidden');
             });
@@ -741,6 +861,8 @@
                 if (window.speechSynthesis) window.speechSynthesis.cancel();
                 showGlobalGnb();
                 multiGameActive = false;
+                applyIngameHostRoleUI(false);
+                document.getElementById('hostRoleToggleWrapper').classList.add('hidden');
 
                 victoryModal.classList.add('hidden');
                 timeOverModal.classList.add('hidden');

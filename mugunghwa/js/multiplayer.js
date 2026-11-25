@@ -70,6 +70,8 @@ class MugunghwaMultiplayer {
         const roomId = settings.roomId || this.generateRoomId();
         const timeLimit = Number(settings.timeLimit) || 90; // 기본 90초
         const grade = settings.grade || 'all';
+        const isHostParticipating = (settings.hostParticipating === true || settings.hostParticipating === 'player');
+        const hostName = settings.hostName || '선생님';
 
         // 100m 트랙 상에 배치될 초기 필드 아이템 5개
         const initialFieldItems = [
@@ -80,9 +82,32 @@ class MugunghwaMultiplayer {
             { id: 'item_5', m: 90, type: 'star', name: '무적 스타 대시', icon: '⭐' }
         ];
 
+        const playersMap = {};
+        if (isHostParticipating) {
+            playersMap[this.myPlayerId] = {
+                id: this.myPlayerId,
+                name: hostName,
+                isHost: true,
+                grade: '선생님',
+                classNum: 0,
+                studentNum: 0,
+                avatarSkin: 'runner_teacher',
+                m: 0,
+                checkpoint: 0,
+                combo: 0,
+                items: [],
+                activeBuffs: { boostShoes: false, shield: false, starDash: false },
+                isFinished: false,
+                finishRank: 0,
+                isOut: false,
+                joinedAt: Date.now()
+            };
+        }
+
         const roomPayload = {
             roomId: roomId,
             hostId: this.myPlayerId,
+            hostParticipating: isHostParticipating,
             status: 'waiting', // waiting | playing | ended
             timeLimit: timeLimit,
             remainingTime: timeLimit,
@@ -91,7 +116,7 @@ class MugunghwaMultiplayer {
             taggerState: 'CHANTING', // CHANTING | TURNING | SCANNING
             taggerSpeed: 1.0,
             taggerTurnCount: 0,
-            players: {},
+            players: playersMap,
             fieldItems: initialFieldItems,
             finishers: [] // 골인 순서 기록 [{ id, name, rank, time }]
         };
@@ -223,6 +248,69 @@ class MugunghwaMultiplayer {
         this.onStateChangeCallbacks.forEach(cb => {
             try { cb(data); } catch (e) { console.error(e); }
         });
+    }
+
+    // 호스트: 게임 참여 여부 실시간 변경 (대기실 토글)
+    async setHostParticipation(isParticipating, hostName = '선생님') {
+        const flag = Boolean(isParticipating);
+        if (this.isMock) {
+            if (!this.roomData) return;
+            this.roomData.hostParticipating = flag;
+            if (!this.roomData.players) this.roomData.players = {};
+            if (flag) {
+                this.roomData.players[this.myPlayerId] = {
+                    id: this.myPlayerId,
+                    name: hostName,
+                    isHost: true,
+                    grade: '선생님',
+                    classNum: 0,
+                    studentNum: 0,
+                    avatarSkin: 'runner_teacher',
+                    m: 0,
+                    checkpoint: 0,
+                    combo: 0,
+                    items: [],
+                    activeBuffs: { boostShoes: false, shield: false, starDash: false },
+                    isFinished: false,
+                    finishRank: 0,
+                    isOut: false,
+                    joinedAt: Date.now()
+                };
+            } else {
+                delete this.roomData.players[this.myPlayerId];
+            }
+            this.notifyStateChange(this.roomData);
+            return;
+        }
+
+        if (!this.isHost || !this.currentRoomId || !this.db) return;
+        const roomRef = this.db.collection('mugunghwa_rooms').doc(this.currentRoomId);
+        const updateObj = {
+            hostParticipating: flag
+        };
+        if (flag) {
+            updateObj[`players.${this.myPlayerId}`] = {
+                id: this.myPlayerId,
+                name: hostName,
+                isHost: true,
+                grade: '선생님',
+                classNum: 0,
+                studentNum: 0,
+                avatarSkin: 'runner_teacher',
+                m: 0,
+                checkpoint: 0,
+                combo: 0,
+                items: [],
+                activeBuffs: { boostShoes: false, shield: false, starDash: false },
+                isFinished: false,
+                finishRank: 0,
+                isOut: false,
+                joinedAt: Date.now()
+            };
+        } else {
+            updateObj[`players.${this.myPlayerId}`] = window.firebase.firestore.FieldValue.delete();
+        }
+        await roomRef.update(updateObj);
     }
 
     // 4. 호스트 전용: 게임 시작
