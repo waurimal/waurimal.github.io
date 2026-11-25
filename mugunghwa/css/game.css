@@ -1,0 +1,90 @@
+/**
+ * 무궁화 꽃이 피었습니다: 영어 런 - 전용 스타일시트
+ */
+
+:root {
+    --primary: #3b82f6;
+    --accent: #f59e0b;
+    --danger: #ef4444;
+    --success: #10b981;
+    --bg-dark: #0f172a;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: #f8fafc;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 캔버스 래퍼 */
+.canvas-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 1200px;
+    aspect-ratio: 2 / 1;
+    margin: 0 auto;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7), 0 0 25px rgba(234, 88, 12, 0.25);
+    border: 3px solid rgba(234, 88, 12, 0.45);
+    background: #000;
+}
+
+#gameCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* 퀴즈 박스 애니메이션 */
+.quiz-panel {
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(12px);
+    border: 2px solid rgba(59, 130, 246, 0.4);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border-radius: 24px;
+}
+
+.quiz-choice-btn {
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+.quiz-choice-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
+}
+.quiz-choice-btn:active {
+    transform: scale(0.98);
+}
+
+/* 술래 상태 펄스 */
+@keyframes taggerGlow {
+    0% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.5)); }
+    50% { transform: scale(1.04); filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.9)); }
+    100% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.5)); }
+}
+
+.tagger-alert {
+    animation: taggerGlow 1.2s infinite ease-in-out;
+}
+
+/* 커스텀 스크롤바 */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}

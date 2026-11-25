@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>무궁화 꽃이 피었습니다: 영어 런 - 와우리말 영어 놀이터</title>
+
+    <!-- Pretendard 웹폰트 및 FontAwesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Firebase SDK (v10 compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
+    <!-- 와우리말 공통 에코시스템 -->
+    <link rel="stylesheet" href="../common/waurimal-theme.css">
+    <script src="../common/firebase-config.js"></script>
+    <script src="../common/curriculum.js"></script>
+    <script src="../common/waurimal-nav.js"></script>
+
+    <link rel="stylesheet" href="css/game.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between">
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 1. 메인 로비 화면 (screen-lobby: 모드 선택 & 방 설정) -->
+    <!-- ─────────────────────────────────────────── -->
+    <main id="screen-lobby" class="flex-1 max-w-5xl w-full mx-auto px-4 py-5 flex flex-col gap-6">
+        <!-- 상단 헤더 -->
+        <div class="text-center space-y-2">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-bold">
+                <span>🌸</span> <span>학급 전체 참여형 실시간 런 & 퀴즈 대전</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-amber-300 to-yellow-400">
+                무궁화 꽃이 피었습니다: 영어 런
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto leading-relaxed">
+                출발선에서 골인 지점까지 질주하라! 영어를 맞혀야만 전진할 수 있으며, 오답 시 출발선/체크포인트로 강제 후퇴합니다!
+            </p>
+        </div>
+
+        <!-- 3개 모드 선택 카드 그리드 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- 모드 1: 교실 대형 TV / 호스트 방 만들기 -->
+            <div class="bg-slate-900/90 p-5 rounded-3xl border border-rose-500/40 flex flex-col justify-between space-y-4 hover:border-rose-400 transition shadow-xl">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-2xl">📺</span>
+                        <span class="px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-black">교사용 / 대형 스크린</span>
+                    </div>
+                    <h2 class="font-black text-base text-white">학급 방 만들기 (호스트)</h2>
+                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                        교실 TV나 빔프로젝터에 100m 실시간 트랙을 띄우고, 반 전체 학생들을 입장시켜 대결합니다.
+                    </p>
+
+                    <!-- 설정 옵션 -->
+                    <div class="space-y-2.5 mt-3 pt-3 border-t border-slate-800 text-xs">
+                        <!-- 들어오는 시간 지정 (제한 시간) -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-amber-300 mb-1">⏱️ 들어오는 시간 지정 (제한 시간)</label>
+                            <select id="hostTimeLimit" class="w-full p-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 font-bold text-xs cursor-pointer">
+                                <option value="60">60초 (광속 스피드 챌린지)</option>
+                                <option value="90" selected>90초 (추천 표준 시간)</option>
+                                <option value="120">120초 (여유로운 골인 모드)</option>
+                                <option value="180">180초 (3분 협동 마라톤)</option>
+                                <option value="0">무제한 (전원 골인할 때까지)</option>
+                            </select>
+                        </div>
+                        <!-- 출제 학년 -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">📚 부활 퀴즈 출제 학년</label>
+                            <select id="hostGrade" class="w-full p-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 font-bold text-xs cursor-pointer">
+                                <option value="all">전체 학년 (랜덤 믹스)</option>
+                                <option value="3">3학년 영어 단어</option>
+                                <option value="4">4학년 영어 단어</option>
+                                <option value="5">5학년 영어 단어</option>
+                                <option value="6" selected>6학년 영어 단어</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" id="btnCreateHostRoom" class="w-full py-3 rounded-2xl bg-gradient-to-r from-rose-600 via-pink-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-black text-xs transition shadow-lg cursor-pointer flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-plus-circle"></i> <span>학급 방 생성 및 학생 대기실 열기</span>
+                </button>
+            </div>
+
+            <!-- 모드 2: 학생 기기 입장하기 (스마트폰/태블릿) -->
+            <div class="bg-slate-900/90 p-5 rounded-3xl border border-blue-500/40 flex flex-col justify-between space-y-4 hover:border-blue-400 transition shadow-xl">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-2xl">📱</span>
+                        <span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] font-black">학생 기기용</span>
+                    </div>
+                    <h2 class="font-black text-base text-white">학생 기기 입장하기</h2>
+                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                        칠판에 뜬 4자리 방 번호를 입력하고 자신의 아바타로 참가하여 퀴즈를 풉니다.
+                    </p>
+
+                    <div class="space-y-2 mt-3 pt-3 border-t border-slate-800 text-xs">
+                        <div>
+                            <label class="block text-[11px] font-bold text-sky-300 mb-1">🔢 4자리 방 코드</label>
+                            <input type="text" id="joinRoomId" placeholder="예: 7842" maxlength="4" class="w-full p-2 rounded-xl bg-slate-950 border border-slate-700 text-center font-black tracking-widest text-lg text-amber-300 placeholder-slate-600 outline-none focus:border-blue-500">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] text-slate-400 mb-0.5">학년/반/번호</label>
+                                <input type="text" id="joinClassInfo" value="6학년 1반 1번" class="w-full p-1.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 text-xs text-center font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-400 mb-0.5">이름</label>
+                                <input type="text" id="joinPlayerName" placeholder="예: 홍길동" maxlength="8" class="w-full p-1.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 text-xs text-center font-bold">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" id="btnJoinRoom" class="w-full py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs transition shadow-lg cursor-pointer flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> <span>방 입장하기</span>
+                </button>
+            </div>
+
+            <!-- 모드 3: 혼자 연습 / AI 반 친구들과 달리기 -->
+            <div class="bg-slate-900/90 p-5 rounded-3xl border border-emerald-500/40 flex flex-col justify-between space-y-4 hover:border-emerald-400 transition shadow-xl">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-2xl">🏃</span>
+                        <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-black">즉시 플레이 / 연습</span>
+                    </div>
+                    <h2 class="font-black text-base text-white">AI 반 친구들과 달리기 (솔로)</h2>
+                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                        방 생성 없이 혼자서도 AI 봇 반 친구 14명과 함께 100m 달리기 대결을 펼칩니다!
+                    </p>
+
+                    <div class="space-y-2 mt-3 pt-3 border-t border-slate-800 text-xs">
+                        <div>
+                            <label class="block text-[11px] font-bold text-emerald-300 mb-1">⏱️ 들어오는 시간</label>
+                            <select id="soloTimeLimit" class="w-full p-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 font-bold text-xs cursor-pointer">
+                                <option value="60">60초 스피드런</option>
+                                <option value="90" selected>90초 표준 시간</option>
+                                <option value="120">120초 여유 모드</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">📚 출제 학년</label>
+                            <select id="soloGrade" class="w-full p-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 font-bold text-xs cursor-pointer">
+                                <option value="all">전체 학년</option>
+                                <option value="3">3학년</option>
+                                <option value="4">4학년</option>
+                                <option value="5">5학년</option>
+                                <option value="6" selected>6학년</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" id="btnStartSoloGame" class="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs transition shadow-lg cursor-pointer flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-play"></i> <span>반 친구들과 바로 시작하기</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 게임 규칙 카드 -->
+        <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 text-xs text-slate-300 space-y-2">
+            <div class="font-black text-white flex items-center gap-2 text-sm">
+                <span>💡</span> <span>무궁화 꽃이 피었습니다 게임 규칙</span>
+            </div>
+            <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-400">
+                <li>• 🟢 <strong>초록불 (술래가 말하는 중)</strong>: 영어 퀴즈를 맞히면 앞으로 <strong>+10m</strong> 전진합니다.</li>
+                <li>• 🔴 <strong>빨간불 (술래가 주시 중)</strong>: 고개를 휙 돌렸을 때 움직이거나 오답이면 적발됩니다!</li>
+                <li>• 🚨 <strong>오답 시 강제 후퇴</strong>: 문제를 틀리면 직전 <strong>체크포인트(25m, 50m, 75m 또는 0m)</strong>로 후퇴합니다.</li>
+                <li>• 🎁 <strong>트랙 아이템</strong>: 중간중간 큐브를 먹으면 <strong>부스터 신발(2배 질주), 방어막 쉴드(오답 1회 방어), 시간 보너스(+10초)</strong>를 얻습니다!</li>
+            </ul>
+        </div>
+    </main>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 2. 인게임 메인 플레이 화면 (screen-game) -->
+    <!-- ─────────────────────────────────────────── -->
+    <div id="screen-game" class="hidden flex-col items-center justify-center w-full min-h-screen p-2 sm:p-4">
+        <!-- 인게임 상단 HUD 상태바 -->
+        <header class="w-full max-w-6xl bg-slate-900/90 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-slate-800 mb-3 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+            <!-- 좌측: 모드 및 홈 복귀 -->
+            <div class="flex items-center gap-2">
+                <button type="button" id="btnBackToLobby" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition flex items-center gap-1 cursor-pointer">
+                    <i class="fa-solid fa-arrow-left"></i> 나가기
+                </button>
+                <div id="hudTaggerState" class="px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> 🟢 전진 찬스 (말하는 중!)
+                </div>
+            </div>
+
+            <!-- 중앙: 시간 타이머, 내 거리, 체크포인트 -->
+            <div class="flex items-center gap-4 bg-slate-950 px-4 py-1.5 rounded-xl border border-slate-800">
+                <div class="flex items-center gap-1.5">
+                    <span class="text-xs text-slate-400 font-bold">남은 시간:</span>
+                    <span id="hudRemainingTime" class="font-black text-amber-300 text-lg">1:30</span>
+                </div>
+                <div class="h-4 w-px bg-slate-800"></div>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-xs text-slate-400 font-bold">진행 거리:</span>
+                    <span id="hudPlayerDistance" class="font-black text-white text-sm">0m / 100m</span>
+                </div>
+                <div class="h-4 w-px bg-slate-800"></div>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-xs text-slate-400 font-bold">안전선:</span>
+                    <span id="hudCheckpoint" class="font-black text-sky-400 text-sm">0m</span>
+                </div>
+            </div>
+
+            <!-- 우측: 사운드 토글 -->
+            <button type="button" id="btnToggleAudio" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition cursor-pointer text-xs" title="소리 켜기/끄기">
+                <i class="fa-solid fa-volume-high"></i>
+            </button>
+        </header>
+
+        <!-- 100m 달리기 캔버스 트랙 -->
+        <div class="canvas-wrapper w-full mb-3">
+            <canvas id="gameCanvas" width="1200" height="600"></canvas>
+        </div>
+
+        <!-- 하단: 4지선다 영어 퀴즈 패널 (학생 입력 영역) -->
+        <div class="quiz-panel w-full max-w-4xl p-4 sm:p-5 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+                <span id="quizPrompt" class="text-xs font-bold text-sky-300 flex items-center gap-1.5">
+                    <span>📝</span> <span>다음 영어 낱말의 올바른 뜻을 고르세요!</span>
+                </span>
+                <button type="button" id="btnQuizTts" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                    <i class="fa-solid fa-volume-high"></i> <span>발음 듣기</span>
+                </button>
+            </div>
+
+            <!-- 문제 텍스트 -->
+            <div class="text-center py-1">
+                <span id="quizQuestionText" class="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 tracking-wider">
+                    flower
+                </span>
+            </div>
+
+            <!-- 4지선다 버튼 그리드 -->
+            <div id="quizChoicesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <!-- 동적으로 버튼 4개 삽입 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 3. 모달: 골인 성공 (Victory Modal) -->
+    <!-- ─────────────────────────────────────────── -->
+    <div id="victoryModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="max-w-md w-full bg-slate-900 border-2 border-yellow-500/80 rounded-3xl p-6 shadow-2xl text-center space-y-4">
+            <div class="text-5xl">🏆</div>
+            <h2 class="text-2xl font-black text-yellow-300">GOAL IN! 골인 성공!</h2>
+            <p class="text-xs text-slate-300 leading-relaxed">
+                축하합니다! 무사히 100m 결승선을 통과하여 승리했습니다!
+            </p>
+
+            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2 text-sm text-left">
+                <div class="flex justify-between">
+                    <span class="text-slate-400">골인 순위</span>
+                    <span id="victoryRank" class="font-black text-yellow-400 text-base">1등 🥇</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">남은 시간</span>
+                    <span id="victoryTime" class="font-bold text-white">45초</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">획득 점수</span>
+                    <span id="victoryScore" class="font-bold text-emerald-400">1,500점</span>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button type="button" id="btnRestartVictory" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-slate-950 font-black text-xs transition shadow cursor-pointer">
+                    다시 달리기
+                </button>
+                <button type="button" id="btnLobbyVictory" class="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition cursor-pointer">
+                    로비로 이동
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 4. 모달: 타임오버 (Time Over Modal) -->
+    <!-- ─────────────────────────────────────────── -->
+    <div id="timeOverModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="max-w-md w-full bg-slate-900 border-2 border-rose-500/80 rounded-3xl p-6 shadow-2xl text-center space-y-4">
+            <div class="text-5xl">⏰</div>
+            <h2 class="text-2xl font-black text-rose-400">TIME OVER! 시간 초과!</h2>
+            <p class="text-xs text-slate-300 leading-relaxed">
+                지정된 제한 시간이 모두 지났습니다! 다음 판에는 더 빠르게 도전해 보세요!
+            </p>
+
+            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2 text-sm text-left">
+                <div class="flex justify-between">
+                    <span class="text-slate-400">내가 도달한 거리</span>
+                    <span id="timeOverDistance" class="font-black text-amber-300">65m / 100m</span>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button type="button" id="btnRestartTimeOver" class="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs transition shadow cursor-pointer">
+                    다시 도전하기
+                </button>
+                <button type="button" id="btnLobbyTimeOver" class="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition cursor-pointer">
+                    로비로 이동
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 하단 푸터 바 -->
+    <footer class="w-full text-center py-3 text-[11px] text-slate-500">
+        와우리말 에듀테크 영어 놀이터 · 2026 무궁화 꽃이 피었습니다 (Mugunghwa English Run)
+    </footer>
+
+    <!-- 게임 스크립트 연결 -->
+    <script src="js/audio.js"></script>
+    <script src="js/quiz.js"></script>
+    <script src="js/multiplayer.js"></script>
+    <script src="js/game.js"></script>
+
+    <!-- 인터랙션 컨트롤러 바인딩 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const game = new MugunghwaGame();
+            window.activeGame = game;
+
+            const screenLobby = document.getElementById('screen-lobby');
+            const screenGame = document.getElementById('screen-game');
+            const victoryModal = document.getElementById('victoryModal');
+            const timeOverModal = document.getElementById('timeOverModal');
+
+            let currentQuestion = null;
+
+            // 1. 솔로 연습 모드 시작
+            document.getElementById('btnStartSoloGame').addEventListener('click', () => {
+                const time = document.getElementById('soloTimeLimit').value;
+                const grade = document.getElementById('soloGrade').value;
+
+                window.MugunghwaQuizManager.setGrade(grade);
+                screenLobby.classList.add('hidden');
+                screenGame.classList.remove('hidden');
+
+                game.startNewGame({ mode: 'solo', timeLimit: Number(time) });
+                serveNextQuiz();
+            });
+
+            // 2. 호스트 방 생성 (교사용 대형 화면)
+            document.getElementById('btnCreateHostRoom').addEventListener('click', async () => {
+                const time = document.getElementById('hostTimeLimit').value;
+                const grade = document.getElementById('hostGrade').value;
+
+                window.MugunghwaQuizManager.setGrade(grade);
+                try {
+                    const roomId = await window.MugunghwaMultiplayer.createRoom({
+                        timeLimit: Number(time),
+                        grade: grade
+                    });
+                    alert(`🎉 학급 방이 생성되었습니다! 방 번호: [ ${roomId} ]\n학생들에게 방 번호를 알려주세요!`);
+
+                    screenLobby.classList.add('hidden');
+                    screenGame.classList.remove('hidden');
+
+                    game.startNewGame({ mode: 'multi', timeLimit: Number(time) });
+                    window.MugunghwaMultiplayer.startHostGame();
+                    serveNextQuiz();
+                } catch (e) {
+                    alert('방 생성 실패: ' + e.message);
+                }
+            });
+
+            // 3. 학생 방 입장
+            document.getElementById('btnJoinRoom').addEventListener('click', async () => {
+                const code = document.getElementById('joinRoomId').value.trim();
+                const name = document.getElementById('joinPlayerName').value.trim() || '도전자';
+                if (!code || code.length < 4) {
+                    alert('4자리 방 번호를 입력해 주세요.');
+                    return;
+                }
+
+                try {
+                    const room = await window.MugunghwaMultiplayer.joinRoom(code, { name: name });
+                    alert(`✅ 방 [ ${code} ] 에 참가 완료! 경기를 시작합니다.`);
+
+                    screenLobby.classList.add('hidden');
+                    screenGame.classList.remove('hidden');
+
+                    game.startNewGame({ mode: 'multi', timeLimit: room.timeLimit || 90 });
+                    serveNextQuiz();
+                } catch (e) {
+                    alert(e.message);
+                }
+            });
+
+            // 4. 로비로 복귀
+            const returnToLobby = () => {
+                game.isRunning = false;
+                if (game.animFrameId) cancelAnimationFrame(game.animFrameId);
+                victoryModal.classList.add('hidden');
+                timeOverModal.classList.add('hidden');
+                screenGame.classList.add('hidden');
+                screenLobby.classList.remove('hidden');
+            };
+
+            document.getElementById('btnBackToLobby').addEventListener('click', returnToLobby);
+            document.getElementById('btnLobbyVictory').addEventListener('click', returnToLobby);
+            document.getElementById('btnLobbyTimeOver').addEventListener('click', returnToLobby);
+
+            // 다시 달리기
+            document.getElementById('btnRestartVictory').addEventListener('click', () => {
+                victoryModal.classList.add('hidden');
+                game.startNewGame({ mode: game.playMode, timeLimit: game.timeLimit });
+                serveNextQuiz();
+            });
+            document.getElementById('btnRestartTimeOver').addEventListener('click', () => {
+                timeOverModal.classList.add('hidden');
+                game.startNewGame({ mode: game.playMode, timeLimit: game.timeLimit });
+                serveNextQuiz();
+            });
+
+            // 오디오 토글
+            document.getElementById('btnToggleAudio').addEventListener('click', () => {
+                const isMuted = window.MugunghwaAudio.toggleMute();
+                const btn = document.getElementById('btnToggleAudio');
+                btn.innerHTML = isMuted ? '<i class="fa-solid fa-volume-xmark text-rose-400"></i>' : '<i class="fa-solid fa-volume-high"></i>';
+            });
+
+            // 5. 퀴즈 출제 함수
+            function serveNextQuiz() {
+                currentQuestion = window.MugunghwaQuizManager.generateQuestion();
+                document.getElementById('quizPrompt').innerHTML = `<span>📝</span> <span>${currentQuestion.prompt}</span>`;
+                document.getElementById('quizQuestionText').textContent = currentQuestion.question;
+
+                const grid = document.getElementById('quizChoicesGrid');
+                grid.innerHTML = '';
+
+                currentQuestion.choices.forEach(ch => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'quiz-choice-btn py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 font-black text-sm sm:text-base transition text-left flex items-center justify-between';
+                    btn.innerHTML = `<span>${ch.text}</span> <i class="fa-solid fa-chevron-right text-xs text-slate-500"></i>`;
+
+                    btn.addEventListener('click', () => {
+                        handleChoiceSelect(ch.isCorrect, btn);
+                    });
+                    grid.appendChild(btn);
+                });
+            }
+
+            // 문제 발음 듣기
+            document.getElementById('btnQuizTts').addEventListener('click', () => {
+                if (currentQuestion && currentQuestion.ttsWord) {
+                    window.MugunghwaAudio.speakWord(currentQuestion.ttsWord);
+                }
+            });
+
+            // 50:50 힌트 패스 발동
+            window.triggerHintPass = () => {
+                const grid = document.getElementById('quizChoicesGrid');
+                const btns = Array.from(grid.querySelectorAll('button'));
+                let removed = 0;
+                btns.forEach((b, idx) => {
+                    if (removed < 2 && currentQuestion && !currentQuestion.choices[idx].isCorrect) {
+                        b.classList.add('opacity-25', 'pointer-events-none');
+                        removed++;
+                    }
+                });
+            };
+
+            // 선택지 클릭 처리
+            function handleChoiceSelect(isCorrect, clickedBtn) {
+                if (!game.isRunning) return;
+
+                // 술래가 SCANNING(빨간불) 상태일 때 누르면 술래 적발 처리!
+                if (game.tagger.state === 'SCANNING') {
+                    game.handleTaggerCaught();
+                    clickedBtn.classList.add('bg-rose-600', 'text-white', 'border-rose-500');
+                    setTimeout(() => serveNextQuiz(), 600);
+                    return;
+                }
+
+                if (isCorrect) {
+                    clickedBtn.classList.remove('bg-slate-800');
+                    clickedBtn.classList.add('bg-emerald-600', 'text-white', 'border-emerald-500');
+                    game.handleCorrectAnswer();
+                } else {
+                    clickedBtn.classList.remove('bg-slate-800');
+                    clickedBtn.classList.add('bg-rose-600', 'text-white', 'border-rose-500');
+                    game.handleWrongAnswer();
+                }
+
+                setTimeout(() => {
+                    if (game.isRunning && !game.player.isFinished) {
+                        serveNextQuiz();
+                    }
+                }, 400);
+            }
+
+            // 승리 모달 표출
+            window.showVictoryModal = (data) => {
+                document.getElementById('victoryRank').textContent = `${data.rank}등 🥇`;
+                document.getElementById('victoryTime').textContent = `${data.remainingTime}초`;
+                document.getElementById('victoryScore').textContent = `${data.score.toLocaleString()}점`;
+                victoryModal.classList.remove('hidden');
+            };
+
+            // 타임오버 모달 표출
+            window.showTimeOverModal = (data) => {
+                document.getElementById('timeOverDistance').textContent = `${data.myMeters}m / 100m`;
+                timeOverModal.classList.remove('hidden');
+            };
+        });
+    </script>
+</body>
+</html>
