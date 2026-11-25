@@ -587,26 +587,18 @@
             // ───────────────────────────────────────────
             // 명예의 전당 (Hall of Fame) 로컬스토리지 관리
             // ───────────────────────────────────────────
-            const HOF_STORAGE_KEY = 'mugunghwa_hall_of_fame_records_v1';
-            const DEFAULT_HOF = [
-                { name: '빛의마라토너', score: 5450, elapsedSec: '28.5', rank: 1, date: '11/25 10:15' },
-                { name: '영어스피드왕', score: 4720, elapsedSec: '36.0', rank: 1, date: '11/25 11:30' },
-                { name: '질주마스터', score: 4100, elapsedSec: '43.2', rank: 1, date: '11/25 12:05' },
-                { name: '와우리말러너', score: 3650, elapsedSec: '50.1', rank: 2, date: '11/25 12:40' },
-                { name: '무궁화챔피언', score: 3200, elapsedSec: '58.4', rank: 2, date: '11/25 13:10' }
-            ];
+            const HOF_STORAGE_KEY = 'mugunghwa_hall_of_fame_records_clean';
 
             function getHallOfFame() {
                 const stored = localStorage.getItem(HOF_STORAGE_KEY);
                 if (!stored) {
-                    localStorage.setItem(HOF_STORAGE_KEY, JSON.stringify(DEFAULT_HOF));
-                    return DEFAULT_HOF;
+                    return [];
                 }
                 try {
                     const parsed = JSON.parse(stored);
-                    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_HOF;
+                    return Array.isArray(parsed) ? parsed : [];
                 } catch (e) {
-                    return DEFAULT_HOF;
+                    return [];
                 }
             }
 
@@ -625,6 +617,19 @@
                 const container = document.getElementById('hallOfFameList');
                 if (!container) return;
                 container.innerHTML = '';
+
+                if (list.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-full py-8 text-center bg-slate-900/40 rounded-2xl border border-dashed border-slate-800 text-slate-400 space-y-2">
+                            <div class="text-3xl">🏃‍♂️💨</div>
+                            <div class="font-bold text-sm text-slate-300">아직 등록된 랭킹 기록이 없습니다!</div>
+                            <div class="text-xs text-slate-500 leading-relaxed">
+                                100m 결승선까지 빠르게 달려 첫 번째 명예의 전당 주인공이 되어보세요!
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
 
                 list.forEach((item, index) => {
                     const rankNum = index + 1;
@@ -675,7 +680,8 @@
             if (btnResetHof) {
                 btnResetHof.addEventListener('click', () => {
                     if (confirm('명예의 전당 기록을 초기화하시겠습니까?')) {
-                        localStorage.setItem(HOF_STORAGE_KEY, JSON.stringify(DEFAULT_HOF));
+                        localStorage.removeItem(HOF_STORAGE_KEY);
+                        localStorage.removeItem('mugunghwa_hall_of_fame_records_v1');
                         renderHallOfFame();
                     }
                 });
