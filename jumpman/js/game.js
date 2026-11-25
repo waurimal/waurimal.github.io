@@ -53,6 +53,20 @@ class JumpmanGame {
         this.survivalTime = 0; // 초
         this.chances = 3; // 기본 찬스 3회 (❤️ ❤️ ❤️)
 
+        // 코인 상점 연동 (장착 스킨, 배경 테마, 시간대 및 특수 기믹)
+        this.equippedSkin = 'mario';
+        this.equippedBg = 'cycle';
+        this.timeOfDay = 0.0; // 0.0 (낮) ~ 0.35 (노을) ~ 0.7 (밤) ~ 0.95 (새벽)
+        this.fireballs = []; // 파이어 마리오 투사체
+        this.fireballTimer = 0;
+        this.bulletWarnings = []; // 킬러 대포알 경고선
+        this.clouds = [
+            { x: 80, y: 50, speed: 0.35, size: 45 },
+            { x: 320, y: 75, speed: 0.22, size: 60 },
+            { x: 620, y: 40, speed: 0.32, size: 42 },
+            { x: 860, y: 65, speed: 0.25, size: 52 }
+        ];
+
         // 활성 아이템 상태 버프 (에너지 쉴드, 코인 자석, 스타 대시)
         this.activeItems = {
             shield: false,
@@ -526,14 +540,65 @@ class JumpmanGame {
         this.wordsCollected = 0;
         this.itemsAcquired = 0;
         this.survivalTime = 0;
-        this.chances = 3; // 찬스 3회 완충!
+        this.chances = 3;
         this.gameSpeed = 5.0 + (mode === 'stage' ? (stage - 1) * 0.4 : 0);
 
-        this.activeItems = {
-            shield: false,
-            magnetTimer: 0,
-            starDashTimer: 0
-        };
+        // 상점 데이터 및 시작 부스트 장착 적용
+        let extraChances = 0;
+        if (typeof window !== 'undefined' && window.JumpmanShop) {
+            this.equippedSkin = window.JumpmanShop.getEquippedSkin() || 'mario';
+            this.equippedBg = window.JumpmanShop.getEquippedBg() || 'cycle';
+            const boosts = window.JumpmanShop.consumeActiveBoosts();
+            this.activeItems = {
+                shield: !!boosts.shield,
+                magnetTimer: boosts.magnetSeconds ? boosts.magnetSeconds * 60 : 0,
+                starDashTimer: boosts.starSeconds ? boosts.starSeconds * 60 : 0
+            };
+            if (boosts.extraChances) {
+                extraChances = boosts.extraChances;
+            }
+        } else {
+            this.equippedSkin = 'mario';
+            this.equippedBg = 'cycle';
+            this.activeItems = {
+                shield: false,
+                magnetTimer: 0,
+                starDashTimer: 0
+            };
+        }
+        this.chances = 3 + extraChances;
+
+        // 장착된 캐릭터에 따른 고유 능력치 적용
+        if (this.equippedSkin === 'luigi') {
+            this.player.speed = 5.5;
+            this.player.jumpPower = -13.7; // 하이 점프
+            this.player.gravity = 0.54; // 체공시간 증가
+        } else if (this.equippedSkin === 'wario') {
+            this.player.speed = 5.4;
+            this.player.jumpPower = -12.5;
+            this.player.gravity = 0.60;
+        } else if (this.equippedSkin === 'toad') {
+            this.player.speed = 6.3; // 쾌속 질주
+            this.player.jumpPower = -12.7;
+            this.player.gravity = 0.58;
+        } else if (this.equippedSkin === 'peach') {
+            this.player.speed = 5.5;
+            this.player.jumpPower = -12.8;
+            this.player.gravity = 0.46; // 우아한 활공
+        } else if (this.equippedSkin === 'fire_mario') {
+            this.player.speed = 5.6;
+            this.player.jumpPower = -12.8;
+            this.player.gravity = 0.58;
+        } else {
+            this.player.speed = 5.5;
+            this.player.jumpPower = -12.8;
+            this.player.gravity = 0.58;
+        }
+
+        this.fireballs = [];
+        this.fireballTimer = 180;
+        this.bulletWarnings = [];
+        this.timeOfDay = 0.0;
 
         this.player.x = 160;
         this.player.y = this.FLOOR_Y - this.player.height;
@@ -786,12 +851,17 @@ class JumpmanGame {
     }
 
     spawnObstacle() {
-        const types = ['rolling_ball', 'spikes', 'flying_bat', 'bouncing_ball', 'falling_rock'];
-        // 난이도에 따른 타입 선택
-        let availableTypes = ['rolling_ball', 'spikes'];
-        if (this.distance > 80 || this.currentStage >= 2) availableTypes.push('bouncing_ball');
-        if (this.distance > 160 || this.currentStage >= 2) availableTypes.push('flying_bat');
-        if (this.distance > 280 || this.currentStage >= 3) availableTypes.push('falling_rock');
+        const types = [
+            'rolling_ball', 'spikes', 'goomba', 'bouncing_ball',
+            'koopa', 'flying_bat', 'piranha_plant', 'falling_rock',
+            'fire_bar', 'boo', 'bullet_bill'
+        ];
+        // 난이도 및 진행 거리에 따른 타입 선택
+        let availableTypes = ['rolling_ball', 'spikes', 'goomba'];
+        if (this.distance > 60 || this.currentStage >= 2) availableTypes.push('bouncing_ball', 'koopa');
+        if (this.distance > 130 || this.currentStage >= 2) availableTypes.push('flying_bat', 'piranha_plant');
+        if (this.distance > 210 || this.currentStage >= 3) availableTypes.push('falling_rock', 'fire_bar');
+        if (this.distance > 300 || this.currentStage >= 3) availableTypes.push('boo', 'bullet_bill');
 
         const chosenType = availableTypes[Math.floor(Math.random() * availableTypes.length)];
 
@@ -863,6 +933,80 @@ class JumpmanGame {
                 speedMultiplier: 1.0,
                 color: '#78716C'
             });
+        } else if (chosenType === 'goomba') {
+            // 🍄 굼바 (버섯 괴물: 위에서 밟기(Stomp) 가능)
+            this.obstacles.push({
+                type: 'goomba',
+                x: this.WIDTH + 30,
+                y: this.FLOOR_Y - 34,
+                width: 34,
+                height: 34,
+                walkPhase: 0,
+                squished: false,
+                squishTimer: 0,
+                speedMultiplier: 0.95
+            });
+        } else if (chosenType === 'koopa') {
+            // 🐢 엉금엉금 (고속 회전 등껍질)
+            this.obstacles.push({
+                type: 'koopa',
+                x: this.WIDTH + 30,
+                y: this.FLOOR_Y - 26,
+                width: 32,
+                height: 26,
+                rotation: 0,
+                speedMultiplier: 1.35
+            });
+        } else if (chosenType === 'piranha_plant') {
+            // 🌿 뻐끔플라워 & 토관
+            this.obstacles.push({
+                type: 'piranha_plant',
+                x: this.WIDTH + 30,
+                y: this.FLOOR_Y - 58,
+                width: 44,
+                height: 58,
+                risePhase: 0,
+                speedMultiplier: 1.0
+            });
+        } else if (chosenType === 'fire_bar') {
+            // 🔥 회전 파이어바
+            this.obstacles.push({
+                type: 'fire_bar',
+                x: this.WIDTH + 40,
+                y: this.FLOOR_Y - 45,
+                width: 36,
+                height: 36,
+                centerX: this.WIDTH + 58,
+                centerY: this.FLOOR_Y - 27,
+                angle: 0,
+                barLength: 52,
+                speedMultiplier: 1.0
+            });
+        } else if (chosenType === 'boo') {
+            // 👻 부끄부끄 유령
+            const yPositions = [this.FLOOR_Y - 70, this.FLOOR_Y - 110];
+            const chosenY = yPositions[Math.floor(Math.random() * yPositions.length)];
+            this.obstacles.push({
+                type: 'boo',
+                x: this.WIDTH + 30,
+                y: chosenY,
+                baseY: chosenY,
+                width: 36,
+                height: 34,
+                wavePhase: 0,
+                speedMultiplier: 1.15
+            });
+        } else if (chosenType === 'bullet_bill') {
+            // 🚀 킬러 대포알 경고 생성
+            const warningY = Math.max(120, Math.min(this.FLOOR_Y - 35, this.player.y + 6));
+            this.bulletWarnings.push({
+                x: this.WIDTH - 60,
+                y: warningY,
+                life: 38
+            });
+            if (window.JumpmanAudio && window.JumpmanAudio.playWarning) {
+                window.JumpmanAudio.playWarning();
+            }
         }
     }
 
@@ -1131,6 +1275,79 @@ class JumpmanGame {
             }
         }
 
+        // 시간 흐름 업데이트 (거리 및 생존 시간에 따른 실시간 낮/노을/밤/새벽 순환)
+        this.timeOfDay = ((this.distance * 0.0005 + this.survivalTime * 0.01) % 1.0);
+        this.clouds.forEach(c => {
+            c.x -= c.speed * (this.gameSpeed * 0.25);
+            if (c.x < -100) c.x = this.WIDTH + 50;
+        });
+
+        // 킬러(Bullet Bill) 경고선 업데이트 & 탄환 발사
+        for (let w = this.bulletWarnings.length - 1; w >= 0; w--) {
+            const warn = this.bulletWarnings[w];
+            warn.life--;
+            if (warn.life <= 0) {
+                this.obstacles.push({
+                    type: 'bullet_bill',
+                    x: this.WIDTH + 30,
+                    y: warn.y,
+                    width: 52,
+                    height: 32,
+                    speedMultiplier: 2.3
+                });
+                this.bulletWarnings.splice(w, 1);
+            }
+        }
+
+        // 파이어 마리오의 파이어볼 발사 & 업데이트
+        if (this.equippedSkin === 'fire_mario') {
+            this.fireballTimer--;
+            if (this.fireballTimer <= 0) {
+                this.fireballs.push({
+                    x: this.player.x + this.player.width + 10,
+                    y: this.player.y + this.player.height / 2,
+                    vx: this.gameSpeed + 7.5,
+                    vy: 2.2,
+                    radius: 8,
+                    rotation: 0
+                });
+                this.fireballTimer = 330; // 5.5초마다 전방 발사
+                if (window.JumpmanAudio && window.JumpmanAudio.playFireball) {
+                    window.JumpmanAudio.playFireball();
+                }
+            }
+        }
+
+        for (let fbIdx = this.fireballs.length - 1; fbIdx >= 0; fbIdx--) {
+            const fb = this.fireballs[fbIdx];
+            fb.x += fb.vx;
+            fb.y += fb.vy;
+            fb.rotation += 0.35;
+            if (fb.y >= this.FLOOR_Y - fb.radius) {
+                fb.y = this.FLOOR_Y - fb.radius;
+                fb.vy = -3.5; // 통통 튀는 화염구
+            }
+            let fbHit = false;
+            for (let oIdx = this.obstacles.length - 1; oIdx >= 0; oIdx--) {
+                const obs = this.obstacles[oIdx];
+                if (obs.squished) continue;
+                const ow = obs.width || 30;
+                const oh = obs.height || 30;
+                const dist = Math.hypot(fb.x - (obs.x + ow / 2), fb.y - (obs.y + oh / 2));
+                if (dist < fb.radius + ow / 2) {
+                    this.createBlastEffect(obs.x + ow / 2, obs.y + oh / 2);
+                    this.obstacles.splice(oIdx, 1);
+                    this.score += 120;
+                    this.addFloatingText('화염 격파! +120', fb.x, fb.y - 12, '#F97316');
+                    fbHit = true;
+                    break;
+                }
+            }
+            if (fbHit || fb.x > this.WIDTH + 50) {
+                this.fireballs.splice(fbIdx, 1);
+            }
+        }
+
         // 장애물 업데이트 및 충돌 검사
         for (let i = this.obstacles.length - 1; i >= 0; i--) {
             const obs = this.obstacles[i];
@@ -1161,6 +1378,45 @@ class JumpmanGame {
                         obs.y = this.FLOOR_Y - obs.height;
                         obs.vy = 0;
                     }
+                }
+            } else if (obs.type === 'goomba') {
+                obs.walkPhase += 0.15;
+                if (obs.squished) {
+                    obs.squishTimer--;
+                    if (obs.squishTimer <= 0) {
+                        this.obstacles.splice(i, 1);
+                        continue;
+                    }
+                }
+            } else if (obs.type === 'koopa') {
+                obs.rotation += 0.35;
+            } else if (obs.type === 'piranha_plant') {
+                obs.risePhase += 0.045;
+                obs.plantHeadY = (this.FLOOR_Y - 26) - Math.abs(Math.sin(obs.risePhase)) * 32;
+            } else if (obs.type === 'fire_bar') {
+                obs.angle += 0.045;
+                obs.centerX = obs.x + obs.width / 2;
+                obs.centerY = this.FLOOR_Y - 25;
+            } else if (obs.type === 'boo') {
+                obs.wavePhase += 0.05;
+                obs.y = obs.baseY + Math.sin(obs.wavePhase) * 26;
+            }
+
+            // 🍄 굼바 위에서 밟기(Stomp) 판정
+            if (obs.type === 'goomba' && !obs.squished) {
+                const pFeet = this.player.y + this.player.height;
+                const gTop = obs.y + 14;
+                if (this.player.vy > 0 && pFeet >= obs.y && pFeet <= gTop &&
+                    this.player.x + this.player.width > obs.x + 4 && this.player.x < obs.x + obs.width - 4) {
+                    obs.squished = true;
+                    obs.squishTimer = 18;
+                    this.player.vy = -10.5; // 스프링 반동 점프!
+                    this.score += 100;
+                    this.addFloatingText('STOMP! +100', obs.x, obs.y - 15, '#FBBF24');
+                    if (window.JumpmanAudio && window.JumpmanAudio.playStomp) {
+                        window.JumpmanAudio.playStomp();
+                    }
+                    continue;
                 }
             }
 
@@ -1208,16 +1464,18 @@ class JumpmanGame {
         }
 
         // 코인 업데이트 및 수집 검사
+        const warioMagnetDist = (this.equippedSkin === 'wario' ? 85 : 42);
+        const magnetDist = (this.activeItems.magnetTimer > 0 ? 280 : warioMagnetDist);
+
         for (let i = this.collectibles.length - 1; i >= 0; i--) {
             const c = this.collectibles[i];
             c.x -= this.gameSpeed;
 
-            // 자석 효과 (자석 아이템 활성화 시 최대 280px까지 끌어당김, 기본 상태는 42px)
             const dx = (this.player.x + this.player.width / 2) - c.x;
             const dy = (this.player.y + this.player.height / 2) - c.y;
             const dist = Math.hypot(dx, dy);
 
-            if (this.activeItems.magnetTimer > 0 && dist < 280) {
+            if (dist < magnetDist) {
                 c.x += (dx / dist) * 8.5;
                 c.y += (dy / dist) * 8.5;
             }
@@ -1228,6 +1486,10 @@ class JumpmanGame {
                 this.score += 100;
                 this.createStarPuff(c.x, c.y);
                 if (window.JumpmanAudio) window.JumpmanAudio.playCoin();
+                // 영구 코인 상점에 코인 실시간 누적!
+                if (typeof window !== 'undefined' && window.JumpmanShop) {
+                    window.JumpmanShop.addCoins(1);
+                }
                 this.collectibles.splice(i, 1);
                 continue;
             }
@@ -1278,7 +1540,9 @@ class JumpmanGame {
     }
 
     checkCollision(player, obs) {
-        // 부드러운 플레이를 위해 히트박스 3px 살짝 여유 부여
+        if (obs.squished) return false;
+
+        // 부드러운 플레이를 위해 히트박스 4px 살짝 여유 부여
         const pLeft = player.x + 4;
         const pRight = player.x + player.width - 4;
         const pTop = player.y + 4;
@@ -1297,6 +1561,26 @@ class JumpmanGame {
             oRight = cx + r;
             oTop = cy - r;
             oBottom = cy + r;
+        } else if (obs.type === 'piranha_plant') {
+            // 토관 본체 + 뻐끔 머리 충돌 검사
+            const pipeTop = this.FLOOR_Y - 32;
+            const isPipeHit = (pLeft < oRight && pRight > oLeft && pBottom > pipeTop);
+            const headTop = obs.plantHeadY || obs.y;
+            const isHeadHit = (pLeft < obs.x + 38 && pRight > obs.x + 6 && pBottom > headTop && pTop < headTop + 28);
+            return isPipeHit || isHeadHit;
+        } else if (obs.type === 'fire_bar') {
+            // 중심 블록 또는 회전하는 파이어볼 3개와의 충돌 검사
+            if (pLeft < oRight && pRight > oLeft && pTop < oBottom && pBottom > oTop) return true;
+            for (let k = 1; k <= 3; k++) {
+                const dist = (obs.barLength / 3) * k;
+                const fx = (obs.centerX || (obs.x + 18)) + Math.cos(obs.angle) * dist;
+                const fy = (obs.centerY || (this.FLOOR_Y - 25)) + Math.sin(obs.angle) * dist;
+                const fr = 7;
+                if (pLeft < fx + fr && pRight > fx - fr && pTop < fy + fr && pBottom > fy - fr) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         return (pLeft < oRight && pRight > oLeft && pTop < oBottom && pBottom > oTop);
@@ -1481,75 +1765,24 @@ class JumpmanGame {
             ctx.translate(shakeX, shakeY);
         }
 
-        // 1. 배경 그라데이션 (네온 레트로 스카이)
-        const skyGrad = ctx.createLinearGradient(0, 0, 0, this.HEIGHT);
-        skyGrad.addColorStop(0, '#0F172A'); // 딥 나이트 블루
-        skyGrad.addColorStop(0.65, '#1E1B4B'); // 인디고 퍼플
-        skyGrad.addColorStop(1, '#311042'); // 노을빛 퍼플
-        ctx.fillStyle = skyGrad;
-        ctx.fillRect(0, 0, this.WIDTH, this.HEIGHT);
+        // 1. 배경 렌더링 (다이내믹 낮밤 순환 & 테마 팩)
+        this.renderBackground(ctx);
 
-        // 2. 배경 별
-        this.backgroundStars.forEach(s => {
-            ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
-            ctx.beginPath();
-            ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-            ctx.fill();
-        });
-
-        // 3. 원경 산/도시 실루엣
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
-        ctx.beginPath();
-        ctx.moveTo(0, this.FLOOR_Y);
-        for (let x = 0; x <= this.WIDTH; x += 60) {
-            const h = Math.sin((x + this.distance * 0.2) * 0.015) * 50 + 60;
-            ctx.lineTo(x, this.FLOOR_Y - h);
-        }
-        ctx.lineTo(this.WIDTH, this.FLOOR_Y);
-        ctx.closePath();
-        ctx.fill();
-
-        // 3.5. 배경 패럴랙스 교육용 영어 단어 & 문장 플로팅
+        // 2. 배경 패럴랙스 교육용 영어 단어 & 문장 플로팅
         this.renderBackgroundTexts(ctx);
 
-        // 4. 바닥 (지면 및 체크무늬 패턴)
-        const floorGrad = ctx.createLinearGradient(0, this.FLOOR_Y, 0, this.HEIGHT);
-        floorGrad.addColorStop(0, '#10B981'); // 잔디 라인
-        floorGrad.addColorStop(0.08, '#047857');
-        floorGrad.addColorStop(1, '#064E3B');
-        ctx.fillStyle = floorGrad;
-        ctx.fillRect(0, this.FLOOR_Y, this.WIDTH, this.HEIGHT - this.FLOOR_Y);
+        // 3. 지면 및 바닥 렌더링
+        this.renderFloor(ctx);
 
-        // 바닥 격자 애니메이션 라인
-        ctx.strokeStyle = 'rgba(52, 211, 153, 0.35)';
-        ctx.lineWidth = 2;
-        const gridOffset = (this.distance * 2) % 40;
-        for (let x = -gridOffset; x <= this.WIDTH; x += 40) {
-            ctx.beginPath();
-            ctx.moveTo(x, this.FLOOR_Y);
-            ctx.lineTo(x, this.HEIGHT);
-            ctx.stroke();
-        }
-
-        // 지면 탑 네온 라인
-        ctx.strokeStyle = '#34D399';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(0, this.FLOOR_Y);
-        ctx.lineTo(this.WIDTH, this.FLOOR_Y);
-        ctx.stroke();
-
-        // 5. 수집 아이템 (코인 🪙)
+        // 4. 수집 아이템 (코인 🪙)
         this.collectibles.forEach(c => {
             ctx.save();
             ctx.translate(c.x, c.y);
-            // 회전/반짝임
             ctx.fillStyle = '#FBBF24';
             ctx.beginPath();
             ctx.arc(0, 0, c.size, 0, Math.PI * 2);
             ctx.fill();
 
-            // 내부 테두리 & 달러/별 마크
             ctx.strokeStyle = '#D97706';
             ctx.lineWidth = 2;
             ctx.stroke();
@@ -1562,12 +1795,10 @@ class JumpmanGame {
             ctx.restore();
         });
 
-        // 5-B. 공중 영어 단어 버블 (Word Orbs)
+        // 4-B. 공중 영어 단어 버블 (Word Orbs)
         this.wordOrbs.forEach(orb => {
             ctx.save();
             ctx.translate(orb.x, orb.y);
-
-            // 반짝이는 네온 필 배경
             ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
             ctx.strokeStyle = '#4ADE80';
             ctx.lineWidth = 2;
@@ -1580,7 +1811,6 @@ class JumpmanGame {
             ctx.fill();
             ctx.stroke();
 
-            // 단어 텍스트
             ctx.shadowBlur = 0;
             ctx.fillStyle = '#86EFAC';
             ctx.font = 'bold 13px "Pretendard Variable", Pretendard, sans-serif';
@@ -1588,19 +1818,15 @@ class JumpmanGame {
             ctx.textBaseline = 'middle';
             ctx.fillText(orb.en, 0, 0);
 
-            // 상단 미니 배지 🔤
             ctx.font = '10px sans-serif';
             ctx.fillText('🔤', -w / 2 + 10, -h / 2 + 3);
-
             ctx.restore();
         });
 
-        // 5-C. 럭키 아이템 상자 (Item Boxes)
+        // 4-C. 럭키 아이템 상자 (Item Boxes)
         this.itemBoxes.forEach(box => {
             ctx.save();
             ctx.translate(box.x, box.y);
-
-            // 황금 큐브 렌더링
             const s = box.size;
             ctx.shadowColor = '#F59E0B';
             ctx.shadowBlur = 12;
@@ -1617,25 +1843,68 @@ class JumpmanGame {
             ctx.fill();
             ctx.stroke();
 
-            // 물음표 마크
             ctx.shadowBlur = 0;
             ctx.fillStyle = '#FFFFFF';
             ctx.font = 'bold 16px sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText('?', 0, 1);
-
             ctx.restore();
         });
 
-        // 6. 장애물 렌더링
+        // 5. 킬러(Bullet Bill) 경고선 렌더링
+        this.bulletWarnings.forEach(warn => {
+            ctx.save();
+            const flash = Math.floor(warn.life / 6) % 2 === 0;
+            if (flash) {
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.2)';
+                ctx.fillRect(0, warn.y - 14, this.WIDTH, 28);
+                ctx.strokeStyle = '#EF4444';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([8, 6]);
+                ctx.beginPath();
+                ctx.moveTo(0, warn.y);
+                ctx.lineTo(this.WIDTH, warn.y);
+                ctx.stroke();
+
+                ctx.fillStyle = '#EF4444';
+                ctx.font = 'bold 12px "Pretendard Variable", Pretendard, sans-serif';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('⚠️ DANGER! 🚀', this.WIDTH - 20, warn.y);
+            }
+            ctx.restore();
+        });
+
+        // 6. 파이어 마리오의 파이어볼 투사체 렌더링
+        this.fireballs.forEach(fb => {
+            ctx.save();
+            ctx.translate(fb.x, fb.y);
+            ctx.rotate(fb.rotation);
+
+            ctx.shadowColor = '#EA580C';
+            ctx.shadowBlur = 10;
+            const grad = ctx.createRadialGradient(0, 0, 2, 0, 0, fb.radius);
+            grad.addColorStop(0, '#FEF08A');
+            grad.addColorStop(0.5, '#F97316');
+            grad.addColorStop(1, '#DC2626');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(0, 0, fb.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 불꽃 꼬리 파티클
+            ctx.fillStyle = '#FDE047';
+            ctx.fillRect(-fb.radius * 0.8, -2, fb.radius * 0.6, 4);
+            ctx.restore();
+        });
+
+        // 7. 장애물 및 몬스터 렌더링 (11종)
         this.obstacles.forEach(obs => {
             ctx.save();
             if (obs.type === 'rolling_ball' || obs.type === 'bouncing_ball') {
                 ctx.translate(obs.x, obs.y);
                 ctx.rotate(obs.rotation);
-
-                // 구체 본체
                 const ballGrad = ctx.createRadialGradient(-obs.radius * 0.3, -obs.radius * 0.3, 2, 0, 0, obs.radius);
                 if (obs.type === 'rolling_ball') {
                     ballGrad.addColorStop(0, '#F87171');
@@ -1649,7 +1918,6 @@ class JumpmanGame {
                 ctx.arc(0, 0, obs.radius, 0, Math.PI * 2);
                 ctx.fill();
 
-                // 볼 패턴 (스파이크 밴드 / 회전선)
                 ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
                 ctx.lineWidth = 2.5;
                 ctx.beginPath();
@@ -1676,11 +1944,9 @@ class JumpmanGame {
                 }
             } else if (obs.type === 'flying_bat') {
                 ctx.translate(obs.x, obs.y);
-                // 날개 펄럭임
                 const wingY = Math.sin(obs.wingPhase * 2) * 8;
                 ctx.fillStyle = '#7C3AED';
 
-                // 왼쪽 날개
                 ctx.beginPath();
                 ctx.moveTo(-16, wingY);
                 ctx.lineTo(-4, 0);
@@ -1688,7 +1954,6 @@ class JumpmanGame {
                 ctx.closePath();
                 ctx.fill();
 
-                // 오른쪽 날개
                 ctx.beginPath();
                 ctx.moveTo(16, wingY);
                 ctx.lineTo(4, 0);
@@ -1696,13 +1961,11 @@ class JumpmanGame {
                 ctx.closePath();
                 ctx.fill();
 
-                // 박쥐 몸통 & 눈
                 ctx.fillStyle = '#5B21B6';
                 ctx.beginPath();
                 ctx.arc(0, 0, 9, 0, Math.PI * 2);
                 ctx.fill();
 
-                // 빨간 눈
                 ctx.fillStyle = '#EF4444';
                 ctx.fillRect(-4, -2, 2, 2);
                 ctx.fillRect(2, -2, 2, 2);
@@ -1712,18 +1975,207 @@ class JumpmanGame {
                 ctx.strokeStyle = '#44403C';
                 ctx.lineWidth = 2;
                 ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
-                // 낙하 경고 라인
                 if (!obs.isFalling) {
                     ctx.fillStyle = 'rgba(239, 68, 68, 0.7)';
                     ctx.font = 'bold 14px sans-serif';
                     ctx.textAlign = 'center';
                     ctx.fillText('▼', obs.x + obs.width / 2, obs.y + obs.height + 15);
                 }
+            } else if (obs.type === 'goomba') {
+                // 🍄 굼바 (버섯 괴물)
+                ctx.translate(obs.x + obs.width / 2, obs.y + obs.height);
+                if (obs.squished) {
+                    ctx.scale(1.4, 0.35); // 밟혀서 납작해진 모습!
+                }
+
+                // 발 (보행 애니메이션)
+                const footOffset = Math.sin(obs.walkPhase || 0) * 4;
+                ctx.fillStyle = '#1C1917';
+                ctx.fillRect(-14 + footOffset, -6, 10, 6);
+                ctx.fillRect(4 - footOffset, -6, 10, 6);
+
+                // 몸통
+                ctx.fillStyle = '#FED7AA';
+                ctx.fillRect(-8, -16, 16, 11);
+
+                // 버섯 갓
+                ctx.fillStyle = '#92400E';
+                ctx.beginPath();
+                ctx.moveTo(-16, -14);
+                ctx.bezierCurveTo(-18, -32, 18, -32, 16, -14);
+                ctx.closePath();
+                ctx.fill();
+
+                // 눈썹 & 눈
+                ctx.fillStyle = '#0F172A';
+                ctx.fillRect(-10, -22, 6, 2);
+                ctx.fillRect(4, -22, 6, 2);
+
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(-9, -20, 5, 5);
+                ctx.fillRect(4, -20, 5, 5);
+                ctx.fillStyle = '#0F172A';
+                ctx.fillRect(-7, -19, 3, 4);
+                ctx.fillRect(4, -19, 3, 4);
+
+                // 덧니
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(-7, -12, 3, 3);
+                ctx.fillRect(4, -12, 3, 3);
+            } else if (obs.type === 'koopa') {
+                // 🐢 엉금엉금 (회전 등껍질)
+                ctx.translate(obs.x + obs.width / 2, obs.y + obs.height / 2);
+                ctx.rotate(obs.rotation || 0);
+
+                // 등껍질 본체
+                ctx.fillStyle = '#16A34A';
+                ctx.beginPath();
+                ctx.arc(0, 0, obs.height / 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 하얀 림 테두리
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // 육각형 등 문양 패턴
+                ctx.strokeStyle = '#15803D';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(-6, -6, 12, 12);
+            } else if (obs.type === 'piranha_plant') {
+                // 🌿 뻐끔플라워 & 초록 토관 파이프
+                const pipeTop = this.FLOOR_Y - 32;
+
+                // 뻐끔플라워 머리
+                const headY = obs.plantHeadY || (this.FLOOR_Y - 55);
+                ctx.fillStyle = '#DC2626';
+                ctx.beginPath();
+                ctx.arc(obs.x + obs.width / 2, headY, 14, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 입술 & 이빨
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(obs.x + obs.width / 2 - 4, headY - 4, 3, 0, Math.PI * 2);
+                ctx.arc(obs.x + obs.width / 2 + 5, headY + 3, 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 입
+                ctx.fillStyle = '#15803D';
+                ctx.fillRect(obs.x + obs.width / 2 - 3, headY + 12, 6, Math.max(0, pipeTop - headY));
+
+                // 토관 림 (입구)
+                ctx.fillStyle = '#16A34A';
+                ctx.fillRect(obs.x - 3, pipeTop, obs.width + 6, 10);
+                ctx.strokeStyle = '#14532D';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(obs.x - 3, pipeTop, obs.width + 6, 10);
+
+                // 토관 본체
+                ctx.fillStyle = '#15803D';
+                ctx.fillRect(obs.x, pipeTop + 10, obs.width, 22);
+                ctx.strokeRect(obs.x, pipeTop + 10, obs.width, 22);
+            } else if (obs.type === 'bullet_bill') {
+                // 🚀 킬러 대포알
+                ctx.translate(obs.x, obs.y);
+                // 추진 연기
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.beginPath();
+                ctx.arc(obs.width + 8, obs.height / 2, 8, 0, Math.PI * 2);
+                ctx.arc(obs.width + 18, obs.height / 2 - 2, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 탄두 본체 (검은 총알)
+                ctx.fillStyle = '#18181B';
+                ctx.beginPath();
+                ctx.moveTo(14, 0);
+                ctx.lineTo(obs.width, 0);
+                ctx.lineTo(obs.width, obs.height);
+                ctx.lineTo(14, obs.height);
+                ctx.quadraticCurveTo(-4, obs.height / 2, 14, 0);
+                ctx.closePath();
+                ctx.fill();
+
+                // 하얀 눈 & 눈동자
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(16, obs.height / 2 - 3, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.arc(13, obs.height / 2 - 3, 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 앙증맞은 주먹 손
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(28, obs.height / 2 + 7, 5, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (obs.type === 'boo') {
+                // 👻 부끄부끄 유령
+                ctx.translate(obs.x + obs.width / 2, obs.y + obs.height / 2);
+                ctx.fillStyle = '#FFFFFF';
+                ctx.shadowColor = '#FFFFFF';
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(0, 0, 16, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // 꼬리
+                ctx.beginPath();
+                ctx.moveTo(12, -4);
+                ctx.lineTo(24, 0);
+                ctx.lineTo(12, 6);
+                ctx.closePath();
+                ctx.fill();
+
+                // 눈 & 눈썹
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(-10, -5, 4, 6);
+                ctx.fillRect(-2, -5, 4, 6);
+
+                // 혀 & 입
+                ctx.fillStyle = '#DC2626';
+                ctx.beginPath();
+                ctx.arc(-6, 6, 5, 0, Math.PI);
+                ctx.fill();
+            } else if (obs.type === 'fire_bar') {
+                // 🔥 회전 파이어바
+                const cx = obs.centerX || (obs.x + 18);
+                const cy = obs.centerY || (this.FLOOR_Y - 25);
+
+                // 중심 블록
+                ctx.fillStyle = '#78350F';
+                ctx.fillRect(cx - 9, cy - 9, 18, 18);
+                ctx.strokeStyle = '#FBBF24';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(cx - 9, cy - 9, 18, 18);
+
+                // 3개 파이어볼 렌더링
+                for (let k = 1; k <= 3; k++) {
+                    const dist = (obs.barLength / 3) * k;
+                    const fx = cx + Math.cos(obs.angle) * dist;
+                    const fy = cy + Math.sin(obs.angle) * dist;
+                    const fr = 7;
+
+                    ctx.shadowColor = '#F97316';
+                    ctx.shadowBlur = 8;
+                    const fGrad = ctx.createRadialGradient(fx, fy, 1, fx, fy, fr);
+                    fGrad.addColorStop(0, '#FEF08A');
+                    fGrad.addColorStop(0.6, '#F97316');
+                    fGrad.addColorStop(1, '#DC2626');
+                    ctx.fillStyle = fGrad;
+                    ctx.beginPath();
+                    ctx.arc(fx, fy, fr, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.shadowBlur = 0;
             }
             ctx.restore();
         });
 
-        // 7. 파티클
+        // 8. 파티클
         this.particles.forEach(p => {
             ctx.save();
             ctx.globalAlpha = Math.max(0, p.alpha);
@@ -1734,10 +2186,10 @@ class JumpmanGame {
             ctx.restore();
         });
 
-        // 8. 플레이어 (Jumpman 캐릭터 렌더링)
+        // 9. 플레이어 렌더링 (장착된 스킨 캐릭터!)
         this.renderPlayer(ctx);
 
-        // 8-B. 플로팅 알림 텍스트 (+150 점수, 3단 점프 등)
+        // 10. 플로팅 알림 텍스트
         this.floatingTexts.forEach(ft => {
             ctx.save();
             ctx.globalAlpha = Math.max(0, ft.alpha);
@@ -1752,7 +2204,7 @@ class JumpmanGame {
             ctx.restore();
         });
 
-        // 9. 목적지 깃발 (스테이지 모드일 때)
+        // 11. 목적지 깃발 (스테이지 모드일 때)
         if (this.gameMode === 'stage') {
             const remainDist = this.stageGoalDistance - this.distance;
             if (remainDist < 120) {
@@ -1766,8 +2218,359 @@ class JumpmanGame {
         ctx.restore();
     }
 
+    renderBackground(ctx) {
+        const bg = this.equippedBg || 'cycle';
+
+        if (bg === 'desert') {
+            // 🏜️ 사막 테마
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, this.HEIGHT);
+            skyGrad.addColorStop(0, '#B45309');
+            skyGrad.addColorStop(0.5, '#F59E0B');
+            skyGrad.addColorStop(1, '#FEF3C7');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, this.WIDTH, this.HEIGHT);
+
+            // 뜨거운 태양
+            ctx.fillStyle = 'rgba(254, 240, 138, 0.9)';
+            ctx.beginPath();
+            ctx.arc(this.WIDTH * 0.78, 110, 48, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 고대 피라미드 실루엣
+            ctx.fillStyle = 'rgba(180, 83, 9, 0.45)';
+            ctx.beginPath();
+            ctx.moveTo(120, this.FLOOR_Y);
+            ctx.lineTo(260, this.FLOOR_Y - 140);
+            ctx.lineTo(400, this.FLOOR_Y);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(480, this.FLOOR_Y);
+            ctx.lineTo(600, this.FLOOR_Y - 110);
+            ctx.lineTo(720, this.FLOOR_Y);
+            ctx.closePath();
+            ctx.fill();
+
+            // 모래언덕 곡선
+            ctx.fillStyle = 'rgba(217, 119, 6, 0.6)';
+            ctx.beginPath();
+            ctx.moveTo(0, this.FLOOR_Y);
+            for (let x = 0; x <= this.WIDTH; x += 50) {
+                const h = Math.sin((x + this.distance * 0.3) * 0.01) * 35 + 40;
+                ctx.lineTo(x, this.FLOOR_Y - h);
+            }
+            ctx.lineTo(this.WIDTH, this.FLOOR_Y);
+            ctx.closePath();
+            ctx.fill();
+            return;
+        }
+
+        if (bg === 'cyber') {
+            // 🌃 사이버 네온 시티
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, this.HEIGHT);
+            skyGrad.addColorStop(0, '#0F172A');
+            skyGrad.addColorStop(0.6, '#4C1D95');
+            skyGrad.addColorStop(1, '#831843');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, this.WIDTH, this.HEIGHT);
+
+            // 네온 마천루 빌딩 실루엣 & 창문 불빛
+            const offset = (this.distance * 0.2) % 180;
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+            for (let x = -offset; x <= this.WIDTH + 100; x += 90) {
+                const bH = 120 + ((x * 13) % 90);
+                ctx.fillRect(x, this.FLOOR_Y - bH, 70, bH);
+
+                // 창문 불빛
+                ctx.fillStyle = ((x / 90) % 2 === 0) ? 'rgba(56, 189, 248, 0.6)' : 'rgba(244, 114, 182, 0.6)';
+                for (let wx = x + 8; wx < x + 62; wx += 14) {
+                    for (let wy = this.FLOOR_Y - bH + 12; wy < this.FLOOR_Y - 10; wy += 22) {
+                        ctx.fillRect(wx, wy, 8, 10);
+                    }
+                }
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+            }
+            return;
+        }
+
+        if (bg === 'lava') {
+            // 🌋 쿠파 성 & 용암
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, this.HEIGHT);
+            skyGrad.addColorStop(0, '#18181B');
+            skyGrad.addColorStop(0.65, '#7F1D1D');
+            skyGrad.addColorStop(1, '#450A0A');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, this.WIDTH, this.HEIGHT);
+
+            // 뾰족한 가시 성채 실루엣
+            ctx.fillStyle = 'rgba(24, 24, 27, 0.75)';
+            ctx.beginPath();
+            ctx.moveTo(0, this.FLOOR_Y);
+            for (let x = 0; x <= this.WIDTH; x += 80) {
+                const h = 70 + (Math.sin(x * 0.03) * 40);
+                ctx.lineTo(x + 20, this.FLOOR_Y - h - 35);
+                ctx.lineTo(x + 40, this.FLOOR_Y - h);
+            }
+            ctx.lineTo(this.WIDTH, this.FLOOR_Y);
+            ctx.closePath();
+            ctx.fill();
+            return;
+        }
+
+        if (bg === 'galaxy') {
+            // 🌌 코스믹 갤럭시
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, this.HEIGHT);
+            skyGrad.addColorStop(0, '#030712');
+            skyGrad.addColorStop(0.5, '#312E81');
+            skyGrad.addColorStop(1, '#581C87');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, this.WIDTH, this.HEIGHT);
+
+            // 토성 고리 행성
+            ctx.save();
+            ctx.translate(this.WIDTH * 0.82, 95);
+            ctx.fillStyle = '#F59E0B';
+            ctx.beginPath();
+            ctx.arc(0, 0, 36, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 행성 고리
+            ctx.strokeStyle = 'rgba(253, 230, 138, 0.85)';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 65, 14, -Math.PI / 8, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+
+            // 별무리
+            this.backgroundStars.forEach(s => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size * 1.2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            return;
+        }
+
+        // 🌓 기본: 실시간 낮·노을·밤 순환 (Day & Night Cycle)
+        const t = this.timeOfDay || 0.0;
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, this.HEIGHT);
+
+        if (t < 0.32) {
+            // [낮 ☀️] 화창한 푸른 하늘
+            skyGrad.addColorStop(0, '#38BDF8');
+            skyGrad.addColorStop(0.65, '#60A5FA');
+            skyGrad.addColorStop(1, '#BAE6FD');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, this.WIDTH, this.HEIGHT);
+
+            // 밝은 태양 & 햇살
+            ctx.fillStyle = 'rgba(253, 224, 71, 0.95)';
+            ctx.shadowColor = '#FBBF24';
+            ctx.shadowBlur = 24;
+            ctx.beginPath();
+            ctx.arc(this.WIDTH * 0.82, 90, 44, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // 뭉게구름
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+            this.clouds.forEach(c => {
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, c.size * 0.5, 0, Math.PI * 2);
+                ctx.arc(c.x + c.size * 0.35, c.y - c.size * 0.15, c.size * 0.45, 0, Math.PI * 2);
+                ctx.arc(c.x + c.size * 0.7, c.y, c.size * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        } else if (t < 0.52) {
+            // [노을 🌅] 주황빛에서 자주빛으로 물드는 석양
+            skyGrad.addColorStop(0, '#C2410C');
+            skyGrad.addColorStop(0.55, '#D946EF');
+            skyGrad.addColorStop(1, '#311042');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, this.WIDTH, this.HEIGHT);
+
+            // 거대한 붉은 석양
+            ctx.fillStyle = 'rgba(251, 146, 60, 0.9)';
+            ctx.shadowColor = '#EA580C';
+            ctx.shadowBlur = 30;
+            ctx.beginPath();
+            ctx.arc(this.WIDTH * 0.75, 135, 56, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        } else if (t < 0.86) {
+            // [밤 🌙] 딥 나이트 블루 & 반짝이는 별무리
+            skyGrad.addColorStop(0, '#0F172A');
+            skyGrad.addColorStop(0.65, '#1E1B4B');
+            skyGrad.addColorStop(1, '#311042');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, this.WIDTH, this.HEIGHT);
+
+            // 밤하늘 별
+            this.backgroundStars.forEach(s => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // 빛나는 초승달
+            ctx.save();
+            ctx.translate(this.WIDTH * 0.8, 85);
+            ctx.fillStyle = '#FEF08A';
+            ctx.shadowColor = '#FDE047';
+            ctx.shadowBlur = 18;
+            ctx.beginPath();
+            ctx.arc(0, 0, 32, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            // 달 그림자 마스킹
+            ctx.fillStyle = '#0F172A';
+            ctx.beginPath();
+            ctx.arc(12, -8, 28, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        } else {
+            // [새벽/여명 🌄] 어스름한 새벽하늘
+            skyGrad.addColorStop(0, '#1E293B');
+            skyGrad.addColorStop(0.6, '#4338CA');
+            skyGrad.addColorStop(1, '#F472B6');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, this.WIDTH, this.HEIGHT);
+
+            // 별이 서서히 옅어짐
+            this.backgroundStars.forEach(s => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha * 0.4})`;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        // 원경 산 실루엣
+        ctx.fillStyle = t < 0.32 ? 'rgba(30, 58, 138, 0.35)' : 'rgba(15, 23, 42, 0.65)';
+        ctx.beginPath();
+        ctx.moveTo(0, this.FLOOR_Y);
+        for (let x = 0; x <= this.WIDTH; x += 60) {
+            const h = Math.sin((x + this.distance * 0.2) * 0.015) * 50 + 60;
+            ctx.lineTo(x, this.FLOOR_Y - h);
+        }
+        ctx.lineTo(this.WIDTH, this.FLOOR_Y);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    renderFloor(ctx) {
+        const bg = this.equippedBg || 'cycle';
+
+        if (bg === 'desert') {
+            // 사막 모래 바닥
+            const fGrad = ctx.createLinearGradient(0, this.FLOOR_Y, 0, this.HEIGHT);
+            fGrad.addColorStop(0, '#F59E0B');
+            fGrad.addColorStop(0.12, '#D97706');
+            fGrad.addColorStop(1, '#92400E');
+            ctx.fillStyle = fGrad;
+            ctx.fillRect(0, this.FLOOR_Y, this.WIDTH, this.HEIGHT - this.FLOOR_Y);
+
+            ctx.strokeStyle = '#FDE68A';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, this.FLOOR_Y);
+            ctx.lineTo(this.WIDTH, this.FLOOR_Y);
+            ctx.stroke();
+            return;
+        }
+
+        if (bg === 'cyber') {
+            // 사이버 그리드 바닥
+            ctx.fillStyle = '#0F172A';
+            ctx.fillRect(0, this.FLOOR_Y, this.WIDTH, this.HEIGHT - this.FLOOR_Y);
+
+            ctx.strokeStyle = 'rgba(236, 72, 153, 0.4)';
+            ctx.lineWidth = 2;
+            const gridOffset = (this.distance * 2) % 40;
+            for (let x = -gridOffset; x <= this.WIDTH; x += 40) {
+                ctx.beginPath();
+                ctx.moveTo(x, this.FLOOR_Y);
+                ctx.lineTo(x, this.HEIGHT);
+                ctx.stroke();
+            }
+
+            ctx.strokeStyle = '#06B6D4';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, this.FLOOR_Y);
+            ctx.lineTo(this.WIDTH, this.FLOOR_Y);
+            ctx.stroke();
+            return;
+        }
+
+        if (bg === 'lava') {
+            // 용암 바닥
+            const fGrad = ctx.createLinearGradient(0, this.FLOOR_Y, 0, this.HEIGHT);
+            fGrad.addColorStop(0, '#DC2626');
+            fGrad.addColorStop(0.3, '#EA580C');
+            fGrad.addColorStop(1, '#7F1D1D');
+            ctx.fillStyle = fGrad;
+            ctx.fillRect(0, this.FLOOR_Y, this.WIDTH, this.HEIGHT - this.FLOOR_Y);
+
+            ctx.strokeStyle = '#FEF08A';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, this.FLOOR_Y);
+            ctx.lineTo(this.WIDTH, this.FLOOR_Y);
+            ctx.stroke();
+            return;
+        }
+
+        if (bg === 'galaxy') {
+            // 우주 플랫폼 바닥
+            const fGrad = ctx.createLinearGradient(0, this.FLOOR_Y, 0, this.HEIGHT);
+            fGrad.addColorStop(0, '#4338CA');
+            fGrad.addColorStop(0.15, '#1E1B4B');
+            fGrad.addColorStop(1, '#0F172A');
+            ctx.fillStyle = fGrad;
+            ctx.fillRect(0, this.FLOOR_Y, this.WIDTH, this.HEIGHT - this.FLOOR_Y);
+
+            ctx.strokeStyle = '#818CF8';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, this.FLOOR_Y);
+            ctx.lineTo(this.WIDTH, this.FLOOR_Y);
+            ctx.stroke();
+            return;
+        }
+
+        // 기본 에메랄드 잔디 바닥
+        const floorGrad = ctx.createLinearGradient(0, this.FLOOR_Y, 0, this.HEIGHT);
+        floorGrad.addColorStop(0, '#10B981');
+        floorGrad.addColorStop(0.08, '#047857');
+        floorGrad.addColorStop(1, '#064E3B');
+        ctx.fillStyle = floorGrad;
+        ctx.fillRect(0, this.FLOOR_Y, this.WIDTH, this.HEIGHT - this.FLOOR_Y);
+
+        ctx.strokeStyle = 'rgba(52, 211, 153, 0.35)';
+        ctx.lineWidth = 2;
+        const gridOffset = (this.distance * 2) % 40;
+        for (let x = -gridOffset; x <= this.WIDTH; x += 40) {
+            ctx.beginPath();
+            ctx.moveTo(x, this.FLOOR_Y);
+            ctx.lineTo(x, this.HEIGHT);
+            ctx.stroke();
+        }
+
+        ctx.strokeStyle = '#34D399';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(0, this.FLOOR_Y);
+        ctx.lineTo(this.WIDTH, this.FLOOR_Y);
+        ctx.stroke();
+    }
+
     renderPlayer(ctx) {
         const p = this.player;
+        const skin = this.equippedSkin || 'mario';
 
         // 무적 상태일 때 깜빡임 연출
         if (p.invulnerableTimer > 0 && Math.floor(p.invulnerableTimer / 4) % 2 === 0) {
@@ -1825,14 +2628,13 @@ class JumpmanGame {
             ctx.fillStyle = 'rgba(56, 189, 248, 0.85)';
             ctx.shadowColor = '#38BDF8';
             ctx.shadowBlur = 8;
-            // 좌측 날개
             ctx.beginPath();
             ctx.moveTo(-12, -p.height / 2);
             ctx.lineTo(-26, -p.height / 2 - 12);
             ctx.lineTo(-18, -p.height / 2 + 6);
             ctx.closePath();
             ctx.fill();
-            // 우측 날개
+
             ctx.beginPath();
             ctx.moveTo(12, -p.height / 2);
             ctx.lineTo(26, -p.height / 2 - 12);
@@ -1842,50 +2644,181 @@ class JumpmanGame {
             ctx.restore();
         }
 
-        // Jumpman 캐릭터 본체 (복고풍 플랫포머 히어로)
-        // A. 다리 (달리기 애니메이션)
-        ctx.fillStyle = '#1E3A8A'; // 진청색 바지
+        // 캐릭터 스킨별 컬러 & 형태 정의
+        let capColor = '#DC2626'; // 마리오 기본 빨강
+        let shirtColor = '#DC2626';
+        let pantsColor = '#1E3A8A'; // 오버올 청색
+        let buttonColor = '#FBBF24'; // 노란 단추
+        let shoeColor = '#92400E';
+
+        if (skin === 'luigi') {
+            capColor = '#16A34A'; // 루이지 초록
+            shirtColor = '#16A34A';
+            pantsColor = '#1E3A8A';
+            shoeColor = '#78350F';
+        } else if (skin === 'wario') {
+            capColor = '#EAB308'; // 와리오 노랑
+            shirtColor = '#EAB308';
+            pantsColor = '#7E22CE'; // 보라 오버올
+            shoeColor = '#15803D'; // 초록 신발
+        } else if (skin === 'fire_mario') {
+            capColor = '#FFFFFF'; // 파이어 화이트
+            shirtColor = '#FFFFFF';
+            pantsColor = '#DC2626'; // 빨간 오버올
+            shoeColor = '#7F1D1D';
+        }
+
         const legPhase = p.onGround ? Math.sin(p.runFrame) * 10 : -4;
-        // 뒷다리
-        ctx.fillRect(-10, -12, 7, 12 + legPhase * 0.5);
-        // 앞다리
-        ctx.fillRect(3, -12, 7, 12 - legPhase * 0.5);
 
-        // 신발 (스니커즈)
-        ctx.fillStyle = '#EF4444';
-        ctx.fillRect(-12, -2 + legPhase * 0.5, 9, 4);
-        ctx.fillRect(3, -2 - legPhase * 0.5, 9, 4);
+        if (skin === 'toad') {
+            // 🍄 키노피오 렌더링
+            // 하얀 바지 & 갈색 신발
+            ctx.fillStyle = '#78350F';
+            ctx.fillRect(-10, -4 + legPhase * 0.4, 8, 4);
+            ctx.fillRect(2, -4 - legPhase * 0.4, 8, 4);
 
-        // B. 몸통 (레드 오버올 & 셔츠)
-        ctx.fillStyle = '#DC2626'; // 레드 셔츠
-        ctx.fillRect(-11, -32, 22, 20);
+            ctx.fillStyle = '#F8FAFC';
+            ctx.fillRect(-9, -14, 18, 11);
 
-        // 오버올 멜빵
-        ctx.fillStyle = '#2563EB';
-        ctx.fillRect(-8, -26, 4, 14);
-        ctx.fillRect(4, -26, 4, 14);
-        // 노란 단추
-        ctx.fillStyle = '#FBBF24';
-        ctx.fillRect(-7, -24, 2, 2);
-        ctx.fillRect(5, -24, 2, 2);
+            // 파란 조끼 & 금빛 테두리
+            ctx.fillStyle = '#0284C7';
+            ctx.fillRect(-10, -26, 20, 13);
+            ctx.fillStyle = '#FBBF24';
+            ctx.fillRect(-10, -26, 3, 13);
+            ctx.fillRect(7, -26, 3, 13);
 
-        // C. 머리 및 모자
-        // 얼굴 살색
-        ctx.fillStyle = '#FED7AA';
-        ctx.fillRect(-9, -46, 18, 14);
+            // 얼굴
+            ctx.fillStyle = '#FED7AA';
+            ctx.fillRect(-9, -38, 18, 13);
+            // 눈
+            ctx.fillStyle = '#0F172A';
+            ctx.fillRect(2, -35, 3, 5);
 
-        // 눈
-        ctx.fillStyle = '#0F172A';
-        ctx.fillRect(2, -42, 3, 4);
+            // 커다란 흰 버섯 모자 & 빨간 도트
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(0, -44, 18, 0, Math.PI * 2);
+            ctx.fill();
 
-        // 코
-        ctx.fillStyle = '#FDBA74';
-        ctx.fillRect(5, -39, 4, 4);
+            ctx.fillStyle = '#DC2626';
+            ctx.beginPath();
+            ctx.arc(0, -49, 7, 0, Math.PI * 2);
+            ctx.arc(-11, -43, 6, 0, Math.PI * 2);
+            ctx.arc(11, -43, 6, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (skin === 'peach') {
+            // 👑 피치 공주 렌더링
+            // 핑크 롱 드레스
+            ctx.fillStyle = '#F472B6';
+            ctx.beginPath();
+            ctx.moveTo(-14, -4);
+            ctx.lineTo(-6, -26);
+            ctx.lineTo(6, -26);
+            ctx.lineTo(14, -4);
+            ctx.closePath();
+            ctx.fill();
 
-        // 빨간 모자 (Jumpman Cap)
-        ctx.fillStyle = '#DC2626';
-        ctx.fillRect(-11, -48, 22, 6);
-        ctx.fillRect(1, -44, 12, 4); // 챙
+            // 드레스 하단 프릴
+            ctx.fillStyle = '#FBCFE8';
+            ctx.fillRect(-14, -4, 28, 4);
+
+            // 상의 코르셋
+            ctx.fillStyle = '#EC4899';
+            ctx.fillRect(-8, -32, 16, 8);
+            // 브로치 (푸른 보석)
+            ctx.fillStyle = '#38BDF8';
+            ctx.beginPath();
+            ctx.arc(0, -28, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 얼굴 & 금발 머리
+            ctx.fillStyle = '#FDE047';
+            ctx.fillRect(-11, -46, 22, 16); // 풍성한 금발
+
+            ctx.fillStyle = '#FED7AA';
+            ctx.fillRect(-7, -44, 15, 12); // 얼굴
+
+            // 눈 & 입술
+            ctx.fillStyle = '#0284C7';
+            ctx.fillRect(2, -41, 3, 4);
+            ctx.fillStyle = '#F43F5E';
+            ctx.fillRect(4, -35, 3, 2);
+
+            // 금빛 왕관 & 보석
+            ctx.fillStyle = '#FBBF24';
+            ctx.fillRect(-7, -49, 14, 5);
+            ctx.fillStyle = '#DC2626';
+            ctx.fillRect(-5, -48, 2, 2);
+            ctx.fillStyle = '#2563EB';
+            ctx.fillRect(0, -48, 2, 2);
+            ctx.fillStyle = '#DC2626';
+            ctx.fillRect(5, -48, 2, 2);
+        } else {
+            // 🔴 마리오 / 🟢 루이지 / 🟡 와리오 / 🔥 파이어 마리오
+            const isTall = (skin === 'luigi');
+            const isWide = (skin === 'wario');
+
+            const hOffset = isTall ? -3 : 0;
+            const wScale = isWide ? 1.2 : 1.0;
+
+            // 다리
+            ctx.fillStyle = pantsColor;
+            ctx.fillRect(-10 * wScale, -12, 7 * wScale, 12 + legPhase * 0.5);
+            ctx.fillRect(3 * wScale, -12, 7 * wScale, 12 - legPhase * 0.5);
+
+            // 신발
+            ctx.fillStyle = shoeColor;
+            ctx.fillRect(-12 * wScale, -2 + legPhase * 0.5, 9 * wScale, 4);
+            ctx.fillRect(3 * wScale, -2 - legPhase * 0.5, 9 * wScale, 4);
+
+            // 몸통
+            ctx.fillStyle = shirtColor;
+            ctx.fillRect(-11 * wScale, -32 + hOffset, 22 * wScale, 20);
+
+            // 오버올 멜빵
+            ctx.fillStyle = pantsColor;
+            ctx.fillRect(-8 * wScale, -26 + hOffset, 4 * wScale, 14);
+            ctx.fillRect(4 * wScale, -26 + hOffset, 4 * wScale, 14);
+
+            // 노란 단추
+            ctx.fillStyle = buttonColor;
+            ctx.fillRect(-7 * wScale, -24 + hOffset, 2, 2);
+            ctx.fillRect(5 * wScale, -24 + hOffset, 2, 2);
+
+            // 머리 & 얼굴 살색
+            ctx.fillStyle = '#FED7AA';
+            ctx.fillRect(-9 * wScale, -46 + hOffset, 18 * wScale, 14);
+
+            // 눈
+            ctx.fillStyle = '#0F172A';
+            ctx.fillRect(2 * wScale, -42 + hOffset, 3, 4);
+
+            // 코
+            ctx.fillStyle = '#FDBA74';
+            ctx.fillRect(5 * wScale, -39 + hOffset, 4, 4);
+
+            // 콧수염
+            ctx.fillStyle = (skin === 'wario' ? '#000000' : '#451A03');
+            if (skin === 'wario') {
+                // 와리오 지그재그 수염
+                ctx.fillRect(1 * wScale, -37 + hOffset, 9 * wScale, 3);
+            } else {
+                ctx.fillRect(2 * wScale, -37 + hOffset, 8 * wScale, 3);
+            }
+
+            // 모자
+            ctx.fillStyle = capColor;
+            ctx.fillRect(-11 * wScale, -48 + hOffset, 22 * wScale, 6);
+            ctx.fillRect(1 * wScale, -44 + hOffset, 12 * wScale, 4); // 챙
+
+            // 파이어 마리오 손 불꽃 오라
+            if (skin === 'fire_mario') {
+                ctx.fillStyle = 'rgba(249, 115, 22, 0.8)';
+                ctx.beginPath();
+                ctx.arc(10 * wScale, -20 + hOffset, 5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
 
         ctx.restore();
         ctx.globalAlpha = 1.0;
@@ -1895,11 +2828,9 @@ class JumpmanGame {
         ctx.save();
         ctx.translate(x, y);
 
-        // 깃대
         ctx.fillStyle = '#E2E8F0';
         ctx.fillRect(-2, -90, 4, 90);
 
-        // 깃발 (체크무늬 레이싱 골 플래그)
         ctx.fillStyle = '#F59E0B';
         ctx.beginPath();
         ctx.moveTo(2, -88);
@@ -1911,7 +2842,6 @@ class JumpmanGame {
         ctx.fillStyle = '#FFFFFF';
         ctx.font = 'black 12px Pretendard, sans-serif';
         ctx.fillText('GOAL', 6, -68);
-
         ctx.restore();
     }
 

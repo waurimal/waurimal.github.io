@@ -262,3 +262,21 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: #475569;
 }
+
+/* 상점 모달 및 코인 스타일 */
+.shop-tab-btn {
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: pointer;
+}
+
+@keyframes coinGlow {
+    0% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.5)); }
+    50% { transform: scale(1.1); filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.9)); }
+    100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.5)); }
+}
+
+.coin-pulse {
+    animation: coinGlow 1.6s infinite ease-in-out;
+    display: inline-block;
+}
