@@ -10,6 +10,7 @@ class MugunghwaAudio {
         this.ttsAvailable = typeof window !== 'undefined' && 'speechSynthesis' in window;
         this.koreanVoice = null;
         this.englishVoice = null;
+        this.chantTimerId = null;
 
         if (this.ttsAvailable) {
             this.initVoices();
@@ -243,8 +244,18 @@ class MugunghwaAudio {
 
     // 9. 술래 TTS 구호 외치기 ("무궁화 꽃이 피었습니다" / 또는 "Red light, green light, one two three!")
     speakChant(text = '무궁화 꽃이 피었습니다!', rate = 1.0, callback = null) {
+        if (this.chantTimerId) {
+            clearTimeout(this.chantTimerId);
+            this.chantTimerId = null;
+        }
+
         if (this.isMuted || !this.ttsAvailable) {
-            if (callback) setTimeout(callback, 2200 / rate);
+            if (callback) {
+                this.chantTimerId = setTimeout(() => {
+                    this.chantTimerId = null;
+                    callback();
+                }, 2200 / rate);
+            }
             return;
         }
         try {
@@ -264,6 +275,10 @@ class MugunghwaAudio {
             if (callback) {
                 let hasFired = false;
                 const safeCb = () => {
+                    if (this.chantTimerId) {
+                        clearTimeout(this.chantTimerId);
+                        this.chantTimerId = null;
+                    }
                     if (!hasFired) {
                         hasFired = true;
                         callback();
@@ -272,7 +287,7 @@ class MugunghwaAudio {
                 utter.onend = safeCb;
                 utter.onerror = safeCb;
                 // 안전 타이머: 브라우저가 음성 이벤트를 놓치더라도 턴이 멈추지 않도록 보장
-                setTimeout(safeCb, Math.max(3000, Math.floor(2600 / rate) + 800));
+                this.chantTimerId = setTimeout(safeCb, Math.max(3000, Math.floor(2600 / rate) + 800));
             }
             window.speechSynthesis.speak(utter);
         } catch (e) {
@@ -289,6 +304,19 @@ class MugunghwaAudio {
             utter.rate = 0.9;
             if (this.englishVoice) utter.voice = this.englishVoice;
             window.speechSynthesis.speak(utter);
+        } catch (e) {}
+    }
+
+    // 11. 게임 종료 / 일시정지 시 모든 음성 및 예약 타이머 즉시 중단
+    stopAll() {
+        if (this.chantTimerId) {
+            clearTimeout(this.chantTimerId);
+            this.chantTimerId = null;
+        }
+        try {
+            if (typeof window !== 'undefined' && window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+            }
         } catch (e) {}
     }
 }

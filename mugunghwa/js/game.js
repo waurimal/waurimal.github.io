@@ -244,7 +244,7 @@ class MugunghwaGame {
     }
 
     speakTaggerChant() {
-        if (!this.isRunning || this.isPaused) return;
+        if (!this.isRunning || this.isPaused || this.player.isFinished || (this.timeLimit > 0 && this.remainingTime <= 0)) return;
 
         this.tagger.turnCount++;
 
@@ -269,15 +269,19 @@ class MugunghwaGame {
 
         if (window.MugunghwaAudio) {
             window.MugunghwaAudio.speakChant('무궁화 꽃이 피었습니다!', speed, () => {
-                // 구호가 끝나면 술래가 휙 돌아봄!
-                if (this.tagger.state === 'CHANTING') {
-                    this.triggerTaggerTurn();
+                // 게임이 정상 진행 중일 때만 돌아보기
+                if (this.isRunning && !this.isPaused && !this.player.isFinished && (this.timeLimit <= 0 || this.remainingTime > 0)) {
+                    if (this.tagger.state === 'CHANTING') {
+                        this.triggerTaggerTurn();
+                    }
                 }
             });
         }
     }
 
     triggerTaggerTurn() {
+        if (!this.isRunning || this.isPaused || this.player.isFinished || (this.timeLimit > 0 && this.remainingTime <= 0)) return;
+
         this.tagger.state = 'SCANNING';
         this.tagger.scanTimer = 0;
         this.tagger.scanDuration = Math.floor(100 + Math.random() * 60); // 1.6 ~ 2.6초 동안 전방 레이저 스캔
@@ -596,12 +600,25 @@ class MugunghwaGame {
 
     triggerPlayerGoal() {
         this.player.isFinished = true;
-        const finishers = this.peers.filter(bot => bot.isFinished).length;
-        this.player.finishRank = finishers + 1;
+        this.isRunning = false;
+        this.isPaused = true;
+        this.tagger.state = 'GOAL_IN';
 
+        if (this.animFrameId) {
+            cancelAnimationFrame(this.animFrameId);
+            this.animFrameId = null;
+        }
+
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
         if (window.MugunghwaAudio) {
+            window.MugunghwaAudio.stopAll();
             window.MugunghwaAudio.playGoal();
         }
+
+        const finishers = this.peers.filter(bot => bot.isFinished).length;
+        this.player.finishRank = finishers + 1;
 
         // 스피드런 보너스 점수 산정 (빨리 들어올수록 대폭 높은 점수 획득!)
         // 1. 순위 보너스: 1위 2,500점, 2위 1,800점, 3위 1,200점, 기타 800점
@@ -654,6 +671,7 @@ class MugunghwaGame {
             this.remainingTime -= dt;
             if (this.remainingTime <= 0) {
                 this.remainingTime = 0;
+                this.updateHUD();
                 this.triggerTimeOver();
                 return;
             }
@@ -671,11 +689,13 @@ class MugunghwaGame {
             this.tagger.headAngle += (0 - this.tagger.headAngle) * 0.35;
             this.tagger.laserAlpha = Math.min(0.65, this.tagger.laserAlpha + 0.08);
 
-            // 주시 시간이 끝나면 다시 CHANTING으로 복귀
+            // 주시 시간이 끝나면 다시 CHANTING으로 복귀 (시간이 남아있고 게임 진행 중일 때만)
             if (this.tagger.scanTimer >= this.tagger.scanDuration) {
-                this.tagger.state = 'CHANTING';
-                this.tagger.chantTimer = 0;
-                this.speakTaggerChant();
+                if (this.isRunning && !this.isPaused && !this.player.isFinished && (this.timeLimit <= 0 || this.remainingTime > 0)) {
+                    this.tagger.state = 'CHANTING';
+                    this.tagger.chantTimer = 0;
+                    this.speakTaggerChant();
+                }
             }
         }
 
@@ -765,6 +785,21 @@ class MugunghwaGame {
     triggerTimeOver() {
         this.isRunning = false;
         this.isPaused = true;
+        this.tagger.state = 'TIME_OVER';
+
+        if (this.animFrameId) {
+            cancelAnimationFrame(this.animFrameId);
+            this.animFrameId = null;
+        }
+
+        // 음성 및 구호 즉시 정지
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
+        if (window.MugunghwaAudio) {
+            window.MugunghwaAudio.stopAll();
+        }
+
         if (window.showTimeOverModal) {
             window.showTimeOverModal({
                 myMeters: Math.floor(this.player.m),
