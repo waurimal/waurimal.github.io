@@ -145,7 +145,11 @@ class MugunghwaGame {
         playerIds.forEach((id, idx) => {
             const p = playersObj[id];
             let existing = this.peers.find(peer => peer.id === id);
-            const laneY = this.TRACK_Y_MIN + ((this.TRACK_Y_MAX - this.TRACK_Y_MIN) / Math.max(2, playerIds.length + 1)) * (idx + 1);
+            const defaultLaneY = this.TRACK_Y_MIN + ((this.TRACK_Y_MAX - this.TRACK_Y_MIN) / Math.max(2, playerIds.length + 1)) * (idx + 1);
+            const laneY = (p.laneIndex !== undefined && this.LANES[p.laneIndex] !== undefined)
+                ? this.LANES[p.laneIndex]
+                : defaultLaneY;
+
             if (!existing) {
                 existing = {
                     id: id,
@@ -153,6 +157,7 @@ class MugunghwaGame {
                     isHost: Boolean(p.isHost),
                     m: p.m || 0,
                     checkpoint: p.checkpoint || 0,
+                    laneIndex: p.laneIndex !== undefined ? p.laneIndex : idx,
                     displayX: this.mToX(p.m || 0),
                     displayY: laneY,
                     targetX: this.mToX(p.m || 0),
@@ -169,6 +174,14 @@ class MugunghwaGame {
                 existing.m = p.m || 0;
                 existing.checkpoint = p.checkpoint || 0;
                 existing.targetX = this.mToX(p.m || 0);
+                existing.targetY = laneY;
+                if (p.laneIndex !== undefined) existing.laneIndex = p.laneIndex;
+
+                // 신규 골인 감지 시 축하 플로팅 텍스트 실시간 표출
+                if (p.isFinished && !existing.isFinished) {
+                    this.addFloatingText(`🥇 ${p.finishRank ? p.finishRank + '등 골인!' : '골인!'} [${existing.name}]`, existing.displayX, existing.displayY - 45, '#FBBF24');
+                }
+
                 existing.isFinished = p.isFinished || false;
                 existing.finishRank = p.finishRank || existing.finishRank;
                 existing.buffs = p.activeBuffs || existing.buffs;
@@ -531,9 +544,9 @@ class MugunghwaGame {
                 this.triggerPlayerGoal();
             }
 
-            // 멀티플레이어 위치 동기화
+            // 멀티플레이어 위치 동기화 (정확한 현재 위치 m 전달하여 100% 실시간 일치)
             if (this.playMode === 'multi' && window.MugunghwaMultiplayer) {
-                window.MugunghwaMultiplayer.advancePlayer(move.targetM - move.prevM, null, move.targetLane);
+                window.MugunghwaMultiplayer.advancePlayer(move.targetM - move.prevM, null, move.targetLane, this.player.m);
             }
 
             return { success: true, moved: true, move };
@@ -585,9 +598,9 @@ class MugunghwaGame {
             this.triggerPlayerGoal();
         }
 
-        // 멀티플레이어 위치 동기화
+        // 멀티플레이어 위치 동기화 (정확한 현재 위치 m 전달하여 100% 실시간 일치)
         if (this.playMode === 'multi' && window.MugunghwaMultiplayer) {
-            window.MugunghwaMultiplayer.advancePlayer(stepM);
+            window.MugunghwaMultiplayer.advancePlayer(stepM, null, null, this.player.m);
         }
     }
 

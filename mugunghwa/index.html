@@ -193,7 +193,10 @@
                             <h2 class="text-base sm:text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400">
                                 명예의 전당 (Hall of Fame) · 100m 골인 랭킹 TOP 10
                             </h2>
-                            <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-extrabold border border-amber-500/30">실시간 기록</span>
+                            <span id="badgeHofSyncStatus" class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-extrabold border border-emerald-500/40 flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <span>실시간 클라우드 동기화 중</span>
+                            </span>
                         </div>
                         <p class="text-[11px] text-slate-400 mt-0.5">
                             ⚡ 100m 결승선에 빠르게 골인할수록 스피드런 시간 보너스 점수(+60점/초)가 폭발적으로 증가합니다!
@@ -891,7 +894,7 @@
                 screenWaitingRoom.classList.add('hidden');
                 screenGame.classList.add('hidden');
                 screenLobby.classList.remove('hidden');
-                renderHallOfFame();
+                initHallOfFameRealtimeSync();
             };
 
             document.getElementById('btnBackToLobby').addEventListener('click', returnToLobby);
@@ -1203,9 +1206,11 @@
             };
 
             // ───────────────────────────────────────────
-            // 명예의 전당 (Hall of Fame) 로컬스토리지 관리
+            // 명예의 전당 (Hall of Fame) 실시간 클라우드 동기화 (Firebase Firestore + LocalStorage Hybrid)
             // ───────────────────────────────────────────
             const HOF_STORAGE_KEY = 'mugunghwa_hall_of_fame_records_clean';
+            const HOF_COLLECTION = 'mugunghwa_scores';
+            let hofUnsubscribe = null;
 
             function escapeHtml(str) {
                 if (!str) return '';
@@ -1231,13 +1236,14 @@
                 }
             }
 
-            function recordToHallOfFame(record) {
+            // 실시간 랭킹 Firestore 저장 & 로컬 캐시 반영
+            async function recordToHallOfFame(record) {
                 if (!record || typeof record.score !== 'number' || isNaN(record.score)) {
                     return getHallOfFame();
                 }
+                // 1. 로컬 캐시 즉시 업데이트
                 const list = getHallOfFame();
                 list.push(record);
-                // 점수 높은 순(내림차순), 동점일 경우 완주 소요 시간이 짧은 순(오름차순)으로 정렬
                 list.sort((a, b) => {
                     if (b.score !== a.score) return b.score - a.score;
                     const timeA = parseFloat(a.elapsedSec) || 999;
@@ -1246,12 +1252,106 @@
                 });
                 const top10 = list.slice(0, 10);
                 localStorage.setItem(HOF_STORAGE_KEY, JSON.stringify(top10));
-                renderHallOfFame();
+                renderHallOfFame(top10);
+
+                // 2. Firebase Firestore 클라우드 컬렉션에 실시간 업로드 (모든 기기에 즉시 동기화!)
+                const db = (window.MugunghwaMultiplayer && window.MugunghwaMultiplayer.db)
+                    ? window.MugunghwaMultiplayer.db
+                    : (window.firebase && window.firebase.firestore ? window.firebase.firestore() : null);
+
+                if (db) {
+                    try {
+                        await db.collection(HOF_COLLECTION).add({
+                            name: record.name,
+                            score: record.score,
+                            elapsedSec: record.elapsedSec,
+                            rank: record.rank,
+                            date: record.date,
+                            timestamp: Date.now()
+                        });
+                    } catch (err) {
+                        console.warn('[HOF] Firestore cloud save notice:', err);
+                    }
+                }
                 return top10;
             }
 
-            function renderHallOfFame() {
-                const list = getHallOfFame();
+            // Firestore 실시간 리스너 (onSnapshot) 바인딩
+            function initHallOfFameRealtimeSync() {
+                if (hofUnsubscribe) {
+                    hofUnsubscribe();
+                    hofUnsubscribe = null;
+                }
+
+                // 1단계: 로컬 캐시 먼저 즉시 렌더링
+                renderHallOfFame();
+
+                // 2단계: Firestore 연결 및 실시간 동기화
+                const db = (window.MugunghwaMultiplayer && window.MugunghwaMultiplayer.db)
+                    ? window.MugunghwaMultiplayer.db
+                    : (window.firebase && window.firebase.firestore ? window.firebase.firestore() : null);
+
+                if (!db) return;
+
+                const badge = document.getElementById('badgeHofSyncStatus');
+                try {
+                    // 점수 내림차순 실시간 구독
+                    const query = db.collection(HOF_COLLECTION).orderBy('score', 'desc').limit(25);
+                    hofUnsubscribe = query.onSnapshot(snapshot => {
+                        if (badge) {
+                            badge.className = 'px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-extrabold border border-emerald-500/40 flex items-center gap-1';
+                            badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span>실시간 클라우드 동기화 중</span>';
+                        }
+                        if (!snapshot || snapshot.empty) {
+                            renderHallOfFame();
+                            return;
+                        }
+                        const cloudItems = [];
+                        snapshot.forEach(doc => {
+                            const d = doc.data();
+                            if (d && typeof d.score === 'number' && !isNaN(d.score)) {
+                                cloudItems.push({
+                                    id: doc.id,
+                                    name: d.name || '도전자',
+                                    score: d.score,
+                                    elapsedSec: d.elapsedSec || '0',
+                                    rank: d.rank || 1,
+                                    date: d.date || '',
+                                    timestamp: d.timestamp || 0
+                                });
+                            }
+                        });
+                        cloudItems.sort((a, b) => {
+                            if (b.score !== a.score) return b.score - a.score;
+                            const timeA = parseFloat(a.elapsedSec) || 999;
+                            const timeB = parseFloat(b.elapsedSec) || 999;
+                            return timeA - timeB;
+                        });
+                        const top10 = cloudItems.slice(0, 10);
+                        localStorage.setItem(HOF_STORAGE_KEY, JSON.stringify(top10));
+                        renderHallOfFame(top10);
+                    }, err => {
+                        console.warn('[HOF] Firestore onSnapshot fallback:', err);
+                        // 인덱스 빌드 전 fallback
+                        db.collection(HOF_COLLECTION).limit(30).get().then(snap => {
+                            const fallbackItems = [];
+                            snap.forEach(doc => {
+                                const d = doc.data();
+                                if (d && typeof d.score === 'number') fallbackItems.push(d);
+                            });
+                            fallbackItems.sort((a, b) => b.score - a.score);
+                            const top10 = fallbackItems.slice(0, 10);
+                            localStorage.setItem(HOF_STORAGE_KEY, JSON.stringify(top10));
+                            renderHallOfFame(top10);
+                        }).catch(() => {});
+                    });
+                } catch (e) {
+                    console.warn('[HOF] Setup error:', e);
+                }
+            }
+
+            function renderHallOfFame(explicitList = null) {
+                const list = explicitList || getHallOfFame();
                 const container = document.getElementById('hallOfFameList');
                 if (!container) return;
                 container.innerHTML = '';
@@ -1320,17 +1420,32 @@
             // 기록 초기화 버튼 핸들러
             const btnResetHof = document.getElementById('btnResetHallOfFame');
             if (btnResetHof) {
-                btnResetHof.addEventListener('click', () => {
-                    if (confirm('명예의 전당 기록을 초기화하시겠습니까?')) {
+                btnResetHof.addEventListener('click', async () => {
+                    if (confirm('명예의 전당 기록을 초기화하시겠습니까? (로컬 및 모든 기기의 실시간 클라우드 기록이 초기화됩니다)')) {
                         localStorage.removeItem(HOF_STORAGE_KEY);
                         localStorage.removeItem('mugunghwa_hall_of_fame_records_v1');
-                        renderHallOfFame();
+                        renderHallOfFame([]);
+
+                        const db = (window.MugunghwaMultiplayer && window.MugunghwaMultiplayer.db)
+                            ? window.MugunghwaMultiplayer.db
+                            : (window.firebase && window.firebase.firestore ? window.firebase.firestore() : null);
+
+                        if (db) {
+                            try {
+                                const snap = await db.collection(HOF_COLLECTION).limit(50).get();
+                                const batch = db.batch();
+                                snap.forEach(doc => batch.delete(doc.ref));
+                                await batch.commit();
+                            } catch (e) {
+                                console.warn('[HOF] Reset batch error:', e);
+                            }
+                        }
                     }
                 });
             }
 
-            // 첫 화면 진입 시 명예의 전당 즉시 렌더링
-            renderHallOfFame();
+            // 첫 화면 진입 시 명예의 전당 실시간 클라우드 동기화 가동
+            initHallOfFameRealtimeSync();
 
             // 승리 모달 표출 및 명예의 전당 자동 등록
             window.showVictoryModal = (data) => {

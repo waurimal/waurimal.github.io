@@ -367,7 +367,7 @@ class MugunghwaMultiplayer {
     }
 
     // 7. 플레이어(학생 또는 직접 참여 관리자): 퀴즈 정답 맞히고 앞으로 전진
-    async advancePlayer(metersToAdd, newBuffs = null, targetLane = null) {
+    async advancePlayer(metersToAdd = 10, newBuffs = null, targetLane = null, exactM = null) {
         if (!this.currentRoomId) return;
 
         // Mock 모드 지원
@@ -381,7 +381,7 @@ class MugunghwaMultiplayer {
             }
             if (curPlayer.isFinished) return;
             const currentM = curPlayer.m || 0;
-            let nextM = Math.min(100, currentM + metersToAdd);
+            let nextM = (exactM !== null && exactM !== undefined) ? Math.min(100, exactM) : Math.min(100, currentM + metersToAdd);
             let nextCheckpoint = curPlayer.checkpoint || 0;
             if (nextM >= 75) nextCheckpoint = Math.max(nextCheckpoint, 75);
             else if (nextM >= 50) nextCheckpoint = Math.max(nextCheckpoint, 50);
@@ -407,7 +407,7 @@ class MugunghwaMultiplayer {
         if (curPlayer && curPlayer.isFinished) return;
 
         const currentM = (curPlayer && curPlayer.m) ? curPlayer.m : 0;
-        let nextM = Math.min(100, currentM + metersToAdd);
+        let nextM = (exactM !== null && exactM !== undefined) ? Math.min(100, exactM) : Math.min(100, currentM + metersToAdd);
 
         // 체크포인트 갱신 (25m, 50m, 75m)
         let nextCheckpoint = (curPlayer && curPlayer.checkpoint) ? curPlayer.checkpoint : 0;
