@@ -254,7 +254,7 @@ class MugunghwaAudio {
                 this.chantTimerId = setTimeout(() => {
                     this.chantTimerId = null;
                     callback();
-                }, 2200 / rate);
+                }, 4400 / rate);
             }
             return;
         }
@@ -284,10 +284,14 @@ class MugunghwaAudio {
                         callback();
                     }
                 };
-                utter.onend = safeCb;
+                // 음성 구호 발화 후 약 2.2초 추가 여유를 주어 총 문제 풀이 텀을 2배(약 4.4초)로 대폭 연장
+                const postDelay = Math.floor(2200 / rate);
+                utter.onend = () => {
+                    this.chantTimerId = setTimeout(safeCb, postDelay);
+                };
                 utter.onerror = safeCb;
                 // 안전 타이머: 브라우저가 음성 이벤트를 놓치더라도 턴이 멈추지 않도록 보장
-                this.chantTimerId = setTimeout(safeCb, Math.max(3000, Math.floor(2600 / rate) + 800));
+                this.chantTimerId = setTimeout(safeCb, Math.max(5500, Math.floor(4800 / rate) + 1200));
             }
             window.speechSynthesis.speak(utter);
         } catch (e) {

@@ -29,16 +29,16 @@ class MugunghwaGame {
         this.gameScore = 0;
 
         // 술래 (Tagger) 상태 머신
-        // states: 'CHANTING' (초록불: 뒤돌아 구호 외침) | 'TURNING' (주의) | 'SCANNING' (빨간불: 뒤돌아 정면 주시 & 레이저 스캔)
+        // states: 'CHANTING' (초록불: 뒤돌아 구호 외침 및 문제 풀이 텀) | 'TURNING' (주의) | 'SCANNING' (빨간불: 뒤돌아 정면 주시 & 레이저 스캔)
         this.tagger = {
             state: 'CHANTING',
             x: 1110,
             y: 330,
             headAngle: Math.PI, // 0 = 왼쪽(플레이어 주시), Math.PI = 오른쪽(나무 주시)
             chantTimer: 0,
-            chantDuration: 210, // 약 3.5초
+            chantDuration: 420, // 약 7초 (문제 풀이 텀 2배 연장)
             scanTimer: 0,
-            scanDuration: 130, // 약 2.1초 (정면 응시)
+            scanDuration: 200, // 약 3.3초 (정면 응시)
             speedMultiplier: 1.0,
             turnCount: 0,
             laserAlpha: 0
@@ -129,7 +129,7 @@ class MugunghwaGame {
                 isFinished: false,
                 finishRank: 0,
                 isFallen: false,
-                botAnswerTimer: Math.floor(Math.random() * 80) + 40,
+                botAnswerTimer: Math.floor(Math.random() * 160) + 80,
                 buffs: { shoes: false, shield: false }
             });
         }
@@ -335,7 +335,7 @@ class MugunghwaGame {
         // 구호 속도: 턴이 지날수록 약간씩 긴장감 넘치게 변동 (0.9 ~ 1.45배속)
         const speed = 0.95 + (Math.random() * 0.45);
         this.tagger.speedMultiplier = speed;
-        this.tagger.chantDuration = Math.floor(190 / speed);
+        this.tagger.chantDuration = Math.floor(380 / speed);
 
         if (window.MugunghwaAudio) {
             window.MugunghwaAudio.speakChant('무궁화 꽃이 피었습니다!', speed, () => {
@@ -354,7 +354,7 @@ class MugunghwaGame {
 
         this.tagger.state = 'SCANNING';
         this.tagger.scanTimer = 0;
-        this.tagger.scanDuration = Math.floor(100 + Math.random() * 60); // 1.6 ~ 2.6초 동안 전방 레이저 스캔
+        this.tagger.scanDuration = Math.floor(180 + Math.random() * 80); // 약 3.0 ~ 4.3초 동안 전방 레이저 스캔
 
         // 술래가 빨간 눈(SCANNING)으로 돌아봐도, 이미 이동을 선택한 플레이어의 pendingMove는 유지하여 문제 풀기 허용!
         if (!this.isSpectator && typeof window !== 'undefined' && window.onTaggerScanStart) {
@@ -884,7 +884,7 @@ class MugunghwaGame {
                             bot.m = bot.checkpoint;
                             bot.targetX = this.mToX(bot.checkpoint);
                         }
-                        bot.botAnswerTimer = Math.floor(Math.random() * 90) + 60;
+                        bot.botAnswerTimer = Math.floor(Math.random() * 180) + 120;
                     }
                 } else if (this.tagger.state === 'SCANNING') {
                     // 술래가 볼 때 가끔 걸리는 봇 연출
