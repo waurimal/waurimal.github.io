@@ -64,10 +64,10 @@
                         <div>
                             <label class="block text-[11px] font-bold text-amber-300 mb-1">⏱️ 들어오는 시간 지정 (제한 시간)</label>
                             <select id="hostTimeLimit" class="w-full p-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 font-bold text-xs cursor-pointer">
-                                <option value="60">60초 (광속 스피드 챌린지)</option>
-                                <option value="90" selected>90초 (추천 표준 시간)</option>
-                                <option value="120">120초 (여유로운 골인 모드)</option>
-                                <option value="180">180초 (3분 협동 마라톤)</option>
+                                <option value="120">120초 (2분 스피드 챌린지)</option>
+                                <option value="180" selected>180초 (3분 추천 표준 시간)</option>
+                                <option value="240">240초 (4분 여유 모드)</option>
+                                <option value="300">300초 (5분 넉넉 모드)</option>
                                 <option value="0">무제한 (전원 골인할 때까지)</option>
                             </select>
                         </div>
@@ -157,9 +157,11 @@
                         <div>
                             <label class="block text-[11px] font-bold text-emerald-300 mb-1">⏱️ 들어오는 시간</label>
                             <select id="soloTimeLimit" class="w-full p-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 font-bold text-xs cursor-pointer">
-                                <option value="60">60초 스피드런</option>
-                                <option value="90" selected>90초 표준 시간</option>
-                                <option value="120">120초 여유 모드</option>
+                                <option value="120">120초 (2분 스피드 챌린지)</option>
+                                <option value="180" selected>180초 (3분 추천 표준 시간)</option>
+                                <option value="240">240초 (4분 여유 모드)</option>
+                                <option value="300">300초 (5분 넉넉 모드)</option>
+                                <option value="0">무제한 (마음껏 문제 풀기)</option>
                             </select>
                         </div>
                         <div>
@@ -947,9 +949,9 @@
             let promptRestoreTimer = null;
 
             // 새로운 구호(텀)가 시작될 때 이동 대기 상태로 초기화
+            // 새로운 구호(텀)가 시작될 때 이동 대기 상태로 초기화 & 문제 즉시 출제
             function prepareNextTurnStandby() {
                 const promptEl = document.getElementById('quizPrompt');
-                const qText = document.getElementById('quizQuestionText');
                 const dpadStatus = document.getElementById('dpadTurnStatus');
                 const dpadCenter = document.getElementById('dpadCenterInfo');
 
@@ -957,43 +959,34 @@
 
                 if (dpadStatus) {
                     dpadStatus.className = 'text-emerald-400 font-black animate-pulse';
-                    dpadStatus.textContent = '🟢 이동 가능';
+                    dpadStatus.textContent = '🟢 이동 & 퀴즈 풀기';
                 }
                 if (dpadCenter) {
-                    dpadCenter.textContent = '방향선택';
-                    dpadCenter.className = 'text-[10px] font-black text-amber-300 text-center select-none truncate px-1';
+                    dpadCenter.textContent = '▶ 전진';
+                    dpadCenter.className = 'text-[10px] font-black text-emerald-300 text-center select-none truncate px-1';
                 }
 
-                if (promptEl) {
-                    promptEl.innerHTML = `<span>🟢</span> <span class="text-amber-300 font-extrabold">[구호 진행 중!]</span> <span>화살표 키(←↑↓→)로 이동할 방향을 선택하세요</span>`;
-                }
-
-                if (qText) {
-                    qText.textContent = '🎮 화살표 키나 아래 버튼을 눌러 이동하세요';
-                }
-
-                const grid = document.getElementById('quizChoicesGrid');
-                if (grid) {
-                    grid.innerHTML = `
-                        <div class="col-span-full py-3.5 px-2 text-center text-slate-400 bg-slate-950/60 rounded-xl border border-dashed border-slate-800 space-y-1">
-                            <div class="text-2xl">🏃‍♂️💨</div>
-                            <div class="text-xs font-bold text-slate-200">화살표 키(←↑↓→)나 조작 버튼을 누르면 이동 퀴즈가 나옵니다!</div>
-                            <div class="text-[11px] text-amber-400 font-semibold leading-relaxed">
-                                • 한 텀에 1회만 이동 가능합니다.<br>
-                                • 정답을 맞히면 선택한 레인/거리로 즉시 이동 완료됩니다!
-                            </div>
-                        </div>
-                    `;
+                // 턴 시작과 동시에 기본 '앞으로 +10m 전진'을 자동 대기 설정하고 즉시 퀴즈를 출제!
+                // 학생이 별도로 조작키를 누르지 않아도 즉시 문제를 읽고 풀 수 있어 풀이 시간을 극대화
+                const res = game.requestMove('right');
+                if (res && res.success && res.pendingMove) {
+                    serveNextQuizForPendingMove(res.pendingMove);
+                } else if (game.player.pendingMove) {
+                    serveNextQuizForPendingMove(game.player.pendingMove);
                 }
             }
             window.prepareNextTurnStandby = prepareNextTurnStandby;
 
-            // 플레이어의 이동 방향 요청 처리
+            // 플레이어의 이동 방향 요청 처리 (초록불 동안 레인 변경 및 전진 선택)
             function handleMoveRequest(direction) {
                 if (!game.isRunning || game.isPaused || game.player.isFinished) return;
 
-                // 술래가 빨간불 주시 중(SCANNING)일 때 이동 시도 시 즉시 적발!
+                // 술래가 빨간불 주시 중(SCANNING)일 때 새 이동 시도 시 즉시 적발!
                 if (game.tagger.state === 'SCANNING') {
+                    if (game.player.pendingMove) {
+                        game.addFloatingText('⚠️ 술래 주시 중에는 방향을 바꿀 수 없습니다! 문제를 맞춰 이동을 완료하세요.', game.player.displayX, game.player.displayY - 30, '#FBBF24');
+                        return;
+                    }
                     game.handleTaggerCaught();
                     const promptEl = document.getElementById('quizPrompt');
                     if (promptEl) {
@@ -1002,7 +995,7 @@
                     return;
                 }
 
-                // 한 텀에 1회 제한
+                // 한 텀에 1회 제한: 이미 이번 턴 답변을 마쳐 이동 완료한 경우
                 if (game.player.hasMovedThisTurn) {
                     game.addFloatingText('⚠️ 이번 텀에는 이미 이동했습니다! 다음 구호를 기다리세요.', game.player.displayX, game.player.displayY - 30, '#FBBF24');
                     const promptEl = document.getElementById('quizPrompt');
@@ -1012,6 +1005,9 @@
                     return;
                 }
 
+                // 기존 pendingMove를 초기화하고 새 방향으로 재설정 (문제는 유지!)
+                game.player.hasMovedThisTurn = false;
+                game.player.pendingMove = null;
                 const res = game.requestMove(direction);
                 if (!res.success) return;
 
@@ -1022,8 +1018,19 @@
                     dpadCenter.className = 'text-[10px] font-black text-emerald-300 text-center select-none truncate px-1';
                 }
 
-                // 이동할 방향 결정 후 -> 문제 출제 & 맞히면 이동 완료
-                serveNextQuizForPendingMove(res.pendingMove);
+                const promptEl = document.getElementById('quizPrompt');
+                if (promptEl && res.pendingMove) {
+                    promptEl.innerHTML = `
+                        <span class="text-amber-300 font-black">🎯 [${res.pendingMove.dirLabel}]</span>
+                        <span class="text-sky-300 font-bold truncate">정답을 맞히면 이동 완료!</span>
+                    `;
+                }
+
+                // 퀴즈가 아직 출제되지 않은 경우에만 출제 (이미 출제된 문제는 변경 없이 유지)
+                const grid = document.getElementById('quizChoicesGrid');
+                if (!currentQuestion || !grid || grid.children.length === 0) {
+                    serveNextQuizForPendingMove(res.pendingMove);
+                }
             }
 
             // 이동 대기 위치에 따른 퀴즈 출제

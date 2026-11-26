@@ -68,7 +68,7 @@ class MugunghwaMultiplayer {
         if (!this.db) this.initFirebase();
 
         const roomId = settings.roomId || this.generateRoomId();
-        const timeLimit = Number(settings.timeLimit) || 90; // 기본 90초
+        const timeLimit = settings.timeLimit !== undefined ? Number(settings.timeLimit) : 180; // 기본 180초 (3분)
         const grade = settings.grade || 'all';
         const isHostParticipating = (settings.hostParticipating === true || settings.hostParticipating === 'player');
         const hostName = settings.hostName || '선생님';
@@ -174,7 +174,7 @@ class MugunghwaMultiplayer {
             const mockRoom = {
                 roomId: cleanId,
                 status: 'waiting',
-                timeLimit: 90,
+                timeLimit: 180,
                 grade: 6,
                 players: {}
             };

@@ -24,8 +24,8 @@ class MugunghwaGame {
         this.isRunning = false;
         this.isPaused = false;
         this.playMode = 'solo'; // 'solo' (AI 봇 반 친구들과 함께) | 'multi' (온라인 실시간)
-        this.timeLimit = 90; // 설정된 제한 시간(초)
-        this.remainingTime = 90;
+        this.timeLimit = 180; // 설정된 제한 시간(초)
+        this.remainingTime = 180;
         this.gameScore = 0;
 
         // 술래 (Tagger) 상태 머신
@@ -36,9 +36,9 @@ class MugunghwaGame {
             y: 330,
             headAngle: Math.PI, // 0 = 왼쪽(플레이어 주시), Math.PI = 오른쪽(나무 주시)
             chantTimer: 0,
-            chantDuration: 420, // 약 7초 (문제 풀이 텀 2배 연장)
+            chantDuration: 540, // 약 9초 (초록불 문제 풀이 여유 시간)
             scanTimer: 0,
-            scanDuration: 200, // 약 3.3초 (정면 응시)
+            scanDuration: 220, // 약 3.6초 (정면 응시)
             speedMultiplier: 1.0,
             turnCount: 0,
             laserAlpha: 0
@@ -129,7 +129,7 @@ class MugunghwaGame {
                 isFinished: false,
                 finishRank: 0,
                 isFallen: false,
-                botAnswerTimer: Math.floor(Math.random() * 160) + 80,
+                botAnswerTimer: Math.floor(Math.random() * 240) + 120,
                 buffs: { shoes: false, shield: false }
             });
         }
@@ -334,10 +334,10 @@ class MugunghwaGame {
             window.MugunghwaMultiplayer.broadcastTaggerState('CHANTING', this.tagger.speedMultiplier, this.tagger.turnCount);
         }
 
-        // 구호 속도: 턴이 지날수록 약간씩 긴장감 넘치게 변동 (0.9 ~ 1.45배속)
-        const speed = 0.95 + (Math.random() * 0.45);
+        // 구호 속도: 차분하고 편안한 낭독 속도 (0.85 ~ 1.1배속)
+        const speed = 0.85 + (Math.random() * 0.25);
         this.tagger.speedMultiplier = speed;
-        this.tagger.chantDuration = Math.floor(380 / speed);
+        this.tagger.chantDuration = Math.floor(540 / speed);
 
         if (window.MugunghwaAudio) {
             window.MugunghwaAudio.speakChant('무궁화 꽃이 피었습니다!', speed, () => {
@@ -356,7 +356,7 @@ class MugunghwaGame {
 
         this.tagger.state = 'SCANNING';
         this.tagger.scanTimer = 0;
-        this.tagger.scanDuration = Math.floor(180 + Math.random() * 80); // 약 3.0 ~ 4.3초 동안 전방 레이저 스캔
+        this.tagger.scanDuration = Math.floor(200 + Math.random() * 80); // 약 3.3 ~ 4.6초 동안 전방 레이저 스캔
 
         // 술래가 빨간 눈(SCANNING)으로 돌아봐도, 이미 이동을 선택한 플레이어의 pendingMove는 유지하여 문제 풀기 허용!
         if (!this.isSpectator && typeof window !== 'undefined' && window.onTaggerScanStart) {
@@ -919,7 +919,7 @@ class MugunghwaGame {
                             bot.m = bot.checkpoint;
                             bot.targetX = this.mToX(bot.checkpoint);
                         }
-                        bot.botAnswerTimer = Math.floor(Math.random() * 180) + 120;
+                        bot.botAnswerTimer = Math.floor(Math.random() * 260) + 160;
                     }
                 } else if (this.tagger.state === 'SCANNING') {
                     // 술래가 볼 때 가끔 걸리는 봇 연출

@@ -254,15 +254,16 @@ class MugunghwaAudio {
                 this.chantTimerId = setTimeout(() => {
                     this.chantTimerId = null;
                     callback();
-                }, 4400 / rate);
+                }, 8500 / rate);
             }
             return;
         }
         try {
             window.speechSynthesis.cancel();
             const utter = new SpeechSynthesisUtterance(text);
-            utter.rate = rate; // 속도 (0.8 느림 ~ 1.5 빠름)
-            utter.pitch = 1.1;
+            const safeRate = Math.min(1.05, Math.max(0.85, rate));
+            utter.rate = safeRate; // 편안한 발음 속도
+            utter.pitch = 1.05;
 
             if (text.includes('flower') || text.includes('light') || text.includes('one')) {
                 if (this.englishVoice) utter.voice = this.englishVoice;
@@ -284,14 +285,14 @@ class MugunghwaAudio {
                         callback();
                     }
                 };
-                // 음성 구호 발화 후 약 2.2초 추가 여유를 주어 총 문제 풀이 텀을 2배(약 4.4초)로 대폭 연장
-                const postDelay = Math.floor(2200 / rate);
+                // 음성 구호 발화 후 약 6.0초 추가 여유를 주어 총 문제 풀이 골든타임을 약 8.5~9.5초로 여유롭게 제공
+                const postDelay = Math.floor(6000 / safeRate);
                 utter.onend = () => {
                     this.chantTimerId = setTimeout(safeCb, postDelay);
                 };
                 utter.onerror = safeCb;
                 // 안전 타이머: 브라우저가 음성 이벤트를 놓치더라도 턴이 멈추지 않도록 보장
-                this.chantTimerId = setTimeout(safeCb, Math.max(5500, Math.floor(4800 / rate) + 1200));
+                this.chantTimerId = setTimeout(safeCb, Math.max(9000, Math.floor(8500 / safeRate) + 2000));
             }
             window.speechSynthesis.speak(utter);
         } catch (e) {
