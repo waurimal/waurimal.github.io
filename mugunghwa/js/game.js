@@ -221,6 +221,8 @@ class MugunghwaGame {
         this.isRunning = true;
         this.isPaused = false;
         this.gameScore = 0;
+        this.allPeersFinished = false;
+        this.savedHostGoalData = null;
 
         // 관리자 참여 여부 상태 설정
         this.isSpectator = (this.playMode === 'multi' && window.MugunghwaMultiplayer && window.MugunghwaMultiplayer.isHost && !settings.hostParticipating);
@@ -694,9 +696,21 @@ class MugunghwaGame {
             window.MugunghwaAudio.playGoal();
         }
 
+        const goalData = {
+            rank: this.player.finishRank,
+            score: totalScore,
+            baseScore: this.gameScore,
+            rankBonus: rankBonus,
+            timeBonus: timeBonus,
+            elapsedSec: elapsedSec,
+            remainingTime: Math.floor(safeRemaining),
+            playerName: this.player.name
+        };
+
         // 호스트 플레이어인데 아직 완주하지 못한 학생이 있는 경우:
         // 게임 루프를 즉시 멈추지 않고, 학생들이 달릴 수 있도록 지속
         if (this.isHostPlayer && this.peers.length > 0 && !this.peers.every(p => p.isFinished)) {
+            this.savedHostGoalData = goalData;
             this.addFloatingText('🎉 선생님 골인 완료! 학생들의 완주를 중계 중입니다.', this.player.displayX, this.player.displayY - 75, '#38BDF8');
             return;
         }
@@ -720,16 +734,31 @@ class MugunghwaGame {
 
         // 게임 승리 모달 호출
         if (window.showVictoryModal) {
-            window.showVictoryModal({
-                rank: this.player.finishRank,
-                score: totalScore,
-                baseScore: this.gameScore,
-                rankBonus: rankBonus,
-                timeBonus: timeBonus,
-                elapsedSec: elapsedSec,
-                remainingTime: Math.floor(safeRemaining),
-                playerName: this.player.name
-            });
+            window.showVictoryModal(goalData);
+        }
+    }
+
+    // 직접 참여한 호스트 플레이어: 모든 학생 완주 시 종료 및 실제 점수 모달 표출
+    finishHostPlayerGame() {
+        this.isRunning = false;
+        this.isPaused = true;
+        this.tagger.state = 'GOAL_IN';
+
+        if (this.animFrameId) {
+            cancelAnimationFrame(this.animFrameId);
+            this.animFrameId = null;
+        }
+
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
+        if (window.MugunghwaAudio) {
+            window.MugunghwaAudio.stopAll();
+            window.MugunghwaAudio.playGoal();
+        }
+
+        if (window.showVictoryModal && this.savedHostGoalData) {
+            window.showVictoryModal(this.savedHostGoalData);
         }
     }
 
@@ -764,7 +793,8 @@ class MugunghwaGame {
                 timeBonus: 2500,
                 elapsedSec: (Math.max(0.1, this.timeLimit - safeRemaining)).toFixed(1),
                 remainingTime: Math.floor(safeRemaining),
-                playerName: '참가 학생 전원 완주!'
+                playerName: '참가 학생 전원 완주!',
+                isSpectator: true
             });
         }
     }
@@ -830,11 +860,16 @@ class MugunghwaGame {
             }
         }
 
-        // 관전 모드: 참가 학생 전원이 완주했는지 검사
-        if (this.isSpectator && this.peers.length > 0 && this.peers.every(p => p.isFinished)) {
-            if (!this.allPeersFinished) {
+        // 전원 완주 검사 (관전 모드 또는 직접 참여 호스트 모드)
+        const allPeersDone = (this.peers.length > 0 && this.peers.every(p => p.isFinished));
+        if (allPeersDone) {
+            if (this.isSpectator && !this.allPeersFinished) {
                 this.allPeersFinished = true;
                 this.triggerAllPeersGoal();
+                return;
+            } else if (this.isHostPlayer && this.player.isFinished && !this.allPeersFinished) {
+                this.allPeersFinished = true;
+                this.finishHostPlayerGame();
                 return;
             }
         }

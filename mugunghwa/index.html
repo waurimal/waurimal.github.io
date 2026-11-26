@@ -534,6 +534,16 @@
             let multiGameActive = false;
             let hostParticipatingState = false;
 
+            // 저장된 최근 플레이어 이름 불러오기
+            const savedPlayerName = localStorage.getItem('mugunghwa_last_player_name');
+            if (savedPlayerName) {
+                myPlayerName = savedPlayerName;
+                const elSoloName = document.getElementById('soloPlayerName');
+                const elJoinName = document.getElementById('joinPlayerName');
+                if (elSoloName && !elSoloName.value) elSoloName.value = savedPlayerName;
+                if (elJoinName && !elJoinName.value) elJoinName.value = savedPlayerName;
+            }
+
             // 로비에서 관리자 참여 여부 변경 시 이름표 필드 토글
             const selHostParticipate = document.getElementById('hostParticipateOption');
             const fieldHostName = document.getElementById('hostNameField');
@@ -659,6 +669,7 @@
                 const grade = document.getElementById('soloGrade').value;
                 const name = (document.getElementById('soloPlayerName') && document.getElementById('soloPlayerName').value.trim()) || '도전자';
                 myPlayerName = name;
+                localStorage.setItem('mugunghwa_last_player_name', name);
                 multiGameActive = false;
 
                 hideGlobalGnb();
@@ -750,6 +761,7 @@
                     return;
                 }
                 myPlayerName = name;
+                localStorage.setItem('mugunghwa_last_player_name', name);
                 multiGameActive = false;
 
                 try {
@@ -884,17 +896,17 @@
             document.getElementById('btnLobbyVictory').addEventListener('click', returnToLobby);
             document.getElementById('btnLobbyTimeOver').addEventListener('click', returnToLobby);
 
-            // 다시 달리기
+            // 다시 달리기 (이전 닉네임 유지)
             document.getElementById('btnRestartVictory').addEventListener('click', () => {
                 victoryModal.classList.add('hidden');
                 hideGlobalGnb();
-                game.startNewGame({ mode: game.playMode, timeLimit: game.timeLimit });
+                game.startNewGame({ mode: game.playMode, timeLimit: game.timeLimit, playerName: myPlayerName });
                 prepareNextTurnStandby();
             });
             document.getElementById('btnRestartTimeOver').addEventListener('click', () => {
                 timeOverModal.classList.add('hidden');
                 hideGlobalGnb();
-                game.startNewGame({ mode: game.playMode, timeLimit: game.timeLimit });
+                game.startNewGame({ mode: game.playMode, timeLimit: game.timeLimit, playerName: myPlayerName });
                 prepareNextTurnStandby();
             });
 
@@ -1188,6 +1200,16 @@
             // ───────────────────────────────────────────
             const HOF_STORAGE_KEY = 'mugunghwa_hall_of_fame_records_clean';
 
+            function escapeHtml(str) {
+                if (!str) return '';
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
             function getHallOfFame() {
                 const stored = localStorage.getItem(HOF_STORAGE_KEY);
                 if (!stored) {
@@ -1195,16 +1217,26 @@
                 }
                 try {
                     const parsed = JSON.parse(stored);
-                    return Array.isArray(parsed) ? parsed : [];
+                    if (!Array.isArray(parsed)) return [];
+                    return parsed.filter(item => item && typeof item.score === 'number' && !isNaN(item.score));
                 } catch (e) {
                     return [];
                 }
             }
 
             function recordToHallOfFame(record) {
+                if (!record || typeof record.score !== 'number' || isNaN(record.score)) {
+                    return getHallOfFame();
+                }
                 const list = getHallOfFame();
                 list.push(record);
-                list.sort((a, b) => b.score - a.score);
+                // 점수 높은 순(내림차순), 동점일 경우 완주 소요 시간이 짧은 순(오름차순)으로 정렬
+                list.sort((a, b) => {
+                    if (b.score !== a.score) return b.score - a.score;
+                    const timeA = parseFloat(a.elapsedSec) || 999;
+                    const timeB = parseFloat(b.elapsedSec) || 999;
+                    return timeA - timeB;
+                });
                 const top10 = list.slice(0, 10);
                 localStorage.setItem(HOF_STORAGE_KEY, JSON.stringify(top10));
                 renderHallOfFame();
@@ -1249,6 +1281,11 @@
                         cardBg = 'bg-slate-900/60 border-slate-800/80 text-slate-300';
                     }
 
+                    const safeName = escapeHtml(item.name || '도전자');
+                    const safeRank = item.rank ? `${item.rank}등 골인` : '';
+                    const safeElapsed = escapeHtml(item.elapsedSec || '0');
+                    const safeDate = escapeHtml(item.date || '');
+
                     const card = document.createElement('div');
                     card.className = `p-3 rounded-2xl border flex items-center justify-between gap-3 ${cardBg} transition hover:border-amber-400/60`;
                     card.innerHTML = `
@@ -1256,13 +1293,12 @@
                             ${rankBadge}
                             <div class="truncate">
                                 <div class="font-black text-sm text-white truncate flex items-center gap-1.5">
-                                    <span>${item.name || '도전자'}</span>
-                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold">${item.rank ? item.rank + '등 골인' : ''}</span>
+                                    <span>${safeName}</span>
+                                    ${safeRank ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold">${safeRank}</span>` : ''}
                                 </div>
                                 <div class="text-[11px] text-slate-400 flex items-center gap-2 mt-0.5">
-                                    <span class="text-sky-300 font-bold">⏱️ ${item.elapsedSec || '0'}초 완주</span>
-                                    <span>•</span>
-                                    <span>${item.date || ''}</span>
+                                    <span class="text-sky-300 font-bold">⏱️ ${safeElapsed}초 완주</span>
+                                    ${safeDate ? `<span>•</span><span>${safeDate}</span>` : ''}
                                 </div>
                             </div>
                         </div>
@@ -1299,6 +1335,16 @@
                 document.getElementById('victoryTimeBonus').textContent = `+${(data.timeBonus || 0).toLocaleString()}점`;
                 document.getElementById('victoryScore').textContent = `${(data.score || 0).toLocaleString()}점`;
                 victoryModal.classList.remove('hidden');
+
+                const hofNotice = document.getElementById('victoryHofNotice');
+
+                // 관전 중계 모드(대형 화면 전체 완주 연출)일 때는 가짜 10,000점 명예의 전당 등록 생략
+                if (data.isSpectator || data.playerName === '참가 학생 전원 완주!') {
+                    if (hofNotice) hofNotice.classList.add('hidden');
+                    return;
+                }
+
+                if (hofNotice) hofNotice.classList.remove('hidden');
 
                 // 명예의 전당 자동 기록 저장
                 const now = new Date();
