@@ -224,11 +224,22 @@ class MugunghwaMultiplayer {
             }
             this.roomData = docSnap.data();
 
-            // 술래 턴이 증가했을 때 학생 단말기에서도 퀴즈 자동 갱신 트리거
-            if (this.roomData.taggerTurnCount && this.roomData.taggerTurnCount > lastKnownTurn) {
-                lastKnownTurn = this.roomData.taggerTurnCount;
-                if (!this.isHost && typeof window !== 'undefined' && window.onNewTaggerTurn) {
-                    window.onNewTaggerTurn(lastKnownTurn);
+            // 호스트의 술래 상태/턴/시간을 학생 기기에 실시간 동기화
+            if (!this.isHost) {
+                // 1) 턴 카운트 증가 또는 새로운 턴 감지 시 문제 갱신
+                if (this.roomData.taggerTurnCount && this.roomData.taggerTurnCount > lastKnownTurn) {
+                    lastKnownTurn = this.roomData.taggerTurnCount;
+                    if (typeof window !== 'undefined' && window.onNewTaggerTurn) {
+                        window.onNewTaggerTurn(lastKnownTurn);
+                    }
+                }
+                // 2) 술래 상태(CHANTING ↔ SCANNING) 동기화
+                if (this.roomData.taggerState && typeof window !== 'undefined' && window.activeGame && window.activeGame.syncTaggerState) {
+                    window.activeGame.syncTaggerState(this.roomData.taggerState, this.roomData.taggerTurnCount, this.roomData.taggerSpeed);
+                }
+                // 3) 남은 시간 동기화
+                if (this.roomData.remainingTime !== undefined && typeof window !== 'undefined' && window.activeGame) {
+                    window.activeGame.remainingTime = this.roomData.remainingTime;
                 }
             }
 
@@ -355,19 +366,51 @@ class MugunghwaMultiplayer {
         });
     }
 
-    // 7. 학생: 퀴즈 정답 맞히고 앞으로 전진
-    async advancePlayer(metersToAdd, newBuffs = null) {
-        if (!this.currentRoomId || !this.db) return;
+    // 7. 플레이어(학생 또는 직접 참여 관리자): 퀴즈 정답 맞히고 앞으로 전진
+    async advancePlayer(metersToAdd, newBuffs = null, targetLane = null) {
+        if (!this.currentRoomId) return;
+
+        // Mock 모드 지원
+        if (this.isMock) {
+            if (!this.roomData) return;
+            if (!this.roomData.players) this.roomData.players = {};
+            let curPlayer = this.roomData.players[this.myPlayerId];
+            if (!curPlayer) {
+                curPlayer = { id: this.myPlayerId, name: '플레이어', m: 0, checkpoint: 0, combo: 0 };
+                this.roomData.players[this.myPlayerId] = curPlayer;
+            }
+            if (curPlayer.isFinished) return;
+            const currentM = curPlayer.m || 0;
+            let nextM = Math.min(100, currentM + metersToAdd);
+            let nextCheckpoint = curPlayer.checkpoint || 0;
+            if (nextM >= 75) nextCheckpoint = Math.max(nextCheckpoint, 75);
+            else if (nextM >= 50) nextCheckpoint = Math.max(nextCheckpoint, 50);
+            else if (nextM >= 25) nextCheckpoint = Math.max(nextCheckpoint, 25);
+
+            curPlayer.m = nextM;
+            curPlayer.checkpoint = nextCheckpoint;
+            curPlayer.combo = (curPlayer.combo || 0) + 1;
+            if (targetLane !== null && targetLane !== undefined) curPlayer.laneIndex = targetLane;
+            if (newBuffs) curPlayer.activeBuffs = newBuffs;
+            if (nextM >= 100) {
+                curPlayer.isFinished = true;
+                curPlayer.finishRank = ((this.roomData.finishers || []).length) + 1;
+            }
+            this.notifyStateChange(this.roomData);
+            return nextM;
+        }
+
+        if (!this.db) return;
         const roomRef = this.db.collection('mugunghwa_rooms').doc(this.currentRoomId);
 
-        const curPlayer = this.roomData && this.roomData.players ? this.roomData.players[this.myPlayerId] : null;
-        if (!curPlayer || curPlayer.isFinished) return;
+        let curPlayer = this.roomData && this.roomData.players ? this.roomData.players[this.myPlayerId] : null;
+        if (curPlayer && curPlayer.isFinished) return;
 
-        const currentM = curPlayer.m || 0;
+        const currentM = (curPlayer && curPlayer.m) ? curPlayer.m : 0;
         let nextM = Math.min(100, currentM + metersToAdd);
 
         // 체크포인트 갱신 (25m, 50m, 75m)
-        let nextCheckpoint = curPlayer.checkpoint || 0;
+        let nextCheckpoint = (curPlayer && curPlayer.checkpoint) ? curPlayer.checkpoint : 0;
         if (nextM >= 75) nextCheckpoint = Math.max(nextCheckpoint, 75);
         else if (nextM >= 50) nextCheckpoint = Math.max(nextCheckpoint, 50);
         else if (nextM >= 25) nextCheckpoint = Math.max(nextCheckpoint, 25);
@@ -375,19 +418,23 @@ class MugunghwaMultiplayer {
         const updateObj = {};
         updateObj[`players.${this.myPlayerId}.m`] = nextM;
         updateObj[`players.${this.myPlayerId}.checkpoint`] = nextCheckpoint;
-        updateObj[`players.${this.myPlayerId}.combo`] = (curPlayer.combo || 0) + 1;
+        updateObj[`players.${this.myPlayerId}.combo`] = ((curPlayer && curPlayer.combo) || 0) + 1;
+
+        if (targetLane !== null && targetLane !== undefined) {
+            updateObj[`players.${this.myPlayerId}.laneIndex`] = targetLane;
+        }
 
         if (newBuffs) {
             updateObj[`players.${this.myPlayerId}.activeBuffs`] = newBuffs;
         }
 
         // 100m 골인 판정!
-        if (nextM >= 100 && !curPlayer.isFinished) {
+        if (nextM >= 100 && (!curPlayer || !curPlayer.isFinished)) {
             const currentFinishers = (this.roomData && this.roomData.finishers) ? this.roomData.finishers : [];
             const myRank = currentFinishers.length + 1;
             const finishRecord = {
                 id: this.myPlayerId,
-                name: curPlayer.name,
+                name: (curPlayer && curPlayer.name) ? curPlayer.name : '참가자',
                 rank: myRank,
                 finishTime: Date.now()
             };
@@ -400,23 +447,42 @@ class MugunghwaMultiplayer {
         return nextM;
     }
 
-    // 8. 학생: 퀴즈 오답 시 직전 체크포인트(또는 출발선 0m 원위치)로 강제 후퇴!
+    // 8. 플레이어: 퀴즈 오답 시 직전 체크포인트(또는 출발선 0m 원위치)로 강제 후퇴!
     async resetPlayerToCheckpoint() {
-        if (!this.currentRoomId || !this.db) return;
+        if (!this.currentRoomId) return;
+
+        // Mock 모드 지원
+        if (this.isMock) {
+            if (!this.roomData || !this.roomData.players) return;
+            const curPlayer = this.roomData.players[this.myPlayerId];
+            if (!curPlayer || curPlayer.isFinished) return;
+            if (curPlayer.activeBuffs && curPlayer.activeBuffs.shield) {
+                curPlayer.activeBuffs.shield = false;
+                this.notifyStateChange(this.roomData);
+                return { defended: true, m: curPlayer.m };
+            }
+            const safePos = curPlayer.checkpoint || 0;
+            curPlayer.m = safePos;
+            curPlayer.combo = 0;
+            this.notifyStateChange(this.roomData);
+            return { defended: false, m: safePos };
+        }
+
+        if (!this.db) return;
         const roomRef = this.db.collection('mugunghwa_rooms').doc(this.currentRoomId);
 
         const curPlayer = this.roomData && this.roomData.players ? this.roomData.players[this.myPlayerId] : null;
-        if (!curPlayer || curPlayer.isFinished) return;
+        if (curPlayer && curPlayer.isFinished) return;
 
         // 방어막 쉴드가 있으면 1회 세이프 (후퇴 방어)
-        if (curPlayer.activeBuffs && curPlayer.activeBuffs.shield) {
+        if (curPlayer && curPlayer.activeBuffs && curPlayer.activeBuffs.shield) {
             const updateObj = {};
             updateObj[`players.${this.myPlayerId}.activeBuffs.shield`] = false;
             await roomRef.update(updateObj);
             return { defended: true, m: curPlayer.m };
         }
 
-        const safePos = curPlayer.checkpoint || 0; // 안전 체크포인트 (0, 25, 50, 75m)
+        const safePos = (curPlayer && curPlayer.checkpoint) || 0; // 안전 체크포인트 (0, 25, 50, 75m)
         const updateObj = {};
         updateObj[`players.${this.myPlayerId}.m`] = safePos;
         updateObj[`players.${this.myPlayerId}.combo`] = 0;

@@ -755,6 +755,11 @@
                 try {
                     const room = await window.MugunghwaMultiplayer.joinRoom(code, { name: name });
 
+                    // 출제 학년 퀴즈 매니저 동기화
+                    if (window.MugunghwaQuizManager) {
+                        window.MugunghwaQuizManager.setGrade(room.grade || 'all');
+                    }
+
                     // 바로 시작하지 않고 대기방 화면으로 전환!
                     screenLobby.classList.add('hidden');
                     screenWaitingRoom.classList.remove('hidden');
@@ -787,6 +792,9 @@
                                 screenWaitingRoom.classList.add('hidden');
                                 screenGame.classList.remove('hidden');
                                 applyIngameHostRoleUI(false); // 학생은 항상 플레이어
+                                if (window.MugunghwaQuizManager) {
+                                    window.MugunghwaQuizManager.setGrade(roomData.grade || room.grade || 'all');
+                                }
                                 game.startNewGame({
                                     mode: 'multi',
                                     timeLimit: Number(roomData.timeLimit || room.timeLimit || 90),
@@ -966,6 +974,7 @@
                     `;
                 }
             }
+            window.prepareNextTurnStandby = prepareNextTurnStandby;
 
             // 플레이어의 이동 방향 요청 처리
             function handleMoveRequest(direction) {

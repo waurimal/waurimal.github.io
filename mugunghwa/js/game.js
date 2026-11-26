@@ -266,6 +266,11 @@ class MugunghwaGame {
 
         if (window.MugunghwaAudio) {
             window.MugunghwaAudio.init();
+        }
+
+        // 솔로 모드이거나 멀티플레이어 호스트인 경우에만 자체 술래 구호/타이머 시작
+        const shouldRunTaggerTimer = (this.playMode === 'solo') || (window.MugunghwaMultiplayer && window.MugunghwaMultiplayer.isHost);
+        if (shouldRunTaggerTimer) {
             this.speakTaggerChant();
         }
 
@@ -273,6 +278,38 @@ class MugunghwaGame {
         if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
         this.loop = this.loop.bind(this);
         this.animFrameId = requestAnimationFrame(this.loop);
+    }
+
+    // 멀티플레이어 학생 기기 전용: 호스트의 술래 상태 실시간 동기화
+    syncTaggerState(state, turnCount, speed = 1.0) {
+        if (this.playMode !== 'multi') return;
+        // 호스트는 자신이 술래를 직접 제어하므로 건너뜀
+        if (window.MugunghwaMultiplayer && window.MugunghwaMultiplayer.isHost) return;
+
+        const prevState = this.tagger.state;
+        this.tagger.state = state;
+        if (turnCount) this.tagger.turnCount = turnCount;
+        if (speed) this.tagger.speedMultiplier = speed;
+
+        if (state === 'CHANTING') {
+            this.tagger.laserAlpha = 0;
+            // 새 턴이 시작되면 이동 제한 리셋
+            if (!this.player.pendingMove) {
+                this.player.hasMovedThisTurn = false;
+            }
+            if (typeof window !== 'undefined' && window.onNewTaggerTurn) {
+                window.onNewTaggerTurn(this.tagger.turnCount);
+            }
+        } else if (state === 'SCANNING') {
+            this.tagger.laserAlpha = 0.65;
+            if (window.MugunghwaAudio) {
+                window.MugunghwaAudio.playTagScan();
+            }
+            if (typeof window !== 'undefined' && window.onTaggerScanStart) {
+                window.onTaggerScanStart();
+            }
+        }
+        this.updateHUD();
     }
 
     speakTaggerChant() {
@@ -759,24 +796,37 @@ class MugunghwaGame {
         }
 
         // 2. 술래 상태 머신 업데이트
-        if (this.tagger.state === 'CHANTING') {
-            this.tagger.chantTimer++;
-            // 머리를 나무 쪽으로 돌려놓음
-            this.tagger.headAngle += (Math.PI - this.tagger.headAngle) * 0.15;
-            this.tagger.laserAlpha = 0;
-        } else if (this.tagger.state === 'SCANNING') {
-            this.tagger.scanTimer++;
-            // 머리를 정면(플레이어 쪽 0도)으로 휙 돌림!
-            this.tagger.headAngle += (0 - this.tagger.headAngle) * 0.35;
-            this.tagger.laserAlpha = Math.min(0.65, this.tagger.laserAlpha + 0.08);
+        // (솔로 모드이거나 멀티플레이어 호스트인 경우에만 자체 타이머로 전환)
+        const isTaggerMaster = (this.playMode === 'solo') || (window.MugunghwaMultiplayer && window.MugunghwaMultiplayer.isHost);
+        if (isTaggerMaster) {
+            if (this.tagger.state === 'CHANTING') {
+                this.tagger.chantTimer++;
+                // 머리를 나무 쪽으로 돌려놓음
+                this.tagger.headAngle += (Math.PI - this.tagger.headAngle) * 0.15;
+                this.tagger.laserAlpha = 0;
+            } else if (this.tagger.state === 'SCANNING') {
+                this.tagger.scanTimer++;
+                // 머리를 정면(플레이어 쪽 0도)으로 휙 돌림!
+                this.tagger.headAngle += (0 - this.tagger.headAngle) * 0.35;
+                this.tagger.laserAlpha = Math.min(0.65, this.tagger.laserAlpha + 0.08);
 
-            // 주시 시간이 끝나면 다시 CHANTING으로 복귀 (시간이 남아있고 게임 진행 중일 때만)
-            if (this.tagger.scanTimer >= this.tagger.scanDuration) {
-                if (this.canContinueGame()) {
-                    this.tagger.state = 'CHANTING';
-                    this.tagger.chantTimer = 0;
-                    this.speakTaggerChant();
+                // 주시 시간이 끝나면 다시 CHANTING으로 복귀 (시간이 남아있고 게임 진행 중일 때만)
+                if (this.tagger.scanTimer >= this.tagger.scanDuration) {
+                    if (this.canContinueGame()) {
+                        this.tagger.state = 'CHANTING';
+                        this.tagger.chantTimer = 0;
+                        this.speakTaggerChant();
+                    }
                 }
+            }
+        } else {
+            // 학생 기기: 호스트의 상태에 맞춰 부드럽게 머리 회전 및 레이저 연출
+            if (this.tagger.state === 'CHANTING') {
+                this.tagger.headAngle += (Math.PI - this.tagger.headAngle) * 0.15;
+                this.tagger.laserAlpha = 0;
+            } else if (this.tagger.state === 'SCANNING') {
+                this.tagger.headAngle += (0 - this.tagger.headAngle) * 0.35;
+                this.tagger.laserAlpha = Math.min(0.65, this.tagger.laserAlpha + 0.08);
             }
         }
 
