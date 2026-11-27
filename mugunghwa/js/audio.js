@@ -11,6 +11,7 @@ class MugunghwaAudio {
         this.koreanVoice = null;
         this.englishVoice = null;
         this.chantTimerId = null;
+        this.syllableTimerIds = [];
 
         if (this.ttsAvailable) {
             this.initVoices();
@@ -248,20 +249,38 @@ class MugunghwaAudio {
             clearTimeout(this.chantTimerId);
             this.chantTimerId = null;
         }
+        if (this.syllableTimerIds && this.syllableTimerIds.length > 0) {
+            this.syllableTimerIds.forEach(id => clearTimeout(id));
+            this.syllableTimerIds = [];
+        }
+
+        const safeRate = Math.min(1.05, Math.max(0.85, rate));
+        const totalDurationMs = Math.floor(8200 / safeRate);
+        const syllableCount = 10;
+        const sylInterval = Math.floor(totalDurationMs / syllableCount);
+
+        // 10음절 글자 게이지 단계별 타이머 등록
+        for (let i = 0; i < syllableCount; i++) {
+            const tid = setTimeout(() => {
+                if (typeof window !== 'undefined' && window.onChantSyllable) {
+                    window.onChantSyllable(i, syllableCount);
+                }
+            }, i * sylInterval);
+            this.syllableTimerIds.push(tid);
+        }
 
         if (this.isMuted || !this.ttsAvailable) {
             if (callback) {
                 this.chantTimerId = setTimeout(() => {
                     this.chantTimerId = null;
                     callback();
-                }, 8500 / rate);
+                }, totalDurationMs);
             }
             return;
         }
         try {
             window.speechSynthesis.cancel();
             const utter = new SpeechSynthesisUtterance(text);
-            const safeRate = Math.min(1.05, Math.max(0.85, rate));
             utter.rate = safeRate; // 편안한 발음 속도
             utter.pitch = 1.05;
 
@@ -280,19 +299,24 @@ class MugunghwaAudio {
                         clearTimeout(this.chantTimerId);
                         this.chantTimerId = null;
                     }
+                    if (this.syllableTimerIds && this.syllableTimerIds.length > 0) {
+                        this.syllableTimerIds.forEach(id => clearTimeout(id));
+                        this.syllableTimerIds = [];
+                    }
                     if (!hasFired) {
                         hasFired = true;
                         callback();
                     }
                 };
-                // 음성 구호 발화 후 약 6.0초 추가 여유를 주어 총 문제 풀이 골든타임을 약 8.5~9.5초로 여유롭게 제공
-                const postDelay = Math.floor(6000 / safeRate);
+
+                // 음성 구호 발화 후 약 5.5초 추가 여유를 주어 총 문제 풀이 골든타임을 약 8초로 여유롭게 제공
+                const postDelay = Math.max(1000, totalDurationMs - 2200);
                 utter.onend = () => {
                     this.chantTimerId = setTimeout(safeCb, postDelay);
                 };
                 utter.onerror = safeCb;
                 // 안전 타이머: 브라우저가 음성 이벤트를 놓치더라도 턴이 멈추지 않도록 보장
-                this.chantTimerId = setTimeout(safeCb, Math.max(9000, Math.floor(8500 / safeRate) + 2000));
+                this.chantTimerId = setTimeout(safeCb, totalDurationMs + 500);
             }
             window.speechSynthesis.speak(utter);
         } catch (e) {
@@ -317,6 +341,10 @@ class MugunghwaAudio {
         if (this.chantTimerId) {
             clearTimeout(this.chantTimerId);
             this.chantTimerId = null;
+        }
+        if (this.syllableTimerIds && this.syllableTimerIds.length > 0) {
+            this.syllableTimerIds.forEach(id => clearTimeout(id));
+            this.syllableTimerIds = [];
         }
         try {
             if (typeof window !== 'undefined' && window.speechSynthesis) {

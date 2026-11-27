@@ -61,6 +61,38 @@ body {
     border-radius: 20px;
 }
 
+/* 무궁화 10음절 글자 게이지 스타일 */
+.gauge-syllable {
+    background-color: rgba(30, 41, 59, 0.6);
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+}
+.gauge-syllable.active {
+    background-color: #f59e0b;
+    color: #020617;
+    font-weight: 900;
+    transform: scale(1.08);
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.7);
+}
+.gauge-syllable.warning {
+    background-color: #ef4444;
+    color: #ffffff;
+    font-weight: 900;
+    transform: scale(1.18);
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.9);
+    animation: warningPulse 0.4s infinite alternate;
+}
+.gauge-syllable.frozen {
+    background-color: rgba(239, 68, 68, 0.25);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.5);
+}
+
+@keyframes warningPulse {
+    from { transform: scale(1.1); }
+    to { transform: scale(1.25); }
+}
+
 .quiz-choice-btn {
     transition: all 0.16s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;

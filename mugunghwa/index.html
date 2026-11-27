@@ -220,10 +220,10 @@
                 <span>💡</span> <span>무궁화 꽃이 피었습니다 게임 규칙</span>
             </div>
             <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-400">
-                <li>• 🟢 <strong>초록불 (술래가 말하는 중)</strong>: 영어 퀴즈를 맞히면 앞으로 <strong>+10m</strong> 전진합니다.</li>
-                <li>• 🔴 <strong>빨간불 (술래가 주시 중)</strong>: 고개를 휙 돌렸을 때 움직이거나 오답이면 적발됩니다!</li>
-                <li>• 🚨 <strong>오답 시 강제 후퇴</strong>: 문제를 틀리면 직전 <strong>체크포인트(25m, 50m, 75m 또는 0m)</strong>로 후퇴합니다.</li>
-                <li>• 🎁 <strong>트랙 아이템</strong>: 중간중간 큐브를 먹으면 <strong>부스터 신발(2배 질주), 방어막 쉴드(오답 1회 방어), 시간 보너스(+10초)</strong>를 얻습니다!</li>
+                <li>• 🟢 <strong>초록불 (술래가 말하는 중)</strong>: 영어 퀴즈를 맞히면 즉시 <strong>+10m 폭풍 질주</strong>! 빠르게 맞힐수록 연속 콤보로 달려나갑니다!</li>
+                <li>• 🔴 <strong>빨간불 (술래 주시 중 - 얼음!)</strong>: 술래가 휙 돌아보면 <strong>화면에서 손을 떼고 멈추세요</strong>! 움직이면 적발됩니다!</li>
+                <li>• 🚨 <strong>적발 시 안전선 후퇴</strong>: 빨간불에 움직여 적발되면 직전 <strong>안전선(25m, 50m, 75m, 0m)</strong>으로 후퇴합니다. (초록불 오답은 -5m)</li>
+                <li>• 🎁 <strong>트랙 아이템</strong>: 중간중간 큐브를 먹으면 <strong>부스터 신발(2배 질주), 방어막 쉴드(감시/오답 1회 방어), 시간 보너스(+10초)</strong>를 얻습니다!</li>
             </ul>
         </div>
     </main>
@@ -358,64 +358,83 @@
             <!-- 크롬북 맞춤 사이드바이사이드 레이아웃: 트랙 캔버스 + 컴팩트 퀴즈 박스 (가로/세로 중앙 정렬) -->
             <div id="gamePlayArea" class="w-full flex-1 min-h-0 flex flex-col lg:flex-row items-center justify-center gap-2.5 sm:gap-3 m-auto">
                 <!-- 100m 달리기 캔버스 트랙 영역 -->
-                <div class="canvas-container flex-1 min-w-0 h-full max-h-full flex items-center justify-center bg-slate-950/70 rounded-2xl border border-slate-800/80 p-1 sm:p-1.5 shadow-2xl">
+                <div class="canvas-container relative flex-1 min-w-0 h-full max-h-full flex items-center justify-center bg-slate-950/70 rounded-2xl border border-slate-800/80 p-1 sm:p-1.5 shadow-2xl">
                     <div class="canvas-wrapper relative w-full h-full max-h-full aspect-[2/1] flex items-center justify-center m-auto">
                         <canvas id="gameCanvas" width="1200" height="600"></canvas>
+                        <!-- 아이템 수집용 상/하 레인 변경 간편 버튼 (보조 조작) -->
+                        <div class="absolute right-3.5 bottom-3.5 flex flex-col gap-1.5 z-10 select-none">
+                            <button type="button" id="btnLaneUp" class="w-8 h-8 rounded-xl bg-slate-900/90 hover:bg-slate-800 active:bg-blue-600 text-sky-300 border border-slate-700/80 font-black text-xs shadow-lg flex items-center justify-center cursor-pointer transition active:scale-95" title="위 레인 이동 (아이템 먹기 / ↑)">
+                                ▲
+                            </button>
+                            <button type="button" id="btnLaneDown" class="w-8 h-8 rounded-xl bg-slate-900/90 hover:bg-slate-800 active:bg-blue-600 text-sky-300 border border-slate-700/80 font-black text-xs shadow-lg flex items-center justify-center cursor-pointer transition active:scale-95" title="아래 레인 이동 (아이템 먹기 / ↓)">
+                                ▼
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- 컴팩트 4지선다 영어 퀴즈 패널 (크롬북 최적화 사이드 패널) -->
-                <div id="gameQuizPanelWrapper" class="quiz-panel w-full lg:w-[350px] xl:w-[380px] h-full max-h-full flex-shrink-0 p-3 sm:p-4 flex flex-col justify-between gap-2 shadow-2xl border border-blue-500/40">
-                    <div class="space-y-1.5">
-                        <!-- 상단 안내 및 발음 버튼 -->
-                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-1.5">
-                            <span id="quizPrompt" class="text-xs font-bold text-sky-300 flex items-center gap-1.5 truncate">
-                                <span>🟢</span> <span>화살표 키로 이동 방향을 선택하세요</span>
+                <!-- 직관적 4지선다 영어 퀴즈 패널 (D-Pad 제거 & 퀴즈 런 중심) -->
+                <div id="gameQuizPanelWrapper" class="quiz-panel relative w-full lg:w-[360px] xl:w-[400px] h-full max-h-full flex-shrink-0 p-3 sm:p-4 flex flex-col justify-between gap-2.5 shadow-2xl border border-blue-500/40 overflow-hidden">
+                    <!-- 🔴 빨간불 얼음! 터치 잠금 오버레이 (술래 주시 중) -->
+                    <div id="freezeOverlay" class="absolute inset-0 z-30 bg-rose-950/92 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center space-y-2 hidden select-none transition-all duration-200">
+                        <div class="text-4xl animate-bounce">✋</div>
+                        <div class="text-xl sm:text-2xl font-black text-rose-300 tracking-wider animate-pulse">
+                            쉿! 얼음! (STOP)
+                        </div>
+                        <p class="text-xs text-rose-200/90 font-bold leading-relaxed">
+                            술래가 정면을 주시하고 있습니다!<br>
+                            <span class="text-amber-300 font-black">화면에서 손을 떼고 가만히 멈추세요!</span>
+                        </p>
+                        <div class="px-3 py-1 rounded-full bg-rose-900/80 border border-rose-500/60 text-[10px] font-black text-rose-300">
+                            ⚠️ 지금 화면을 누르면 술래에게 적발됩니다!
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <!-- 상단 신호등 배너 & 콤보 카운터 -->
+                        <div id="trafficBanner" class="p-2 rounded-2xl bg-emerald-950/80 border border-emerald-500/60 flex items-center justify-between shadow-inner transition-colors duration-200">
+                            <div class="flex items-center gap-1.5">
+                                <span id="trafficIcon" class="text-base animate-pulse">🟢</span>
+                                <span id="trafficStatusText" class="text-xs font-black text-emerald-300">달려라! (초록불)</span>
+                            </div>
+                            <div id="comboBadge" class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[11px] font-black flex items-center gap-1">
+                                <span>🔥</span> <span id="comboCount">0</span> <span>COMBO</span>
+                            </div>
+                        </div>
+
+                        <!-- [무 · 궁 · 화 · 꽃 · 이 · 피 · 었 · 습 · 니 · 다] 10음절 시각 게이지 바 -->
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-between text-[10px] text-slate-400 font-bold px-1">
+                                <span id="gaugeLabel">🌸 술래 구호 타이머</span>
+                                <span id="gaugeCountdown" class="text-amber-300 font-black">달리는 중! 🏃</span>
+                            </div>
+                            <div id="chantGaugeBar" class="grid grid-cols-10 gap-1 p-1 bg-slate-950/90 rounded-xl border border-slate-800 shadow-inner">
+                                <span class="gauge-syllable text-center py-1 rounded-lg text-xs font-black text-slate-500 transition-all duration-150" data-syl="0">무</span>
+                                <span class="gauge-syllable text-center py-1 rounded-lg text-xs font-black text-slate-500 transition-all duration-150" data-syl="1">궁</span>
+                                <span class="gauge-syllable text-center py-1 rounded-lg text-xs font-black text-slate-500 transition-all duration-150" data-syl="2">화</span>
+                                <span class="gauge-syllable text-center py-1 rounded-lg text-xs font-black text-slate-500 transition-all duration-150" data-syl="3">꽃</span>
+                                <span class="gauge-syllable text-center py-1 rounded-lg text-xs font-black text-slate-500 transition-all duration-150" data-syl="4">이</span>
+                                <span class="gauge-syllable text-center py-1 rounded-lg text-xs font-black text-slate-500 transition-all duration-150" data-syl="5">피</span>
+                                <span class="gauge-syllable text-center py-1 rounded-lg text-xs font-black text-slate-500 transition-all duration-150" data-syl="6">었</span>
+                                <span class="gauge-syllable text-center py-1 rounded-lg text-xs font-black text-slate-500 transition-all duration-150" data-syl="7">습</span>
+                                <span class="gauge-syllable text-center py-1 rounded-lg text-xs font-black text-slate-500 transition-all duration-150" data-syl="8">니</span>
+                                <span class="gauge-syllable text-center py-1 rounded-lg text-xs font-black text-slate-500 transition-all duration-150" data-syl="9">다</span>
+                            </div>
+                        </div>
+
+                        <!-- 문제 텍스트 & 발음 듣기 -->
+                        <div class="py-2.5 px-3 bg-slate-950/90 rounded-2xl border border-slate-800/80 text-center shadow-inner min-h-[58px] flex items-center justify-between gap-2">
+                            <span id="quizQuestionText" class="flex-1 text-lg sm:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 tracking-wider break-keep">
+                                문제를 맞히면 앞으로 질주합니다!
                             </span>
-                            <button type="button" id="btnQuizTts" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs font-bold transition flex items-center gap-1 cursor-pointer flex-shrink-0">
-                                <i class="fa-solid fa-volume-high"></i> <span>발음</span>
+                            <button type="button" id="btnQuizTts" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs font-bold transition flex items-center gap-1 cursor-pointer flex-shrink-0" title="발음 듣기">
+                                <i class="fa-solid fa-volume-high"></i>
                             </button>
-                        </div>
-
-                        <!-- 온스크린 D-Pad 컨트롤러 (Chromebook 터치 & 마우스 클릭) -->
-                        <div id="dpadContainer" class="p-2 bg-slate-950/70 rounded-2xl border border-slate-800/90 flex flex-col items-center justify-center gap-1 shadow-inner">
-                            <div class="w-full flex items-center justify-between px-1 text-[10px] text-slate-400 font-bold">
-                                <span>🎮 방향키 이동 (한 텀 1회)</span>
-                                <span id="dpadTurnStatus" class="text-emerald-400 font-black">🟢 이동 가능</span>
-                            </div>
-                            <div class="grid grid-cols-3 gap-1 w-full max-w-[210px] items-center justify-items-center">
-                                <div></div>
-                                <button type="button" id="btnMoveUp" class="dpad-btn w-full py-1.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-blue-600 text-sky-300 font-black text-xs transition border border-slate-700 shadow flex items-center justify-center gap-1 cursor-pointer" title="위 레인 이동 (↑ 또는 W)">
-                                    <span>▲</span> <span class="text-[10px]">위 레인</span>
-                                </button>
-                                <div></div>
-                                <button type="button" id="btnMoveLeft" class="dpad-btn w-full py-1.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-blue-600 text-amber-300 font-black text-xs transition border border-slate-700 shadow flex items-center justify-center gap-1 cursor-pointer" title="뒤로 후퇴 (← 또는 A)">
-                                    <span>◀</span> <span class="text-[10px]">-10m</span>
-                                </button>
-                                <div class="text-[10px] font-black text-amber-300 text-center select-none truncate px-1">
-                                    <span id="dpadCenterInfo">방향선택</span>
-                                </div>
-                                <button type="button" id="btnMoveRight" class="dpad-btn w-full py-1.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-blue-600 text-emerald-300 font-black text-xs transition border border-slate-700 shadow flex items-center justify-center gap-1 cursor-pointer" title="앞으로 전진 (→ 또는 D)">
-                                    <span class="text-[10px]">+10m</span> <span>▶</span>
-                                </button>
-                                <div></div>
-                                <button type="button" id="btnMoveDown" class="dpad-btn w-full py-1.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-blue-600 text-sky-300 font-black text-xs transition border border-slate-700 shadow flex items-center justify-center gap-1 cursor-pointer" title="아래 레인 이동 (↓ 또는 S)">
-                                    <span>▼</span> <span class="text-[10px]">아래 레인</span>
-                                </button>
-                                <div></div>
-                            </div>
-                        </div>
-
-                        <!-- 문제 텍스트 -->
-                        <div class="py-2 px-3 bg-slate-950/90 rounded-2xl border border-slate-800/80 text-center shadow-inner min-h-[46px] flex items-center justify-center">
-                            <span id="quizQuestionText" class="text-lg sm:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 tracking-wider break-keep">
-                                화살표 키를 눌러 이동을 시작하세요!
-                            </span>
                         </div>
                     </div>
 
                     <!-- 4지선다 버튼 리스트 (크롬북 최적화) -->
-                    <div id="quizChoicesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1.5 flex-1 justify-center content-center">
+                    <div id="quizChoicesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2 flex-1 justify-center content-center">
                         <!-- 동적으로 버튼 4개 삽입 -->
                     </div>
                 </div>
@@ -947,242 +966,243 @@
             applyQuizPosition(quizPos);
 
             // ───────────────────────────────────────────
-            // 5. 방향키 이동 & 퀴즈 출제 연동 시스템
+            // 5. 직관적 퀴즈 런 & 술래 신호등 연동 시스템
             // ───────────────────────────────────────────
-            let promptRestoreTimer = null;
+            const trafficBanner = document.getElementById('trafficBanner');
+            const trafficIcon = document.getElementById('trafficIcon');
+            const trafficStatusText = document.getElementById('trafficStatusText');
+            const comboCountEl = document.getElementById('comboCount');
+            const freezeOverlay = document.getElementById('freezeOverlay');
+            const gaugeCountdown = document.getElementById('gaugeCountdown');
+            const syllables = Array.from(document.querySelectorAll('.gauge-syllable'));
 
-            // 새로운 구호(텀)가 시작될 때 이동 대기 상태로 초기화
-            // 새로운 구호(텀)가 시작될 때 이동 대기 상태로 초기화 & 문제 즉시 출제
+            function updateComboUI(combo) {
+                if (comboCountEl) {
+                    comboCountEl.textContent = combo || 0;
+                    const badge = document.getElementById('comboBadge');
+                    if (badge) {
+                        if (combo > 1) {
+                            badge.className = 'px-2.5 py-0.5 rounded-full bg-amber-500/30 text-amber-300 border border-amber-400 text-[11px] font-black flex items-center gap-1 scale-105 transition-transform animate-pulse';
+                        } else {
+                            badge.className = 'px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[11px] font-black flex items-center gap-1';
+                        }
+                    }
+                }
+            }
+
+            // 10음절 글자 게이지 진행 상태 초기화
+            function resetChantGauge() {
+                syllables.forEach(el => {
+                    el.className = 'gauge-syllable text-center py-1 rounded-lg text-xs font-black text-slate-500 transition-all duration-150';
+                });
+            }
+
+            // 새로운 구호(초록불) 턴 시작 시 대기 상태 설정 & 퀴즈 출제
             function prepareNextTurnStandby() {
-                const promptEl = document.getElementById('quizPrompt');
-                const dpadStatus = document.getElementById('dpadTurnStatus');
-                const dpadCenter = document.getElementById('dpadCenterInfo');
+                if (!game.isRunning || game.player.isFinished) return;
 
-                if (promptRestoreTimer) clearTimeout(promptRestoreTimer);
-
-                if (dpadStatus) {
-                    dpadStatus.className = 'text-emerald-400 font-black animate-pulse';
-                    dpadStatus.textContent = '🟢 이동 & 퀴즈 풀기';
+                if (trafficBanner) {
+                    trafficBanner.className = 'p-2 rounded-2xl bg-emerald-950/80 border border-emerald-500/60 flex items-center justify-between shadow-inner transition-colors duration-200';
                 }
-                if (dpadCenter) {
-                    dpadCenter.textContent = '▶ 전진';
-                    dpadCenter.className = 'text-[10px] font-black text-emerald-300 text-center select-none truncate px-1';
+                if (trafficIcon) trafficIcon.textContent = '🟢';
+                if (trafficStatusText) {
+                    trafficStatusText.className = 'text-xs font-black text-emerald-300';
+                    trafficStatusText.textContent = '달려라! (초록불 - 문제를 풀면 전진!)';
                 }
+                if (gaugeCountdown) {
+                    gaugeCountdown.textContent = '달리는 중! 🏃';
+                    gaugeCountdown.className = 'text-amber-300 font-black';
+                }
+                if (freezeOverlay) freezeOverlay.classList.add('hidden');
 
-                // 턴 시작과 동시에 기본 '앞으로 +10m 전진'을 자동 대기 설정하고 즉시 퀴즈를 출제!
-                // 학생이 별도로 조작키를 누르지 않아도 즉시 문제를 읽고 풀 수 있어 풀이 시간을 극대화
-                const res = game.requestMove('right');
-                if (res && res.success && res.pendingMove) {
-                    serveNextQuizForPendingMove(res.pendingMove);
-                } else if (game.player.pendingMove) {
-                    serveNextQuizForPendingMove(game.player.pendingMove);
+                resetChantGauge();
+
+                // 퀴즈가 없으면 즉시 새 문제 출제
+                const grid = document.getElementById('quizChoicesGrid');
+                if (!currentQuestion || !grid || grid.children.length === 0) {
+                    serveNextQuiz();
                 }
             }
             window.prepareNextTurnStandby = prepareNextTurnStandby;
 
-            // 플레이어의 이동 방향 요청 처리 (초록불 동안 레인 변경 및 전진 선택)
-            function handleMoveRequest(direction) {
-                if (!game.isRunning || game.isPaused || game.player.isFinished) return;
+            // 술래 구호 음절 게이지 틱 (0 ~ 9번째 음절 점등)
+            window.onChantSyllable = (idx, totalCount) => {
+                if (!game.isRunning || game.player.isFinished) return;
+                if (game.tagger.state !== 'CHANTING') return;
 
-                // 술래가 빨간불 주시 중(SCANNING)일 때 새 이동 시도 시 즉시 적발!
-                if (game.tagger.state === 'SCANNING') {
-                    if (game.player.pendingMove) {
-                        game.addFloatingText('⚠️ 술래 주시 중에는 방향을 바꿀 수 없습니다! 문제를 맞춰 이동을 완료하세요.', game.player.displayX, game.player.displayY - 30, '#FBBF24');
-                        return;
+                const targetSyl = document.querySelector(`.gauge-syllable[data-syl="${idx}"]`);
+                if (targetSyl) {
+                    if (idx === totalCount - 1) {
+                        targetSyl.className = 'gauge-syllable active warning text-center py-1 rounded-lg text-xs font-black transition-all duration-150';
+                        if (gaugeCountdown) {
+                            gaugeCountdown.textContent = '⚠️ 곧 술래가 돌아봅니다! 손 떼기!';
+                            gaugeCountdown.className = 'text-rose-400 font-black animate-pulse';
+                        }
+                        if (trafficBanner) {
+                            trafficBanner.className = 'p-2 rounded-2xl bg-amber-950/90 border border-amber-500 flex items-center justify-between shadow-inner transition-colors duration-200';
+                        }
+                        if (trafficIcon) trafficIcon.textContent = '🟡';
+                        if (trafficStatusText) {
+                            trafficStatusText.className = 'text-xs font-black text-amber-300';
+                            trafficStatusText.textContent = '주의! (곧 술래가 뒤돌아봅니다!)';
+                        }
+                    } else {
+                        targetSyl.className = 'gauge-syllable active text-center py-1 rounded-lg text-xs font-black transition-all duration-150';
                     }
-                    game.handleTaggerCaught();
-                    const promptEl = document.getElementById('quizPrompt');
-                    if (promptEl) {
-                        promptEl.innerHTML = `<span class="text-rose-400 font-black animate-pulse">🚨 술래 주시 중 움직임 적발! 체크포인트로 후퇴!</span>`;
+                }
+            };
+
+            // 술래가 빨간불 주시(SCANNING) 시작할 때: 리얼 얼음 발동!
+            window.onTaggerScanStart = () => {
+                if (trafficBanner) {
+                    trafficBanner.className = 'p-2 rounded-2xl bg-rose-950/90 border border-rose-500 flex items-center justify-between shadow-inner transition-colors duration-200 animate-pulse';
+                }
+                if (trafficIcon) trafficIcon.textContent = '🔴';
+                if (trafficStatusText) {
+                    trafficStatusText.className = 'text-xs font-black text-rose-300';
+                    trafficStatusText.textContent = '얼음! (술래 감시 중 - 화면 터치 금지!)';
+                }
+                if (gaugeCountdown) {
+                    gaugeCountdown.textContent = '🔴 쉿! 가만히 멈추세요!';
+                    gaugeCountdown.className = 'text-rose-400 font-black animate-pulse';
+                }
+                if (freezeOverlay && game.isRunning && !game.player.isFinished) {
+                    freezeOverlay.classList.remove('hidden');
+                }
+                syllables.forEach(el => {
+                    el.className = 'gauge-syllable frozen text-center py-1 rounded-lg text-xs font-black transition-all duration-150';
+                });
+            };
+
+            // 얼음 오버레이 상태에서 화면을 건드리면 적발!
+            if (freezeOverlay) {
+                freezeOverlay.addEventListener('click', () => {
+                    if (game.isRunning && game.tagger.state === 'SCANNING') {
+                        game.handleTaggerCaught();
+                        updateComboUI(0);
                     }
-                    return;
-                }
-
-                // 한 텀에 1회 제한: 이미 이번 턴 답변을 마쳐 이동 완료한 경우
-                if (game.player.hasMovedThisTurn) {
-                    game.addFloatingText('⚠️ 이번 텀에는 이미 이동했습니다! 다음 구호를 기다리세요.', game.player.displayX, game.player.displayY - 30, '#FBBF24');
-                    const promptEl = document.getElementById('quizPrompt');
-                    if (promptEl) {
-                        promptEl.innerHTML = `<span class="text-amber-400 font-bold">⚠️ 이번 텀에는 이미 이동했습니다! 다음 구호를 기다리세요.</span>`;
-                    }
-                    return;
-                }
-
-                // 기존 pendingMove를 초기화하고 새 방향으로 재설정 (문제는 유지!)
-                game.player.hasMovedThisTurn = false;
-                game.player.pendingMove = null;
-                const res = game.requestMove(direction);
-                if (!res.success) return;
-
-                const dpadCenter = document.getElementById('dpadCenterInfo');
-                if (dpadCenter) {
-                    const dirNames = { up: '▲ 위', down: '▼ 아래', right: '▶ 전진', left: '◀ 후퇴' };
-                    dpadCenter.textContent = dirNames[direction] || direction;
-                    dpadCenter.className = 'text-[10px] font-black text-emerald-300 text-center select-none truncate px-1';
-                }
-
-                const promptEl = document.getElementById('quizPrompt');
-                if (promptEl && res.pendingMove) {
-                    promptEl.innerHTML = `
-                        <span class="text-amber-300 font-black">🎯 [${res.pendingMove.dirLabel}]</span>
-                        <span class="text-sky-300 font-bold truncate">정답을 맞히면 이동 완료!</span>
-                    `;
-                }
-
-                // 퀴즈가 아직 출제되지 않은 경우에만 출제 (이미 출제된 문제는 변경 없이 유지)
-                const grid = document.getElementById('quizChoicesGrid');
-                if (!currentQuestion || !grid || grid.children.length === 0) {
-                    serveNextQuizForPendingMove(res.pendingMove);
-                }
-            }
-
-            // 이동 대기 위치에 따른 퀴즈 출제
-            function serveNextQuizForPendingMove(pendingMove) {
-                currentQuestion = window.MugunghwaQuizManager.generateQuestion();
-                const promptEl = document.getElementById('quizPrompt');
-                const qText = document.getElementById('quizQuestionText');
-
-                if (promptRestoreTimer) clearTimeout(promptRestoreTimer);
-
-                promptEl.innerHTML = `
-                    <span class="text-amber-300 font-black">🎯 [${pendingMove.dirLabel}]</span>
-                    <span class="text-sky-300 font-bold truncate">정답을 맞히면 이동 완료!</span>
-                `;
-
-                qText.textContent = currentQuestion.question;
-                qText.classList.add('scale-105', 'transition-transform');
-                setTimeout(() => qText.classList.remove('scale-105'), 200);
-
-                const grid = document.getElementById('quizChoicesGrid');
-                grid.innerHTML = '';
-
-                currentQuestion.choices.forEach(ch => {
-                    const btn = document.createElement('button');
-                    btn.type = 'button';
-                    btn.className = 'quiz-choice-btn py-2.5 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-blue-600 text-slate-100 border border-slate-700 font-bold text-xs sm:text-sm transition text-left flex items-center justify-between cursor-pointer shadow min-h-[42px]';
-                    btn.innerHTML = `<span>${ch.text}</span> <i class="fa-solid fa-chevron-right text-xs text-slate-500"></i>`;
-
-                    btn.addEventListener('click', () => {
-                        handleChoiceSelect(ch.isCorrect, btn);
-                    });
-                    grid.appendChild(btn);
                 });
             }
 
-            // 퀴즈 답안 선택 시 처리 (이동한 상태에서는 빨간 눈일 때도 정답 입력 허용)
-            function handleChoiceSelect(isCorrect, clickedBtn) {
-                if (!game.isRunning) return;
-
-                // 이동 선택(pendingMove) 없이 버튼을 누른 경우
-                if (!game.player.pendingMove) {
-                    if (game.tagger.state === 'SCANNING') {
-                        game.handleTaggerCaught();
-                        clickedBtn.classList.add('bg-rose-600', 'text-white', 'border-rose-500');
-                        const promptEl = document.getElementById('quizPrompt');
-                        if (promptEl) {
-                            promptEl.innerHTML = `<span class="text-rose-400 font-black animate-pulse">🚨 술래 주시 중 움직임 적발! 체크포인트로 후퇴!</span>`;
-                        }
-                    } else {
-                        const promptEl = document.getElementById('quizPrompt');
-                        if (promptEl) {
-                            promptEl.innerHTML = `<span class="text-amber-400 font-bold">⚠️ 먼저 화살표 키로 이동할 방향을 선택해주세요!</span>`;
-                        }
-                    }
-                    return;
-                }
-
-                // 이동한 상태(pendingMove가 있는 상태)에서는 빨간 눈(SCANNING) 상태여도 문제 맞히기 허용!
-                const grid = document.getElementById('quizChoicesGrid');
-                const allBtns = grid.querySelectorAll('button');
-                allBtns.forEach(b => b.classList.add('pointer-events-none'));
-
-                const promptEl = document.getElementById('quizPrompt');
-                const dpadStatus = document.getElementById('dpadTurnStatus');
-                const dpadCenter = document.getElementById('dpadCenterInfo');
-
-                const wasScanning = (game.tagger.state === 'SCANNING');
-                const result = game.confirmPendingMove(isCorrect);
-
-                if (isCorrect) {
-                    clickedBtn.classList.remove('bg-slate-800');
-                    clickedBtn.classList.add('bg-emerald-600', 'text-white', 'border-emerald-500');
-                    if (promptEl) {
-                        if (wasScanning) {
-                            promptEl.innerHTML = `<span class="text-emerald-400 font-black">✅ 정답! 🔴 빨간 눈 주시 중 이동 완료!</span>`;
-                        } else {
-                            promptEl.innerHTML = `<span class="text-emerald-400 font-black">✅ 정답! 이동 완료! 다음 구호를 기다리세요.</span>`;
-                        }
-                    }
-                } else {
-                    clickedBtn.classList.remove('bg-slate-800');
-                    clickedBtn.classList.add('bg-rose-600', 'text-white', 'border-rose-500');
-                    if (promptEl) {
-                        promptEl.innerHTML = `<span class="text-rose-400 font-black">💥 오답! 안전선으로 후퇴합니다. 다음 구호를 기다리세요.</span>`;
-                    }
-                }
-
-                if (dpadStatus) {
-                    dpadStatus.className = 'text-slate-400 font-bold';
-                    dpadStatus.textContent = '⏳ 이번 텀 완료';
-                }
-                if (dpadCenter) {
-                    dpadCenter.textContent = '대기 중';
-                    dpadCenter.className = 'text-[10px] font-bold text-slate-400 text-center select-none truncate px-1';
-                }
-            }
-
-            // 턴이 새로 바뀔 때마다 이동 대기 상태로 자동 갱신
+            // 턴이 새로 시작될 때 자동 준비
             window.onNewTaggerTurn = (turnCount) => {
                 if (game.isRunning && !game.player.isFinished) {
                     prepareNextTurnStandby();
                 }
             };
 
-            // 술래가 빨간불로 주시 시작할 때 UI 알림
-            window.onTaggerScanStart = () => {
-                const dpadStatus = document.getElementById('dpadTurnStatus');
-                const dpadCenter = document.getElementById('dpadCenterInfo');
-                const promptEl = document.getElementById('quizPrompt');
+            // 다음 영어 퀴즈 문제 출제
+            function serveNextQuiz() {
+                if (!game.isRunning || game.player.isFinished) return;
+                currentQuestion = window.MugunghwaQuizManager.generateQuestion();
+                const qText = document.getElementById('quizQuestionText');
+                const grid = document.getElementById('quizChoicesGrid');
 
-                if (dpadStatus) {
-                    dpadStatus.className = 'text-rose-400 font-black animate-pulse';
-                    dpadStatus.textContent = '🔴 얼음!';
+                if (qText) {
+                    qText.textContent = currentQuestion.question;
+                    qText.classList.add('scale-105', 'transition-transform');
+                    setTimeout(() => qText.classList.remove('scale-105'), 180);
                 }
-                if (dpadCenter) {
-                    dpadCenter.textContent = '얼음!';
-                    dpadCenter.className = 'text-[10px] font-black text-rose-400 text-center select-none truncate px-1';
-                }
-                if (promptEl && game.isRunning && !game.player.isFinished) {
-                    if (game.player.pendingMove) {
-                        promptEl.innerHTML = `<span class="text-rose-400 font-black animate-pulse">🔴 [빨간 눈 주시 중!]</span> <span class="text-amber-300 font-bold">이동 상태 유지! 정답을 맞히면 이동 완료!</span>`;
-                    } else {
-                        promptEl.innerHTML = `<span class="text-rose-400 font-black animate-pulse">🚨 술래 주시 중! 얼음! (새 이동 시 적발)</span>`;
-                    }
-                }
-            };
 
-            // 키보드 화살표 키 및 WASD 이동 이벤트 리스너
+                if (!grid) return;
+                grid.innerHTML = '';
+
+                currentQuestion.choices.forEach((ch, idx) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'quiz-choice-btn py-3 px-4 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:bg-blue-600 text-slate-100 border border-slate-700 font-bold text-xs sm:text-sm transition flex items-center justify-between cursor-pointer shadow min-h-[46px] group';
+                    btn.innerHTML = `
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-6 h-6 rounded-lg bg-slate-900 border border-slate-700 text-amber-300 font-black text-xs flex items-center justify-center group-hover:border-amber-400 flex-shrink-0">${idx + 1}</span>
+                            <span class="text-left font-bold">${ch.text}</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-xs text-slate-500 group-hover:text-amber-300 transition-colors"></i>
+                    `;
+
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        handleChoiceSelect(ch.isCorrect, btn);
+                    });
+                    grid.appendChild(btn);
+                });
+            }
+
+            // 퀴즈 답안 선택 시 처리: 정답 즉시 앞으로 질주 & 연속 풀이 지원!
+            function handleChoiceSelect(isCorrect, clickedBtn) {
+                if (!game.isRunning || game.player.isFinished) return;
+
+                // 1. 술래가 주시 중(SCANNING)일 때 클릭한 경우: 적발!
+                if (game.tagger.state === 'SCANNING') {
+                    game.handleTaggerCaught();
+                    updateComboUI(0);
+                    return;
+                }
+
+                const grid = document.getElementById('quizChoicesGrid');
+                const allBtns = grid ? grid.querySelectorAll('button') : [];
+                allBtns.forEach(b => b.classList.add('pointer-events-none'));
+
+                if (isCorrect) {
+                    clickedBtn.classList.remove('bg-slate-800/90');
+                    clickedBtn.classList.add('bg-emerald-600', 'text-white', 'border-emerald-400', 'shadow-emerald-500/30', 'shadow-lg');
+                    const res = game.handleCorrectAnswer();
+                    updateComboUI(res ? res.combo : game.player.combo);
+
+                    // 정답 시 0.18초 뒤 즉시 다음 문제 출제! (초록불 동안 쾌속 연속 질주 콤보!)
+                    setTimeout(() => {
+                        if (game.isRunning && !game.player.isFinished && game.tagger.state === 'CHANTING') {
+                            serveNextQuiz();
+                        }
+                    }, 180);
+                } else {
+                    clickedBtn.classList.remove('bg-slate-800/90');
+                    clickedBtn.classList.add('bg-rose-600', 'text-white', 'border-rose-400');
+                    game.handleWrongAnswer();
+                    updateComboUI(0);
+
+                    // 오답 시 0.6초 뒤 다음 문제 출제
+                    setTimeout(() => {
+                        if (game.isRunning && !game.player.isFinished && game.tagger.state === 'CHANTING') {
+                            serveNextQuiz();
+                        }
+                    }, 600);
+                }
+            }
+
+            // 아이템 수집용 상/하 레인 변경 간편 버튼 이벤트
+            const btnUp = document.getElementById('btnLaneUp');
+            const btnDown = document.getElementById('btnLaneDown');
+            if (btnUp) btnUp.addEventListener('click', () => game.changeLane(-1));
+            if (btnDown) btnDown.addEventListener('click', () => game.changeLane(1));
+
+            // 키보드 조작 (1~4번 답안 선택, 방향키 상/하 레인 변경)
             window.addEventListener('keydown', (e) => {
                 if (!game.isRunning || game.isPaused || game.player.isFinished) return;
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-                let dir = null;
-                if (e.code === 'ArrowUp' || e.code === 'KeyW') dir = 'up';
-                else if (e.code === 'ArrowDown' || e.code === 'KeyS') dir = 'down';
-                else if (e.code === 'ArrowRight' || e.code === 'KeyD') dir = 'right';
-                else if (e.code === 'ArrowLeft' || e.code === 'KeyA') dir = 'left';
-
-                if (dir) {
+                // 숫자키 1, 2, 3, 4로 퀴즈 선택지 즉시 선택
+                if (['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Numpad1', 'Numpad2', 'Numpad3', 'Numpad4'].includes(e.code)) {
                     e.preventDefault();
-                    handleMoveRequest(dir);
+                    const choiceIdx = e.code.endsWith('1') ? 0 : (e.code.endsWith('2') ? 1 : (e.code.endsWith('3') ? 2 : 3));
+                    const grid = document.getElementById('quizChoicesGrid');
+                    if (grid) {
+                        const btns = grid.querySelectorAll('button');
+                        if (btns && btns[choiceIdx] && !btns[choiceIdx].classList.contains('pointer-events-none')) {
+                            btns[choiceIdx].click();
+                        }
+                    }
+                    return;
+                }
+
+                // 상/하 방향키 또는 W/S로 레인 변경 (아이템 수집용)
+                if (e.code === 'ArrowUp' || e.code === 'KeyW') {
+                    e.preventDefault();
+                    game.changeLane(-1);
+                } else if (e.code === 'ArrowDown' || e.code === 'KeyS') {
+                    e.preventDefault();
+                    game.changeLane(1);
                 }
             });
-
-            // 온스크린 D-Pad 버튼 클릭 리스너 (Chromebook 터치 & 마우스 클릭)
-            document.getElementById('btnMoveUp').addEventListener('click', () => handleMoveRequest('up'));
-            document.getElementById('btnMoveDown').addEventListener('click', () => handleMoveRequest('down'));
-            document.getElementById('btnMoveRight').addEventListener('click', () => handleMoveRequest('right'));
-            document.getElementById('btnMoveLeft').addEventListener('click', () => handleMoveRequest('left'));
 
             // 문제 발음 듣기
             document.getElementById('btnQuizTts').addEventListener('click', () => {

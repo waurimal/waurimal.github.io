@@ -55,8 +55,7 @@ class MugunghwaGame {
             m: 0, // 0 ~ 100m
             checkpoint: 0, // 0, 25, 50, 75m
             laneIndex: 2, // 1~5번 레인 중 중앙(3번 레인, index 2)
-            hasMovedThisTurn: false, // 한 텀에 1회 이동 제한 플래그
-            pendingMove: null, // 화살표 키로 선택한 이동 대기 { direction, dirLabel, targetM, targetLane, targetX, targetY }
+            combo: 0, // 연속 정답 콤보
             displayX: this.TRACK_LEFT,
             displayY: 340,
             targetX: this.TRACK_LEFT,
@@ -247,8 +246,7 @@ class MugunghwaGame {
         this.player.m = 0;
         this.player.checkpoint = 0;
         this.player.laneIndex = 2; // 중앙(3번) 레인에서 시작
-        this.player.hasMovedThisTurn = false;
-        this.player.pendingMove = null;
+        this.player.combo = 0;
         this.player.displayX = this.TRACK_LEFT;
         this.player.targetX = this.TRACK_LEFT;
         this.player.displayY = this.LANES[2];
@@ -308,10 +306,6 @@ class MugunghwaGame {
 
         if (state === 'CHANTING') {
             this.tagger.laserAlpha = 0;
-            // 새 턴이 시작되면 이동 제한 리셋
-            if (!this.player.pendingMove) {
-                this.player.hasMovedThisTurn = false;
-            }
             if (typeof window !== 'undefined' && window.onNewTaggerTurn) {
                 window.onNewTaggerTurn(this.tagger.turnCount);
             }
@@ -331,14 +325,13 @@ class MugunghwaGame {
         if (!this.canContinueGame()) return;
 
         this.tagger.turnCount++;
+        this.tagger.state = 'CHANTING';
+        this.tagger.laserAlpha = 0;
 
-        // 관전 모드가 아니고 본인이 아직 완주 전일 때만 이동/문제 턴 리셋
+        // 관전 모드가 아니고 본인이 아직 완주 전일 때 새 구호 턴 알림
         if (!this.isSpectator && !this.player.isFinished) {
-            if (!this.player.pendingMove) {
-                this.player.hasMovedThisTurn = false;
-                if (typeof window !== 'undefined' && window.onNewTaggerTurn) {
-                    window.onNewTaggerTurn(this.tagger.turnCount);
-                }
+            if (typeof window !== 'undefined' && window.onNewTaggerTurn) {
+                window.onNewTaggerTurn(this.tagger.turnCount);
             }
         }
 
@@ -347,10 +340,10 @@ class MugunghwaGame {
             window.MugunghwaMultiplayer.broadcastTaggerState('CHANTING', this.tagger.speedMultiplier, this.tagger.turnCount);
         }
 
-        // 구호 속도: 차분하고 편안한 낭독 속도 (0.85 ~ 1.1배속)
-        const speed = 0.85 + (Math.random() * 0.25);
+        // 구호 속도: 차분하고 편안한 낭독 속도 (0.85 ~ 1.05배속)
+        const speed = 0.85 + (Math.random() * 0.20);
         this.tagger.speedMultiplier = speed;
-        this.tagger.chantDuration = Math.floor(540 / speed);
+        this.tagger.chantDuration = Math.floor(520 / speed);
 
         if (window.MugunghwaAudio) {
             window.MugunghwaAudio.speakChant('무궁화 꽃이 피었습니다!', speed, () => {
@@ -369,9 +362,9 @@ class MugunghwaGame {
 
         this.tagger.state = 'SCANNING';
         this.tagger.scanTimer = 0;
-        this.tagger.scanDuration = Math.floor(200 + Math.random() * 80); // 약 3.3 ~ 4.6초 동안 전방 레이저 스캔
+        this.tagger.scanDuration = Math.floor(180 + Math.random() * 50); // 약 2.8 ~ 3.6초 동안 전방 레이저 스캔
 
-        // 술래가 빨간 눈(SCANNING)으로 돌아봐도, 이미 이동을 선택한 플레이어의 pendingMove는 유지하여 문제 풀기 허용!
+        // 술래가 빨간 눈(SCANNING)으로 돌아보면 화면 터치 잠금 및 리얼 얼음 발동!
         if (!this.isSpectator && typeof window !== 'undefined' && window.onTaggerScanStart) {
             window.onTaggerScanStart();
         }
@@ -386,208 +379,69 @@ class MugunghwaGame {
         }
     }
 
-    // 플레이어가 화살표 키(←↑↓→ / WASD) 또는 온스크린 버튼으로 이동 방향을 선택
-    requestMove(direction) {
-        if (!this.isRunning || this.isPaused || this.player.isFinished) {
-            return { success: false, reason: 'not_running' };
+    // 상/하 레인 변경 (옵션: 아이템 먹기용 보조 조작)
+    changeLane(delta) {
+        if (!this.isRunning || this.isPaused || this.player.isFinished) return;
+        // 술래가 빨간불 주시 중(SCANNING)일 때 움직이면 즉시 적발!
+        if (this.tagger.state === 'SCANNING') {
+            this.handleTaggerCaught();
+            return;
         }
 
-        // 1. 술래가 빨간불 주시 중(SCANNING)일 때 움직이면 즉시 적발!
+        const curLane = this.player.laneIndex !== undefined ? this.player.laneIndex : 2;
+        const newLane = Math.max(0, Math.min(this.LANES.length - 1, curLane + delta));
+        if (newLane !== curLane) {
+            this.player.laneIndex = newLane;
+            this.player.targetY = this.LANES[newLane];
+            if (window.MugunghwaAudio) window.MugunghwaAudio.playStep();
+            this.checkFieldItemPickup(this.player);
+            if (this.playMode === 'multi' && window.MugunghwaMultiplayer) {
+                window.MugunghwaMultiplayer.advancePlayer(0, null, this.player.laneIndex, this.player.m);
+            }
+        }
+    }
+
+    // 퀴즈 정답 시: 즉시 앞으로 +10m (부스터 시 +20m) 전진 및 콤보 획득!
+    handleCorrectAnswer() {
+        if (!this.isRunning || this.player.isFinished) return { success: false };
+
+        // 1. 술래가 빨간불 주시 중(SCANNING)일 때 클릭 시 적발!
         if (this.tagger.state === 'SCANNING') {
-            this.player.pendingMove = null;
             this.handleTaggerCaught();
             return { success: false, reason: 'caught_by_tagger' };
         }
 
-        // 2. 한 텀에 1회 이동 제한: 이미 이번 턴에 이동 완료했거나 소비한 경우
-        if (this.player.hasMovedThisTurn) {
-            this.addFloatingText('⚠️ 이번 텀에는 이미 이동했습니다! 다음 구호를 기다리세요.', this.player.displayX, this.player.displayY - 30, '#FBBF24');
-            return { success: false, reason: 'already_moved' };
-        }
-
-        const curM = this.player.m;
-        const curLane = this.player.laneIndex !== undefined ? this.player.laneIndex : 2;
-        let targetM = curM;
-        let targetLane = curLane;
-        let dirLabel = '';
-
-        if (direction === 'up') {
-            if (curLane <= 0) {
-                this.addFloatingText('⚠️ 이미 최상단 1번 레인입니다!', this.player.displayX, this.player.displayY - 25, '#F87171');
-                return { success: false, reason: 'boundary_top' };
-            }
-            targetLane = curLane - 1;
-            dirLabel = `위쪽 ${targetLane + 1}번 레인으로 이동`;
-        } else if (direction === 'down') {
-            if (curLane >= this.LANES.length - 1) {
-                this.addFloatingText('⚠️ 이미 최하단 5번 레인입니다!', this.player.displayX, this.player.displayY - 25, '#F87171');
-                return { success: false, reason: 'boundary_bottom' };
-            }
-            targetLane = curLane + 1;
-            dirLabel = `아래쪽 ${targetLane + 1}번 레인으로 이동`;
-        } else if (direction === 'right') {
-            if (curM >= 100) {
-                return { success: false, reason: 'already_goal' };
-            }
-            const stepM = this.player.buffs.shoes ? 20 : 10;
-            targetM = Math.min(100, curM + stepM);
-            dirLabel = `앞으로 +${stepM}m 전진`;
-        } else if (direction === 'left') {
-            if (curM <= 0) {
-                this.addFloatingText('⚠️ 출발선(0m) 이전으로는 갈 수 없습니다!', this.player.displayX, this.player.displayY - 25, '#F87171');
-                return { success: false, reason: 'boundary_start' };
-            }
-            targetM = Math.max(0, curM - 10);
-            dirLabel = `뒤로 -10m 후퇴`;
-        } else {
-            return { success: false, reason: 'unknown_direction' };
-        }
-
-        const targetX = this.mToX(targetM);
-        const targetY = this.LANES[targetLane];
-
-        this.player.pendingMove = {
-            direction,
-            dirLabel,
-            targetM,
-            targetLane,
-            targetX,
-            targetY,
-            prevM: curM,
-            prevLane: curLane
-        };
-
-        if (window.MugunghwaAudio) {
-            window.MugunghwaAudio.playStep();
-        }
-
-        this.addFloatingText(`🎯 ${dirLabel} 선택! 문제를 맞히세요!`, this.player.displayX, this.player.displayY - 25, '#FBBF24');
-
-        return {
-            success: true,
-            pendingMove: this.player.pendingMove
-        };
-    }
-
-    // 퀴즈 답안 선택 시 이동 확정 또는 오답 후퇴 처리 (이동한 상태에서는 빨간 눈일 때도 정답 입력 허용)
-    confirmPendingMove(isCorrect) {
-        if (!this.isRunning || this.player.isFinished) return { success: false };
-
-        const move = this.player.pendingMove;
-        if (!move) {
-            // 이동 방향 선택 없이(pendingMove 없음) 답변한 경우: 술래가 빨간 눈(SCANNING)이면 적발
-            if (this.tagger.state === 'SCANNING') {
-                this.player.hasMovedThisTurn = true;
-                this.handleTaggerCaught();
-                return { success: false, reason: 'caught_by_tagger' };
-            }
-            if (isCorrect) {
-                this.handleCorrectAnswer();
-            } else {
-                this.handleWrongAnswer();
-            }
-            this.player.hasMovedThisTurn = true;
-            return { success: true, moved: isCorrect };
-        }
-
-        // 이동한 상태(pendingMove 존재)에서는 술래가 빨간 눈(SCANNING) 상태여도 문제 맞히기 허용!
-        // 이번 텀 이동 1회 소비 완료
-        this.player.hasMovedThisTurn = true;
-        this.player.pendingMove = null;
-
-        if (isCorrect) {
-            // 정답 시: 빨간 눈 상태여도 선택한 레인 및 거리로 정상 이동 완료!
-            if (move.direction === 'right') {
-                if (this.player.buffs.shoes) {
-                    this.player.buffs.shoes = false;
-                    if (window.MugunghwaAudio) window.MugunghwaAudio.playBoost();
-                    this.addFloatingText('⚡ 부스터 2배 질주! +20m 전진 완료', move.targetX, move.targetY - 25, '#F59E0B');
-                } else {
-                    if (window.MugunghwaAudio) window.MugunghwaAudio.playStep();
-                    this.addFloatingText('+10m 전진 완료!', move.targetX, move.targetY - 20, '#10B981');
-                }
-            } else if (move.direction === 'left') {
-                if (window.MugunghwaAudio) window.MugunghwaAudio.playStep();
-                this.addFloatingText('-10m 뒤로 이동 완료!', move.targetX, move.targetY - 20, '#60A5FA');
-            } else if (move.direction === 'up') {
-                if (window.MugunghwaAudio) window.MugunghwaAudio.playStep();
-                this.addFloatingText(`⬆️ 위쪽 ${move.targetLane + 1}번 레인 이동 완료!`, move.targetX, move.targetY - 20, '#34D399');
-            } else if (move.direction === 'down') {
-                if (window.MugunghwaAudio) window.MugunghwaAudio.playStep();
-                this.addFloatingText(`⬇️ 아래쪽 ${move.targetLane + 1}번 레인 이동 완료!`, move.targetX, move.targetY - 20, '#34D399');
-            }
-
-            this.player.m = move.targetM;
-            this.player.laneIndex = move.targetLane;
-            this.player.targetX = move.targetX;
-            this.player.targetY = move.targetY;
-            this.player.isMoving = true;
-            this.gameScore += 150;
-
-            // 체크포인트 도달 확인 (25m, 50m, 75m)
-            if (this.player.m >= 75 && this.player.checkpoint < 75) {
-                this.player.checkpoint = 75;
-                this.addFloatingText('🚩 75m 안전 체크포인트 확보!', this.player.displayX, this.player.displayY - 35, '#38BDF8');
-            } else if (this.player.m >= 50 && this.player.checkpoint < 50) {
-                this.player.checkpoint = 50;
-                this.addFloatingText('🚩 50m 안전 체크포인트 확보!', this.player.displayX, this.player.displayY - 35, '#38BDF8');
-            } else if (this.player.m >= 25 && this.player.checkpoint < 25) {
-                this.player.checkpoint = 25;
-                this.addFloatingText('🚩 25m 안전 체크포인트 확보!', this.player.displayX, this.player.displayY - 35, '#38BDF8');
-            }
-
-            // 트랙 상 아이템 획득 검사
-            this.checkFieldItemPickup(this.player);
-
-            // 100m 결승선 골인 판정!
-            if (this.player.m >= 100 && !this.player.isFinished) {
-                this.triggerPlayerGoal();
-            }
-
-            // 멀티플레이어 위치 동기화 (정확한 현재 위치 m 전달하여 100% 실시간 일치)
-            if (this.playMode === 'multi' && window.MugunghwaMultiplayer) {
-                window.MugunghwaMultiplayer.advancePlayer(move.targetM - move.prevM, null, move.targetLane, this.player.m);
-            }
-
-            return { success: true, moved: true, move };
-        } else {
-            // 오답 시: 이동 취소 및 직전 체크포인트로 강제 후퇴!
-            this.handleWrongAnswer();
-            return { success: false, moved: false, move };
-        }
-    }
-
-    // 퀴즈 정답 시: 앞으로 전진!
-    handleCorrectAnswer() {
-        if (!this.isRunning || this.player.isFinished) return;
-
-        // 부스터 신발 착용 시 2배 전진 (+20m), 기본 +10m 전진
+        // 2. 부스터 신발 착용 시 2배 전진 (+20m), 기본 +10m 전진
         let stepM = 10;
         if (this.player.buffs.shoes) {
             stepM = 20;
             this.player.buffs.shoes = false;
             if (window.MugunghwaAudio) window.MugunghwaAudio.playBoost();
-            this.addFloatingText('⚡ 부스터 2배 질주! +20m', this.player.displayX, this.player.displayY - 25, '#F59E0B');
         } else {
             if (window.MugunghwaAudio) window.MugunghwaAudio.playStep();
-            this.addFloatingText('+10m 전진!', this.player.displayX, this.player.displayY - 20, '#10B981');
         }
+
+        this.player.combo = (this.player.combo || 0) + 1;
+        const comboBonus = (this.player.combo - 1) * 30;
+        this.gameScore += 150 + comboBonus;
 
         this.player.m = Math.min(100, this.player.m + stepM);
         this.player.targetX = this.mToX(this.player.m);
         this.player.isMoving = true;
-        this.gameScore += 150;
+
+        const comboText = this.player.combo > 1 ? ` 🔥 ${this.player.combo} COMBO!` : '';
+        this.addFloatingText(`+${stepM}m 전진!${comboText}`, this.player.displayX, this.player.displayY - 25, this.player.combo > 1 ? '#FBBF24' : '#10B981');
 
         // 체크포인트 도달 확인 (25m, 50m, 75m)
         if (this.player.m >= 75 && this.player.checkpoint < 75) {
             this.player.checkpoint = 75;
-            this.addFloatingText('🚩 75m 안전 체크포인트 확보!', this.player.displayX, this.player.displayY - 35, '#38BDF8');
+            this.addFloatingText('🚩 75m 안전 체크포인트 확보!', this.player.displayX, this.player.displayY - 45, '#38BDF8');
         } else if (this.player.m >= 50 && this.player.checkpoint < 50) {
             this.player.checkpoint = 50;
-            this.addFloatingText('🚩 50m 안전 체크포인트 확보!', this.player.displayX, this.player.displayY - 35, '#38BDF8');
+            this.addFloatingText('🚩 50m 안전 체크포인트 확보!', this.player.displayX, this.player.displayY - 45, '#38BDF8');
         } else if (this.player.m >= 25 && this.player.checkpoint < 25) {
             this.player.checkpoint = 25;
-            this.addFloatingText('🚩 25m 안전 체크포인트 확보!', this.player.displayX, this.player.displayY - 35, '#38BDF8');
+            this.addFloatingText('🚩 25m 안전 체크포인트 확보!', this.player.displayX, this.player.displayY - 45, '#38BDF8');
         }
 
         // 트랙 상 아이템 획득 검사
@@ -598,42 +452,49 @@ class MugunghwaGame {
             this.triggerPlayerGoal();
         }
 
-        // 멀티플레이어 위치 동기화 (정확한 현재 위치 m 전달하여 100% 실시간 일치)
+        // 멀티플레이어 위치 동기화
         if (this.playMode === 'multi' && window.MugunghwaMultiplayer) {
-            window.MugunghwaMultiplayer.advancePlayer(stepM, null, null, this.player.m);
+            window.MugunghwaMultiplayer.advancePlayer(stepM, null, this.player.laneIndex, this.player.m);
         }
+
+        return { success: true, m: this.player.m, combo: this.player.combo };
     }
 
-    // 퀴즈 오답 시: 직전 체크포인트(원위치)로 강제 후퇴!
+    // 퀴즈 오답 시: 제자리 스턴 및 가벼운 감점 (-5m)
     handleWrongAnswer() {
         if (!this.isRunning || this.player.isFinished) return;
 
-        // 쉴드 방어막이 있으면 1회 세이프!
-        if (this.player.buffs.shield) {
-            this.player.buffs.shield = false;
-            if (window.MugunghwaAudio) window.MugunghwaAudio.playShieldDefend();
-            this.addFloatingText('🛡️ 쉴드 방어 세이프! 후퇴 무효화', this.player.displayX, this.player.displayY - 25, '#38BDF8');
+        // 1. 술래가 빨간불 주시 중(SCANNING)일 때 오답 클릭 시 적발!
+        if (this.tagger.state === 'SCANNING') {
+            this.handleTaggerCaught();
             return;
         }
 
-        const safeM = this.player.checkpoint;
-        const prevM = this.player.m;
-        this.player.m = safeM;
-        this.player.targetX = this.mToX(safeM);
+        // 2. 쉴드 방어막이 있으면 1회 세이프!
+        if (this.player.buffs.shield) {
+            this.player.buffs.shield = false;
+            if (window.MugunghwaAudio) window.MugunghwaAudio.playShieldDefend();
+            this.addFloatingText('🛡️ 쉴드 방어 세이프! 오답 무효화', this.player.displayX, this.player.displayY - 25, '#38BDF8');
+            return;
+        }
+
+        this.player.combo = 0;
+        const penaltyM = 5;
+        this.player.m = Math.max(this.player.checkpoint, this.player.m - penaltyM);
+        this.player.targetX = this.mToX(this.player.m);
         this.player.isFallen = true;
         this.player.fallProgress = 0;
 
         if (window.MugunghwaAudio) window.MugunghwaAudio.playWrongFall();
 
-        const msg = safeM === 0 ? '💥 오답! 출발선 원위치로 강제 후퇴!' : `💥 오답! ${safeM}m 체크포인트로 후퇴!`;
-        this.addFloatingText(msg, this.player.displayX, this.player.displayY - 30, '#EF4444');
+        this.addFloatingText('💥 오답! (-5m) 다음 문제 집중!', this.player.displayX, this.player.displayY - 25, '#EF4444');
 
         if (this.playMode === 'multi' && window.MugunghwaMultiplayer) {
-            window.MugunghwaMultiplayer.resetPlayerToCheckpoint();
+            window.MugunghwaMultiplayer.advancePlayer(-penaltyM, null, this.player.laneIndex, this.player.m);
         }
     }
 
-    // 술래가 빨간불로 주시 중(SCANNING)일 때 오답이거나 함부로 움직였을 때 적발
+    // 술래가 빨간불 주시 중(SCANNING)일 때 움직이거나 화면을 눌렀을 때 적발
     handleTaggerCaught() {
         if (!this.isRunning || this.player.isFinished) return;
 
@@ -644,6 +505,7 @@ class MugunghwaGame {
             return;
         }
 
+        this.player.combo = 0;
         const safeM = this.player.checkpoint;
         this.player.m = safeM;
         this.player.targetX = this.mToX(safeM);
@@ -651,7 +513,12 @@ class MugunghwaGame {
         this.player.fallProgress = 0;
 
         if (window.MugunghwaAudio) window.MugunghwaAudio.playWrongFall();
-        this.addFloatingText('🚨 술래에게 포착! 원위치로 후퇴!', this.player.displayX, this.player.displayY - 30, '#DC2626');
+        const msg = safeM === 0 ? '🚨 술래에게 적발! 출발선(0m)으로 후퇴!' : `🚨 술래에게 적발! 안전선(${safeM}m)으로 후퇴!`;
+        this.addFloatingText(msg, this.player.displayX, this.player.displayY - 30, '#DC2626');
+
+        if (this.playMode === 'multi' && window.MugunghwaMultiplayer) {
+            window.MugunghwaMultiplayer.resetPlayerToCheckpoint();
+        }
     }
 
     checkFieldItemPickup(p) {
@@ -1397,43 +1264,6 @@ class MugunghwaGame {
     }
 
     renderRunners(ctx) {
-        // 목표 이동 위치 타겟 가이드 렌더링 (관전 모드가 아닐 때, 방향 선택 후 정답 대기 상태)
-        if (!this.isSpectator && this.player.pendingMove) {
-            const pm = this.player.pendingMove;
-            ctx.save();
-
-            // 점선 궤적 라인
-            ctx.strokeStyle = 'rgba(250, 204, 21, 0.85)';
-            ctx.lineWidth = 2.5;
-            ctx.setLineDash([6, 6]);
-            ctx.beginPath();
-            ctx.moveTo(this.player.displayX, this.player.displayY);
-            ctx.lineTo(pm.targetX, pm.targetY);
-            ctx.stroke();
-            ctx.setLineDash([]);
-
-            // 펄스 애니메이션 목표 마커 링
-            const pulse = Math.sin(Date.now() / 150) * 4;
-            ctx.strokeStyle = '#FACC15';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(pm.targetX, pm.targetY, 20 + pulse, 0, Math.PI * 2);
-            ctx.stroke();
-
-            ctx.fillStyle = 'rgba(250, 204, 21, 0.25)';
-            ctx.beginPath();
-            ctx.arc(pm.targetX, pm.targetY, 20 + pulse, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 타겟 텍스트
-            ctx.fillStyle = '#FEF08A';
-            ctx.font = 'bold 11px Pretendard, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('🎯 ' + (pm.dirLabel || '이동 목표'), pm.targetX, pm.targetY - 28);
-
-            ctx.restore();
-        }
-
         // 모든 주자 정렬 (관전 모드일 때는 player 제외)
         const allRunners = (this.isSpectator ? [...this.peers] : [...this.peers, this.player]).sort((a, b) => a.displayY - b.displayY);
 
