@@ -1277,11 +1277,11 @@
         // ── 유틸: 이름 마스킹 (홍O동 표준) ──
         function maskStudentName(nameStr) {
             if (!nameStr) return '학생';
-            let str = String(nameStr).trim();
-            str = str.replace(/\\*/g, 'O');
+            let str = String(nameStr).trim().replace(/\*/g, 'O');
             if (str.includes('선생님') || str.includes('관리자')) return str;
+            if (/^O+$/.test(str)) return '학생';
 
-            const parts = str.split(/\\s+/);
+            const parts = str.split(/\s+/);
             if (parts.length > 1) {
                 const rawName = parts[parts.length - 1];
                 if (!rawName.endsWith('반') && !rawName.endsWith('번') && !rawName.endsWith('학년')) {
@@ -2108,8 +2108,11 @@
         }
 
         function normalizeScoreDoc(id, data) {
-            let rawName = data.name || data.studentName || '학생';
-            let cleanName = String(rawName).replace(/\\*/g, 'O');
+            let rawName = data.name || data.studentName;
+            if (!rawName || /^O+$/.test(rawName)) {
+                rawName = data.maskedName && !/^O+$/.test(data.maskedName) ? data.maskedName : '학생';
+            }
+            let cleanName = String(rawName).trim().replace(/\*/g, 'O');
 
             let ts = data.timestamp;
             if (ts && typeof ts.toMillis === 'function') {
@@ -2350,7 +2353,7 @@
                 else if (rank === 3) rankBadge = '<span class="text-xl">🥉</span>';
 
                 const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleDateString('ko-KR', { year: '2-digit', month: 'numeric', day: 'numeric' }) : '-';
-                const safeName = sanitize(item.maskedName || maskStudentName(item.name || '학생'));
+                const safeName = sanitize((item.maskedName && !/^O+$/.test(item.maskedName)) ? item.maskedName : maskStudentName(item.name || '학생'));
                 const safeUnit = sanitize(item.unit);
                 const safeSchool = item.schoolInfo ? sanitize(item.schoolInfo) + ' • ' : '';
 
@@ -2559,7 +2562,7 @@
                 return `
                 <tr class="hover:bg-sky-50/50 transition">
                     <td class="p-2.5 font-bold">${rank}</td>
-                    <td class="p-2.5 font-black text-slate-800">${sanitize(s.maskedName)}</td>
+                    <td class="p-2.5 font-black text-slate-800">${sanitize((s.maskedName && !/^O+$/.test(s.maskedName)) ? s.maskedName : maskStudentName(s.name || '학생'))}</td>
                     <td class="p-2.5 font-semibold text-slate-600">${s.schoolInfo ? sanitize(s.schoolInfo) : '-'}</td>
                     <td class="p-2.5 font-semibold text-sky-800">${sanitize(s.unit)}</td>
                     <td class="p-2.5">${modeBadge}</td>
